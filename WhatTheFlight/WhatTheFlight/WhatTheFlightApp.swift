@@ -12,7 +12,10 @@ struct WhatTheFlightApp: App {
     #if os(macOS)
     @StateObject private var windowManager = WindowManager.shared
     #endif
-    
+    #if os(iOS)
+    @UIApplicationDelegateAdaptor(RadarAppDelegate.self) private var appDelegate
+    #endif
+
     var body: some Scene {
         WindowGroup {
             #if os(macOS)
@@ -22,6 +25,11 @@ struct WhatTheFlightApp: App {
             .onAppear {
                 windowManager.configureMainWindow()
             }
+            #elseif os(iOS)
+            // iOS / iPadOS run the redesigned radar experience.
+            RadarRootView()
+            #elseif os(tvOS)
+            TVRadarRootView()
             #else
             ContentView()
             #endif

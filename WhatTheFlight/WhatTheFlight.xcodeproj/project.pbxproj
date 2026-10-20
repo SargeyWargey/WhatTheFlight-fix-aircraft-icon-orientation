@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		7C5E00032E3D806500AAC798 /* WhatTheFlightWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7C5E00022E3D806500AAC798 /* WhatTheFlightWidgets.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7C5F00032E3D806500AAC798 /* WhatTheFlightTopShelf.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7C5F00022E3D806500AAC798 /* WhatTheFlightTopShelf.appex */; platformFilters = (tvos, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		7C446AA12E3D806500AAC798 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,17 +26,114 @@
 			remoteGlobalIDString = 7C446A912E3D806500AAC798;
 			remoteInfo = WhatTheFlight;
 		};
+		7C5E00012E3D806500AAC798 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7C446A8A2E3D806400AAC798 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7C5E000B2E3D806500AAC798;
+			remoteInfo = WhatTheFlightWidgets;
+		};
+		7C5F00012E3D806500AAC798 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7C446A8A2E3D806400AAC798 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7C5F000B2E3D806500AAC798;
+			remoteInfo = WhatTheFlightTopShelf;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7C5E00042E3D806500AAC798 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				7C5F00032E3D806500AAC798 /* WhatTheFlightTopShelf.appex in Embed Foundation Extensions */,
+				7C5E00032E3D806500AAC798 /* WhatTheFlightWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		7C446A922E3D806500AAC798 /* WhatTheFlight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhatTheFlight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C446AA02E3D806500AAC798 /* WhatTheFlightTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhatTheFlightTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C446AAA2E3D806500AAC798 /* WhatTheFlightUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhatTheFlightUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C5E00022E3D806500AAC798 /* WhatTheFlightWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WhatTheFlightWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C5F00022E3D806500AAC798 /* WhatTheFlightTopShelf.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WhatTheFlightTopShelf.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		7C5E00062E3D806500AAC798 /* Exceptions for "WhatTheFlightWidgets" folder in "WhatTheFlightWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 7C5E000B2E3D806500AAC798 /* WhatTheFlightWidgets */;
+		};
+		7C5E00072E3D806500AAC798 /* Exceptions for "WhatTheFlight" folder in "WhatTheFlightWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Core/Flight.swift,
+				Core/FlightFeedParser.swift,
+				Core/GeoMath.swift,
+				Core/NotableTraffic.swift,
+				Core/OperatorInfo.swift,
+				Data/AircraftTypeCatalog.swift,
+				Data/AirlineCatalog.swift,
+				"Data/AirlineCatalog+Data.swift",
+				Data/AirportCatalog.swift,
+				"Data/AirportCatalog+Data.swift",
+				Data/RegistrationCountry.swift,
+				Models/GeographicBounds.swift,
+				Services/AircraftPhotoProvider.swift,
+				Services/AppRouter.swift,
+				Services/FlightFeed.swift,
+				Services/SharedRadarStore.swift,
+				Services/SkyWatchAttributes.swift,
+				UI/Theme.swift,
+			);
+			target = 7C5E000B2E3D806500AAC798 /* WhatTheFlightWidgets */;
+		};
+		7C5F00062E3D806500AAC798 /* Exceptions for "WhatTheFlightTopShelf" folder in "WhatTheFlightTopShelf" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 7C5F000B2E3D806500AAC798 /* WhatTheFlightTopShelf */;
+		};
+		7C5F00072E3D806500AAC798 /* Exceptions for "WhatTheFlight" folder in "WhatTheFlightTopShelf" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Core/Flight.swift,
+				Core/FlightFeedParser.swift,
+				Core/GeoMath.swift,
+				Core/NotableTraffic.swift,
+				Core/OperatorInfo.swift,
+				Data/AircraftTypeCatalog.swift,
+				Data/AirlineCatalog.swift,
+				"Data/AirlineCatalog+Data.swift",
+				Data/AirportCatalog.swift,
+				"Data/AirportCatalog+Data.swift",
+				Data/RegistrationCountry.swift,
+				Models/GeographicBounds.swift,
+				Services/AircraftPhotoProvider.swift,
+				Services/FlightFeed.swift,
+				Services/SharedRadarStore.swift,
+			);
+			target = 7C5F000B2E3D806500AAC798 /* WhatTheFlightTopShelf */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7C446A942E3D806500AAC798 /* WhatTheFlight */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7C5E00072E3D806500AAC798 /* Exceptions for "WhatTheFlight" folder in "WhatTheFlightWidgets" target */,
+				7C5F00072E3D806500AAC798 /* Exceptions for "WhatTheFlight" folder in "WhatTheFlightTopShelf" target */,
+			);
 			path = WhatTheFlight;
 			sourceTree = "<group>";
 		};
@@ -43,6 +145,22 @@
 		7C446AAD2E3D806500AAC798 /* WhatTheFlightUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = WhatTheFlightUITests;
+			sourceTree = "<group>";
+		};
+		7C5E00052E3D806500AAC798 /* WhatTheFlightWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7C5E00062E3D806500AAC798 /* Exceptions for "WhatTheFlightWidgets" folder in "WhatTheFlightWidgets" target */,
+			);
+			path = WhatTheFlightWidgets;
+			sourceTree = "<group>";
+		};
+		7C5F00052E3D806500AAC798 /* WhatTheFlightTopShelf */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7C5F00062E3D806500AAC798 /* Exceptions for "WhatTheFlightTopShelf" folder in "WhatTheFlightTopShelf" target */,
+			);
+			path = WhatTheFlightTopShelf;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -69,6 +187,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7C5E00082E3D806500AAC798 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7C5F00082E3D806500AAC798 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -76,6 +208,8 @@
 			isa = PBXGroup;
 			children = (
 				7C446A942E3D806500AAC798 /* WhatTheFlight */,
+				7C5E00052E3D806500AAC798 /* WhatTheFlightWidgets */,
+				7C5F00052E3D806500AAC798 /* WhatTheFlightTopShelf */,
 				7C446AA32E3D806500AAC798 /* WhatTheFlightTests */,
 				7C446AAD2E3D806500AAC798 /* WhatTheFlightUITests */,
 				7C446A932E3D806500AAC798 /* Products */,
@@ -88,6 +222,8 @@
 				7C446A922E3D806500AAC798 /* WhatTheFlight.app */,
 				7C446AA02E3D806500AAC798 /* WhatTheFlightTests.xctest */,
 				7C446AAA2E3D806500AAC798 /* WhatTheFlightUITests.xctest */,
+				7C5F00022E3D806500AAC798 /* WhatTheFlightTopShelf.appex */,
+				7C5E00022E3D806500AAC798 /* WhatTheFlightWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -102,10 +238,13 @@
 				7C446A8E2E3D806500AAC798 /* Sources */,
 				7C446A8F2E3D806500AAC798 /* Frameworks */,
 				7C446A902E3D806500AAC798 /* Resources */,
+				7C5E00042E3D806500AAC798 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				7C5F000C2E3D806500AAC798 /* PBXTargetDependency */,
+				7C5E000C2E3D806500AAC798 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				7C446A942E3D806500AAC798 /* WhatTheFlight */,
@@ -163,6 +302,50 @@
 			productReference = 7C446AAA2E3D806500AAC798 /* WhatTheFlightUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		7C5E000B2E3D806500AAC798 /* WhatTheFlightWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C5E000F2E3D806500AAC798 /* Build configuration list for PBXNativeTarget "WhatTheFlightWidgets" */;
+			buildPhases = (
+				7C5E000A2E3D806500AAC798 /* Sources */,
+				7C5E00082E3D806500AAC798 /* Frameworks */,
+				7C5E00092E3D806500AAC798 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7C5E00052E3D806500AAC798 /* WhatTheFlightWidgets */,
+			);
+			name = WhatTheFlightWidgets;
+			packageProductDependencies = (
+			);
+			productName = WhatTheFlightWidgets;
+			productReference = 7C5E00022E3D806500AAC798 /* WhatTheFlightWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		7C5F000B2E3D806500AAC798 /* WhatTheFlightTopShelf */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C5F000F2E3D806500AAC798 /* Build configuration list for PBXNativeTarget "WhatTheFlightTopShelf" */;
+			buildPhases = (
+				7C5F000A2E3D806500AAC798 /* Sources */,
+				7C5F00082E3D806500AAC798 /* Frameworks */,
+				7C5F00092E3D806500AAC798 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7C5F00052E3D806500AAC798 /* WhatTheFlightTopShelf */,
+			);
+			name = WhatTheFlightTopShelf;
+			packageProductDependencies = (
+			);
+			productName = WhatTheFlightTopShelf;
+			productReference = 7C5F00022E3D806500AAC798 /* WhatTheFlightTopShelf.appex */;
+			productType = "com.apple.product-type.tv-app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -184,6 +367,12 @@
 						CreatedOnToolsVersion = 16.4;
 						TestTargetID = 7C446A912E3D806500AAC798;
 					};
+					7C5E000B2E3D806500AAC798 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					7C5F000B2E3D806500AAC798 = {
+						CreatedOnToolsVersion = 27.1;
+					};
 				};
 			};
 			buildConfigurationList = 7C446A8D2E3D806400AAC798 /* Build configuration list for PBXProject "WhatTheFlight" */;
@@ -203,6 +392,8 @@
 				7C446A912E3D806500AAC798 /* WhatTheFlight */,
 				7C446A9F2E3D806500AAC798 /* WhatTheFlightTests */,
 				7C446AA92E3D806500AAC798 /* WhatTheFlightUITests */,
+				7C5E000B2E3D806500AAC798 /* WhatTheFlightWidgets */,
+				7C5F000B2E3D806500AAC798 /* WhatTheFlightTopShelf */,
 			);
 		};
 /* End PBXProject section */
@@ -223,6 +414,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7C446AA82E3D806500AAC798 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7C5E00092E3D806500AAC798 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7C5F00092E3D806500AAC798 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -253,6 +458,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7C5E000A2E3D806500AAC798 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7C5F000A2E3D806500AAC798 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -265,6 +484,17 @@
 			isa = PBXTargetDependency;
 			target = 7C446A912E3D806500AAC798 /* WhatTheFlight */;
 			targetProxy = 7C446AAB2E3D806500AAC798 /* PBXContainerItemProxy */;
+		};
+		7C5E000C2E3D806500AAC798 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = 7C5E000B2E3D806500AAC798 /* WhatTheFlightWidgets */;
+			targetProxy = 7C5E00012E3D806500AAC798 /* PBXContainerItemProxy */;
+		};
+		7C5F000C2E3D806500AAC798 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7C5F000B2E3D806500AAC798 /* WhatTheFlightTopShelf */;
+			targetProxy = 7C5F00012E3D806500AAC798 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -389,14 +619,21 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=appletvos*]" = "App Icon & Top Shelf Image";
+				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=appletvsimulator*]" = "App Icon & Top Shelf Image";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = WhatTheFlight/WhatTheFlight.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=appletvos*]" = "WhatTheFlight/WhatTheFlight-tvOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=appletvsimulator*]" = "WhatTheFlight/WhatTheFlight-tvOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "WhatTheFlight/WhatTheFlight-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "WhatTheFlight/WhatTheFlight-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/WhatTheFlight-Info.plist";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "WhatTheFlight uses your location to automatically set the geographic area for monitoring aircraft overhead. You can also manually enter coordinates if you prefer.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WhatTheFlight uses your location to automatically set the geographic area for monitoring aircraft overhead. You can also manually enter coordinates if you prefer.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -431,14 +668,21 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=appletvos*]" = "App Icon & Top Shelf Image";
+				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=appletvsimulator*]" = "App Icon & Top Shelf Image";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = WhatTheFlight/WhatTheFlight.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=appletvos*]" = "WhatTheFlight/WhatTheFlight-tvOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=appletvsimulator*]" = "WhatTheFlight/WhatTheFlight-tvOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "WhatTheFlight/WhatTheFlight-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "WhatTheFlight/WhatTheFlight-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/WhatTheFlight-Info.plist";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "WhatTheFlight uses your location to automatically set the geographic area for monitoring aircraft overhead. You can also manually enter coordinates if you prefer.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WhatTheFlight uses your location to automatically set the geographic area for monitoring aircraft overhead. You can also manually enter coordinates if you prefer.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -474,7 +718,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
@@ -498,7 +742,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
@@ -521,7 +765,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
@@ -544,7 +788,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
@@ -560,6 +804,122 @@
 				TEST_TARGET_NAME = WhatTheFlight;
 				TVOS_DEPLOYMENT_TARGET = 18.0;
 				XROS_DEPLOYMENT_TARGET = 2.5;
+			};
+			name = Release;
+		};
+		7C5E000D2E3D806500AAC798 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = WhatTheFlightWidgets/WhatTheFlightWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = RBX6TT8HQV;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WhatTheFlightWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = SargeyWargey.WhatTheFlight.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) WIDGET_EXTENSION";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7C5E000E2E3D806500AAC798 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = WhatTheFlightWidgets/WhatTheFlightWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = RBX6TT8HQV;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WhatTheFlightWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = SargeyWargey.WhatTheFlight.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) WIDGET_EXTENSION";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7C5F000D2E3D806500AAC798 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = WhatTheFlightTopShelf/WhatTheFlightTopShelf.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = RBX6TT8HQV;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WhatTheFlightTopShelf/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = SargeyWargey.WhatTheFlight.TopShelf;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) WIDGET_EXTENSION";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 18.0;
+			};
+			name = Debug;
+		};
+		7C5F000E2E3D806500AAC798 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = WhatTheFlightTopShelf/WhatTheFlightTopShelf.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = RBX6TT8HQV;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WhatTheFlightTopShelf/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = SargeyWargey.WhatTheFlight.TopShelf;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) WIDGET_EXTENSION";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 18.0;
 			};
 			name = Release;
 		};
@@ -598,6 +958,24 @@
 			buildConfigurations = (
 				7C446ABB2E3D806500AAC798 /* Debug */,
 				7C446ABC2E3D806500AAC798 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7C5E000F2E3D806500AAC798 /* Build configuration list for PBXNativeTarget "WhatTheFlightWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C5E000D2E3D806500AAC798 /* Debug */,
+				7C5E000E2E3D806500AAC798 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7C5F000F2E3D806500AAC798 /* Build configuration list for PBXNativeTarget "WhatTheFlightTopShelf" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C5F000D2E3D806500AAC798 /* Debug */,
+				7C5F000E2E3D806500AAC798 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

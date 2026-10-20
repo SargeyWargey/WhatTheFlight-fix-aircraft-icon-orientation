@@ -631,25 +631,17 @@ class MainViewModel: ObservableObject {
             isSearching = true
         }
         
-        do {
-            // Try to find the flight by searching through a broader area
-            // Since we don't have a direct search API, we'll try to fetch flight details
-            // This is a limitation of the FlightRadar24 API - it doesn't have a search endpoint
-            
-            // For now, we'll show a message that the flight wasn't found locally
-            // In a real implementation, you might want to expand the search bounds
-            // or use a different API that supports flight number search
-            
-            await MainActor.run {
-                isSearching = false
-                // Could add a message here about expanding search or trying different terms
-            }
-            
-        } catch {
-            await MainActor.run {
-                isSearching = false
-                setError("Failed to search for flight: \(error.localizedDescription)")
-            }
+        // Try to find the flight by searching through a broader area
+        // Since we don't have a direct search API, we'll try to fetch flight details
+        // This is a limitation of the FlightRadar24 API - it doesn't have a search endpoint
+
+        // For now, we'll show a message that the flight wasn't found locally
+        // In a real implementation, you might want to expand the search bounds
+        // or use a different API that supports flight number search
+
+        await MainActor.run {
+            isSearching = false
+            // Could add a message here about expanding search or trying different terms
         }
     }
     

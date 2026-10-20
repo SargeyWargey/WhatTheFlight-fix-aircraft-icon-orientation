@@ -31,7 +31,7 @@
       "size" : "1024x1024"
     },
     {
-      "filename" : "20.png",
+      "filename" : "40.png",
       "idiom" : "iphone",
       "scale" : "2x",
       "size" : "20x20"
@@ -197,30 +197,6 @@
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"
-    },
-    {
-      "filename" : "plane2 2.png",
-      "idiom" : "tv",
-      "scale" : "1x",
-      "size" : "400x240"
-    },
-    {
-      "filename" : "plane2 3.png",
-      "idiom" : "tv",
-      "scale" : "2x",
-      "size" : "400x240"
-    },
-    {
-      "filename" : "plane2.png",
-      "idiom" : "tv",
-      "scale" : "1x",
-      "size" : "1280x768"
-    },
-    {
-      "filename" : "plane2 1.png",
-      "idiom" : "tv",
-      "scale" : "2x",
-      "size" : "1280x768"
     }
   ],
   "info" : {

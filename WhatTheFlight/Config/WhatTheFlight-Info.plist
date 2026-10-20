@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Merged with the generated Info.plist (GENERATE_INFOPLIST_FILE = YES). -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>WhatTheFlight links your iPhone and Apple TV on your local network so you can send your location and the direction your TV faces.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_wtf-radar._tcp</string>
+		<string>_wtf-radar._udp</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Sky View labels the aircraft you can see through the camera, and the camera helps you aim your iPhone at your TV so WhatTheFlight knows which way the screen faces.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>SargeyWargey.WhatTheFlight</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>whattheflight</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

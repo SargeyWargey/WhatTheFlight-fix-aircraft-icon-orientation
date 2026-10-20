@@ -1686,6 +1686,7 @@ struct NoFlightsView: View {
 
 // MARK: - Preview Support
 
+#if DEBUG
 #Preview("With Flights") {
     FlightDisplayView(viewModel: MainViewModel.preview(withFlights: true))
 }
@@ -1697,6 +1698,7 @@ struct NoFlightsView: View {
 #Preview("Multiple Flights") {
     FlightDisplayView(viewModel: MainViewModel.preview(withMultipleFlights: true))
 }
+#endif
 
 // MARK: - iOS-Specific Components
 
