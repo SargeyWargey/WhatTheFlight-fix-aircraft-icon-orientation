@@ -107,16 +107,32 @@ struct FlightDetailSheet: View {
                     .foregroundStyle(Palette.caption)
                     .padding(.top, 4)
             }
-            if let seen = logbook?.seenBeforeSummary(for: flight) {
-                Label(seen, systemImage: "book.closed.fill")
-                    .font(.mono(11, .semibold))
-                    .foregroundStyle(Palette.route)
+            if let logbook, let airframe = flight.registration ?? flight.hex {
+                seenCounter(airframe: airframe, logbook: logbook)
                     .padding(.top, 6)
             }
         }
         .padding(.top, 8)
     }
 
+    /// "Logbook  4": every time you've seen this airframe; tap for the full log.
+    @ViewBuilder
+    private func seenCounter(airframe: String, logbook: Logbook) -> some View {
+        let count = logbook.summary(airframe: airframe).count
+        if count > 0 {
+            NavigationLink {
+                AirframeHistoryView(airframe: airframe, logbook: logbook, onTrack: { id in
+                    model.focus(on: id)
+                    dismiss()
+                }, isLive: { model.contact(id: $0) != nil })
+            } label: {
+                LogbookCountLabel(count: count)
+            }
+            .buttonStyle(.plain)
+        } else {
+            LogbookCountLabel(count: 0)
+        }
+    }
 
     private func telemetry(_ contact: RadarContact) -> some View {
         let f = contact.flight
@@ -217,6 +233,17 @@ struct FlightDetailSheet: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(RadarButtonStyle(prominent: false))
+            }
+            if !model.contacts.contains(where: { $0.id == contact.id }), contact.flight.canLocate {
+                // Out of the radius (or off the feed's query box): look for it anywhere.
+                NavigationLink {
+                    WhereaboutsView(title: contact.flight.displayIdentifier, registration: contact.flight.registration,
+                                    callsign: contact.flight.callsign, seenFlightID: contact.id, observer: model.observer)
+                } label: {
+                    Label("Where Is It Now?", systemImage: "location.magnifyingglass")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(RadarButtonStyle(prominent: true))
             }
             if let onFindInSky {
                 Button {

@@ -124,13 +124,39 @@ struct SharedRadarStore {
 enum NearbyTraffic {
     static func contacts(around observer: CLLocationCoordinate2D, radiusMiles: Double,
                          feed: FlightFeed = FlightRadarFeed()) async throws -> [RadarContact] {
+        let flights = try await flights(around: observer, radiusMiles: radiusMiles, feed: feed)
+        return contacts(flights, observer: observer, radiusMiles: radiusMiles, at: Date())
+    }
+
+    /// Airborne flights in a box a little wider than the radius, so aircraft about to enter
+    /// it are known too (complication timelines project them forward).
+    static func flights(around observer: CLLocationCoordinate2D, radiusMiles: Double,
+                        feed: FlightFeed = FlightRadarFeed()) async throws -> [Flight] {
         let bounds = GeographicBounds.around(center: observer, radiusMiles: radiusMiles + 3)
-        let now = Date()
-        return try await feed.flights(in: bounds)
-            .filter { !$0.isOnGround }
-            .map { RadarContact(flight: $0, observer: observer, at: now) }
+        return try await feed.flights(in: bounds).filter { !$0.isOnGround }
+    }
+
+    /// In-range contacts at `date`, nearest first, dead-reckoned up to `maxExtrapolation`.
+    static func contacts(_ flights: [Flight], observer: CLLocationCoordinate2D, radiusMiles: Double,
+                         at date: Date, maxExtrapolation: TimeInterval = 90) -> [RadarContact] {
+        flights
+            .map { RadarContact(flight: $0, observer: observer, at: date, maxExtrapolation: maxExtrapolation) }
             .filter { $0.distanceMiles <= radiusMiles }
             .sorted { $0.distanceMiles < $1.distanceMiles }
+    }
+
+    /// One snapshot per `step` for `count` steps from `start`, each aircraft dead-reckoned
+    /// along its track. Complications can only reload a few times an hour, so a timeline of
+    /// these keeps them moving in between. Beyond a few minutes turns make this guesswork,
+    /// so callers keep the horizon short.
+    static func projectedSnapshots(_ flights: [Flight], observer: CLLocationCoordinate2D, radiusMiles: Double,
+                                   placeName: String?, start: Date, count: Int, step: TimeInterval) -> [RadarSnapshot] {
+        (0..<max(0, count)).map { i in
+            let date = start.addingTimeInterval(Double(i) * step)
+            let horizon = date.timeIntervalSince(start) + 90
+            let inRange = contacts(flights, observer: observer, radiusMiles: radiusMiles, at: date, maxExtrapolation: horizon)
+            return RadarSnapshot(date: date, placeName: placeName, radiusMiles: radiusMiles, contacts: inRange)
+        }
     }
 
     /// Fresh traffic around the shared observer, falling back to the app's last snapshot.

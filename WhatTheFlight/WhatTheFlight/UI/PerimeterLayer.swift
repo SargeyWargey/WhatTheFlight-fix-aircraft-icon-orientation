@@ -7,7 +7,7 @@
 //  label tucked between it and the centre of the screen.
 //
 
-#if os(iOS) || os(tvOS)
+#if os(iOS) || os(tvOS) || os(watchOS)
 import SwiftUI
 
 struct PerimeterLayer: View {
@@ -28,6 +28,7 @@ struct PerimeterLayer: View {
                     .opacity(isFocused ? 1 : fade)
                     .position(placement.labelPoint)
                     .animation(.interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.labelPoint)
+                    .transition(edgeTransition(for: placement))
                     .zIndex(3)
 
                 AircraftBlip(
@@ -46,11 +47,20 @@ struct PerimeterLayer: View {
                 .accessibilityLabel(accessibilityText(for: placement.contact))
                 .accessibilityAddTraits(.isButton)
                 .accessibilityHint("Shows this aircraft in the centre")
+                .transition(edgeTransition(for: placement))
                 .zIndex(isFocused ? 2 : 1)
             }
-            .transition(.scale(scale: 0.4).combined(with: .opacity))
         }
-        .animation(.smooth(duration: 0.5), value: placements.map(\.id))
+        .animation(.smooth(duration: 0.9), value: placements.map(\.id))
+    }
+
+    /// Aircraft entering the radius float in from beyond the screen edge at their bearing
+    /// (and drift back out the same way when they leave), rather than growing out of the
+    /// centre: a scale transition on a positioned view is anchored to the whole layer.
+    private func edgeTransition(for placement: PerimeterPlacement) -> AnyTransition {
+        let distance = 110 * scale
+        return .offset(x: -placement.inward.dx * distance, y: -placement.inward.dy * distance)
+            .combined(with: .opacity)
     }
 
     private func accessibilityText(for contact: RadarContact) -> String {

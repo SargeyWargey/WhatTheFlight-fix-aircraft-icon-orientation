@@ -18,8 +18,26 @@ struct TrafficAlert: Identifiable, Equatable, Sendable {
     let title: String
     let body: String
     let symbol: String
+    /// The aircraft as it was when the alert fired, for richer notifications (Apple Watch).
+    var flight: SnapshotFlight? = nil
 
     var id: String { "\(flightID)-\(reason.rawValue)" }
+}
+
+/// How traffic alerts travel as notifications: the iPhone posts them, Apple Watch draws its
+/// own long-look for the category and offers Point & Find from the action.
+enum TrafficNotification {
+    static let category = "wtf.traffic"
+    static let flightIDKey = "flightID"
+    /// A `SnapshotFlight` as a JSON string.
+    static let flightKey = "flight"
+    static let findAction = "wtf.find"
+
+    static func flight(from userInfo: [AnyHashable: Any]) -> SnapshotFlight? {
+        let value = userInfo[flightKey]
+        guard let data = (value as? String).map({ Data($0.utf8) }) ?? (value as? Data) else { return nil }
+        return try? JSONDecoder().decode(SnapshotFlight.self, from: data)
+    }
 }
 
 struct TrafficAlertRules: Equatable, Sendable {
@@ -63,7 +81,8 @@ struct TrafficAlertEngine {
                     flightID: f.id, reason: .overhead,
                     title: "\(name) overhead \(when)",
                     body: "\(what) at \(RadarFormat.wholeNumber(f.altitudeFeet)) ft — look \(GeoMath.cardinal(contact.bearing))\(f.hasRoute ? ", \(f.originIATA ?? "") → \(f.destinationIATA ?? "")" : "").",
-                    symbol: "scope"
+                    symbol: "scope",
+                    flight: SnapshotFlight(contact)
                 ))
             }
         }
@@ -73,7 +92,8 @@ struct TrafficAlertEngine {
                 flightID: f.id, reason: .notable,
                 title: "\(name) \(top.reason)",
                 body: "\(what), \(RadarFormat.miles(contact.distanceMiles)) mi \(GeoMath.cardinal(contact.bearing)) at \(RadarFormat.wholeNumber(f.altitudeFeet)) ft.",
-                symbol: top.tag.symbol
+                symbol: top.tag.symbol,
+                flight: SnapshotFlight(contact)
             ))
         }
         return result
@@ -152,5 +172,45 @@ enum SpokenTraffic {
         var t = text.replacingOccurrences(of: " (", with: ", ").replacingOccurrences(of: ")", with: "")
         for code in ["7500", "7600", "7700"] { t = t.replacingOccurrences(of: code, with: spelled(code)) }
         return t
+    }
+}
+
+// MARK: - Siri
+
+extension SpokenTraffic {
+    /// Point & Find's call-out: "Delta Air Lines flight 570, San Francisco to Atlanta. A Boeing
+    /// 757-200 at 30,000 feet, 8 miles southwest."
+    static func identification(for contact: RadarContact) -> String {
+        let f = contact.flight
+        var first = spokenName(f)
+        if let from = f.origin?.city, let to = f.destination?.city { first += ", \(from) to \(to)" }
+        let altitude = "\(RadarFormat.wholeNumber(Int((Double(f.altitudeFeet) / 100).rounded()) * 100)) feet"
+        let where_ = contact.distanceMiles < 0.5 ? "right overhead" : "\(RadarFormat.miles(contact.distanceMiles)) miles \(direction(contact.bearing))"
+        let what = f.typeName.map { "A \($0)" } ?? (f.kind == .helicopter ? "A helicopter" : "An aircraft")
+        var sentence = "\(first). \(what) at \(altitude), \(where_)."
+        if let notable = f.notable.first { sentence += " It \(speakable(notable.reason))." }
+        return sentence
+    }
+
+    /// "That's Delta Air Lines DL570, a Boeing 757-200 from San Francisco to Atlanta. It's
+    /// 2 miles north at 30,000 feet, and passes closest in about a minute."
+    static func siriAnswer(for contact: RadarContact) -> String {
+        let f = contact.flight
+        let info = f.operatorInfo
+        var who = info.kind == .airline ? "\(info.title) \(f.displayIdentifier)" : "\(f.displayIdentifier), \(info.title.lowercased())"
+        if let type = f.typeName ?? f.typeCode { who += ", a \(type)" }
+        if let from = f.origin?.city ?? f.originIATA, let to = f.destination?.city ?? f.destinationIATA {
+            who += " from \(from) to \(to)"
+        }
+        let direction = ["N": "north", "NE": "northeast", "E": "east", "SE": "southeast",
+                         "S": "south", "SW": "southwest", "W": "west", "NW": "northwest"][GeoMath.cardinal(contact.bearing)] ?? ""
+        let miles = contact.distanceMiles < 0.5 ? "right overhead" : "\(RadarFormat.miles(contact.distanceMiles)) miles \(direction)"
+        var sentence = "That's \(who). It's \(miles) at \(RadarFormat.wholeNumber(f.altitudeFeet)) feet"
+        if contact.isApproaching, contact.closestApproach.secondsFromNow < 900 {
+            let minutes = Int((contact.closestApproach.secondsFromNow / 60).rounded())
+            sentence += minutes < 1 ? ", and it's about to pass closest" : ", and passes closest in about \(minutes) minute\(minutes == 1 ? "" : "s")"
+        }
+        if let notable = f.notable.first { sentence += ". Heads up: it \(notable.reason)" }
+        return sentence + "."
     }
 }

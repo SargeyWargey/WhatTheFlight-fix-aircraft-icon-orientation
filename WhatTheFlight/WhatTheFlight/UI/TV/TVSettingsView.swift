@@ -243,9 +243,9 @@ struct TVRadarSettingsView: View {
                         .foregroundStyle(Palette.value)
                 }
                 VStack(alignment: .leading, spacing: 8) {
-                    step(1, "On iPhone: Settings → Apple TV → Aim at Your Apple TV")
-                    step(2, "Point the iPhone at this TV from your seat")
-                    step(3, "Tap Send — location and direction arrive here")
+                    step(1, "On your iPhone, open the WhatTheFlight app, tap its ⚙︎ Settings button, then Apple TV → Aim at Your Apple TV")
+                    step(2, "Stand directly in front of this TV, facing it, and hold the iPhone up so its camera points at the centre of the screen")
+                    step(3, "Hold it steady and tap Send — your location and the direction the TV faces arrive here")
                 }
             }
             Spacer(minLength: 0)
@@ -418,7 +418,8 @@ struct TVRadarSettingsView: View {
         }
 
         TVSectionHeader(title: "Logbook")
-        TVToggleRow(title: "Keep a logbook", subtitle: "Record every aircraft that comes inside your radius", symbol: "book.closed.fill", isOn: $settings.keepLogbook)
+        TVToggleRow(title: "Keep a logbook", subtitle: "Record every aircraft that comes inside your radius. Kept on this Apple TV only; demo traffic is never logged",
+                    symbol: "book.closed.fill", isOn: $settings.keepLogbook)
     }
 
     /// The nearest real aircraft if there is one, so the sample sounds like the real thing.
@@ -449,6 +450,10 @@ struct TVRadarSettingsView: View {
         TVToggleRow(title: "Compass bezel", symbol: "location.north.line.fill", isOn: $settings.showCompassBezel)
         TVToggleRow(title: "Radar sweep", symbol: "dot.radiowaves.right", isOn: $settings.radarSweep)
         TVToggleRow(title: "Aircraft photos", symbol: "photo.fill", isOn: $settings.showPhotos)
+
+        TVSectionHeader(title: "Screen")
+        TVToggleRow(title: "Keep screen awake", subtitle: "No screen saver or sleep while the radar is open",
+                    symbol: "sun.max.fill", isOn: $settings.keepScreenAwake)
     }
 
     // MARK: About

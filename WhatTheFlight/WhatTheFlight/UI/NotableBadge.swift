@@ -5,7 +5,7 @@
 //  "EMERGENCY 7700", "MILITARY", "RARE · A380" — the capsule that marks notable traffic.
 //
 
-#if os(iOS) || os(tvOS)
+#if os(iOS) || os(tvOS) || os(watchOS)
 import SwiftUI
 
 struct NotableBadge: View {

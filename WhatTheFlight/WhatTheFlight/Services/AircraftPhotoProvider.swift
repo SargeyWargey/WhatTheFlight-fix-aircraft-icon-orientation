@@ -16,13 +16,16 @@ struct AircraftPhoto: Equatable, Sendable {
 
 actor AircraftPhotoProvider {
     static let shared = AircraftPhotoProvider()
+    /// Apple Watch without "Photos on cellular": Wi-Fi or the iPhone's connection only.
+    static let noCellular = AircraftPhotoProvider(allowsCellularAccess: false)
 
     private var cache: [String: AircraftPhoto?] = [:]
     private var inFlight: [String: Task<AircraftPhoto?, Never>] = [:]
     private let session: URLSession
 
-    init() {
+    init(allowsCellularAccess: Bool = true) {
         let config = URLSessionConfiguration.default
+        config.allowsCellularAccess = allowsCellularAccess
         config.timeoutIntervalForRequest = 10
         config.httpAdditionalHeaders = [
             "User-Agent": "WhatTheFlight/2.0 (+https://github.com/SargeyWargey/WhatTheFlight)",
@@ -48,6 +51,13 @@ actor AircraftPhotoProvider {
         inFlight[key] = nil
         cache[key] = result
         return result
+    }
+
+    /// The photo itself, fetched over this provider's session (so the cellular rule applies).
+    func imageData(for photo: AircraftPhoto) async -> Data? {
+        guard let (data, response) = try? await session.data(from: photo.imageURL),
+              (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+        return data
     }
 
     private struct Response: Decodable {

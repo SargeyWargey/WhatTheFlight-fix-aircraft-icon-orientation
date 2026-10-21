@@ -20,6 +20,10 @@
 	<array>
 		<string>location</string>
 	</array>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>SargeyWargey.WhatTheFlight.flight</string>
+	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

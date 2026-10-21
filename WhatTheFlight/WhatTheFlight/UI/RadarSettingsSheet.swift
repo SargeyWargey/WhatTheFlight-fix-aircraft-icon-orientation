@@ -96,7 +96,7 @@ struct RadarSettingsSheet: View {
         } header: {
             Text("Logbook")
         } footer: {
-            Text("Every aircraft that comes inside your radius, with stats and badges. Stored only on this iPhone.")
+            Text("Every aircraft that comes inside your radius, with stats and badges. Stored only on this iPhone. Demo traffic and custom spots aren't logged, only what's around you.")
         }
     }
 

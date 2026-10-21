@@ -85,7 +85,7 @@ struct TVRadarRootView: View {
                     presented = nil
                 }
             case .logbook:
-                TVLogbookView(logbook: logbook, showTopography: settings.showTopography,
+                TVLogbookView(logbook: logbook, showTopography: settings.showTopography, showPhotos: settings.showPhotos,
                               isLive: { model.contact(id: $0) != nil }) { id in
                     withAnimation(.snappy) { model.focus(on: id) }
                     presented = nil
@@ -93,10 +93,14 @@ struct TVRadarRootView: View {
                 .preferredColorScheme(settings.appearance.colorScheme)
             }
         }
+        .environment(\.radarObserver, model.observer)
         .onAppear {
             link.onPayload = { apply($0) }
             model.logbook = logbook
+            // The TV has no GPS, so its set place is where it really is: log from there.
+            model.logsCustomSpot = true
             model.onAlert = announce
+            updateIdleTimer()
             link.start()
             model.start()
             if settings.locationMode == .device { tvLocation.locate() }
@@ -111,7 +115,9 @@ struct TVRadarRootView: View {
                 link.start()
                 model.start()
                 model.refreshNow()
+                updateIdleTimer()
             case .background:
+                UIApplication.shared.isIdleTimerDisabled = false
                 model.stop()
                 link.stop()
                 logbook.flush()
@@ -124,6 +130,7 @@ struct TVRadarRootView: View {
         .onChange(of: settings.locationMode) { _, _ in syncObserver() }
         .onChange(of: settings.customLatitude) { _, _ in syncObserver() }
         .onChange(of: settings.customLongitude) { _, _ in syncObserver() }
+        .onChange(of: settings.keepScreenAwake) { _, _ in updateIdleTimer() }
         .onChange(of: settings.showHelicopters) { _, _ in model.settingsDidChange(refetch: false) }
         .onChange(of: settings.demoTraffic) { _, _ in model.settingsDidChange(refetch: true) }
         .onChange(of: settings.radiusMiles) { _, _ in model.settingsDidChange(refetch: true) }
@@ -139,6 +146,11 @@ struct TVRadarRootView: View {
             guard url.host() == "flight", let id = url.pathComponents.dropFirst().first else { return }
             if model.hasLoadedOnce { showFlight(id) } else { pendingFlight = id }
         }
+    }
+
+    /// "Keep screen awake" holds off the screen saver (and sleep) while the radar is open.
+    private func updateIdleTimer() {
+        UIApplication.shared.isIdleTimerDisabled = settings.keepScreenAwake && scenePhase == .active
     }
 
     /// Banner always; spoken too when "Speak alerts" is on.

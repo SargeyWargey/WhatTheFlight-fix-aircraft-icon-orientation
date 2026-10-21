@@ -302,6 +302,9 @@ struct PerimeterPlacement: Identifiable {
     let labelPoint: CGPoint
     /// Track relative to the top of the screen.
     let screenTrack: Double
+    /// Unit vector from the icon toward the centre of the screen. New aircraft float in
+    /// along it from beyond the edge, and leave the same way.
+    var inward = CGVector(dx: 0, dy: -1)
 
     var id: String { contact.id }
 }
@@ -311,7 +314,7 @@ enum PerimeterPlanner {
     static let labelOffset: CGFloat = 30
     static let maxIcons = 32
 
-    static func plan(contacts: [RadarContact], heading: Double, track: PerimeterTrack, obstacles: [PerimeterTrack.Obstacle], scale: CGFloat = 1) -> [PerimeterPlacement] {
+    static func plan(contacts: [RadarContact], heading: Double, track: PerimeterTrack, obstacles: [PerimeterTrack.Obstacle], scale: CGFloat = 1, maxIcons: Int = maxIcons) -> [PerimeterPlacement] {
         let shown = Array(contacts.prefix(maxIcons))
         let desired = shown.map { track.arcLength(forScreenAngle: $0.bearing - heading) }
         let spread = track.spread(desired, minGap: iconSpacing * scale, obstacles: obstacles)
@@ -320,7 +323,8 @@ enum PerimeterPlanner {
             let point = track.point(at: s)
             let inward = track.inwardDirection(from: point)
             let label = CGPoint(x: point.x + inward.dx * labelOffset, y: point.y + inward.dy * labelOffset)
-            return PerimeterPlacement(contact: contact, point: point, labelPoint: label, screenTrack: contact.flight.track - heading)
+            return PerimeterPlacement(contact: contact, point: point, labelPoint: label,
+                                      screenTrack: contact.flight.track - heading, inward: inward)
         }
     }
 }

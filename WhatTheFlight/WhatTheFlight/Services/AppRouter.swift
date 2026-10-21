@@ -7,6 +7,7 @@
 //
 //    whattheflight://flight/<id>   flight details
 //    whattheflight://sky           Sky View
+//    whattheflight://sky/<id>      Sky View, guiding you to that flight
 //    whattheflight://logbook       the logbook
 //
 
@@ -21,6 +22,8 @@ final class AppRouter {
 
     enum Route: Equatable {
         case flight(String)
+        /// Sky View guiding you to this aircraft.
+        case find(String)
         case sky
         case logbook
         case radar
@@ -35,6 +38,7 @@ final class AppRouter {
         switch route {
         case .flight(let id): return URL(string: "\(scheme)://flight/\(id)")!
         case .sky: return URL(string: "\(scheme)://sky")!
+        case .find(let id): return URL(string: "\(scheme)://sky/\(id)")!
         case .logbook: return URL(string: "\(scheme)://logbook")!
         case .radar, .startSkyWatch: return URL(string: "\(scheme)://radar")!
         }
@@ -47,7 +51,9 @@ final class AppRouter {
         case "flight":
             let id = url.pathComponents.dropFirst().first ?? ""
             pending = id.isEmpty ? .radar : .flight(id)
-        case "sky": pending = .sky
+        case "sky":
+            let id = url.pathComponents.dropFirst().first ?? ""
+            pending = id.isEmpty ? .sky : .find(id)
         case "logbook": pending = .logbook
         default: pending = .radar
         }

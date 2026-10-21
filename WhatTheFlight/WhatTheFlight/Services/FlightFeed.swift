@@ -54,27 +54,56 @@ struct FlightRadarFeed: FlightFeed {
     }
 
     static func url(for bounds: GeographicBounds) -> URL? {
+        url(bounds: bounds.boundsString, extra: [])
+    }
+
+    /// The whole world, narrowed to one airframe (`reg`) or flight (`callsign`). Ground
+    /// traffic is included so a parked aircraft is found at its gate.
+    static func locateURL(registration: String?, callsign: String?) -> URL? {
+        let filter: URLQueryItem
+        if let registration = registration?.trimmingCharacters(in: .whitespaces), !registration.isEmpty {
+            filter = URLQueryItem(name: "reg", value: registration.uppercased())
+        } else if let callsign = callsign?.trimmingCharacters(in: .whitespaces), !callsign.isEmpty {
+            filter = URLQueryItem(name: "callsign", value: callsign.uppercased())
+        } else {
+            return nil
+        }
+        return url(bounds: "90,-90,-180,180", extra: [filter], ground: true)
+    }
+
+    private static func url(bounds: String, extra: [URLQueryItem], ground: Bool = false) -> URL? {
         var components = URLComponents(string: "https://data-cloud.flightradar24.com/zones/fcgi/feed.js")
         components?.queryItems = [
-            URLQueryItem(name: "bounds", value: bounds.boundsString),
+            URLQueryItem(name: "bounds", value: bounds),
             URLQueryItem(name: "faa", value: "1"),
             URLQueryItem(name: "satellite", value: "1"),
             URLQueryItem(name: "mlat", value: "1"),
             URLQueryItem(name: "flarm", value: "1"),
             URLQueryItem(name: "adsb", value: "1"),
-            URLQueryItem(name: "gnd", value: "0"),
+            URLQueryItem(name: "gnd", value: ground ? "1" : "0"),
             URLQueryItem(name: "air", value: "1"),
             URLQueryItem(name: "vehicles", value: "0"),
             URLQueryItem(name: "estimated", value: "1"),
             URLQueryItem(name: "maxage", value: "14400"),
             URLQueryItem(name: "gliders", value: "1"),
             URLQueryItem(name: "stats", value: "0"),
-        ]
+        ] + extra
         return components?.url
     }
 
     func flights(in bounds: GeographicBounds) async throws -> [Flight] {
         guard let url = Self.url(for: bounds) else { throw FeedError.badData }
+        return try await fetch(url)
+    }
+
+    /// Where this airframe (or, without a registration, this callsign) is right now,
+    /// anywhere in the world. `nil` when it isn't transmitting.
+    func locate(registration: String?, callsign: String?) async throws -> Flight? {
+        guard let url = Self.locateURL(registration: registration, callsign: callsign) else { return nil }
+        return try await fetch(url).max { $0.positionTime < $1.positionTime }
+    }
+
+    private func fetch(_ url: URL) async throws -> [Flight] {
         let data: Data
         let response: URLResponse
         do {

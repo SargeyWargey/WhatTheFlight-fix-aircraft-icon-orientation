@@ -3,12 +3,15 @@
 //  WhatTheFlight
 //
 //  Colour palette and type ramp. Light mode follows the mockup (paper, indigo ink, red
-//  arrow); dark mode is a night-radar variant of the same palette.
+//  arrow); dark mode is a night-radar variant of the same palette. Apple Watch is always
+//  dark, so it uses the night-radar values alone.
 //
 
-#if os(iOS) || os(tvOS)
+#if os(iOS) || os(tvOS) || os(watchOS)
 import SwiftUI
+#if !os(watchOS)
 import UIKit
+#endif
 
 enum Palette {
     /// Background paper.
@@ -46,13 +49,20 @@ enum Palette {
         }
     }
 
+    #if os(watchOS)
+    private static func dynamic(light: UInt32, dark: UInt32) -> Color {
+        Color(red: Double((dark >> 16) & 0xFF) / 255, green: Double((dark >> 8) & 0xFF) / 255, blue: Double(dark & 0xFF) / 255)
+    }
+    #else
     private static func dynamic(light: UInt32, dark: UInt32) -> Color {
         Color(UIColor { traits in
             UIColor(rgb: traits.userInterfaceStyle == .dark ? dark : light)
         })
     }
+    #endif
 }
 
+#if !os(watchOS)
 extension UIColor {
     convenience init(rgb: UInt32, alpha: CGFloat = 1) {
         self.init(red: CGFloat((rgb >> 16) & 0xFF) / 255,
@@ -61,6 +71,7 @@ extension UIColor {
                   alpha: alpha)
     }
 }
+#endif
 
 extension Font {
     /// SF Mono, the radar's voice.
@@ -73,7 +84,7 @@ extension View {
     /// Liquid Glass on iOS 26+, frosted material before that.
     @ViewBuilder
     func glassSurface<S: Shape>(in shape: S, interactive: Bool = false) -> some View {
-        if #available(iOS 26.0, tvOS 26.0, *) {
+        if #available(iOS 26.0, tvOS 26.0, watchOS 26.0, *) {
             self.glassEffect(interactive ? .regular.interactive() : .regular, in: shape)
         } else {
             self.background(.ultraThinMaterial, in: shape)

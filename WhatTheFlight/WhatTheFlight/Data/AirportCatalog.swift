@@ -30,6 +30,18 @@ enum AirportCatalog {
         table[iata.uppercased()]
     }
 
+    /// The closest known airport, if one is within `withinMiles` ("on the ground at ATL").
+    static func nearest(to coordinate: CLLocationCoordinate2D, withinMiles: Double) -> Airport? {
+        var best: (airport: Airport, miles: Double)?
+        for airport in table.values {
+            guard let c = airport.coordinate,
+                  abs(c.latitude - coordinate.latitude) < 1, abs(c.longitude - coordinate.longitude) < 1.5 else { continue }
+            let miles = GeoMath.distanceMiles(from: coordinate, to: c)
+            if miles <= withinMiles, miles < (best?.miles ?? .infinity) { best = (airport, miles) }
+        }
+        return best?.airport
+    }
+
     private static let table: [String: Airport] = {
         var result: [String: Airport] = [:]
         for line in generatedRaw.split(separator: "\n") {

@@ -6,7 +6,7 @@
 //  bezel that hugs the screen edge and turns with the phone.
 //
 
-#if os(iOS) || os(tvOS)
+#if os(iOS) || os(tvOS) || os(watchOS)
 import SwiftUI
 
 struct RadarBackdrop: View {

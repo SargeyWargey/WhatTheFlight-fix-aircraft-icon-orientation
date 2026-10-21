@@ -34,6 +34,12 @@ final class RadarSettings {
     }
 
     static let radiusRange: ClosedRange<Double> = 2...100
+    /// The Watch watches a tighter circle: roughly what you can see from where you stand.
+    #if os(watchOS)
+    static let defaultRadius: Double = 10
+    #else
+    static let defaultRadius: Double = 20
+    #endif
     static let refreshRange: ClosedRange<Double> = 5...60
 
     var radiusMiles: Double { didSet { save(radiusMiles, .radius) } }
@@ -82,7 +88,7 @@ final class RadarSettings {
         func value(_ key: Key, _ fallback: String) -> String {
             defaults.string(forKey: key.name) ?? fallback
         }
-        radiusMiles = value(.radius, 20.0).clamped(to: Self.radiusRange)
+        radiusMiles = value(.radius, Self.defaultRadius).clamped(to: Self.radiusRange)
         refreshSeconds = value(.refresh, 10.0).clamped(to: Self.refreshRange)
         locationMode = LocationMode(rawValue: value(.locationMode, "device")) ?? .device
         func optionalDouble(_ key: Key) -> Double? {
@@ -129,7 +135,7 @@ final class RadarSettings {
     }
 
     func resetToDefaults() {
-        radiusMiles = 20
+        radiusMiles = Self.defaultRadius
         refreshSeconds = 10
         appearance = .system
         showHelicopters = true

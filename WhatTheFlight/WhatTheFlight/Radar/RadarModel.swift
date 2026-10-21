@@ -58,8 +58,12 @@ final class RadarModel {
     @ObservationIgnored private var trails: [String: [TrailPoint]] = [:]
     @ObservationIgnored private var alertEngine = TrafficAlertEngine()
 
-    /// Sightings are recorded here (live traffic only, never demo).
+    /// Query at least this far out whatever the radius (Apple Watch's Identify looks 15 mi).
+    @ObservationIgnored var queryRadiusFloor: Double = 0
+    /// Sightings are recorded here: live traffic only, never demo, and never a custom spot
+    /// unless `logsCustomSpot` (the Apple TV, whose "custom" spot is where the TV really is).
     @ObservationIgnored var logbook: Logbook?
+    @ObservationIgnored var logsCustomSpot = false
     /// Called for every new overhead / notable alert. Unset, alerts become notices.
     @ObservationIgnored var onAlert: ((TrafficAlert) -> Void)?
 
@@ -91,6 +95,12 @@ final class RadarModel {
     }
 
     var isDemo: Bool { settings.demoTraffic }
+
+    /// Whether what's on the radar now goes into the logbook. Browsing somewhere else (a
+    /// custom spot on the iPhone) or demo traffic never does: the book is what you saw.
+    var isLogging: Bool {
+        settings.keepLogbook && !settings.demoTraffic && (logsCustomSpot || settings.locationMode == .device)
+    }
 
     // MARK: Lifecycle
 
@@ -155,6 +165,13 @@ final class RadarModel {
         } else if previous == nil {
             refreshNow()
         }
+    }
+
+    /// Moves the dead-reckoning clock without polling: Apple Watch's Always-On display
+    /// redraws about once a minute while the wrist is down and the model is stopped.
+    func advanceClock(to date: Date = Date()) {
+        now = date
+        recompute()
     }
 
     // MARK: Focus actions
@@ -226,7 +243,7 @@ final class RadarModel {
         let feed = useDemo ? demoFeed : liveFeed
         // Query a little beyond the radius so aircraft are known before they enter it,
         // and pinned aircraft can be followed after they leave.
-        let bounds = GeographicBounds.around(center: observer, radiusMiles: settings.radiusMiles * 1.5 + 3)
+        let bounds = GeographicBounds.around(center: observer, radiusMiles: max(settings.radiusMiles * 1.5 + 3, queryRadiusFloor))
         if !hasLoadedOnce { status = .loading }
         do {
             let result = try await feed.flights(in: bounds)
@@ -304,8 +321,9 @@ final class RadarModel {
         outsideContacts = Array(all[split...])
 
         if hasLoadedOnce {
-            if !settings.demoTraffic, settings.keepLogbook {
-                logbook?.record(contacts, at: now, placeName: settings.locationMode == .custom ? settings.customPlaceName : nil)
+            if isLogging {
+                logbook?.record(contacts, at: now, observer: observer,
+                                placeName: settings.locationMode == .custom ? settings.customPlaceName : nil)
             }
             for alert in alertEngine.evaluate(contacts, rules: settings.alertRules, now: now) {
                 if let onAlert { onAlert(alert) } else { post(notice: alert.title, symbol: alert.symbol) }

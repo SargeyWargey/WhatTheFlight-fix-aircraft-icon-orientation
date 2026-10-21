@@ -4,7 +4,9 @@
 //
 //  Hold the phone up to the sky: the camera feed with every aircraft labelled where it
 //  really is, a horizon and compass ticks, and arrows at the edges for anything off-screen.
-//  Aim the reticle at a label to lock on; tap the card for details. Without motion sensors
+//  Aim the reticle at a label to lock on; tap the card for details. Labels are plain text
+//  (no boxes) and the locked aircraft has none at all — its details sit in the card at the
+//  bottom — so nothing covers the real aircraft in the camera view. Without motion sensors
 //  (simulator) the view can be dragged around instead.
 //
 
@@ -58,14 +60,16 @@ struct SkyView: View {
                 SkyGrid(projector: projector)
                     .allowsHitTesting(false)
 
-                ForEach(placedLabels(onScreen, size: geo.size, locked: locked?.id), id: \.target.id) { item in
-                    SkyLabel(contact: item.target.contact, elevation: item.target.elevation,
-                             isLocked: item.target.id == locked?.id, isGoal: item.target.id == request.targetID)
+                ForEach(onScreen) { target in
+                    SkyMarker(isLocked: target.id == locked?.id, notable: target.contact.flight.notable.first?.tag)
+                        .position(target.projection.point)
+                        .allowsHitTesting(false)
+                }
+
+                ForEach(placedLabels(onScreen, size: geo.size, locked: locked), id: \.target.id) { item in
+                    SkyLabel(contact: item.target.contact, isGoal: item.target.id == request.targetID)
                         .position(item.labelCenter)
                         .onTapGesture { onDetail(item.target.id) }
-                    SkyMarker(isLocked: item.target.id == locked?.id, notable: item.target.contact.flight.notable.first?.tag)
-                        .position(item.target.projection.point)
-                        .allowsHitTesting(false)
                 }
 
                 ForEach(placedArrows(targets.filter { !$0.projection.isOnScreen(geo.size, margin: -20) }, size: geo.size), id: \.target.id) { item in
@@ -153,17 +157,20 @@ struct SkyView: View {
         let labelCenter: CGPoint
     }
 
-    /// Puts each label just above its aircraft, nudging upward to avoid overlaps. Nearest
-    /// aircraft (and the locked one) get first pick.
-    private func placedLabels(_ onScreen: [Target], size: CGSize, locked: String?) -> [Placed] {
-        let ordered = onScreen.sorted {
-            if $0.id == locked { return true }
-            if $1.id == locked { return false }
-            return $0.contact.distanceMiles < $1.contact.distanceMiles
-        }
+    /// Puts each label just above its aircraft, nudging upward to avoid overlaps, nearest
+    /// first. The locked aircraft gets no label (the bottom card has its details) and the
+    /// sky around it is kept clear, so you can see the real thing inside the ring.
+    private func placedLabels(_ onScreen: [Target], size: CGSize, locked: Target?) -> [Placed] {
+        let ordered = onScreen
+            .filter { $0.id != locked?.id }
+            .sorted { $0.contact.distanceMiles < $1.contact.distanceMiles }
         var taken: [CGRect] = []
+        if let locked {
+            let p = locked.projection.point
+            taken.append(CGRect(x: p.x - 45, y: p.y - 45, width: 90, height: 90))
+        }
         var result: [Placed] = []
-        let labelSize = CGSize(width: 150, height: 52)
+        let labelSize = CGSize(width: 130, height: 40)
         for target in ordered.prefix(14) {
             var center = CGPoint(x: target.projection.point.x, y: target.projection.point.y - 46)
             for _ in 0..<5 {
@@ -364,35 +371,30 @@ private struct SkyMarker: View {
     }
 }
 
+/// Callsign plus type and distance as shadowed text: readable over sky and cloud without a
+/// box that could hide the aircraft itself.
 private struct SkyLabel: View {
     let contact: RadarContact
-    let elevation: Double
-    let isLocked: Bool
     let isGoal: Bool
 
     var body: some View {
         let f = contact.flight
-        VStack(spacing: 1) {
+        VStack(spacing: 0) {
             HStack(spacing: 4) {
                 if let tag = f.notable.first?.tag {
                     Image(systemName: tag.symbol).font(.system(size: 9, weight: .heavy)).foregroundStyle(Palette.color(for: tag))
                 }
-                Text(f.displayIdentifier).font(.mono(14, .heavy))
+                Text(f.displayIdentifier).font(.mono(13, .heavy))
             }
-            Text("\(f.typeCode ?? "—") · \(RadarFormat.wholeNumber(f.altitudeFeet)) ft")
+            Text("\(f.typeCode ?? "—") · \(RadarFormat.miles(contact.distanceMiles)) mi")
                 .font(.mono(10, .semibold))
-            Text("\(RadarFormat.miles(contact.distanceMiles)) mi · \(Int(elevation.rounded()))° up")
-                .font(.mono(9))
-                .opacity(0.8)
+                .opacity(0.85)
         }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 9)
-        .padding(.vertical, 5)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill((isLocked || isGoal) ? Palette.signal.opacity(0.85) : Color.black.opacity(0.45))
-        )
-        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(.white.opacity(0.25), lineWidth: 0.5))
+        .foregroundStyle(isGoal ? Palette.signal : .white)
+        .shadow(color: .black.opacity(0.85), radius: 1.5)
+        .shadow(color: .black.opacity(0.5), radius: 4)
+        .padding(4)
+        .contentShape(Rectangle())
         .fixedSize()
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
@@ -463,7 +465,11 @@ private struct LockedCard: View {
                                 .foregroundStyle(Palette.route)
                         }
                     }
-                    Text([f.typeName ?? f.typeCode, "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft", "\(RadarFormat.miles(contact.distanceMiles)) mi"].compactMap { $0 }.joined(separator: " · "))
+                    Text([f.typeName ?? f.typeCode, "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft"].compactMap { $0 }.joined(separator: " · "))
+                        .font(.mono(11))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .lineLimit(1)
+                    Text("\(RadarFormat.miles(contact.distanceMiles)) mi away · \(Int(elevation.rounded()))° up · \(RadarFormat.wholeNumber(f.groundSpeedKnots)) kts")
                         .font(.mono(11))
                         .foregroundStyle(.white.opacity(0.85))
                         .lineLimit(1)

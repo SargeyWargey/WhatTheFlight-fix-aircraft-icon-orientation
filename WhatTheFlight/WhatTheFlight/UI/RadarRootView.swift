@@ -27,6 +27,7 @@ struct RadarRootView: View {
 
     private let router = AppRouter.shared
     private let skyWatch = SkyWatch.shared
+    private let watchLink = PhoneWatchLink.shared
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
@@ -71,6 +72,7 @@ struct RadarRootView: View {
         .preferredColorScheme(settings.appearance.colorScheme)
         .sheet(item: $sheet) { sheet in
             sheetContent(sheet)
+                .environment(\.radarObserver, model.observer)
         }
         .fullScreenCover(item: $sky) { request in
             SkyView(model: model, settings: settings, location: location, request: request,
@@ -86,6 +88,8 @@ struct RadarRootView: View {
             skyWatch.location = location
             skyWatch.endOrphanedActivities()
             raise.onRaise = { if sky == nil && sheet == nil { sky = SkyRequest(byRaise: true) } }
+            watchLink.onStartSkyWatch = startSkyWatchForWatch
+            watchLink.activate()
             location.start()
             model.start()
             syncObserver()
@@ -130,6 +134,9 @@ struct RadarRootView: View {
             }
         }
         .onOpenURL { router.open($0) }
+        .onContinueUserActivity(WatchSync.handoffActivityType) { activity in
+            if let id = activity.userInfo?[WatchSync.handoffFlightKey] as? String { router.pending = .flight(id) }
+        }
         .onChange(of: router.pending, initial: true) { _, route in
             guard let route else { return }
             router.pending = nil
@@ -139,7 +146,11 @@ struct RadarRootView: View {
         .onChange(of: settings.locationMode) { _, _ in syncObserver() }
         .onChange(of: settings.customLatitude) { _, _ in syncObserver() }
         .onChange(of: settings.customLongitude) { _, _ in syncObserver() }
-        .onChange(of: settings.showHelicopters) { _, _ in model.settingsDidChange(refetch: false) }
+        .onChange(of: settings.showHelicopters) { _, _ in
+            model.settingsDidChange(refetch: false)
+            sendWatchContext()
+        }
+        .onChange(of: settings.alertRules) { _, _ in sendWatchContext() }
         .onChange(of: settings.demoTraffic) { _, _ in model.settingsDidChange(refetch: true) }
         .onChange(of: settings.keepScreenAwake) { _, _ in updateIdleTimer() }
         .task(id: settings.radiusMiles) {
@@ -266,6 +277,38 @@ struct RadarRootView: View {
         store.observer = observerCoordinate
         store.placeName = placeName
         store.radiusMiles = settings.radiusMiles
+        sendWatchContext()
+    }
+
+    /// Tells Apple Watch where the iPhone is watching (for its "iPhone's spot" mode) and the
+    /// preferences both share. The Watch keeps its own radius.
+    private func sendWatchContext() {
+        // ~100 m is plenty for "what's over my iPhone's spot", and keeps GPS jitter off the link.
+        func rounded(_ value: Double?) -> Double? { value.map { ($0 * 1000).rounded() / 1000 } }
+        let observer = observerCoordinate
+        watchLink.send(WatchSync.Context(
+            latitude: rounded(observer?.latitude), longitude: rounded(observer?.longitude),
+            placeName: settings.locationMode == .custom ? placeName : nil,
+            showHelicopters: settings.showHelicopters,
+            overheadAlerts: settings.overheadAlerts, overheadAlertMiles: settings.overheadAlertMiles,
+            notableAlerts: settings.notableAlerts, sentAt: Date()
+        ))
+    }
+
+    /// "Start Sky Watch" from the Watch. iOS only starts Live Activities from the foreground.
+    private func startSkyWatchForWatch() async -> WatchSync.Reply {
+        if skyWatch.isActive {
+            return WatchSync.Reply(ok: true, message: "Sky Watch is already on.")
+        }
+        guard UIApplication.shared.applicationState == .active else {
+            return WatchSync.Reply(ok: false, message: "Open WhatTheFlight on your iPhone to start Sky Watch. iOS only allows it while the app is open.")
+        }
+        await skyWatch.start(placeName: placeName, radiusMiles: settings.radiusMiles, contacts: model.contacts)
+        guard skyWatch.isActive else {
+            return WatchSync.Reply(ok: false, message: skyWatch.problem ?? "Sky Watch couldn't start.")
+        }
+        model.post(notice: "Sky Watch started from Apple Watch", symbol: "applewatch")
+        return WatchSync.Reply(ok: true, message: "Sky Watch is on. Alerts will tap your wrist while your iPhone is locked.")
     }
 
     /// "Atlanta, GA" for a custom spot, "My location" otherwise.
@@ -289,6 +332,16 @@ struct RadarRootView: View {
                 deferredRoute = route
             } else {
                 sheet = nil
+                model.post(notice: "That aircraft has left the area", symbol: "airplane.departure")
+            }
+        case .find(let id):
+            if model.contact(id: id) != nil {
+                sheet = nil
+                model.focus(on: id)
+                sky = SkyRequest(targetID: id)
+            } else if !model.hasLoadedOnce {
+                deferredRoute = route
+            } else {
                 model.post(notice: "That aircraft has left the area", symbol: "airplane.departure")
             }
         case .sky:
@@ -392,6 +445,7 @@ final class RadarAppDelegate: NSObject, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         UNUserNotificationCenter.current().delegate = notifications
+        UNUserNotificationCenter.current().setNotificationCategories([AlertNotifier.trafficCategory])
         return true
     }
 

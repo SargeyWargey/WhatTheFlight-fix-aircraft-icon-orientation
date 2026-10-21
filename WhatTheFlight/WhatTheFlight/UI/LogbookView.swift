@@ -127,6 +127,12 @@ extension Sighting {
     }
 
     var closestText: String { "\(RadarFormat.miles(closestMiles)) mi" }
+
+    /// "6 min", "Under a min".
+    var inRangeText: String {
+        let minutes = Int((lastSeen.timeIntervalSince(firstSeen) / 60).rounded())
+        return minutes < 1 ? "Under a min" : "\(minutes) min"
+    }
 }
 
 enum LogbookGrouping {
@@ -276,44 +282,192 @@ struct LogbookView: View {
         NavigationLink {
             SightingDetailView(sighting: s, logbook: logbook, onTrack: onTrack, isLive: isLive(s.id))
         } label: {
-            HStack(spacing: 12) {
-                Image(systemName: s.kind == .helicopter ? "fan.fill" : "airplane")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(isLive(s.id) ? Palette.signal : Palette.blip)
-                    .frame(width: 24)
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        Text(s.displayIdentifier)
-                            .font(.mono(15, .bold))
+            SightingRowLabel(sighting: s, isLive: isLive(s.id))
+        }
+        .listRowBackground(Palette.paperShade.opacity(0.25))
+    }
+}
+
+/// One sighting in a list: icon, flight, route, operator and type, closest pass and time.
+struct SightingRowLabel: View {
+    let sighting: Sighting
+    var isLive = false
+    /// Show the date rather than the time (lists that span days).
+    var showsDate = false
+
+    var body: some View {
+        let s = sighting
+        HStack(spacing: 12) {
+            Image(systemName: s.kind == .helicopter ? "fan.fill" : "airplane")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(isLive ? Palette.signal : Palette.blip)
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(s.displayIdentifier)
+                        .font(.mono(15, .bold))
+                        .foregroundStyle(Palette.ink)
+                    if let route = s.routeText {
+                        Text(route)
+                            .font(.mono(11, .semibold))
+                            .foregroundStyle(Palette.route)
+                    }
+                    if let tag = s.tags.first {
+                        Image(systemName: tag.symbol)
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Palette.color(for: tag))
+                    }
+                }
+                Text(s.summaryLine)
+                    .font(.mono(11))
+                    .foregroundStyle(Palette.caption)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 6)
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(s.closestText)
+                    .font(.mono(13, .bold))
+                    .foregroundStyle(Palette.value)
+                Text(showsDate ? s.firstSeen.formatted(.dateTime.month(.abbreviated).day().hour().minute()) : s.firstSeen.formatted(date: .omitted, time: .shortened))
+                    .font(.mono(10))
+                    .foregroundStyle(Palette.caption)
+            }
+        }
+    }
+}
+
+/// "Logbook  4" — the airframe's all-time sighting count, as a capsule on its pages.
+struct LogbookCountLabel: View {
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "book.closed.fill")
+                .font(.system(size: 12, weight: .bold))
+            Text("Logbook")
+                .font(.mono(12, .bold))
+            Text(RadarFormat.wholeNumber(count))
+                .font(.mono(13, .heavy))
+                .monospacedDigit()
+                .foregroundStyle(count > 0 ? Color.white : Palette.caption)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 2)
+                .background(count > 0 ? Palette.route : Palette.ink.opacity(0.1), in: Capsule())
+            if count > 0 {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 9, weight: .bold))
+            }
+        }
+        .foregroundStyle(count > 0 ? Palette.route : Palette.caption)
+        .padding(.leading, 12)
+        .padding(.trailing, 10)
+        .padding(.vertical, 6)
+        .background(Palette.route.opacity(count > 0 ? 0.1 : 0.04), in: Capsule())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Logbook, seen \(count) \(count == 1 ? "time" : "times")")
+    }
+}
+
+/// Every time this airframe came by, newest first, reached from the "Logbook" button on
+/// an aircraft's page: the all-time numbers, then each visit and when it was.
+struct AirframeHistoryView: View {
+    let airframe: String
+    let logbook: Logbook
+    var onTrack: ((String) -> Void)?
+    var isLive: (String) -> Bool = { _ in false }
+
+    var body: some View {
+        let summary = logbook.summary(airframe: airframe)
+        List {
+            if let latest = summary.latest {
+                Section {
+                    VStack(spacing: 6) {
+                        Text(latest.operatorName).radarCaption()
+                        Text(airframe)
+                            .font(.mono(36, .heavy))
                             .foregroundStyle(Palette.ink)
-                        if let route = s.routeText {
-                            Text(route)
-                                .font(.mono(11, .semibold))
-                                .foregroundStyle(Palette.route)
-                        }
-                        if let tag = s.tags.first {
-                            Image(systemName: tag.symbol)
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(Palette.color(for: tag))
+                        if let type = latest.typeName ?? latest.typeCode {
+                            Text(type).font(.mono(13)).foregroundStyle(Palette.caption)
                         }
                     }
-                    Text(s.summaryLine)
-                        .font(.mono(11))
-                        .foregroundStyle(Palette.caption)
-                        .lineLimit(1)
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                        LogbookStatTile(title: "Times seen", value: RadarFormat.wholeNumber(summary.count))
+                        LogbookStatTile(title: "Closest ever", value: summary.closest?.closestText ?? "—")
+                        LogbookStatTile(title: "First seen", value: summary.first?.firstSeen.formatted(date: .abbreviated, time: .omitted) ?? "—")
+                        LogbookStatTile(title: "Last seen", value: summary.latest.map { AirframeHistoryView.when($0.lastSeen) } ?? "—")
+                    }
+                    .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
+                    .listRowBackground(Color.clear)
                 }
-                Spacer(minLength: 6)
-                VStack(alignment: .trailing, spacing: 3) {
-                    Text(s.closestText)
-                        .font(.mono(13, .bold))
-                        .foregroundStyle(Palette.value)
-                    Text(s.firstSeen.formatted(date: .omitted, time: .shortened))
-                        .font(.mono(10))
-                        .foregroundStyle(Palette.caption)
+            }
+            Section("Every sighting · \(summary.count)") {
+                ForEach(summary.history) { s in
+                    NavigationLink {
+                        SightingDetailView(sighting: s, logbook: logbook, onTrack: onTrack, isLive: isLive(s.id))
+                    } label: {
+                        VisitRow(sighting: s, isLive: isLive(s.id))
+                    }
+                    .listRowBackground(Palette.paperShade.opacity(0.25))
                 }
             }
         }
-        .listRowBackground(Palette.paperShade.opacity(0.25))
+        .scrollContentBackground(.hidden)
+        .background(Palette.paper.ignoresSafeArea())
+        .navigationTitle(airframe)
+        .navigationBarTitleDisplayMode(.inline)
+        .fontDesign(.monospaced)
+    }
+
+    /// "Today", "Yesterday", or "Oct 2, 2026".
+    static func when(_ date: Date, calendar: Calendar = .current) -> String {
+        if calendar.isDateInToday(date) { return "Today" }
+        if calendar.isDateInYesterday(date) { return "Yesterday" }
+        return date.formatted(date: .abbreviated, time: .omitted)
+    }
+
+    /// One visit: when, which flight and route, and how close and high it came.
+    private struct VisitRow: View {
+        let sighting: Sighting
+        let isLive: Bool
+
+        var body: some View {
+            let s = sighting
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("\(AirframeHistoryView.when(s.firstSeen)) · \(s.firstSeen.formatted(date: .omitted, time: .shortened))")
+                        .font(.mono(12, .bold))
+                        .foregroundStyle(isLive ? Palette.signal : Palette.value)
+                    Spacer()
+                    if isLive {
+                        Text("ON RADAR").font(.mono(9, .heavy)).tracking(1.5).foregroundStyle(Palette.signal)
+                    }
+                }
+                HStack(spacing: 6) {
+                    Text(s.displayIdentifier)
+                        .font(.mono(15, .heavy))
+                        .foregroundStyle(Palette.ink)
+                    if let route = s.routeText {
+                        Text(route)
+                            .font(.mono(12, .semibold))
+                            .foregroundStyle(Palette.route)
+                    }
+                }
+                HStack(spacing: 8) {
+                    Text("\(s.closestText) closest · \(RadarFormat.wholeNumber(s.altitudeAtClosestFeet)) ft · \(RadarFormat.wholeNumber(s.speedKnots)) kts")
+                    Label(s.inRangeText.lowercased(), systemImage: "clock")
+                        .labelStyle(.titleAndIcon)
+                        .accessibilityLabel("\(s.inRangeText) in range")
+                }
+                .font(.mono(11))
+                .foregroundStyle(Palette.caption)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            }
+            .padding(.vertical, 2)
+        }
     }
 }
 
@@ -399,9 +553,10 @@ struct SightingDetailView: View {
     var onTrack: ((String) -> Void)?
     var isLive = false
 
+    @Environment(\.radarObserver) private var observer
+
     var body: some View {
         let s = sighting
-        let others = logbook.recent.filter { $0.airframe != nil && $0.airframe == s.airframe && $0.id != s.id }
         List {
             Section {
                 VStack(spacing: 6) {
@@ -445,18 +600,39 @@ struct SightingDetailView: View {
                 LabeledContent("ICAO hex", value: s.hex ?? "—")
             }
 
-            if !others.isEmpty {
-                Section("Also seen · \(others.count)") {
-                    ForEach(others.prefix(20)) { o in
-                        LabeledContent(o.firstSeen.formatted(date: .abbreviated, time: .shortened),
-                                       value: [o.displayIdentifier, o.routeText].compactMap { $0 }.joined(separator: " "))
+            if let airframe = s.airframe {
+                let count = logbook.summary(airframe: airframe).count
+                Section {
+                    NavigationLink {
+                        AirframeHistoryView(airframe: airframe, logbook: logbook, onTrack: onTrack, isLive: { _ in false })
+                    } label: {
+                        LabeledContent {
+                            Text(RadarFormat.wholeNumber(count))
+                                .font(.mono(15, .heavy))
+                                .foregroundStyle(Palette.route)
+                        } label: {
+                            Label("Logbook", systemImage: "book.closed.fill")
+                        }
                     }
+                } footer: {
+                    Text("Every time you've seen \(airframe).")
                 }
             }
 
             if isLive, let onTrack {
                 Section {
                     Button("Show on Radar", systemImage: "scope") { onTrack(s.id) }
+                }
+            } else if s.canLocate {
+                Section {
+                    NavigationLink {
+                        WhereaboutsView(title: s.registration ?? s.displayIdentifier, registration: s.registration,
+                                        callsign: s.callsign, seenFlightID: s.id, observer: observer ?? s.observerCoordinate)
+                    } label: {
+                        Label("Where Is It Now?", systemImage: "location.magnifyingglass")
+                    }
+                } footer: {
+                    Text("Finds this aircraft anywhere in the world, even far outside your radius.")
                 }
             }
         }

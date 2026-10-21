@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreLocation
 import Observation
 
 struct Sighting: Codable, Identifiable, Hashable, Sendable {
@@ -29,10 +30,43 @@ struct Sighting: Codable, Identifiable, Hashable, Sendable {
     var speedKnots: Int
     var tags: [NotableTag]
     var placeName: String?
+    /// Where the aircraft was at its closest pass, which way it was heading, and where it was
+    /// watched from. Missing on sightings logged before they were recorded.
+    var closestLatitude: Double?
+    var closestLongitude: Double?
+    var trackAtClosest: Double?
+    var observerLatitude: Double?
+    var observerLongitude: Double?
 
     /// The airframe, for "seen N times" (falls back to the hex code).
     var airframe: String? { registration ?? hex }
     var typeName: String? { AircraftTypeCatalog.name(forTypeCode: typeCode) }
+
+    var closestCoordinate: CLLocationCoordinate2D? {
+        guard let closestLatitude, let closestLongitude else { return nil }
+        return CLLocationCoordinate2D(latitude: closestLatitude, longitude: closestLongitude)
+    }
+
+    var observerCoordinate: CLLocationCoordinate2D? {
+        guard let observerLatitude, let observerLongitude else { return nil }
+        return CLLocationCoordinate2D(latitude: observerLatitude, longitude: observerLongitude)
+    }
+
+    var origin: Airport? { originIATA.flatMap(AirportCatalog.airport(iata:)) }
+    var destination: Airport? { destinationIATA.flatMap(AirportCatalog.airport(iata:)) }
+
+    fileprivate mutating func noteClosest(_ contact: RadarContact, observer: CLLocationCoordinate2D?) {
+        closestMiles = contact.distanceMiles
+        altitudeAtClosestFeet = contact.flight.altitudeFeet
+        speedKnots = contact.flight.groundSpeedKnots
+        closestLatitude = contact.coordinate.latitude
+        closestLongitude = contact.coordinate.longitude
+        trackAtClosest = contact.flight.track
+        if let observer {
+            observerLatitude = observer.latitude
+            observerLongitude = observer.longitude
+        }
+    }
 }
 
 @MainActor
@@ -65,7 +99,7 @@ final class Logbook {
     // MARK: Recording
 
     /// Call with the in-range contacts; cheap enough to run every tick.
-    func record(_ contacts: [RadarContact], at date: Date = Date(), placeName: String? = nil) {
+    func record(_ contacts: [RadarContact], at date: Date = Date(), observer: CLLocationCoordinate2D? = nil, placeName: String? = nil) {
         guard !contacts.isEmpty else { return }
         for contact in contacts {
             let f = contact.flight
@@ -73,9 +107,7 @@ final class Logbook {
                 var s = sightings[i]
                 s.lastSeen = date
                 if contact.distanceMiles < s.closestMiles - 0.05 {
-                    s.closestMiles = contact.distanceMiles
-                    s.altitudeAtClosestFeet = f.altitudeFeet
-                    s.speedKnots = f.groundSpeedKnots
+                    s.noteClosest(contact, observer: observer)
                 }
                 let tags = Set(s.tags).union(f.notable.map(\.tag))
                 if tags.count != s.tags.count { s.tags = tags.sorted() }
@@ -87,14 +119,16 @@ final class Logbook {
                 }
             } else {
                 let info = f.operatorInfo
-                sightings.append(Sighting(
+                var s = Sighting(
                     id: f.id, firstSeen: date, lastSeen: date, displayIdentifier: f.displayIdentifier,
                     callsign: f.callsign, registration: f.registration, hex: f.hex, typeCode: f.typeCode,
                     kind: f.kind, operatorName: info.title, isAirline: info.kind == .airline,
                     originIATA: f.originIATA, destinationIATA: f.destinationIATA,
                     closestMiles: contact.distanceMiles, altitudeAtClosestFeet: f.altitudeFeet,
                     speedKnots: f.groundSpeedKnots, tags: f.notable.map(\.tag), placeName: placeName
-                ))
+                )
+                s.noteClosest(contact, observer: observer)
+                sightings.append(s)
                 index[f.id] = sightings.count - 1
                 isDirty = true
             }
@@ -106,6 +140,17 @@ final class Logbook {
     func timesSeen(airframe: String?) -> Int {
         guard let airframe else { return 0 }
         return sightings.reduce(0) { $0 + ($1.airframe == airframe ? 1 : 0) }
+    }
+
+    /// Every sighting of this airframe, newest first.
+    func history(airframe: String?) -> [Sighting] {
+        guard let airframe else { return [] }
+        return sightings.filter { $0.airframe == airframe }.reversed()
+    }
+
+    /// The all-time numbers behind an aircraft's "Logbook" button and its history screen.
+    func summary(airframe: String?) -> AirframeSummary {
+        AirframeSummary(history: history(airframe: airframe))
     }
 
     func firstSighting(airframe: String?) -> Sighting? {
@@ -175,6 +220,19 @@ final class Logbook {
     private func rebuildIndex() {
         index = Dictionary(sightings.enumerated().map { ($1.id, $0) }, uniquingKeysWith: { _, last in last })
     }
+}
+
+/// Every visit of one airframe, newest first, plus the headline numbers.
+struct AirframeSummary: Equatable, Sendable {
+    let history: [Sighting]
+
+    var count: Int { history.count }
+    var first: Sighting? { history.last }
+    var latest: Sighting? { history.first }
+    var closest: Sighting? { history.min { $0.closestMiles < $1.closestMiles } }
+    var highest: Sighting? { history.max { $0.altitudeAtClosestFeet < $1.altitudeAtClosestFeet } }
+    /// Different flight numbers / callsigns it was flying when you saw it.
+    var flights: Int { Set(history.map(\.displayIdentifier)).count }
 }
 
 // MARK: - Stats
@@ -271,10 +329,10 @@ struct Achievement: Identifiable, Equatable, Sendable {
         return [
             make("first", "First Contact", "Log your first aircraft", "airplane", target: 1, sightings,
                  about: "Every logbook starts somewhere. Any aircraft that comes inside your radius counts."),
-            make("spotter", "Plane Spotter", "Log 50 aircraft", "binoculars.fill", target: 50, sightings,
-                 about: "Fifty sightings. Leave the radar running near a window and they add up fast, especially under a busy approach path."),
-            make("veteran", "Sky Veteran", "Log 500 aircraft", "medal.fill", target: 500, sightings,
-                 about: "Five hundred aircraft in the book. You know the local traffic better than most people on the ground."),
+            make("spotter", "Plane Spotter", "Log 500 aircraft", "binoculars.fill", target: 500, sightings,
+                 about: "Five hundred sightings. Leave the radar running near a window and they add up, especially under a busy approach path."),
+            make("veteran", "Sky Veteran", "Log 5,000 aircraft", "medal.fill", target: 5_000, sightings,
+                 about: "Five thousand aircraft in the book. You know the local traffic better than most people on the ground."),
             make("overhead", "Right Overhead", "Have an aircraft pass within half a mile", "scope", target: 1,
                  matching { $0.closestMiles < 0.5 },
                  about: "About as close as a flight gets: its track passed within half a mile of where you were watching."),

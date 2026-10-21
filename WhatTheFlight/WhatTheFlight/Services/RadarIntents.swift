@@ -33,26 +33,8 @@ struct WhatsOverheadIntent: AppIntent {
                        view: OverheadSnippet(flight: SnapshotFlight(nearest), count: contacts.count))
     }
 
-    /// "That's Delta Air Lines DL570, a Boeing 757-200 from San Francisco to Atlanta. It's
-    /// 2 miles north at 30,000 feet, and passes closest in about a minute."
     static func sentence(for contact: RadarContact) -> String {
-        let f = contact.flight
-        let info = f.operatorInfo
-        var who = info.kind == .airline ? "\(info.title) \(f.displayIdentifier)" : "\(f.displayIdentifier), \(info.title.lowercased())"
-        if let type = f.typeName ?? f.typeCode { who += ", a \(type)" }
-        if let from = f.origin?.city ?? f.originIATA, let to = f.destination?.city ?? f.destinationIATA {
-            who += " from \(from) to \(to)"
-        }
-        let direction = ["N": "north", "NE": "northeast", "E": "east", "SE": "southeast",
-                         "S": "south", "SW": "southwest", "W": "west", "NW": "northwest"][GeoMath.cardinal(contact.bearing)] ?? ""
-        let miles = contact.distanceMiles < 0.5 ? "right overhead" : "\(RadarFormat.miles(contact.distanceMiles)) miles \(direction)"
-        var sentence = "That's \(who). It's \(miles) at \(RadarFormat.wholeNumber(f.altitudeFeet)) feet"
-        if contact.isApproaching, contact.closestApproach.secondsFromNow < 900 {
-            let minutes = Int((contact.closestApproach.secondsFromNow / 60).rounded())
-            sentence += minutes < 1 ? ", and it's about to pass closest" : ", and passes closest in about \(minutes) minute\(minutes == 1 ? "" : "s")"
-        }
-        if let notable = f.notable.first { sentence += ". Heads up: it \(notable.reason)" }
-        return sentence + "."
+        SpokenTraffic.siriAnswer(for: contact)
     }
 }
 

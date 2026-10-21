@@ -22,6 +22,7 @@ let package = Package(
                 "Services/RadarSettings.swift",
                 "Services/SharedRadarStore.swift",
                 "Services/TVLink.swift",
+                "Services/WatchSync.swift",
             ],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),

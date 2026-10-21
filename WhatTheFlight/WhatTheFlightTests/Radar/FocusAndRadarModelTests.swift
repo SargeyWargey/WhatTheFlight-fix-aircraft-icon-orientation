@@ -122,6 +122,39 @@ final class RadarModelTests: XCTestCase {
         XCTAssertEqual(model.contacts.first?.bearing ?? 0, 200, accuracy: 0.5)
     }
 
+    func testLogsLiveTrafficWithWhereItPassed() async {
+        let book = Logbook(fileURL: nil)
+        model.logbook = book
+        settings.locationMode = .device
+        feed.flights = [TestTraffic.flight("near", miles: 2, bearing: 200)]
+        await model.pollOnce()
+        let sighting = try? XCTUnwrap(book.sightings.first)
+        XCTAssertEqual(book.sightings.map(\.id), ["near"])
+        XCTAssertNotNil(sighting?.closestCoordinate)
+        XCTAssertEqual(sighting?.observerCoordinate?.latitude ?? 0, TestTraffic.observer.latitude, accuracy: 1e-9)
+    }
+
+    func testDemoTrafficAndCustomSpotsAreNotLogged() async {
+        let book = Logbook(fileURL: nil)
+        model.logbook = book
+        feed.flights = [TestTraffic.flight("near", miles: 2)]
+
+        settings.locationMode = .device
+        settings.demoTraffic = true
+        await model.pollOnce()
+        XCTAssertTrue(book.isEmpty, "demo traffic")
+
+        settings.demoTraffic = false
+        settings.locationMode = .custom
+        await model.pollOnce()
+        XCTAssertTrue(book.isEmpty, "browsing a custom spot on the iPhone")
+
+        // The Apple TV's set place is where it really is.
+        model.logsCustomSpot = true
+        await model.pollOnce()
+        XCTAssertEqual(book.sightings.count, 1)
+    }
+
     func testQueryBoxReachesBeyondTheRadius() async {
         await model.pollOnce()
         let bounds = try? XCTUnwrap(feed.requests.last)

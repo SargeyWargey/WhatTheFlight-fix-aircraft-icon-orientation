@@ -3,7 +3,8 @@
 //  WhatTheFlight
 //
 //  Delivers traffic alerts as local notifications while the app runs in the background
-//  (during Sky Watch). Tapping one opens that flight.
+//  (during Sky Watch). Tapping one opens that flight. The aircraft rides along in the
+//  payload so Apple Watch can draw its own notification (category `wtf.traffic`).
 //
 
 #if os(iOS)
@@ -11,6 +12,18 @@ import Foundation
 import UserNotifications
 
 enum AlertNotifier {
+    static let category = TrafficNotification.category
+    static let flightKey = TrafficNotification.flightKey
+    static let findAction = TrafficNotification.findAction
+
+    /// Registered at launch. Apple Watch shows the same action under its own notification,
+    /// where it opens Point & Find instead of Sky View.
+    static var trafficCategory: UNNotificationCategory {
+        let find = UNNotificationAction(identifier: findAction, title: "Find in the Sky", options: [.foreground],
+                                        icon: UNNotificationActionIcon(systemImageName: "scope"))
+        return UNNotificationCategory(identifier: category, actions: [find], intentIdentifiers: [])
+    }
+
     static func requestAuthorization() async -> Bool {
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
@@ -27,7 +40,12 @@ enum AlertNotifier {
         content.body = alert.body
         content.sound = .default
         content.threadIdentifier = alert.reason.rawValue
-        content.userInfo = ["flightID": alert.flightID]
+        content.categoryIdentifier = category
+        var info: [String: Any] = [TrafficNotification.flightIDKey: alert.flightID, "reason": alert.reason.rawValue]
+        if let flight = alert.flight, let data = try? JSONEncoder().encode(flight) {
+            info[flightKey] = String(decoding: data, as: UTF8.self)
+        }
+        content.userInfo = info
         content.interruptionLevel = alert.reason == .overhead ? .timeSensitive : .active
         let request = UNNotificationRequest(identifier: alert.id, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
@@ -42,7 +60,8 @@ final class AlertNotificationDelegate: NSObject, UNUserNotificationCenterDelegat
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         guard let id = response.notification.request.content.userInfo["flightID"] as? String else { return }
-        await MainActor.run { AppRouter.shared.pending = .flight(id) }
+        let find = response.actionIdentifier == AlertNotifier.findAction
+        await MainActor.run { AppRouter.shared.pending = find ? .find(id) : .flight(id) }
     }
 }
 #endif

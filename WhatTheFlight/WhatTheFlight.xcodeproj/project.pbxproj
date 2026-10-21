@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		7C5E00032E3D806500AAC798 /* WhatTheFlightWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7C5E00022E3D806500AAC798 /* WhatTheFlightWidgets.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7C5F00032E3D806500AAC798 /* WhatTheFlightTopShelf.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7C5F00022E3D806500AAC798 /* WhatTheFlightTopShelf.appex */; platformFilters = (tvos, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7C6000032E3D806500AAC798 /* WhatTheFlightWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 7C6000022E3D806500AAC798 /* WhatTheFlightWatch.app */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7C6100032E3D806500AAC798 /* WhatTheFlightWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7C6100022E3D806500AAC798 /* WhatTheFlightWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,6 +42,20 @@
 			remoteGlobalIDString = 7C5F000B2E3D806500AAC798;
 			remoteInfo = WhatTheFlightTopShelf;
 		};
+		7C6000012E3D806500AAC798 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7C446A8A2E3D806400AAC798 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7C60000B2E3D806500AAC798;
+			remoteInfo = WhatTheFlightWatch;
+		};
+		7C6100012E3D806500AAC798 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7C446A8A2E3D806400AAC798 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7C61000B2E3D806500AAC798;
+			remoteInfo = WhatTheFlightWatchWidgets;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -55,6 +71,28 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7C6000042E3D806500AAC798 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				7C6000032E3D806500AAC798 /* WhatTheFlightWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7C6000102E3D806500AAC798 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				7C6100032E3D806500AAC798 /* WhatTheFlightWatchWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -63,6 +101,8 @@
 		7C446AAA2E3D806500AAC798 /* WhatTheFlightUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WhatTheFlightUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C5E00022E3D806500AAC798 /* WhatTheFlightWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WhatTheFlightWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C5F00022E3D806500AAC798 /* WhatTheFlightTopShelf.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WhatTheFlightTopShelf.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C6000022E3D806500AAC798 /* WhatTheFlightWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhatTheFlightWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C6100022E3D806500AAC798 /* WhatTheFlightWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WhatTheFlightWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -125,6 +165,68 @@
 			);
 			target = 7C5F000B2E3D806500AAC798 /* WhatTheFlightTopShelf */;
 		};
+		7C6000072E3D806500AAC798 /* Exceptions for "WhatTheFlight" folder in "WhatTheFlightWatch" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Core/Flight.swift,
+				Core/FlightFeedParser.swift,
+				Core/FocusPolicy.swift,
+				Core/GeoMath.swift,
+				Core/NotableTraffic.swift,
+				Core/OperatorInfo.swift,
+				Core/PerimeterTrack.swift,
+				Core/RouteProgress.swift,
+				Core/SkyProjector.swift,
+				Core/WristPointing.swift,
+				Data/AircraftTypeCatalog.swift,
+				Data/AirlineCatalog.swift,
+				"Data/AirlineCatalog+Data.swift",
+				Data/AirportCatalog.swift,
+				"Data/AirportCatalog+Data.swift",
+				Data/RegistrationCountry.swift,
+				Models/GeographicBounds.swift,
+				Radar/Logbook.swift,
+				Radar/RadarModel.swift,
+				Radar/TrafficAlerts.swift,
+				Services/AircraftPhotoProvider.swift,
+				Services/FlightFeed.swift,
+				Services/RadarSettings.swift,
+				Services/SharedRadarStore.swift,
+				Services/WatchSync.swift,
+				UI/NotableBadge.swift,
+				UI/PerimeterLayer.swift,
+				UI/RadarBackdrop.swift,
+				UI/Theme.swift,
+			);
+			target = 7C60000B2E3D806500AAC798 /* WhatTheFlightWatch */;
+		};
+		7C6100062E3D806500AAC798 /* Exceptions for "WhatTheFlightWatchWidgets" folder in "WhatTheFlightWatchWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 7C61000B2E3D806500AAC798 /* WhatTheFlightWatchWidgets */;
+		};
+		7C6100072E3D806500AAC798 /* Exceptions for "WhatTheFlight" folder in "WhatTheFlightWatchWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Core/Flight.swift,
+				Core/FlightFeedParser.swift,
+				Core/GeoMath.swift,
+				Core/NotableTraffic.swift,
+				Core/OperatorInfo.swift,
+				Data/AircraftTypeCatalog.swift,
+				Data/AirlineCatalog.swift,
+				"Data/AirlineCatalog+Data.swift",
+				Data/AirportCatalog.swift,
+				"Data/AirportCatalog+Data.swift",
+				Data/RegistrationCountry.swift,
+				Models/GeographicBounds.swift,
+				Services/FlightFeed.swift,
+				Services/SharedRadarStore.swift,
+			);
+			target = 7C61000B2E3D806500AAC798 /* WhatTheFlightWatchWidgets */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -132,6 +234,8 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				7C5E00072E3D806500AAC798 /* Exceptions for "WhatTheFlight" folder in "WhatTheFlightWidgets" target */,
+				7C6000072E3D806500AAC798 /* Exceptions for "WhatTheFlight" folder in "WhatTheFlightWatch" target */,
+				7C6100072E3D806500AAC798 /* Exceptions for "WhatTheFlight" folder in "WhatTheFlightWatchWidgets" target */,
 				7C5F00072E3D806500AAC798 /* Exceptions for "WhatTheFlight" folder in "WhatTheFlightTopShelf" target */,
 			);
 			path = WhatTheFlight;
@@ -161,6 +265,19 @@
 				7C5F00062E3D806500AAC798 /* Exceptions for "WhatTheFlightTopShelf" folder in "WhatTheFlightTopShelf" target */,
 			);
 			path = WhatTheFlightTopShelf;
+			sourceTree = "<group>";
+		};
+		7C6000052E3D806500AAC798 /* WhatTheFlightWatch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = WhatTheFlightWatch;
+			sourceTree = "<group>";
+		};
+		7C6100052E3D806500AAC798 /* WhatTheFlightWatchWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7C6100062E3D806500AAC798 /* Exceptions for "WhatTheFlightWatchWidgets" folder in "WhatTheFlightWatchWidgets" target */,
+			);
+			path = WhatTheFlightWatchWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -201,6 +318,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7C6000082E3D806500AAC798 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7C6100082E3D806500AAC798 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -209,6 +340,8 @@
 			children = (
 				7C446A942E3D806500AAC798 /* WhatTheFlight */,
 				7C5E00052E3D806500AAC798 /* WhatTheFlightWidgets */,
+				7C6000052E3D806500AAC798 /* WhatTheFlightWatch */,
+				7C6100052E3D806500AAC798 /* WhatTheFlightWatchWidgets */,
 				7C5F00052E3D806500AAC798 /* WhatTheFlightTopShelf */,
 				7C446AA32E3D806500AAC798 /* WhatTheFlightTests */,
 				7C446AAD2E3D806500AAC798 /* WhatTheFlightUITests */,
@@ -223,6 +356,8 @@
 				7C446AA02E3D806500AAC798 /* WhatTheFlightTests.xctest */,
 				7C446AAA2E3D806500AAC798 /* WhatTheFlightUITests.xctest */,
 				7C5F00022E3D806500AAC798 /* WhatTheFlightTopShelf.appex */,
+				7C6000022E3D806500AAC798 /* WhatTheFlightWatch.app */,
+				7C6100022E3D806500AAC798 /* WhatTheFlightWatchWidgets.appex */,
 				7C5E00022E3D806500AAC798 /* WhatTheFlightWidgets.appex */,
 			);
 			name = Products;
@@ -238,12 +373,14 @@
 				7C446A8E2E3D806500AAC798 /* Sources */,
 				7C446A8F2E3D806500AAC798 /* Frameworks */,
 				7C446A902E3D806500AAC798 /* Resources */,
+				7C6000042E3D806500AAC798 /* Embed Watch Content */,
 				7C5E00042E3D806500AAC798 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				7C5F000C2E3D806500AAC798 /* PBXTargetDependency */,
+				7C60000C2E3D806500AAC798 /* PBXTargetDependency */,
 				7C5E000C2E3D806500AAC798 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
@@ -346,6 +483,52 @@
 			productReference = 7C5F00022E3D806500AAC798 /* WhatTheFlightTopShelf.appex */;
 			productType = "com.apple.product-type.tv-app-extension";
 		};
+		7C60000B2E3D806500AAC798 /* WhatTheFlightWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C60000F2E3D806500AAC798 /* Build configuration list for PBXNativeTarget "WhatTheFlightWatch" */;
+			buildPhases = (
+				7C60000A2E3D806500AAC798 /* Sources */,
+				7C6000082E3D806500AAC798 /* Frameworks */,
+				7C6000092E3D806500AAC798 /* Resources */,
+				7C6000102E3D806500AAC798 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7C61000C2E3D806500AAC798 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7C6000052E3D806500AAC798 /* WhatTheFlightWatch */,
+			);
+			name = WhatTheFlightWatch;
+			packageProductDependencies = (
+			);
+			productName = WhatTheFlightWatch;
+			productReference = 7C6000022E3D806500AAC798 /* WhatTheFlightWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		7C61000B2E3D806500AAC798 /* WhatTheFlightWatchWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C61000F2E3D806500AAC798 /* Build configuration list for PBXNativeTarget "WhatTheFlightWatchWidgets" */;
+			buildPhases = (
+				7C61000A2E3D806500AAC798 /* Sources */,
+				7C6100082E3D806500AAC798 /* Frameworks */,
+				7C6100092E3D806500AAC798 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7C6100052E3D806500AAC798 /* WhatTheFlightWatchWidgets */,
+			);
+			name = WhatTheFlightWatchWidgets;
+			packageProductDependencies = (
+			);
+			productName = WhatTheFlightWatchWidgets;
+			productReference = 7C6100022E3D806500AAC798 /* WhatTheFlightWatchWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -373,6 +556,12 @@
 					7C5F000B2E3D806500AAC798 = {
 						CreatedOnToolsVersion = 27.1;
 					};
+					7C60000B2E3D806500AAC798 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					7C61000B2E3D806500AAC798 = {
+						CreatedOnToolsVersion = 27.1;
+					};
 				};
 			};
 			buildConfigurationList = 7C446A8D2E3D806400AAC798 /* Build configuration list for PBXProject "WhatTheFlight" */;
@@ -393,6 +582,8 @@
 				7C446A9F2E3D806500AAC798 /* WhatTheFlightTests */,
 				7C446AA92E3D806500AAC798 /* WhatTheFlightUITests */,
 				7C5E000B2E3D806500AAC798 /* WhatTheFlightWidgets */,
+				7C60000B2E3D806500AAC798 /* WhatTheFlightWatch */,
+				7C61000B2E3D806500AAC798 /* WhatTheFlightWatchWidgets */,
 				7C5F000B2E3D806500AAC798 /* WhatTheFlightTopShelf */,
 			);
 		};
@@ -428,6 +619,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7C5F00092E3D806500AAC798 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7C6000092E3D806500AAC798 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7C6100092E3D806500AAC798 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -472,6 +677,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7C60000A2E3D806500AAC798 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7C61000A2E3D806500AAC798 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -495,6 +714,17 @@
 			isa = PBXTargetDependency;
 			target = 7C5F000B2E3D806500AAC798 /* WhatTheFlightTopShelf */;
 			targetProxy = 7C5F00012E3D806500AAC798 /* PBXContainerItemProxy */;
+		};
+		7C60000C2E3D806500AAC798 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = 7C60000B2E3D806500AAC798 /* WhatTheFlightWatch */;
+			targetProxy = 7C6000012E3D806500AAC798 /* PBXContainerItemProxy */;
+		};
+		7C61000C2E3D806500AAC798 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7C61000B2E3D806500AAC798 /* WhatTheFlightWatchWidgets */;
+			targetProxy = 7C6100012E3D806500AAC798 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -628,9 +858,10 @@
 				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "WhatTheFlight/WhatTheFlight-iOS.entitlements";
 				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "WhatTheFlight/WhatTheFlight-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_ONLY_ACTIVE_RESOURCES = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/WhatTheFlight-Info.plist";
@@ -677,9 +908,10 @@
 				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = "WhatTheFlight/WhatTheFlight-iOS.entitlements";
 				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "WhatTheFlight/WhatTheFlight-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_ONLY_ACTIVE_RESOURCES = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/WhatTheFlight-Info.plist";
@@ -718,7 +950,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
@@ -742,7 +974,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
@@ -765,7 +997,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
@@ -788,7 +1020,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
@@ -812,7 +1044,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = WhatTheFlightWidgets/WhatTheFlightWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhatTheFlightWidgets/Info.plist;
@@ -841,7 +1073,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = WhatTheFlightWidgets/WhatTheFlightWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhatTheFlightWidgets/Info.plist;
@@ -870,7 +1102,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = WhatTheFlightTopShelf/WhatTheFlightTopShelf.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhatTheFlightTopShelf/Info.plist;
@@ -899,7 +1131,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = WhatTheFlightTopShelf/WhatTheFlightTopShelf.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhatTheFlightTopShelf/Info.plist;
@@ -920,6 +1152,130 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 18.0;
+			};
+			name = Release;
+		};
+		7C60000D2E3D806500AAC798 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = WhatTheFlightWatch/WhatTheFlightWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = RBX6TT8HQV;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WhatTheFlight uses your location to show the aircraft flying over you.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Point & Find uses your Watch's motion sensors to tell which way your arm is pointing, so it can guide you to an aircraft.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = SargeyWargey.WhatTheFlight;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = SargeyWargey.WhatTheFlight.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+			};
+			name = Debug;
+		};
+		7C60000E2E3D806500AAC798 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = WhatTheFlightWatch/WhatTheFlightWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = RBX6TT8HQV;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WhatTheFlight uses your location to show the aircraft flying over you.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Point & Find uses your Watch's motion sensors to tell which way your arm is pointing, so it can guide you to an aircraft.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = SargeyWargey.WhatTheFlight;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = SargeyWargey.WhatTheFlight.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+			};
+			name = Release;
+		};
+		7C61000D2E3D806500AAC798 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = WhatTheFlightWatchWidgets/WhatTheFlightWatchWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = RBX6TT8HQV;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WhatTheFlightWatchWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = SargeyWargey.WhatTheFlight.watchkitapp.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) WIDGET_EXTENSION";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+			};
+			name = Debug;
+		};
+		7C61000E2E3D806500AAC798 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = WhatTheFlightWatchWidgets/WhatTheFlightWatchWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = RBX6TT8HQV;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WhatTheFlightWatchWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = SargeyWargey.WhatTheFlight.watchkitapp.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) WIDGET_EXTENSION";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
 			};
 			name = Release;
 		};
@@ -976,6 +1332,24 @@
 			buildConfigurations = (
 				7C5F000D2E3D806500AAC798 /* Debug */,
 				7C5F000E2E3D806500AAC798 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7C60000F2E3D806500AAC798 /* Build configuration list for PBXNativeTarget "WhatTheFlightWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C60000D2E3D806500AAC798 /* Debug */,
+				7C60000E2E3D806500AAC798 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7C61000F2E3D806500AAC798 /* Build configuration list for PBXNativeTarget "WhatTheFlightWatchWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C61000D2E3D806500AAC798 /* Debug */,
+				7C61000E2E3D806500AAC798 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -100,9 +100,10 @@ struct RadarContact: Identifiable, Equatable, Sendable {
     /// Moving toward the observer (the closest point is still ahead).
     var isApproaching: Bool { closestApproach.isAhead }
 
-    init(flight: Flight, observer: CLLocationCoordinate2D, at date: Date) {
+    /// `maxExtrapolation` caps dead reckoning; complication timelines project further ahead.
+    init(flight: Flight, observer: CLLocationCoordinate2D, at date: Date, maxExtrapolation: TimeInterval = 90) {
         self.flight = flight
-        let position = flight.predictedCoordinate(at: date)
+        let position = flight.predictedCoordinate(at: date, maxExtrapolation: maxExtrapolation)
         self.coordinate = position
         self.distanceMiles = GeoMath.distanceMiles(from: observer, to: position)
         self.bearing = GeoMath.bearing(from: observer, to: position)

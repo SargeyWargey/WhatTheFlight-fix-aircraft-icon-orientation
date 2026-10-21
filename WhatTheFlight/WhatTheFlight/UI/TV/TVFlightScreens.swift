@@ -17,6 +17,8 @@ struct TVFlightDetailView: View {
 
     @State private var lastContact: RadarContact?
     @State private var photo: AircraftPhoto?
+    @State private var showsLog = false
+    @State private var showWhereabouts = false
     /// `-wtf.debugMapMode route` opens on the full route (screenshots).
     @State private var mapMode = DetailMap.Mode(rawValue: UserDefaults.standard.string(forKey: "wtf.debugMapMode") ?? "") ?? .nearby
 
@@ -42,95 +44,147 @@ struct TVFlightDetailView: View {
             guard settings.showPhotos, let flight = contact?.flight else { return }
             photo = await AircraftPhotoProvider.shared.photo(registration: flight.registration, hex: flight.hex)
         }
-    }
-
-    private func content(_ contact: RadarContact) -> some View {
-        let f = contact.flight
-        return HStack(alignment: .top, spacing: 70) {
-            VStack(alignment: .leading, spacing: 18) {
-                Text(f.operatorInfo.headline)
-                    .radarCaptionTV()
-                if let subtitle = f.operatorInfo.subtitle, f.operatorInfo.kind == .airline {
-                    Text(subtitle)
-                        .font(.mono(20))
-                        .foregroundStyle(Palette.caption)
+        .fullScreenCover(isPresented: $showsLog) {
+            if let logbook, let airframe = contact?.flight.registration ?? contact?.flight.hex {
+                TVAirframeHistoryView(airframe: airframe, logbook: logbook, showTopography: settings.showTopography,
+                                      showPhotos: settings.showPhotos, isLive: { model.contact(id: $0) != nil }) { id in
+                    showsLog = false
+                    model.focus(on: id)
+                    onClose()
                 }
-                NotableBadgeRow(flight: f, scale: 1.8)
-                HStack(spacing: 18) {
-                    if model.focus.focusedID == f.id && model.focus.isPinned {
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 34, weight: .bold))
-                            .foregroundStyle(Palette.signal)
-                    }
-                    Text(f.displayIdentifier)
-                        .font(.mono(96, .heavy))
-                        .foregroundStyle(Palette.ink)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                }
-                if f.hasRoute {
-                    RouteLine(flight: f)
-                        .scaleEffect(1.8, anchor: .leading)
-                        .frame(height: 100, alignment: .leading)
-                    if let progress = RouteProgress(flight: f, position: contact.coordinate) {
-                        RouteProgressView(progress: progress, scale: 1.8)
-                    }
-                }
-                if let name = f.typeName ?? f.typeCode {
-                    Text(name)
-                        .font(.mono(28, .medium))
-                        .foregroundStyle(Palette.caption)
-                }
-                photoView
-                    .frame(width: 700, height: 400)
-                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-                if let photo {
-                    Text("Photo © \(photo.photographer ?? "Unknown") · Planespotters.net")
-                        .font(.mono(18))
-                        .foregroundStyle(Palette.caption)
-                }
-            }
-            .frame(width: 700)
-
-            VStack(alignment: .leading, spacing: 26) {
-                stats(contact)
-                if let observer = model.observer {
-                    DetailMap(contact: contact, observer: observer, radiusMiles: settings.radiusMiles,
-                              trail: model.trail(for: contact.id).map(\.coordinate), mode: mapMode,
-                              height: 300, interactive: false)
-                }
-                if let seen = logbook?.seenBeforeSummary(for: f) {
-                    Label(seen, systemImage: "book.closed.fill")
-                        .font(.mono(22, .semibold))
-                        .foregroundStyle(Palette.route)
-                }
-                HStack(spacing: 24) {
-                    if model.focus.focusedID == f.id {
-                        Button(model.focus.isPinned ? "Unpin" : "Pin") {
-                            withAnimation(.snappy) { model.togglePin() }
-                        }
-                        .buttonStyle(TVPillButtonStyle(prominent: true))
-                    } else {
-                        Button("Show on Radar") {
-                            model.focus(on: f.id)
-                            onClose()
-                        }
-                        .buttonStyle(TVPillButtonStyle(prominent: true))
-                    }
-                    if DetailMap.canShowRoute(f) {
-                        Button(mapMode == .route ? "Nearby Map" : "Full Route") {
-                            withAnimation(.smooth) { mapMode = mapMode == .route ? .nearby : .route }
-                        }
-                        .buttonStyle(TVPillButtonStyle(prominent: false))
-                    }
-                    Button("Close", action: onClose)
-                        .buttonStyle(TVPillButtonStyle(prominent: false))
-                }
-                .focusSection()
+                .environment(\.radarObserver, model.observer)
+                .preferredColorScheme(settings.appearance.colorScheme)
             }
         }
+        .fullScreenCover(isPresented: $showWhereabouts) {
+            if let f = contact?.flight {
+                TVWhereaboutsView(title: f.displayIdentifier, registration: f.registration, callsign: f.callsign,
+                                  seenFlightID: f.id, observer: model.observer, showTopography: settings.showTopography)
+                    .preferredColorScheme(settings.appearance.colorScheme)
+            }
+        }
+    }
+
+    /// Two columns (who and what on the left, live numbers and map on the right) with every
+    /// action in one full-width row along the bottom, so no button label gets squeezed.
+    private func content(_ contact: RadarContact) -> some View {
+        VStack(alignment: .leading, spacing: 36) {
+            HStack(alignment: .top, spacing: 70) {
+                identity(contact)
+                    .frame(width: 700, alignment: .leading)
+                VStack(alignment: .leading, spacing: 26) {
+                    stats(contact)
+                    if let observer = model.observer {
+                        DetailMap(contact: contact, observer: observer, radiusMiles: settings.radiusMiles,
+                                  trail: model.trail(for: contact.id).map(\.coordinate), mode: mapMode,
+                                  height: 300, interactive: false)
+                    }
+                }
+            }
+            .frame(maxHeight: .infinity, alignment: .top)
+
+            actions(contact)
+        }
         .padding(.horizontal, 90)
-        .padding(.vertical, 60)
+        .padding(.top, 50)
+        .padding(.bottom, 40)
+    }
+
+    private func identity(_ contact: RadarContact) -> some View {
+        let f = contact.flight
+        return VStack(alignment: .leading, spacing: 16) {
+            Text(f.operatorInfo.headline)
+                .radarCaptionTV()
+            if let subtitle = f.operatorInfo.subtitle, f.operatorInfo.kind == .airline {
+                Text(subtitle)
+                    .font(.mono(20))
+                    .foregroundStyle(Palette.caption)
+            }
+            NotableBadgeRow(flight: f, scale: 1.8)
+            HStack(spacing: 18) {
+                if model.focus.focusedID == f.id && model.focus.isPinned {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(Palette.signal)
+                }
+                Text(f.displayIdentifier)
+                    .font(.mono(96, .heavy))
+                    .foregroundStyle(Palette.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+            }
+            if f.hasRoute {
+                RouteLine(flight: f)
+                    .scaleEffect(1.8, anchor: .leading)
+                    .frame(height: 100, alignment: .leading)
+                if let progress = RouteProgress(flight: f, position: contact.coordinate) {
+                    RouteProgressView(progress: progress, scale: 1.8)
+                }
+            }
+            if let name = f.typeName ?? f.typeCode {
+                Text(name)
+                    .font(.mono(28, .medium))
+                    .foregroundStyle(Palette.caption)
+            }
+            // The photo takes whatever height is left, so the button row always fits.
+            photoView
+                .frame(width: 700)
+                .frame(minHeight: 180, maxHeight: 400)
+                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                .layoutPriority(-1)
+            if let photo {
+                Text("Photo © \(photo.photographer ?? "Unknown") · Planespotters.net")
+                    .font(.mono(18))
+                    .foregroundStyle(Palette.caption)
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    private func actions(_ contact: RadarContact) -> some View {
+        let f = contact.flight
+        return HStack(spacing: 24) {
+            if model.focus.focusedID == f.id {
+                pill(model.focus.isPinned ? "Unpin" : "Pin", prominent: true) {
+                    withAnimation(.snappy) { model.togglePin() }
+                }
+            } else {
+                pill("Show on Radar", prominent: true) {
+                    model.focus(on: f.id)
+                    onClose()
+                }
+            }
+            if !model.contacts.contains(where: { $0.id == f.id }), f.canLocate {
+                pill("Where Is It Now?") { showWhereabouts = true }
+            }
+            if DetailMap.canShowRoute(f) {
+                pill(mapMode == .route ? "Nearby Map" : "Full Route") {
+                    withAnimation(.smooth) { mapMode = mapMode == .route ? .nearby : .route }
+                }
+            }
+            if let logbook, let airframe = f.registration ?? f.hex {
+                // Every time you've seen this airframe; click for the full log.
+                let count = logbook.summary(airframe: airframe).count
+                Button { showsLog = true } label: {
+                    TVLogbookCountLabel(count: count)
+                        .fixedSize()
+                }
+                .buttonStyle(TVPillButtonStyle(prominent: false))
+                .disabled(count == 0)
+            }
+            Spacer(minLength: 0)
+            pill("Close", action: onClose)
+        }
+        .focusSection()
+    }
+
+    private func pill(_ title: String, prominent: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .lineLimit(1)
+                .fixedSize()
+        }
+        .buttonStyle(TVPillButtonStyle(prominent: prominent))
     }
 
     @ViewBuilder

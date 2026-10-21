@@ -3,7 +3,8 @@
 //  WhatTheFlightWidgets
 //
 //  Sky Watch on the Lock Screen and in the Dynamic Island: the next aircraft heading your
-//  way, a live countdown to its closest pass, and a Stop button.
+//  way, a live countdown to its closest pass, and a Stop button. Apple Watch shows it in the
+//  Smart Stack using the compact `.small` layout.
 //
 
 import ActivityKit
@@ -14,7 +15,7 @@ import AppIntents
 struct SkyWatchLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: SkyWatchAttributes.self) { context in
-            SkyWatchLockScreenView(context: context)
+            SkyWatchActivityView(context: context)
                 .activityBackgroundTint(Palette.paper.opacity(0.92))
                 .activitySystemActionForegroundColor(Palette.ink)
                 .widgetURL(url(context.state))
@@ -63,6 +64,7 @@ struct SkyWatchLiveActivity: Widget {
             }
             .widgetURL(url(context.state))
         }
+        .supplementalActivityFamilies([.small])
     }
 
     private func url(_ state: SkyWatchAttributes.ContentState) -> URL {
@@ -88,6 +90,66 @@ private struct PassCountdown: View {
         } else {
             Label("Clear skies — still watching", systemImage: "sun.haze")
         }
+    }
+}
+
+/// The Lock Screen banner, or the compact layout on Apple Watch.
+private struct SkyWatchActivityView: View {
+    let context: ActivityViewContext<SkyWatchAttributes>
+    @Environment(\.activityFamily) private var family
+
+    var body: some View {
+        if family == .small {
+            SkyWatchSmallView(context: context)
+        } else {
+            SkyWatchLockScreenView(context: context)
+        }
+    }
+}
+
+/// Apple Watch Smart Stack: which aircraft, where to look, and the countdown.
+private struct SkyWatchSmallView: View {
+    let context: ActivityViewContext<SkyWatchAttributes>
+
+    var body: some View {
+        let state = context.state
+        VStack(alignment: .leading, spacing: 3) {
+            if let f = state.flight {
+                HStack(spacing: 5) {
+                    Image(systemName: "location.north.fill")
+                        .rotationEffect(.degrees(f.bearing))
+                        .foregroundStyle(Palette.signal)
+                    Text(f.identifier)
+                        .font(.mono(16, .heavy))
+                        .foregroundStyle(Palette.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Spacer(minLength: 2)
+                    Text("\(RadarFormat.miles(f.distanceMiles)) mi \(GeoMath.cardinal(f.bearing))")
+                        .font(.mono(12, .bold))
+                        .foregroundStyle(Palette.value)
+                }
+                Text([f.route, "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft"].compactMap { $0 }.joined(separator: " · "))
+                    .font(.mono(11, .semibold))
+                    .foregroundStyle(Palette.route)
+                    .lineLimit(1)
+            } else {
+                Label("Sky Watch", systemImage: "dot.radiowaves.left.and.right")
+                    .font(.mono(14, .heavy))
+                    .foregroundStyle(Palette.signal)
+            }
+            HStack {
+                PassCountdown(state: state)
+                    .font(.mono(11, .semibold))
+                    .foregroundStyle(Palette.caption)
+                    .lineLimit(1)
+                Spacer(minLength: 2)
+                Text("\(state.inRangeCount) in range")
+                    .font(.mono(10))
+                    .foregroundStyle(Palette.caption)
+            }
+        }
+        .padding(10)
     }
 }
 
