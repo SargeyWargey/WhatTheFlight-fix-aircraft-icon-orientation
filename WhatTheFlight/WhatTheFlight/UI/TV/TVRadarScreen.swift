@@ -7,9 +7,12 @@
 //
 //  Siri Remote
 //    ◀ ▶      closer / farther aircraft      click      details
-//    ⏯        pin / unpin                    ▼          dock: Nearest · Pin · Aircraft · Logbook · Settings
+//    ⏯        pin / unpin                    ▼          dock: Nearest · Pin · Aircraft · Logbook · Map · Settings
 //
 //  The remote hints sit in a footer below the bezel; the dock only appears after ▼.
+//  With Map view on, the dock's Map item swaps the radar face for the live map
+//  (`TVMapStack`); the remote works the same on both. Left alone for 30 s, the map settles:
+//  the status badge and hints fade out until the next press.
 //
 
 #if os(tvOS)
@@ -36,17 +39,24 @@ struct TVRadarScreen: View {
     }
 
     enum DockItem: CaseIterable {
-        case nearest, pin, aircraft, logbook, settings
+        case nearest, pin, aircraft, logbook, map, settings
     }
 
     @FocusState private var focus: Focus?
     @State private var showDock = false
+    /// Ambient settle: the last remote input, and whether the chrome has faded since.
+    @State private var lastInput = Date()
+    @State private var isSettled = false
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let scale: CGFloat = 1.7
     private static let heroScale: CGFloat = 1.55
 
     private var heading: Double { settings.tvFacingDegrees }
+    private var showsMap: Bool { settings.effectiveTVView == .map }
+    /// The badge and hints, faded once the map has settled.
+    private var chromeOpacity: Double { showsMap && isSettled && !showDock ? 0 : 1 }
 
     var body: some View {
         GeometryReader { geo in
@@ -64,23 +74,31 @@ struct TVRadarScreen: View {
             let heroWidth = geo.size.width * 0.62
 
             ZStack {
-                if settings.showCompassBezel {
-                    CompassBezel(track: layout.bezelTrack, heading: heading, scale: Self.scale)
+                if showsMap {
+                    TVMapStack(model: model, settings: settings) { mapCard }
+                        .transition(.opacity)
+                } else {
+                    Group {
+                        if settings.showCompassBezel {
+                            CompassBezel(track: layout.bezelTrack, heading: heading, scale: Self.scale)
+                                .animation(.spring(response: 0.6, dampingFraction: 0.85), value: heading)
+                        }
+
+                        PerimeterLayer(
+                            placements: placements,
+                            focusedID: model.focus.focusedID,
+                            radiusMiles: settings.radiusMiles,
+                            scale: Self.scale,
+                            onTap: { _ in },
+                            onLongPress: { _ in }
+                        )
                         .animation(.spring(response: 0.6, dampingFraction: 0.85), value: heading)
+
+                        center(width: heroWidth)
+                            .position(x: geo.size.width / 2, y: geo.size.height * 0.47)
+                    }
+                    .transition(.opacity)
                 }
-
-                PerimeterLayer(
-                    placements: placements,
-                    focusedID: model.focus.focusedID,
-                    radiusMiles: settings.radiusMiles,
-                    scale: Self.scale,
-                    onTap: { _ in },
-                    onLongPress: { _ in }
-                )
-                .animation(.spring(response: 0.6, dampingFraction: 0.85), value: heading)
-
-                center(width: heroWidth)
-                    .position(x: geo.size.width / 2, y: geo.size.height * 0.47)
 
                 if centerState == nil {
                     if showDock {
@@ -89,12 +107,19 @@ struct TVRadarScreen: View {
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                     RemoteHints(dockIsOpen: showDock, isPinned: model.focus.isPinned)
+                        .opacity(chromeOpacity)
                         .position(x: geo.size.width / 2, y: Self.footerY(in: geo))
                 }
 
-                StatusBadge(model: model)
-                    .scaleEffect(1.6)
-                    .position(layout.statusPoint)
+                if showsMap {
+                    mapStatus
+                        .opacity(chromeOpacity)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                } else {
+                    StatusBadge(model: model)
+                        .scaleEffect(1.6)
+                        .position(layout.statusPoint)
+                }
 
                 NoticeBanner(model: model)
                     .scaleEffect(1.6)
@@ -104,16 +129,33 @@ struct TVRadarScreen: View {
             .frame(width: geo.size.width, height: geo.size.height)
         }
         .background {
-            RadarBackdrop(showTopography: settings.showTopography, showSweep: settings.radarSweep, isActive: scenePhase == .active)
-                .ignoresSafeArea()
+            if !showsMap {
+                RadarBackdrop(showTopography: settings.showTopography, showSweep: settings.radarSweep, isActive: scenePhase == .active)
+                    .ignoresSafeArea()
+            }
         }
         .defaultFocus($focus, .radar)
         .onChange(of: focus) { _, newValue in
+            noteInput()
             // Leaving the dock (MENU, or ▲ back to the aircraft) tucks it away again.
             if case .dock = newValue { return }
             withAnimation(.smooth(duration: 0.25)) { showDock = false }
         }
         .onChange(of: centerState) { _, _ in showDock = false }
+        .onChange(of: settings.mapView) { _, isOn in
+            // Switching Map view off while the map shows goes straight back to the radar.
+            guard !isOn, settings.tvView == .map else { return }
+            withAnimation(.smooth(duration: 0.6)) { settings.tvView = .radar }
+        }
+        .onChange(of: showsMap, initial: true) { _, showsMap in
+            if showsMap { suggestKeepingAwake() }
+        }
+        .task(id: SettleKey(lastInput: lastInput, showsMap: showsMap)) {
+            guard showsMap else { return }
+            try? await Task.sleep(for: .seconds(30))
+            guard !Task.isCancelled else { return }
+            withAnimation(reduceMotion ? nil : .smooth(duration: 1.2)) { isSettled = true }
+        }
         #if DEBUG
         .task {
             // `-wtf.debugDock YES` opens the dock for screenshots.
@@ -140,9 +182,7 @@ struct TVRadarScreen: View {
                     .frame(width: width * 0.8)
                     .transition(.opacity)
             } else if let contact = model.focusedContact {
-                Button {
-                    actions.openDetail(contact.id)
-                } label: {
+                heroButton(contact) {
                     FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading, wideStats: true, detailScale: 1.4)
                         .id(contact.id)
                         .frame(width: width / Self.heroScale)
@@ -150,24 +190,105 @@ struct TVRadarScreen: View {
                         .frame(width: width, height: 640)
                         .transition(.opacity)
                 }
-                .buttonStyle(TVQuietButtonStyle())
-                .focused($focus, equals: .radar)
-                .onMoveCommand { direction in
-                    switch direction {
-                    case .left: withAnimation(.snappy) { model.focusPrevious() }
-                    case .right: withAnimation(.snappy) { model.focusNext() }
-                    case .down: openDock()
-                    default: break
-                    }
-                }
-                .onPlayPauseCommand {
-                    withAnimation(.snappy) { model.togglePin() }
-                }
-                .accessibilityHint("Left and right change aircraft. Click for details.")
             }
         }
         .animation(.smooth(duration: 0.35), value: model.focus.focusedID)
         .animation(.smooth(duration: 0.35), value: centerState)
+    }
+
+    /// The map's card: the same hero, smaller, or the same empty-state copy as the radar.
+    @ViewBuilder
+    private var mapCard: some View {
+        ZStack {
+            if let centerState {
+                TVScaledContent(width: TVMapLayout.cardWidth, scale: 0.72) {
+                    CenterStateView(kind: centerState, onPrimary: actions.centerPrimary, onSecondary: actions.centerSecondary)
+                }
+                .transition(.opacity)
+            } else if let contact = model.focusedContact {
+                heroButton(contact) {
+                    TVScaledContent(width: TVMapLayout.cardWidth, scale: 1.35) {
+                        FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading, wideStats: true, detailScale: 0.9)
+                    }
+                    .id(contact.id)
+                    .transition(.opacity)
+                }
+            }
+        }
+        .animation(.smooth(duration: 0.35), value: model.focus.focusedID)
+        .animation(.smooth(duration: 0.35), value: centerState)
+    }
+
+    /// The focus anchor, on the radar and on the map alike: ◀ ▶ change aircraft, click opens
+    /// the details, ⏯ pins, ▼ opens the dock.
+    private func heroButton<Label: View>(_ contact: RadarContact, @ViewBuilder label: () -> Label) -> some View {
+        Button {
+            noteInput()
+            actions.openDetail(contact.id)
+        } label: {
+            label()
+        }
+        .buttonStyle(TVQuietButtonStyle())
+        .focused($focus, equals: .radar)
+        .onMoveCommand { direction in
+            noteInput()
+            switch direction {
+            case .left: withAnimation(.snappy) { model.focusPrevious() }
+            case .right: withAnimation(.snappy) { model.focusNext() }
+            case .down: openDock()
+            default: break
+            }
+        }
+        .onPlayPauseCommand {
+            noteInput()
+            withAnimation(.snappy) { model.togglePin() }
+        }
+        .accessibilityHint("Left and right change aircraft. Click for details.")
+    }
+
+    // MARK: Map chrome
+
+    /// Top-left on the map: the live badge, then where and how far.
+    private var mapStatus: some View {
+        HStack(spacing: 18) {
+            StatusBadge(model: model)
+                .scaleEffect(1.6)
+                .frame(width: 140, height: 52, alignment: .leading)
+            if let caption = mapCaption {
+                Text(caption)
+                    .font(.mono(22, .bold))
+                    .foregroundStyle(Palette.value)
+                    .paperHalo()
+            }
+        }
+    }
+
+    /// "Atlanta, GA · 20 mi".
+    private var mapCaption: String? {
+        let place = settings.locationMode == .custom ? settings.customPlaceName : model.logPlaceName
+        return [place, "\(Int(settings.radiusMiles)) mi"].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    // MARK: Ambient settle
+
+    private struct SettleKey: Equatable {
+        let lastInput: Date
+        let showsMap: Bool
+    }
+
+    /// Any remote input brings the badge and hints back and restarts the 30 s timer.
+    private func noteInput() {
+        lastInput = Date()
+        guard isSettled else { return }
+        withAnimation(reduceMotion ? nil : .smooth(duration: 0.4)) { isSettled = false }
+    }
+
+    /// The map is meant to be left on; the first time it opens, mention the screen saver.
+    private func suggestKeepingAwake() {
+        let key = "wtf.mapAwakeHintShown"
+        guard !settings.keepScreenAwake, !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        model.post(notice: "Turn on Keep screen awake in Settings to leave the map running", symbol: "sun.max.fill")
     }
 
     // MARK: Dock
@@ -193,6 +314,13 @@ struct TVRadarScreen: View {
             dockButton(.logbook, title: "Logbook", symbol: "book.closed.fill") {
                 actions.openLogbook()
             }
+            if settings.mapView {
+                dockButton(.map, title: showsMap ? "Radar" : "Map", symbol: showsMap ? "scope" : "map.fill") {
+                    withAnimation(.smooth(duration: 0.6)) { settings.tvView = showsMap ? .radar : .map }
+                    // The hero is rebuilt for the other view: focus it once it's there.
+                    Task { @MainActor in focus = .radar }
+                }
+            }
             dockButton(.settings, title: "Settings", symbol: "gearshape.fill") {
                 actions.openSettings(.location)
             }
@@ -201,11 +329,17 @@ struct TVRadarScreen: View {
         .padding(.vertical, 18)
         .glassSurface(in: Capsule())
         .focusSection()
-        .onExitCommand { focus = .radar }
+        .onExitCommand {
+            noteInput()
+            focus = .radar
+        }
     }
 
     private func dockButton(_ item: DockItem, title: String, symbol: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        Button {
+            noteInput()
+            action()
+        } label: {
             Label(title, systemImage: symbol)
         }
         .buttonStyle(TVPillButtonStyle(prominent: false, compact: true))

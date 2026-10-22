@@ -1,0 +1,111 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+  svg { display: block; }
+</style>
+<body>
+<script>
+  // Question Contrail · Teal & Coral. Same geometry as the review page.
+  const C = 32, m = x => +(64 - x).toFixed(2);
+  function fus({ n, t, w, nose = 7, tw = w * 0.35, taper = t - 14 }) {
+    return `<path d="M ${C} ${n} C ${C + w * .55} ${n}, ${C + w} ${n + nose * .45}, ${C + w} ${n + nose} L ${C + w} ${taper} L ${C + tw} ${t} L ${C - tw} ${t} L ${C - w} ${taper} L ${C - w} ${n + nose} C ${C - w} ${n + nose * .45}, ${C - w * .55} ${n}, ${C} ${n} Z"/>`;
+  }
+  const poly = pts => `<path d="M ${pts.concat(pts.slice().reverse().map(([x, y]) => [m(x), y])).map(p => p.join(' ')).join(' L ')} Z"/>`;
+  const pods = (cx, y1, y2, w) => [cx, m(cx)].map(x => `<rect x="${x - w / 2}" y="${y1}" width="${w}" height="${y2 - y1}" rx="${w / 2}"/>`).join('');
+  const airliner = () => fus({ n: 5, t: 60, w: 3.6, nose: 7, tw: 1.2, taper: 46 }) + poly([[32.5, 25], [57, 37.5], [57.5, 40.5], [32.5, 36]]) + pods(42.5, 25.5, 33, 4.6) + poly([[32.5, 51], [43, 56.5], [43.3, 59], [32.5, 57]]);
+
+  const WAYS = {
+    light:  { bg: ['#1F565C', '#0D2A2F'], trail: '#FFFFFF', plane: '#FF6B5E' },
+    dark:   { bg: ['#0D2327', '#020306'], trail: '#E7EAF0', plane: '#FF6B5E' },
+    signal: { bg: ['#F2604F', '#D23A2D'], trail: '#FFFFFF', plane: '#FFFFFF' },
+    // Tinted: grayscale on black; iOS colours it with the user's tint.
+    tinted: { bg: ['#141414', '#000000'], trail: '#D6D6D6', plane: '#FFFFFF' },
+  };
+
+  // The mark on its 100-unit square.
+  const trailPath = `<path d="M 30 36 C 30 20, 41 13, 51 13 C 63 13, 71 21, 71 31 C 71 43, 52 45, 51 57 L 51 61" fill="none" stroke="url(#trail)" stroke-width="8.5" stroke-linecap="round"/>`;
+  const plane = color => `<g transform="translate(51 77) rotate(180) scale(${24 / 64}) translate(-32 -32)" fill="${color}">${airliner()}</g>`;
+  const defs = (w, gradUnits = 'objectBoundingBox') => `<defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${w.bg[0]}"/><stop offset="1" stop-color="${w.bg[1]}"/></linearGradient>
+      <linearGradient id="trail" x1=".1" y1=".1" x2=".5" y2=".9"><stop offset="0" stop-color="${w.trail}" stop-opacity=".22"/><stop offset="1" stop-color="${w.trail}" stop-opacity="1"/></linearGradient>
+    </defs>`;
+
+  /** Faint topographic contours (Top Shelf only). */
+  function contours(cx, cy, rings, step, stroke, op, sw) {
+    let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    const ph = [r() * 6.28, r() * 6.28, r() * 6.28];
+    let out = '';
+    for (let k = 1; k <= rings; k++) {
+      const base = k * step; let d = '';
+      for (let i = 0; i <= 120; i++) {
+        const t = i / 120 * Math.PI * 2;
+        const rr = base * (1 + .16 * Math.sin(2 * t + ph[0] + k * .12) + .09 * Math.sin(3 * t + ph[1]) + .05 * Math.sin(5 * t + ph[2] + k * .3));
+        d += (i ? 'L' : 'M') + (cx + rr * Math.cos(t)).toFixed(1) + ' ' + (cy + rr * Math.sin(t)).toFixed(1);
+      }
+      out += `<path d="${d}Z" fill="none" stroke="${stroke}" stroke-opacity="${op}" stroke-width="${sw}"/>`;
+    }
+    return out;
+  }
+
+  // ---- Asset builders. Each returns [width, height, svg] ----
+  // #<kind>,<w>,<h>[,<palette>] — palette (TV layers): light | dark | signal
+  const [kind, W, H, palette] = location.hash.slice(1).split(',');
+  const w = +W, h = +H;
+  const svg = (vb, inner, extra = '') => `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="${vb}" ${extra}>${inner}</svg>`;
+
+  function square(mode) {
+    const way = WAYS[mode];
+    return svg('0 0 100 100', defs(way) + `<rect width="100" height="100" fill="url(#bg)"/>${trailPath}${plane(way.plane)}`);
+  }
+
+  /** macOS icons aren't masked: rounded square with margin and a soft shadow. */
+  function mac() {
+    const way = WAYS.light;
+    return svg('0 0 100 100', defs(way) + `
+      <defs><filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.2" stdDeviation="1.4" flood-opacity=".3"/></filter>
+      <clipPath id="sq"><rect x="10" y="10" width="80" height="80" rx="18"/></clipPath></defs>
+      <rect x="10" y="10" width="80" height="80" rx="18" fill="url(#bg)" filter="url(#sh)"/>
+      <g clip-path="url(#sq)"><g transform="translate(10 10) scale(.8)">${trailPath}${plane(way.plane)}</g></g>`);
+  }
+
+  /** Apple TV layered icon (5:3). The mark sits in the middle at 82% of the height. */
+  function tvLayer(layer, palette = 'light') {
+    const way = WAYS[palette];
+    const vbW = 100 * w / h, scale = .82, ox = (vbW - 100 * scale) / 2, oy = (100 - 100 * scale) / 2;
+    const mark = inner => `<g transform="translate(${ox} ${oy}) scale(${scale})">${inner}</g>`;
+    if (layer === 'back') return svg(`0 0 ${vbW} 100`, defs(way) + `<rect width="${vbW}" height="100" fill="url(#bg)"/>${contours(vbW * .18, 78, 16, 8, '#FFFFFF', palette === 'dark' ? .04 : .06, .35)}`);
+    if (layer === 'flat') return svg(`0 0 ${vbW} 100`, defs(way) + `<rect width="${vbW}" height="100" fill="url(#bg)"/>${contours(vbW * .18, 78, 16, 8, '#FFFFFF', palette === 'dark' ? .04 : .06, .35)}` + mark(trailPath + plane(way.plane)));
+    if (layer === 'middle') return svg(`0 0 ${vbW} 100`, defs(way) + mark(trailPath));
+    return svg(`0 0 ${vbW} 100`, mark(plane(way.plane)));
+  }
+
+  /** Top Shelf banner. tvOS shows it full screen: scaled to the TV's height and cropped to its
+   *  width, so only the middle ~55% (wide) to ~67% of the width is visible, and the app row
+   *  covers the bottom quarter. The name and mark sit together inside that window. */
+  function topShelf() {
+    const way = WAYS.light;
+    const vbW = 100 * w / h, cx = vbW / 2;
+    const markSize = 56, markX = cx + 50, markY = 10;
+    const textX = cx - 74;
+    return svg(`0 0 ${vbW} 100`, `<defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#235F66"/><stop offset=".6" stop-color="#123A3F"/><stop offset="1" stop-color="#0A2226"/></linearGradient>
+        <linearGradient id="trail" x1=".1" y1=".1" x2=".5" y2=".9"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".22"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient>
+      </defs>
+      <rect width="${vbW}" height="100" fill="url(#bg)"/>
+      ${contours(markX + 14, 42, 22, 7, '#FFFFFF', .07, .3)}
+      <g transform="translate(${markX - markSize / 2} ${markY}) scale(${markSize / 100})">${trailPath}${plane(way.plane)}</g>
+      <text x="${textX}" y="42" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-weight="800" font-size="10" fill="#FFFFFF" letter-spacing="-.2">What The Flight?</text>
+      <text x="${textX + .4}" y="49.5" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-weight="600" font-size="3.3" fill="#FF6B5E" letter-spacing="1.1">WHAT\u2019S FLYING OVER YOU</text>`);
+  }
+
+  let out;
+  switch (kind) {
+    case 'light': case 'dark': case 'tinted': out = square(kind); break;
+    case 'mac': out = mac(); break;
+    case 'tv-back': case 'tv-middle': case 'tv-front': case 'tv-flat': out = tvLayer(kind.slice(3), palette || 'light'); break;
+    case 'topshelf': out = topShelf(); break;
+  }
+  document.body.innerHTML = out;
+</script>
+</body>

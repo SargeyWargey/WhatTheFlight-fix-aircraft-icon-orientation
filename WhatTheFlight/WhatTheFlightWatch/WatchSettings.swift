@@ -34,6 +34,8 @@ final class WatchSettings {
     var flipScreen: Bool { didSet { defaults.set(flipScreen, forKey: Key.flipScreen) } }
     /// Identify reads out what you're pointing at.
     var speakIdentification: Bool { didSet { defaults.set(speakIdentification, forKey: Key.speakIdentification) } }
+    /// The first-run tour has been shown (or skipped).
+    var hasSeenTour: Bool { didSet { defaults.set(hasSeenTour, forKey: Key.hasSeenTour) } }
 
     /// Where the iPhone's radar last watched from (its custom spot or its GPS).
     private(set) var phoneObserver: CLLocationCoordinate2D?
@@ -50,6 +52,7 @@ final class WatchSettings {
         flipScreen = defaults.bool(forKey: Key.flipScreen)
         aimStyle = WristPointing.AimStyle(rawValue: defaults.string(forKey: Key.aimStyle) ?? "") ?? .point
         speakIdentification = defaults.object(forKey: Key.speakIdentification) == nil ? true : defaults.bool(forKey: Key.speakIdentification)
+        hasSeenTour = defaults.bool(forKey: Key.hasSeenTour)
         if defaults.object(forKey: Key.phoneLatitude) != nil {
             phoneObserver = CLLocationCoordinate2D(latitude: defaults.double(forKey: Key.phoneLatitude),
                                                    longitude: defaults.double(forKey: Key.phoneLongitude))
@@ -80,6 +83,7 @@ final class WatchSettings {
         static let flipScreen = "wtf.watch.flipScreen"
         static let aimStyle = "wtf.watch.aimStyle"
         static let speakIdentification = "wtf.watch.speakIdentification"
+        static let hasSeenTour = "wtf.watch.hasSeenTour"
         static let phoneLatitude = "wtf.watch.phoneLatitude"
         static let phoneLongitude = "wtf.watch.phoneLongitude"
         static let phonePlaceName = "wtf.watch.phonePlaceName"

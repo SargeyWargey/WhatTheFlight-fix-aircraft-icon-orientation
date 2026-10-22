@@ -33,6 +33,12 @@ final class RadarSettings {
         }
     }
 
+    /// Apple TV: the radar face or the live map.
+    enum TVView: String, CaseIterable, Identifiable {
+        case radar, map
+        var id: String { rawValue }
+    }
+
     static let radiusRange: ClosedRange<Double> = 2...100
     /// The Watch watches a tighter circle: roughly what you can see from where you stand.
     #if os(watchOS)
@@ -75,6 +81,13 @@ final class RadarSettings {
     var syncLogbook: Bool { didSet { save(syncLogbook, .syncLogbook) } }
     /// iPhone: lifting the phone to the sky opens Sky View.
     var raiseToSkyView: Bool { didSet { save(raiseToSkyView, .raiseToSkyView) } }
+    /// The ambient map: a Map item in the TV dock and a map pane beside the radar on iPad
+    /// in landscape. Off, nothing else changes.
+    var mapView: Bool { didSet { save(mapView, .mapView) } }
+    /// Apple TV: which view is showing. Read it through `effectiveTVView`.
+    var tvView: TVView { didSet { save(tvView.rawValue, .tvView) } }
+    /// The map turns so "up" is the TV's facing direction, like the radar. On = north up.
+    var mapNorthUp: Bool { didSet { save(mapNorthUp, .mapNorthUp) } }
 
     @ObservationIgnored private let defaults: UserDefaults
 
@@ -117,7 +130,13 @@ final class RadarSettings {
         keepLogbook = value(.keepLogbook, true)
         syncLogbook = value(.syncLogbook, true)
         raiseToSkyView = value(.raiseToSkyView, true)
+        mapView = value(.mapView, true)
+        tvView = TVView(rawValue: value(.tvView, "radar")) ?? .radar
+        mapNorthUp = value(.mapNorthUp, false)
     }
+
+    /// The TV's view, treated as the radar whenever the map is switched off.
+    var effectiveTVView: TVView { mapView ? tvView : .radar }
 
     static let overheadAlertRange: ClosedRange<Double> = 0.5...5
 
@@ -156,6 +175,9 @@ final class RadarSettings {
         keepLogbook = true
         syncLogbook = true
         raiseToSkyView = true
+        mapView = true
+        tvView = .radar
+        mapNorthUp = false
     }
 
     // MARK: - Persistence
@@ -165,6 +187,7 @@ final class RadarSettings {
         case showHelicopters, showTopography, showCompassBezel, radarSweep, showPhotos
         case haptics, keepAwake, demoTraffic, hasSeenWelcome, customPlaceName, tvFacing
         case overheadAlerts, overheadAlertMiles, notableAlerts, spokenAlerts, keepLogbook, raiseToSkyView
+        case mapView, tvView, mapNorthUp
         case syncLogbook = "iCloudLogbook"
 
         var name: String { "wtf.\(rawValue)" }

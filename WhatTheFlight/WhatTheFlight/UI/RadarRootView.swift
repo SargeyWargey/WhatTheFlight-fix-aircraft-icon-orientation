@@ -31,11 +31,15 @@ struct RadarRootView: View {
     private let skyWatch = SkyWatch.shared
     private let watchLink = PhoneWatchLink.shared
 
+    /// iPad: the direction the map pane turns to, following the compass in steps.
+    @State private var mapHeading: Double?
+
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     enum Sheet: Identifiable, Equatable {
-        case settings, search, welcome, pickSpot, tvLink, logbook
+        case settings, search, welcome, pickSpot, tvLink, logbook, appIcon
         case detail(String)
 
         var id: String {
@@ -46,6 +50,7 @@ struct RadarRootView: View {
             case .pickSpot: return "pickSpot"
             case .tvLink: return "tvLink"
             case .logbook: return "logbook"
+            case .appIcon: return "appIcon"
             case .detail(let id): return "detail-\(id)"
             }
         }
@@ -58,21 +63,46 @@ struct RadarRootView: View {
     }
 
     var body: some View {
-        RadarScreen(
-            model: model,
-            settings: settings,
-            location: location,
-            centerState: centerState,
-            actions: .init(
-                openSettings: { sheet = .settings },
-                openSearch: { if !model.allContacts.isEmpty { sheet = .search } },
-                openDetail: { sheet = .detail($0) },
-                openLogbook: { sheet = .logbook },
-                openSpotPicker: { sheet = .pickSpot },
-                centerPrimary: centerPrimary,
-                centerSecondary: { sheet = .pickSpot }
-            )
-        )
+        GeometryReader { geo in
+            let showsMap = showsMapPane(in: geo.size)
+            HStack(spacing: 0) {
+                RadarScreen(
+                    model: model,
+                    settings: settings,
+                    location: location,
+                    centerState: centerState,
+                    actions: .init(
+                        openSettings: { sheet = .settings },
+                        openSearch: { if !model.allContacts.isEmpty { sheet = .search } },
+                        openDetail: { sheet = .detail($0) },
+                        openLogbook: { sheet = .logbook },
+                        openSpotPicker: { sheet = .pickSpot },
+                        centerPrimary: centerPrimary,
+                        centerSecondary: { sheet = .pickSpot }
+                    )
+                )
+                // Square-ish beside the map: as wide as the screen is tall.
+                .frame(width: showsMap ? geo.size.height : nil)
+
+                if showsMap, let observer = model.observer {
+                    TrafficMap(
+                        observer: observer,
+                        radiusMiles: settings.radiusMiles,
+                        contacts: model.contacts,
+                        fringe: model.outsideContacts,
+                        focused: model.focusedContact,
+                        isPinned: model.focus.isPinned,
+                        trail: model.trail(for:),
+                        trailVersion: model.trailVersion,
+                        headingUp: settings.mapNorthUp ? nil : mapHeading,
+                        options: .init(interactive: true),
+                        onTap: { id in withAnimation(.snappy) { model.focus(on: id) } }
+                    )
+                    .ignoresSafeArea()
+                    .transition(.move(edge: .trailing))
+                }
+            }
+        }
         .preferredColorScheme(settings.appearance.colorScheme)
         .sheet(item: $sheet) { sheet in
             sheetContent(sheet)
@@ -148,6 +178,7 @@ struct RadarRootView: View {
             router.pending = nil
             handle(route)
         }
+        .onChange(of: location.heading) { _, heading in followHeading(heading) }
         .onChange(of: location.location) { _, _ in syncObserver() }
         .onChange(of: settings.locationMode) { _, _ in syncObserver() }
         .onChange(of: settings.customLatitude) { _, _ in syncObserver() }
@@ -221,6 +252,10 @@ struct RadarRootView: View {
             NavigationStack {
                 TVLinkSetupView(settings: settings, location: location)
             }
+        case .appIcon:
+            NavigationStack {
+                AppIconPickerView()
+            }
         case .pickSpot:
             NavigationStack {
                 LocationPickerView(settings: settings, location: location)
@@ -231,6 +266,23 @@ struct RadarRootView: View {
                     }
             }
         }
+    }
+
+    // MARK: Map pane
+
+    /// iPad in landscape at full width, with Map view on. Portrait, Split View and iPhone keep
+    /// the radar alone.
+    private func showsMapPane(in size: CGSize) -> Bool {
+        UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular
+            && size.width > size.height && settings.mapView && model.observer != nil
+    }
+
+    /// The map turns with the iPad, but only once the heading has moved 10°, so compass
+    /// jitter doesn't keep it rocking.
+    private func followHeading(_ heading: Double?) {
+        guard let heading else { return }
+        if let current = mapHeading, abs(GeoMath.shortestDelta(from: current, to: heading)) < 10 { return }
+        mapHeading = GeoMath.normalize((heading / 5).rounded() * 5)
     }
 
     // MARK: State
@@ -420,6 +472,14 @@ struct RadarRootView: View {
     /// `-wtf.debugFocus DL570` focuses a flight (screenshots, UI tests).
     private func openDebugSheetIfRequested() {
         let defaults = UserDefaults.standard
+        // `-wtf.debugIcon <choice>` switches the Home Screen icon (e.g. `edgeRadar`, `automatic`).
+        if let raw = defaults.string(forKey: "wtf.debugIcon"), let choice = AppIconChoice(rawValue: raw) {
+            Task { @MainActor in
+                // iOS only changes the icon once the app is on screen.
+                try? await Task.sleep(for: .seconds(2))
+                do { try await choice.apply() } catch { print("debugIcon:", error) }
+            }
+        }
         let focusName = defaults.string(forKey: "wtf.debugFocus")
         let name = defaults.string(forKey: "wtf.debugSheet")
         guard focusName != nil || name != nil else { return }
@@ -436,6 +496,7 @@ struct RadarRootView: View {
             case "sky": sky = SkyRequest(targetID: defaults.bool(forKey: "wtf.debugFind") ? model.focus.focusedID : nil)
             case "welcome": sheet = .welcome
             case "tvlink": sheet = .tvLink
+            case "appicon": sheet = .appIcon
             case "detail": if let id = model.focus.focusedID { sheet = .detail(id) }
             default: break
             }

@@ -1,0 +1,280 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}svg{display:block}</style>
+<body>
+<script>
+(() => {
+  // ---------- Aircraft silhouettes (same 64-grid geometry as the app's AircraftGlyph) ----------
+  const C = 32, m = x => +(64 - x).toFixed(2);
+  function fus({ n, t, w, nose = 7, tw = w * 0.35, taper = t - 14, sharp = false }) {
+    const a = sharp ? `C ${C + w * .15} ${n + nose * .35}, ${C + w * .9} ${n + nose * .75}, ${C + w} ${n + nose}`
+                    : `C ${C + w * .55} ${n}, ${C + w} ${n + nose * .45}, ${C + w} ${n + nose}`;
+    const b = sharp ? `C ${C - w * .9} ${n + nose * .75}, ${C - w * .15} ${n + nose * .35}, ${C} ${n}`
+                    : `C ${C - w} ${n + nose * .45}, ${C - w * .55} ${n}, ${C} ${n}`;
+    return `<path d="M ${C} ${n} ${a} L ${C + w} ${taper} L ${C + tw} ${t} L ${C - tw} ${t} L ${C - w} ${taper} L ${C - w} ${n + nose} ${b} Z"/>`;
+  }
+  const poly = pts => `<path d="M ${pts.concat(pts.slice().reverse().map(([x, y]) => [m(x), y])).map(p => p.join(' ')).join(' L ')} Z"/>`;
+  const pods = (cx, y1, y2, w) => [cx, m(cx)].map(x => `<rect x="${x - w / 2}" y="${y1}" width="${w}" height="${y2 - y1}" rx="${w / 2}"/>`).join('');
+  const SHAPES = {
+    airliner: () => fus({ n: 5, t: 60, w: 3.6, nose: 7, tw: 1.2, taper: 46 }) + poly([[32.5, 25], [57, 37.5], [57.5, 40.5], [32.5, 36]]) + pods(42.5, 25.5, 33, 4.6) + poly([[32.5, 51], [43, 56.5], [43.3, 59], [32.5, 57]]),
+    widebody: () => fus({ n: 3, t: 61, w: 4.6, nose: 8, tw: 1.4, taper: 46 }) + poly([[32.5, 22], [61.5, 39], [62, 42.5], [32.5, 37]]) + pods(44, 22.5, 33, 6.2) + poly([[32.5, 50.5], [46, 57], [46.3, 60], [32.5, 57]]),
+    fourEngine: () => fus({ n: 2.5, t: 61.5, w: 5, nose: 9, tw: 1.5, taper: 47 }) + poly([[32.5, 21], [62, 40.5], [62.5, 44], [32.5, 37]]) + pods(41.5, 22.5, 31, 4.8) + pods(52, 29, 37, 4.4) + poly([[32.5, 50.5], [47, 57.5], [47.3, 60.5], [32.5, 57]]),
+    fighter: () => fus({ n: 2, t: 60, w: 3.6, nose: 15, tw: 2.4, taper: 54, sharp: true }) + poly([[33, 14], [37.5, 27], [37.5, 33], [32.5, 33]]) + poly([[34, 27], [56, 42], [56, 46.5], [34, 46.5]]) + poly([[34, 50], [45, 57], [45, 60.5], [34, 60]]),
+    light: () => fus({ n: 9, t: 58, w: 3.8, nose: 4, tw: .9, taper: 30 }) + poly([[32.5, 21], [61, 21.3], [61, 28.5], [32.5, 28.5]]) + `<circle cx="32" cy="8.5" r="8" fill-opacity=".34"/><rect x="24" y="7.6" width="16" height="1.8" rx=".9"/><circle cx="32" cy="8.5" r="1.9"/>` + poly([[32.5, 49.5], [42.5, 49.8], [42.5, 55], [32.5, 55.5]]),
+    helicopter: () => `<g fill-opacity=".55"><rect x="3" y="25.3" width="58" height="3.4" rx="1.7" transform="rotate(45 32 27)"/><rect x="3" y="25.3" width="58" height="3.4" rx="1.7" transform="rotate(-45 32 27)"/></g><path d="M 30.2 36 L 33.8 36 L 33 57 L 31 57 Z"/><rect x="25" y="49" width="14" height="3" rx="1.2"/><rect x="33.6" y="52.5" width="2.6" height="9" rx="1"/><ellipse cx="32" cy="27" rx="6.5" ry="11"/>`,
+  };
+  /** Draws a silhouette centred at (x, y), `size` units across, turned `rot` degrees. */
+  const craft = (kind, x, y, size, rot, fill, extra = '') =>
+    `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${size / 64}) translate(-32 -32)" fill="${fill}" ${extra}>${SHAPES[kind]()}</g>`;
+
+  // ---------- Helpers ----------
+  let uid = 0;
+  const id = p => `${p}${++uid}`;
+  function rng(seed) { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+  /** Topographic contour lines around one off-centre summit. */
+  function contours(seed, stroke, opacity, width = .45, cx = 26, cy = 70, rings = 15) {
+    const r = rng(seed);
+    const ph = [r() * 6.28, r() * 6.28, r() * 6.28], amp = [.16, .09, .05];
+    let out = '';
+    for (let k = 1; k <= rings; k++) {
+      const base = k * 7.2;
+      let d = '';
+      for (let i = 0; i <= 90; i++) {
+        const t = i / 90 * Math.PI * 2;
+        const rr = base * (1 + amp[0] * Math.sin(2 * t + ph[0] + k * .12) + amp[1] * Math.sin(3 * t + ph[1]) + amp[2] * Math.sin(5 * t + ph[2] + k * .3));
+        d += (i ? 'L' : 'M') + (cx + rr * Math.cos(t)).toFixed(1) + ' ' + (cy + rr * Math.sin(t)).toFixed(1);
+      }
+      out += `<path d="${d}Z" fill="none" stroke="${stroke}" stroke-opacity="${opacity}" stroke-width="${width}"/>`;
+    }
+    return out;
+  }
+  const rings = (cx, cy, radii, stroke, op, dash = '1.2 2.4', w = .6) =>
+    radii.map(r => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${stroke}" stroke-opacity="${op}" stroke-width="${w}" stroke-dasharray="${dash}"/>`).join('');
+  /** A fading radar sweep wedge ending at `angle` (deg, 0 = north). */
+  function sweep(cx, cy, r, angle, color, maxOp = .5, span = 70, steps = 14) {
+    let out = '';
+    for (let i = 0; i < steps; i++) {
+      const a0 = (angle - span + span * i / steps) * Math.PI / 180, a1 = (angle - span + span * (i + 1) / steps) * Math.PI / 180;
+      const p0 = [cx + r * Math.sin(a0), cy - r * Math.cos(a0)], p1 = [cx + r * Math.sin(a1), cy - r * Math.cos(a1)];
+      out += `<path d="M ${cx} ${cy} L ${p0[0].toFixed(2)} ${p0[1].toFixed(2)} A ${r} ${r} 0 0 1 ${p1[0].toFixed(2)} ${p1[1].toFixed(2)} Z" fill="${color}" fill-opacity="${(maxOp * ((i + 1) / steps) ** 2).toFixed(3)}"/>`;
+    }
+    const e = angle * Math.PI / 180;
+    return out + `<line x1="${cx}" y1="${cy}" x2="${(cx + r * Math.sin(e)).toFixed(2)}" y2="${(cy - r * Math.cos(e)).toFixed(2)}" stroke="${color}" stroke-width=".9" stroke-opacity="${maxOp + .3}"/>`;
+  }
+  const linear = (gid, stops, x1 = 0, y1 = 0, x2 = 0, y2 = 1) =>
+    `<linearGradient id="${gid}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stops.map(([o, c, a = 1]) => `<stop offset="${o}" stop-color="${c}" stop-opacity="${a}"/>`).join('')}</linearGradient>`;
+  const radial = (gid, stops, cx = .5, cy = .5, r = .7) =>
+    `<radialGradient id="${gid}" cx="${cx}" cy="${cy}" r="${r}">${stops.map(([o, c, a = 1]) => `<stop offset="${o}" stop-color="${c}" stop-opacity="${a}"/>`).join('')}</radialGradient>`;
+  /** Compass ticks around a rounded square, like the radar's bezel. */
+  function bezel(inset, stroke, op, every = 5, majorEvery = 30) {
+    let out = '';
+    const s = 100 - inset * 2, cx = 50, cy = 50;
+    for (let deg = 0; deg < 360; deg += every) {
+      const a = deg * Math.PI / 180, dx = Math.sin(a), dy = -Math.cos(a);
+      const t = Math.min((s / 2) / Math.max(Math.abs(dx), 1e-6), (s / 2) / Math.max(Math.abs(dy), 1e-6));
+      const major = deg % majorEvery === 0, len = major ? 4 : 2.2;
+      const x1 = cx + dx * t, y1 = cy + dy * t, x2 = cx + dx * (t - len), y2 = cy + dy * (t - len);
+      if (deg === 0) continue;
+      out += `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="${stroke}" stroke-opacity="${major ? op * 1.6 : op}" stroke-width="${major ? .9 : .6}" stroke-linecap="round"/>`;
+    }
+    return out;
+  }
+  const northMark = (fill, y = 6) => `<path d="M 50 ${y} L 54.2 ${y + 7.5} L 50 ${y + 5.6} L 45.8 ${y + 7.5} Z" fill="${fill}"/>`;
+
+  // Palettes from Theme.swift
+  const P = {
+    light: { paper: '#E9E7E2', shade: '#D3D0C8', ink: '#3A33D6', blip: '#2D56B9', heli: '#3F8CF0', signal: '#E5483B', mil: '#55692A', caption: '#75726C', sweep: '#3A33D6' },
+    dark:  { paper: '#0A0E14', shade: '#020306', ink: '#A8A4FF', blip: '#72AAFF', heli: '#7CD8FF', signal: '#FF6B5E', mil: '#A9C76B', caption: '#8790A0', sweep: '#4CF0C0' },
+    tinted:{ paper: '#000000', shade: '#000000', ink: '#FFFFFF', blip: '#FFFFFF', heli: '#D9D9D9', signal: '#FFFFFF', mil: '#BDBDBD', caption: '#8A8A8A', sweep: '#FFFFFF' },
+  };
+
+  // ---------- Concepts ----------
+  const CONCEPTS = [
+    {
+      id: 'edge', name: 'Edge Radar', badge: 'Pick', rec: true,
+      idea: 'The radar itself: paper, contour lines, range rings, the red north arrow, and an airliner riding the edge on its real heading.',
+      why: 'Looks exactly like the app you open. Distinctive on a Home Screen full of glyph-on-gradient icons.',
+      draw(mode) {
+        const p = P[mode], v = id('v');
+        const vig = mode === 'light' ? .5 : .9;
+        return `<defs>${radial(v, [[.45, p.shade, 0], [1, p.shade, vig]])}</defs>
+          <rect width="100" height="100" fill="${p.paper}"/>
+          ${contours(7, mode === 'light' ? '#6E6A60' : '#FFFFFF', mode === 'light' ? .28 : .12)}
+          ${rings(50, 50, [17, 31, 45], p.ink, mode === 'light' ? .22 : .3)}
+          <rect width="100" height="100" fill="url(#${v})"/>
+          ${northMark(p.signal, 7)}
+          <circle cx="50" cy="50" r="6.5" fill="${p.signal}" fill-opacity=".16"/><circle cx="50" cy="50" r="2.6" fill="${p.signal}"/>
+          ${craft('airliner', 71, 33, 40, 228, p.blip)}
+          ${craft('helicopter', 24, 75, 18, 40, p.heli)}`;
+      }
+    },
+    {
+      id: 'scope', name: 'Night Scope',
+      idea: 'A classic radar scope: a glowing sweep catches a single aircraft, with a dotted trail of where it has been.',
+      why: 'Instantly reads as "radar". The dark version glows; the light one is the paper radar at noon.',
+      draw(mode) {
+        const p = P[mode], g = id('g');
+        const bg = mode === 'light' ? [[0, '#F4F2EC'], [1, '#D9D6CD']] : mode === 'dark' ? [[0, '#0E1F24'], [1, '#020306']] : [[0, '#111'], [1, '#000']];
+        const line = mode === 'light' ? p.ink : p.sweep;
+        const blip = mode === 'light' ? p.ink : p.sweep;
+        return `<defs>${radial(g, bg, .5, .5, .75)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          ${rings(50, 50, [14, 28, 42], line, .35, 'none', .7)}
+          <line x1="50" y1="8" x2="50" y2="92" stroke="${line}" stroke-opacity=".2" stroke-width=".6"/>
+          <line x1="8" y1="50" x2="92" y2="50" stroke="${line}" stroke-opacity=".2" stroke-width=".6"/>
+          ${sweep(50, 50, 44, 48, line, mode === 'light' ? .32 : .5)}
+          ${[0, 1, 2, 3].map(i => `<circle cx="${(48 - i * 5.5).toFixed(1)}" cy="${(46.5 + i * 3.4).toFixed(1)}" r="${(1.5 - i * .25).toFixed(2)}" fill="${blip}" fill-opacity="${(.7 - i * .16).toFixed(2)}"/>`).join('')}
+          ${craft('airliner', 62, 38, 26, 58, blip)}
+          <circle cx="50" cy="50" r="1.8" fill="${p.signal}"/>`;
+      }
+    },
+    {
+      id: 'overhead', name: 'Overhead',
+      idea: 'Looking straight up: a big airliner crosses the sky inside the red identify reticle.',
+      why: 'The boldest, simplest silhouette, so it holds up at tiny sizes. Says what the app answers: what’s that plane?',
+      draw(mode) {
+        const p = P[mode], g = id('g');
+        const sky = mode === 'light' ? [[0, '#8EC3F5'], [1, '#3D6FD6']] : mode === 'dark' ? [[0, '#1F2466'], [1, '#05070D']] : [[0, '#1a1a1a'], [1, '#000']];
+        const stars = mode === 'dark' ? [[18, 20], [80, 14], [86, 70], [12, 64], [30, 88], [68, 86]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i % 2 ? .5 : .7}" fill="#fff" fill-opacity=".7"/>`).join('') : '';
+        const reticle = mode === 'tinted' ? '#9a9a9a' : p.signal;
+        return `<defs>${linear(g, sky)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>${stars}
+          <circle cx="50" cy="51" r="33" fill="none" stroke="${reticle}" stroke-width="2.6" stroke-dasharray="40 11.8" stroke-dashoffset="20"/>
+          ${[0, 90, 180, 270].map(a => `<line x1="50" y1="11" x2="50" y2="20" stroke="${reticle}" stroke-width="2.6" stroke-linecap="round" transform="rotate(${a} 50 51)"/>`).join('')}
+          ${craft('airliner', 50, 51, 62, 38, '#FFFFFF', 'style="filter: drop-shadow(0 1.2px 1.2px rgba(0,0,0,.25))"')}`;
+      }
+    },
+    {
+      id: 'question', name: 'Question Contrail',
+      idea: 'The plane’s contrail curls into a question mark, and the plane itself is the dot.',
+      why: 'Keeps today’s question-mark idea and the red, but flat and crisp in the radar’s style. The most playful option.',
+      draw(mode) {
+        const p = P[mode], g = id('g'), t = id('t');
+        const bg = mode === 'light' ? [[0, '#F2604F'], [1, '#D23A2D']] : mode === 'dark' ? [[0, '#2A1416'], [1, '#0A0E14']] : [[0, '#111'], [1, '#000']];
+        const trail = mode === 'dark' ? '#FFFFFF' : '#FFFFFF';
+        const plane = mode === 'dark' ? p.signal : '#FFFFFF';
+        return `<defs>${linear(g, bg)}${linear(t, [[0, trail, .25], [1, trail, 1]], .1, .1, .5, .9)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          <path d="M 30 36 C 30 20, 41 13, 51 13 C 63 13, 71 21, 71 31 C 71 43, 52 45, 51 57 L 51 61" fill="none" stroke="url(#${t})" stroke-width="8.5" stroke-linecap="round"/>
+          ${craft('airliner', 51, 77, 24, 180, plane)}`;
+      }
+    },
+    {
+      id: 'compass', name: 'Compass',
+      idea: 'The radar’s compass bezel around the edge with a red north, and an airliner at the centre heading northeast.',
+      why: 'Calm and precise, like an instrument. Works well tinted because it’s all line work and one shape.',
+      draw(mode) {
+        const p = P[mode];
+        return `<rect width="100" height="100" fill="${p.paper}"/>
+          ${mode === 'light' ? contours(19, '#6E6A60', .14, .4, 80, 30, 10) : ''}
+          ${bezel(7, p.caption, mode === 'light' ? .55 : .7)}
+          ${northMark(p.signal, 5)}
+          ${rings(50, 50, [24], p.ink, .25, '1.2 2.4')}
+          ${craft('airliner', 50, 51, 46, 45, mode === 'light' ? p.ink : p.ink)}`;
+      }
+    },
+    {
+      id: 'family', name: 'Perimeter',
+      idea: 'Five of the new silhouettes ride the edge at their bearings (airliner, jumbo, helicopter, fighter, Cessna) around you in the middle.',
+      why: 'Shows off the aircraft types and the edge layout in one picture. Busier, so it’s best at larger sizes.',
+      draw(mode) {
+        const p = P[mode];
+        return `<rect width="100" height="100" fill="${p.paper}"/>
+          ${contours(3, mode === 'light' ? '#6E6A60' : '#FFFFFF', mode === 'light' ? .2 : .09, .4, 60, 60, 12)}
+          <rect x="11" y="11" width="78" height="78" rx="14" fill="none" stroke="${p.ink}" stroke-opacity=".22" stroke-width=".7" stroke-dasharray="1.2 2.4"/>
+          ${craft('airliner', 50, 13, 19, 200, p.blip)}
+          ${craft('fourEngine', 86, 46, 20, 250, p.blip)}
+          ${craft('helicopter', 76, 84, 15, 320, p.heli)}
+          ${craft('fighter', 18, 78, 16, 40, p.mil)}
+          ${craft('light', 15, 30, 14, 120, p.blip)}
+          <circle cx="50" cy="50" r="15" fill="${p.signal}" fill-opacity=".14"/>
+          <circle cx="50" cy="50" r="15" fill="none" stroke="${p.signal}" stroke-opacity=".5" stroke-width="1"/>
+          ${craft('airliner', 50, 50, 20, 225, p.signal)}`;
+      }
+    },
+    {
+      id: 'skyview', name: 'Sky View',
+      idea: 'A camera viewfinder locks onto an aircraft overhead, with its flight tag underneath, like the app’s Sky View.',
+      why: 'Highlights the AR feature and the "point at the sky" moment. Reads as camera plus plane.',
+      draw(mode) {
+        const p = P[mode], g = id('g');
+        const sky = mode === 'light' ? [[0, '#A9D2FA'], [1, '#4A7FE0']] : mode === 'dark' ? [[0, '#202760'], [1, '#070A14']] : [[0, '#1a1a1a'], [1, '#000']];
+        const tag = mode === 'tinted' ? '#bdbdbd' : p.signal;
+        const corner = (x, y, sx, sy) => `<path d="M ${x} ${y + sy * 12} L ${x} ${y} L ${x + sx * 12} ${y}" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+        return `<defs>${linear(g, sky)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          ${corner(18, 16, 1, 1)}${corner(82, 16, -1, 1)}${corner(18, 72, 1, -1)}${corner(82, 72, -1, -1)}
+          ${craft('airliner', 50, 44, 44, 32, '#FFFFFF')}
+          <rect x="31" y="77" width="38" height="11" rx="5.5" fill="${tag}"/>
+          <rect x="36" y="81" width="15" height="3" rx="1.5" fill="#fff"/>
+          <rect x="54" y="81" width="10" height="3" rx="1.5" fill="#fff" fill-opacity=".7"/>`;
+      }
+    },
+  ];
+
+
+  // ---------- Question Contrail colourways (colours from Theme.swift) ----------
+  const WAYS = [
+    { id: 'signal', name: 'Signal Red', note: 'Round 1. The red of the radar’s north arrow and focus ring.',
+      light: { bg: ['#F2604F', '#D23A2D'], trail: '#FFFFFF', plane: '#FFFFFF' },
+      dark:  { bg: ['#2A1416', '#0A0E14'], trail: '#FFFFFF', plane: '#FF6B5E' } },
+    { id: 'teal', name: 'Deep Teal', note: 'The night radar’s blue-green, with a signal-red contrail and plane.',
+      light: { bg: ['#1F565C', '#0D2A2F'], trail: '#FF6B5E', plane: '#FF6B5E' },
+      dark:  { bg: ['#0D2327', '#020306'], trail: '#FF6B5E', plane: '#FF6B5E' } },
+    { id: 'tealwhite', name: 'Teal & Coral', note: 'Deep teal with a white contrail and a coral plane, so the plane is the accent.',
+      light: { bg: ['#1F565C', '#0D2A2F'], trail: '#FFFFFF', plane: '#FF6B5E' },
+      dark:  { bg: ['#0D2327', '#020306'], trail: '#E7EAF0', plane: '#FF6B5E' } },
+    { id: 'sweep', name: 'Radar Sweep', note: 'The glowing green of the night radar sweep on near-black teal.',
+      light: { bg: ['#143E43', '#071A1D'], trail: '#4CF0C0', plane: '#FFFFFF' },
+      dark:  { bg: ['#0A1A1D', '#020306'], trail: '#4CF0C0', plane: '#FF6B5E' } },
+    { id: 'indigo', name: 'Flight Indigo', note: 'The indigo of the big flight number, a white contrail, a coral plane.',
+      light: { bg: ['#4A43E6', '#2A239E'], trail: '#FFFFFF', plane: '#FF6B5E' },
+      dark:  { bg: ['#18154A', '#0A0E14'], trail: '#A8A4FF', plane: '#FF6B5E' } },
+    { id: 'blip', name: 'Blip Blue', note: 'The blue of the aircraft icons, with a gold plane (the rare-aircraft colour).',
+      light: { bg: ['#3C6CD2', '#1C3780'], trail: '#FFFFFF', plane: '#FFCB45' },
+      dark:  { bg: ['#0F1D3D', '#05070D'], trail: '#72AAFF', plane: '#FFCB45' } },
+    { id: 'dusk', name: 'Dusk', note: 'Indigo fading to teal, like the sky just after sunset, with a coral plane.',
+      light: { bg: ['#3A33D6', '#0F5257'], trail: '#FFFFFF', plane: '#FF6B5E', diagonal: true },
+      dark:  { bg: ['#1A1550', '#06181B'], trail: '#E7EAF0', plane: '#FF6B5E', diagonal: true } },
+    { id: 'paper', name: 'Paper & Ink', note: 'The light radar: paper and contour lines, an indigo contrail, a red plane.',
+      light: { bg: ['#F1EFEA', '#DCD9D1'], trail: '#3A33D6', plane: '#E5483B', topo: '#6E6A60' },
+      dark:  { bg: ['#101620', '#0A0E14'], trail: '#A8A4FF', plane: '#FF6B5E', topo: '#FFFFFF' } },
+  ];
+  const TINTED = { bg: ['#141414', '#000000'], trail: '#FFFFFF', plane: '#FFFFFF' };
+
+  function contrail(c) {
+    const g = id('g'), t = id('t');
+    const dir = c.diagonal ? [0, 0, 1, 1] : [0, 0, 0, 1];
+    return `<defs>${linear(g, [[0, c.bg[0]], [1, c.bg[1]]], ...dir)}${linear(t, [[0, c.trail, .22], [1, c.trail, 1]], .1, .1, .5, .9)}</defs>
+      <rect width="100" height="100" fill="url(#${g})"/>
+      ${c.topo ? contours(7, c.topo, c.topo === '#FFFFFF' ? .07 : .2, .45) : ''}
+      <path d="M 30 36 C 30 20, 41 13, 51 13 C 63 13, 71 21, 71 31 C 71 43, 52 45, 51 57 L 51 61" fill="none" stroke="url(#${t})" stroke-width="8.5" stroke-linecap="round"/>
+      ${craft('airliner', 51, 77, 24, 180, c.plane)}`;
+  }
+
+
+  // #<icon>,<mode>,<w>,<h>[,layer]
+  //   icon: concept id (edge, scope, overhead, compass, family, skyview) or contrail colourway (signal, tealwhite)
+  //   mode: light | dark | tinted
+  //   layer (TV, wide canvas): back | front | flat
+  const [icon, mode, W, H, layer] = location.hash.slice(1).split(',');
+  const w = +W, h = +H;
+  const concept = CONCEPTS.find(c => c.id === icon);
+  const art = () => concept ? concept.draw(mode) : contrail(mode === 'tinted' ? TINTED : WAYS.find(x => x.id === icon)[mode]);
+  let out;
+  if (!layer) {
+    out = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 100 100">${art()}</svg>`;
+  } else {
+    // Apple TV (5:3). Back: the art blown up and blurred to fill the width. Front: the art itself, full height, centred.
+    const vbW = 100 * w / h, ox = (vbW - 100) / 2;
+    const back = `<defs><filter id="blur" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3.5"/></filter></defs>
+      <g filter="url(#blur)"><g transform="translate(${-10} ${(100 - vbW * 1.1) / 2}) scale(${vbW * 1.1 / 100})">${art()}</g></g>
+      <rect width="${vbW}" height="100" fill="#000" fill-opacity=".06"/>`;
+    const front = `<defs><clipPath id="sq"><rect x="${ox}" y="0" width="100" height="100"/></clipPath></defs><g clip-path="url(#sq)"><g transform="translate(${ox} 0)">${art()}</g></g>`;
+    const body = layer === 'back' ? back : layer === 'front' ? front : back + front;
+    out = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${vbW} 100">${body}</svg>`;
+  }
+  document.body.innerHTML = out;
+})();
+</script>
+</body>

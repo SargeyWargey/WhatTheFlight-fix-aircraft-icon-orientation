@@ -41,6 +41,9 @@ final class RadarModel {
     private(set) var observer: CLLocationCoordinate2D?
     private(set) var now = Date()
     private(set) var hasLoadedOnce = false
+    /// Bumped whenever the trails change (once per feed, not per tick), so views that draw
+    /// them rebuild only then.
+    private(set) var trailVersion = 0
 
     // MARK: Dependencies
 
@@ -287,6 +290,7 @@ final class RadarModel {
             trails[f.id] = trail
         }
         trails = trails.filter { ($0.value.last?.time ?? .distantPast) > cutoff }
+        trailVersion += 1
     }
 
     // MARK: Ticking

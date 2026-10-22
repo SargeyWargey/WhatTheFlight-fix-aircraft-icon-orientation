@@ -19,6 +19,7 @@ struct RadarSettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @State private var confirmReset = false
+    @State private var appIcon = AppIconChoice.current
     private let skyWatch = SkyWatch.shared
 
     var body: some View {
@@ -192,14 +193,39 @@ struct RadarSettingsSheet: View {
     }
 
     private var displaySection: some View {
-        Section("Display") {
+        Section {
             Picker("Appearance", selection: $settings.appearance) {
                 ForEach(RadarSettings.Appearance.allCases) { Text($0.title).tag($0) }
+            }
+            NavigationLink {
+                AppIconPickerView { appIcon = $0 }
+            } label: {
+                LabeledContent {
+                    HStack(spacing: 8) {
+                        Text(appIcon.title)
+                        AppIconPreview(choice: appIcon, size: 28)
+                    }
+                } label: {
+                    Text("App Icon")
+                }
             }
             Toggle("Topographic background", isOn: $settings.showTopography)
             Toggle("Compass bezel", isOn: $settings.showCompassBezel)
             Toggle("Radar sweep", isOn: $settings.radarSweep)
             Toggle("Aircraft photos", isOn: $settings.showPhotos)
+            // The map pane is an iPad thing: the iPhone keeps the radar face.
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                Toggle("Map view", isOn: $settings.mapView)
+                if settings.mapView {
+                    Toggle("Map north up", isOn: $settings.mapNorthUp)
+                }
+            }
+        } header: {
+            Text("Display")
+        } footer: {
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                Text("Map view: in landscape, shows a live map beside the radar.")
+            }
         }
     }
 

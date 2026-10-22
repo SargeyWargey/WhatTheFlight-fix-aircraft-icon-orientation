@@ -162,7 +162,14 @@ enum SpokenTraffic {
         id.uppercased().filter { $0.isLetter || $0.isNumber }.map(String.init).joined(separator: " ")
     }
 
-    private static func direction(_ bearing: Double) -> String {
+    /// The ambient map's VoiceOver label: "DL570, Delta Air Lines, 3 miles northeast, 30,000 feet".
+    static func mapLabel(for contact: RadarContact) -> String {
+        let f = contact.flight
+        let where_ = contact.distanceMiles < 0.5 ? "overhead" : "\(RadarFormat.miles(contact.distanceMiles)) miles \(direction(contact.bearing))"
+        return "\(f.displayIdentifier), \(f.operatorInfo.title), \(where_), \(RadarFormat.wholeNumber(f.altitudeFeet)) feet"
+    }
+
+    static func direction(_ bearing: Double) -> String {
         ["N": "north", "NE": "northeast", "E": "east", "SE": "southeast",
          "S": "south", "SW": "southwest", "W": "west", "NW": "northwest"][GeoMath.cardinal(bearing)] ?? ""
     }

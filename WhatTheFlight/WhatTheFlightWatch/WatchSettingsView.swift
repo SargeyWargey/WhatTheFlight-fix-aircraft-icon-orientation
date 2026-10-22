@@ -18,6 +18,8 @@ struct WatchSettingsView: View {
     let open: (WatchRootView.Screen) -> Void
     /// Back to the radar. The radar is also below the end of the list.
     let close: () -> Void
+    /// Replays the first-run tour.
+    var showTour: () -> Void = {}
 
     @State private var skyWatchMessage: String?
     @State private var askingPhone = false
@@ -120,6 +122,9 @@ struct WatchSettingsView: View {
 
             Section {
                 Toggle("Demo traffic", isOn: $settings.demoTraffic)
+                Button(action: showTour) {
+                    Label("Take the tour", systemImage: "sparkles")
+                }
             } footer: {
                 Text("Flight data: Flightradar24 (unofficial). Airlines: OpenFlights (ODbL). Airports: OurAirports. Photos: Planespotters.net.")
             }

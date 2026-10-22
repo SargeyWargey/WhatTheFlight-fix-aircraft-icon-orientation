@@ -32,6 +32,8 @@ struct WatchRootView: View {
     @State private var page: Page = .radar
     @State private var path: [Screen] = []
     @State private var complications = ComplicationPublisher()
+    /// First run: the tour, before the location prompt.
+    @State private var showTour = false
     /// A route that arrived before the first feed load (e.g. from a complication).
     @State private var deferredRoute: WatchRouter.Route?
     #if DEBUG
@@ -53,7 +55,8 @@ struct WatchRootView: View {
         NavigationStack(path: $path) {
             TabView(selection: $page) {
                 WatchSettingsView(settings: settings, watchSettings: watchSettings, location: location, link: link,
-                                  nearbyCount: model.contacts.count, open: { path.append($0) }, close: backToRadar)
+                                  nearbyCount: model.contacts.count, open: { path.append($0) }, close: backToRadar,
+                                  showTour: { showTour = true })
                     .tag(Page.settings)
                 WatchRadarView(model: model, settings: settings, watchSettings: watchSettings, location: location,
                                centerState: centerState, isActive: page == .radar && path.isEmpty,
@@ -81,6 +84,11 @@ struct WatchRootView: View {
                 }
             }
         }
+        .fullScreenCover(isPresented: $showTour) {
+            WatchTourView(settings: settings, watchSettings: watchSettings,
+                          onDone: { finishTour(thenIdentify: false) },
+                          onTryIdentify: { finishTour(thenIdentify: true) })
+        }
         #if DEBUG
         .sheet(item: $debugNotification) { flight in
             ScrollView {
@@ -101,7 +109,11 @@ struct WatchRootView: View {
             link.activate()
             // Identify names anything you can see within 15 mi, whatever the radar's radius.
             model.queryRadiusFloor = WristPointing.identifyRangeMiles + 1
-            location.requestPermission()
+            if watchSettings.hasSeenTour {
+                location.requestPermission()
+            } else {
+                showTour = true
+            }
             location.start()
             model.start()
             syncObserver()
@@ -201,6 +213,19 @@ struct WatchRootView: View {
         case .error(let message) where !model.hasLoadedOnce: return .error(message)
         case .idle, .loading: return .scanning
         default: return model.hasLoadedOnce ? .clearSkies(radius: settings.radiusMiles) : .scanning
+        }
+    }
+
+    private func finishTour(thenIdentify: Bool) {
+        watchSettings.hasSeenTour = true
+        showTour = false
+        location.requestPermission()
+        page = .radar
+        if thenIdentify {
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(0.5))
+                path = [.identify]
+            }
         }
     }
 

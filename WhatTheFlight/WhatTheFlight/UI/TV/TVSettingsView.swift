@@ -455,6 +455,14 @@ struct TVRadarSettingsView: View {
         TVToggleRow(title: "Radar sweep", symbol: "dot.radiowaves.right", isOn: $settings.radarSweep)
         TVToggleRow(title: "Aircraft photos", symbol: "photo.fill", isOn: $settings.showPhotos)
 
+        TVSectionHeader(title: "Map")
+        TVToggleRow(title: "Map view", subtitle: "Adds a Map item to the dock: a live map of every aircraft around you",
+                    symbol: "map.fill", isOn: $settings.mapView)
+        if settings.mapView {
+            TVToggleRow(title: "Map north up", subtitle: "Off, the map turns so the top of the screen is the way the TV faces",
+                        symbol: "location.north.line.fill", isOn: $settings.mapNorthUp)
+        }
+
         TVSectionHeader(title: "Screen")
         TVToggleRow(title: "Keep screen awake", subtitle: "No screen saver or sleep while the radar is open",
                     symbol: "sun.max.fill", isOn: $settings.keepScreenAwake)

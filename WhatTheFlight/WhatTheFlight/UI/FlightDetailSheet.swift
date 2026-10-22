@@ -377,19 +377,9 @@ struct DetailMap: View {
 
     private var showsRoute: Bool { mode == .route && Self.canShowRoute(flight) }
 
-    private var projectedPath: [CLLocationCoordinate2D] {
-        let start = contact.coordinate
-        let speed = Double(flight.groundSpeedKnots)
-        return stride(from: 0.0, through: 600, by: 60).map {
-            GeoMath.extrapolate(start, trackDegrees: flight.track, speedKnots: speed, seconds: $0)
-        }
-    }
-
     var body: some View {
         Map(position: $camera, interactionModes: interactive ? [.pan, .zoom] : []) {
-            MapCircle(center: observer, radius: radiusMiles * 1609.344)
-                .foregroundStyle(Palette.ink.opacity(0.06))
-                .stroke(Palette.ink.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+            RadiusRings(observer: observer, radiusMiles: radiusMiles)
 
             if showsRoute, let from = originCoordinate, let to = destinationCoordinate {
                 // Flown: from the origin, through every position we saw, to where it is now.
@@ -410,16 +400,11 @@ struct DetailMap: View {
                     MapPolyline(coordinates: trail + [contact.coordinate])
                         .stroke(Palette.route.opacity(0.9), style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
                 }
-                MapPolyline(coordinates: projectedPath)
-                    .stroke(Palette.signal.opacity(0.8), style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [6, 5]))
+                ProjectedPath(contact: contact)
             }
 
             Annotation("You", coordinate: observer, anchor: .center) {
-                Circle()
-                    .fill(Palette.ink)
-                    .frame(width: 12, height: 12)
-                    .overlay(Circle().stroke(.white, lineWidth: 2))
-                    .shadow(radius: 2)
+                ObserverDot()
             }
 
             Annotation(flight.displayIdentifier, coordinate: contact.coordinate, anchor: .center) {
@@ -442,50 +427,14 @@ struct DetailMap: View {
         if showsRoute, let from = originCoordinate, let to = destinationCoordinate {
             camera = .region(Self.region(fitting: [from, to, contact.coordinate], padding: 1.35, minimumSpan: 0.5))
         } else {
-            camera = .region(Self.region(fitting: [observer, contact.coordinate] + projectedPath.suffix(1), padding: 1.6, minimumSpan: 0.05))
+            camera = .region(Self.region(fitting: [observer, contact.coordinate] + contact.projectedPath.suffix(1), padding: 1.6, minimumSpan: 0.05))
         }
     }
 
-    /// A region around the points. Longitudes are unwrapped so a trans-Pacific route frames
-    /// the short way across the date line.
+    /// A region around the points (see `TrafficMapGeometry.frame(fitting:)`).
     static func region(fitting points: [CLLocationCoordinate2D], padding: Double, minimumSpan: Double) -> MKCoordinateRegion {
-        guard let first = points.first else { return MKCoordinateRegion() }
-        let lats = points.map(\.latitude)
-        let lons = points.map { p -> Double in
-            var lon = p.longitude
-            while lon - first.longitude > 180 { lon -= 360 }
-            while lon - first.longitude < -180 { lon += 360 }
-            return lon
-        }
-        let minLat = lats.min()!, maxLat = lats.max()!, minLon = lons.min()!, maxLon = lons.max()!
-        var centerLon = (minLon + maxLon) / 2
-        if centerLon > 180 { centerLon -= 360 } else if centerLon < -180 { centerLon += 360 }
-        let center = CLLocationCoordinate2D(latitude: (minLat + maxLat) / 2, longitude: centerLon)
-        let span = MKCoordinateSpan(latitudeDelta: min(170, max(minimumSpan, (maxLat - minLat) * padding)),
-                                    longitudeDelta: min(355, max(minimumSpan, (maxLon - minLon) * padding)))
-        return MKCoordinateRegion(center: center, span: span)
-    }
-}
-
-/// An airport marker: the IATA code in a tag over a dot (filled = origin, ring = destination).
-struct AirportPin: View {
-    let code: String
-    let filled: Bool
-
-    var body: some View {
-        VStack(spacing: 3) {
-            Text(code)
-                .font(.mono(12, .heavy))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
-                .background(Palette.route, in: Capsule())
-                .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
-            Circle()
-                .fill(filled ? Palette.route : Color.white)
-                .frame(width: 10, height: 10)
-                .overlay(Circle().stroke(Palette.route, lineWidth: 2.5))
-        }
+        guard !points.isEmpty else { return MKCoordinateRegion() }
+        return TrafficMapGeometry.frame(fitting: points, padding: padding, minimumSpan: minimumSpan).region
     }
 }
 
