@@ -193,6 +193,7 @@
 				Services/RadarSettings.swift,
 				Services/SharedRadarStore.swift,
 				Services/WatchSync.swift,
+				UI/AircraftGlyph.swift,
 				UI/NotableBadge.swift,
 				UI/PerimeterLayer.swift,
 				UI/RadarBackdrop.swift,
@@ -865,8 +866,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/WhatTheFlight-Info.plist";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "WhatTheFlight uses your location to automatically set the geographic area for monitoring aircraft overhead. You can also manually enter coordinates if you prefer.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WhatTheFlight uses your location to automatically set the geographic area for monitoring aircraft overhead. You can also manually enter coordinates if you prefer.";
+				INFOPLIST_KEY_CFBundleDisplayName = "What The Flight?";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "What The Flight? uses your location to show the aircraft flying over you.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "What The Flight? uses your location to show the aircraft flying over you.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -915,8 +917,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/WhatTheFlight-Info.plist";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "WhatTheFlight uses your location to automatically set the geographic area for monitoring aircraft overhead. You can also manually enter coordinates if you prefer.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WhatTheFlight uses your location to automatically set the geographic area for monitoring aircraft overhead. You can also manually enter coordinates if you prefer.";
+				INFOPLIST_KEY_CFBundleDisplayName = "What The Flight?";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "What The Flight? uses your location to show the aircraft flying over you.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "What The Flight? uses your location to show the aircraft flying over you.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -1048,7 +1051,7 @@
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhatTheFlightWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				INFOPLIST_KEY_CFBundleDisplayName = "What The Flight?";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1077,7 +1080,7 @@
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhatTheFlightWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				INFOPLIST_KEY_CFBundleDisplayName = "What The Flight?";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1106,7 +1109,7 @@
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhatTheFlightTopShelf/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				INFOPLIST_KEY_CFBundleDisplayName = "What The Flight?";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1135,7 +1138,7 @@
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhatTheFlightTopShelf/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				INFOPLIST_KEY_CFBundleDisplayName = "What The Flight?";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1165,8 +1168,8 @@
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WhatTheFlight uses your location to show the aircraft flying over you.";
+				INFOPLIST_KEY_CFBundleDisplayName = "What The Flight?";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "What The Flight? uses your location to show the aircraft flying over you.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Point & Find uses your Watch's motion sensors to tell which way your arm is pointing, so it can guide you to an aircraft.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = SargeyWargey.WhatTheFlight;
@@ -1198,8 +1201,8 @@
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WhatTheFlight uses your location to show the aircraft flying over you.";
+				INFOPLIST_KEY_CFBundleDisplayName = "What The Flight?";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "What The Flight? uses your location to show the aircraft flying over you.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Point & Find uses your Watch's motion sensors to tell which way your arm is pointing, so it can guide you to an aircraft.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = SargeyWargey.WhatTheFlight;
@@ -1230,7 +1233,7 @@
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhatTheFlightWatchWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				INFOPLIST_KEY_CFBundleDisplayName = "What The Flight?";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1259,7 +1262,7 @@
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WhatTheFlightWatchWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = WhatTheFlight;
+				INFOPLIST_KEY_CFBundleDisplayName = "What The Flight?";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

@@ -295,7 +295,7 @@ struct TVAircraftListView: View {
         var body: some View {
             let f = contact.flight
             HStack(spacing: 28) {
-                AircraftBlip(kind: f.kind, screenTrack: f.track - heading, isFocused: isFocusedAircraft, scale: 1.3)
+                AircraftBlip(flight: f, screenTrack: f.track - heading, isFocused: isFocusedAircraft, scale: 1.3)
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 16) {
                         Text(f.displayIdentifier).font(.mono(32, .bold))

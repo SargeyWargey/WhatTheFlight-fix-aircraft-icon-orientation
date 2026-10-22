@@ -90,7 +90,7 @@ struct WhatTheFlightApp: App {
         
         // Help menu
         CommandGroup(replacing: .help) {
-            Button("WhatTheFlight Help") {
+            Button("What The Flight? Help") {
                 if let url = URL(string: "https://github.com/yourusername/whattheflight/wiki") {
                     NSWorkspace.shared.open(url)
                 }

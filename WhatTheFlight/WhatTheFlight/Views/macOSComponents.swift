@@ -282,7 +282,7 @@ class WindowManager: ObservableObject {
         window.titleVisibility = .visible
         
         // Set window title
-        window.title = "WhatTheFlight"
+        window.title = "What The Flight?"
         
         // Configure window to be closable but not minimizable to prevent accidental closure
         window.styleMask.insert(.closable)
@@ -301,9 +301,9 @@ class WindowManager: ObservableObject {
         guard let window = NSApplication.shared.windows.first else { return }
         
         if let status = status {
-            window.title = "WhatTheFlight - \(status)"
+            window.title = "What The Flight? — \(status)"
         } else {
-            window.title = "WhatTheFlight"
+            window.title = "What The Flight?"
         }
     }
 }

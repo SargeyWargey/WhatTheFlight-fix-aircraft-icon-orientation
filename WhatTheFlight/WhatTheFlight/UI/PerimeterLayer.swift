@@ -24,7 +24,7 @@ struct PerimeterLayer: View {
                 let isFocused = placement.id == focusedID
                 let fade = 1 - 0.4 * min(1, placement.contact.distanceMiles / max(radiusMiles, 1))
 
-                DistanceLabel(miles: placement.contact.distanceMiles, isFocused: isFocused, kind: placement.contact.flight.kind, scale: scale)
+                DistanceLabel(miles: placement.contact.distanceMiles, isFocused: isFocused, flight: placement.contact.flight, scale: scale)
                     .opacity(isFocused ? 1 : fade)
                     .position(placement.labelPoint)
                     .animation(.interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.labelPoint)
@@ -32,11 +32,10 @@ struct PerimeterLayer: View {
                     .zIndex(3)
 
                 AircraftBlip(
-                    kind: placement.contact.flight.kind,
+                    flight: placement.contact.flight,
                     screenTrack: placement.screenTrack,
                     isFocused: isFocused,
-                    scale: scale,
-                    notable: placement.contact.flight.notable.first?.tag
+                    scale: scale
                 )
                 .opacity(isFocused ? 1 : fade)
                 .position(placement.point)
@@ -46,7 +45,7 @@ struct PerimeterLayer: View {
                 .accessibilityElement()
                 .accessibilityLabel(accessibilityText(for: placement.contact))
                 .accessibilityAddTraits(.isButton)
-                .accessibilityHint("Shows this aircraft in the centre")
+                .accessibilityHint("Shows this aircraft in the center")
                 .transition(edgeTransition(for: placement))
                 .zIndex(isFocused ? 2 : 1)
             }
@@ -72,22 +71,22 @@ struct PerimeterLayer: View {
 }
 
 struct AircraftBlip: View {
-    let kind: AircraftKind
+    let flight: Flight
     let screenTrack: Double
     let isFocused: Bool
     var scale: CGFloat = 1
-    /// Notable traffic gets a coloured marker; emergencies turn the whole blip red.
-    var notable: NotableTag? = nil
 
     @State private var pulse = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var tint: Color {
-        if isFocused || notable?.isEmergency == true { return Palette.signal }
-        return kind == .helicopter ? Palette.heliBlip : Palette.blip
-    }
-
     var body: some View {
+        let tags = flight.notable.map(\.tag)
+        // Emergencies turn the whole blip red. Military already shows in the icon's colour,
+        // so the corner marker shows the next most urgent tag.
+        let tint = isFocused || tags.first?.isEmergency == true
+            ? Palette.signal
+            : Palette.blip(kind: flight.kind, isMilitary: tags.contains(.military))
+        let markerTag = tags.first { $0 != .military }
         ZStack {
             if isFocused {
                 Circle()
@@ -99,14 +98,13 @@ struct AircraftBlip: View {
                     .fill(Palette.signal.opacity(0.16))
                     .frame(width: 40 * scale, height: 40 * scale)
             }
-            glyph
+            AircraftGlyph(silhouette: flight.silhouette, size: (isFocused ? 34 : 30) * scale)
                 .foregroundStyle(tint)
-                // The SF Symbol points east; the helicopter artwork points north.
-                .continuousRotation(kind == .helicopter ? screenTrack : screenTrack - 90)
+                .continuousRotation(screenTrack)
                 .shadow(color: tint.opacity(0.35), radius: 3 * scale, y: scale)
-            if let notable {
+            if let markerTag {
                 Circle()
-                    .fill(Palette.color(for: notable))
+                    .fill(Palette.color(for: markerTag))
                     .frame(width: 9 * scale, height: 9 * scale)
                     .overlay(Circle().stroke(Palette.paper, lineWidth: 1.5 * scale))
                     .offset(x: 13 * scale, y: -13 * scale)
@@ -116,21 +114,6 @@ struct AircraftBlip: View {
         .contentShape(Circle())
         .onAppear { startPulse() }
         .onChange(of: isFocused) { _, _ in startPulse() }
-    }
-
-    @ViewBuilder
-    private var glyph: some View {
-        switch kind {
-        case .airplane:
-            Image(systemName: "airplane")
-                .font(.system(size: (isFocused ? 25 : 21) * scale, weight: .semibold))
-        case .helicopter:
-            Image("helicopter-bottom-view")
-                .resizable()
-                .renderingMode(.template)
-                .scaledToFit()
-                .frame(width: (isFocused ? 28 : 24) * scale, height: (isFocused ? 28 : 24) * scale)
-        }
     }
 
     private func startPulse() {
@@ -145,14 +128,14 @@ struct AircraftBlip: View {
 struct DistanceLabel: View {
     let miles: Double
     let isFocused: Bool
-    let kind: AircraftKind
+    let flight: Flight
     var scale: CGFloat = 1
 
     var body: some View {
         Text(RadarFormat.miles(miles))
             .font(.mono((isFocused ? 15 : 13) * scale, .bold))
             .monospacedDigit()
-            .foregroundStyle(isFocused ? Palette.signal : (kind == .helicopter ? Palette.heliBlip : Palette.blip))
+            .foregroundStyle(isFocused ? Palette.signal : Palette.blip(for: flight))
             .contentTransition(.numericText(value: miles))
             .paperHalo()
             .fixedSize()

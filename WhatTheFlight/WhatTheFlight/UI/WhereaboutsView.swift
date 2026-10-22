@@ -76,7 +76,7 @@ struct WhereaboutsView: View {
             }
             .padding(.top, 10)
 
-            WhereaboutsMap(whereabouts: w, observer: observer, height: 300)
+            WhereaboutsMap(whereabouts: w, observer: observer, height: 360, interactive: true)
 
             if !f.isOnGround, let progress = RouteProgress(flight: f, position: w.coordinate) {
                 RouteProgressView(progress: progress)

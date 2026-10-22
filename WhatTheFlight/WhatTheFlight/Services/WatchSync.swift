@@ -130,7 +130,7 @@ final class PhoneWatchLink: NSObject {
 
     private func handle(_ message: [String: Any]) async -> [String: Any] {
         guard message[WatchSync.requestKey] as? String == WatchSync.startSkyWatch, let onStartSkyWatch else {
-            return WatchSync.encode(WatchSync.Reply(ok: false, message: "Your iPhone didn't understand that. Update WhatTheFlight on both devices."))
+            return WatchSync.encode(WatchSync.Reply(ok: false, message: "Your iPhone didn't understand that. Update What The Flight? on both devices."))
         }
         return WatchSync.encode(await onStartSkyWatch())
     }
@@ -183,14 +183,14 @@ final class WatchPhoneLink: NSObject {
     func requestSkyWatch() async -> WatchSync.Reply {
         let session = WCSession.default
         guard session.activationState == .activated, session.isReachable else {
-            return WatchSync.Reply(ok: false, message: "Can't reach your iPhone. Open WhatTheFlight on it and start Sky Watch there.")
+            return WatchSync.Reply(ok: false, message: "Can't reach your iPhone. Open What The Flight? on it and start Sky Watch there.")
         }
         return await withCheckedContinuation { continuation in
             session.sendMessage([WatchSync.requestKey: WatchSync.startSkyWatch], replyHandler: { reply in
                 continuation.resume(returning: WatchSync.decodeReply(reply)
                     ?? WatchSync.Reply(ok: false, message: "Your iPhone sent an answer this Watch couldn't read."))
             }, errorHandler: { _ in
-                continuation.resume(returning: WatchSync.Reply(ok: false, message: "Your iPhone didn't answer. Open WhatTheFlight on it and start Sky Watch there."))
+                continuation.resume(returning: WatchSync.Reply(ok: false, message: "Your iPhone didn't answer. Open What The Flight? on it and start Sky Watch there."))
             })
         }
     }

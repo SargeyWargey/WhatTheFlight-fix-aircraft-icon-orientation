@@ -54,7 +54,7 @@ final class SkyWatch {
                 problem = "Live Activities are unavailable: \(error.localizedDescription)"
             }
         } else {
-            problem = "Live Activities are off for WhatTheFlight in iOS Settings — alerts will still arrive."
+            problem = "Live Activities are off for What The Flight? in iOS Settings — alerts will still arrive."
         }
         isActive = true
         endsAt = ends

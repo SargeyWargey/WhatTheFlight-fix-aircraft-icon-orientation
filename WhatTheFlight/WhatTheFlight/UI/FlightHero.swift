@@ -77,7 +77,8 @@ struct FlightHero: View {
     @ViewBuilder
     private var typeLine: some View {
         VStack(spacing: 5 * detailScale) {
-            if let code = flight.typeCode {
+            // Unidentified aircraft already show their type code as the title.
+            if let code = flight.typeCode, code != flight.displayIdentifier {
                 Text(code)
                     .font(.mono(15 * detailScale, .bold))
                     .foregroundStyle(.white)
@@ -384,7 +385,7 @@ struct CenterStateView: View {
             #else
             return denied
                 ? "Location access is off. Turn it on, or drop a pin to watch any spot on Earth."
-                : "WhatTheFlight needs your position to find what's flying over you."
+                : "What The Flight? needs your position to find what's flying over you."
             #endif
         case .scanning:
             return "Listening for aircraft overhead"

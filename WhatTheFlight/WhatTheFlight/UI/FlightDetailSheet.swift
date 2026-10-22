@@ -269,7 +269,7 @@ struct FlightDetailSheet: View {
         var text = "✈️ \(f.displayIdentifier)"
         if f.hasRoute { text += " \(f.originIATA ?? "") → \(f.destinationIATA ?? "")" }
         if let type = f.typeName ?? f.typeCode { text += " · \(type)" }
-        text += " — \(RadarFormat.wholeNumber(f.altitudeFeet)) ft, \(RadarFormat.miles(contact.distanceMiles)) mi away. Spotted with WhatTheFlight."
+        text += " — \(RadarFormat.wholeNumber(f.altitudeFeet)) ft, \(RadarFormat.miles(contact.distanceMiles)) mi away. Spotted with What The Flight?"
         return text
     }
 
@@ -423,18 +423,9 @@ struct DetailMap: View {
             }
 
             Annotation(flight.displayIdentifier, coordinate: contact.coordinate, anchor: .center) {
-                Group {
-                    if flight.kind == .helicopter {
-                        Image("helicopter-bottom-view").resizable().renderingMode(.template).scaledToFit()
-                            .frame(width: 26, height: 26)
-                            .rotationEffect(.degrees(flight.track))
-                    } else {
-                        Image(systemName: "airplane")
-                            .font(.system(size: 24, weight: .semibold))
-                            .rotationEffect(.degrees(flight.track - 90))
-                    }
-                }
-                .foregroundStyle(Palette.signal)
+                AircraftGlyph(silhouette: flight.silhouette, size: 34)
+                    .rotationEffect(.degrees(flight.track))
+                    .foregroundStyle(Palette.signal)
                 .shadow(color: .black.opacity(0.3), radius: 2)
             }
         }

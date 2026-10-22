@@ -4,8 +4,10 @@
 //
 //  The wrist radar. Same rules as the iPhone: the nearest aircraft takes the centre and keeps
 //  it until it leaves the radius; the others ride the screen edge at their compass bearing,
-//  turning with the wrist. The Digital Crown steps out to farther aircraft and back in;
-//  double tap (or "Nearest") returns to the closest one.
+//  turning with the wrist. Swipe left (or turn the Digital Crown) for farther aircraft, swipe
+//  right to come back in; double tap (or "Nearest") returns to the closest one. Settings sit
+//  above the radar and the Nearby list below it (vertical pages, see `WatchRootView`). The
+//  pointer button opens Identify; holding it switches between Point and Aim.
 //
 
 import SwiftUI
@@ -17,11 +19,15 @@ struct WatchRadarView: View {
     let watchSettings: WatchSettings
     let location: WatchLocationService
     let centerState: WatchCenterState.Kind?
+    /// The radar is the visible page; the crown goes back to it.
+    let isActive: Bool
     let open: (WatchRootView.Screen) -> Void
     let retry: () -> Void
 
     @State private var crown = 0
     @FocusState private var crownFocused: Bool
+    /// The long press that switched aim styles also ends as a tap; that tap is ignored.
+    @State private var ignoreNextPointerTap = false
     @Environment(\.isLuminanceReduced) private var isLuminanceReduced
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -80,19 +86,10 @@ struct WatchRadarView: View {
                     )
                     .opacity(isLuminanceReduced ? 0.6 : 1)
                 }
-
-                if let notice = model.notice, !isLuminanceReduced {
-                    NoticeCapsule(notice: notice)
-                        .frame(maxWidth: max(0, geo.size.width - 40))
-                        .position(x: geo.size.width / 2, y: layout.noticeY)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                        .task(id: notice.id) {
-                            try? await Task.sleep(for: .seconds(3.5))
-                            withAnimation { model.dismissNotice(notice.id) }
-                        }
-                }
             }
-            .animation(.smooth, value: model.notice)
+            .contentShape(Rectangle())
+            // Simultaneous, so the vertical page swipes still reach the TabView.
+            .simultaneousGesture(swipe)
         }
         .ignoresSafeArea()
         .focusable()
@@ -101,21 +98,65 @@ struct WatchRadarView: View {
                               sensitivity: .low, isContinuous: false, isHapticFeedbackEnabled: true)
         .onChange(of: crown) { old, new in step(by: new - old) }
         .onAppear { crownFocused = true }
+        .onChange(of: isActive) { _, active in
+            if active { crownFocused = true }
+        }
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button { open(.settings) } label: { Image(systemName: "gearshape.fill") }
-                    .accessibilityLabel("Settings")
-            }
             ToolbarItemGroup(placement: .bottomBar) {
-                Button { open(.nearby) } label: { Image(systemName: "list.bullet") }
-                    .accessibilityLabel("Nearby aircraft")
                 Spacer()
-                Button { open(.identify) } label: { Image(systemName: watchSettings.aimStyle.symbol) }
-                    .accessibilityLabel("Identify: \(watchSettings.aimStyle == .point ? "point" : "aim") at a plane")
+                pointerButton
             }
         }
         .accessibilityAction(named: "Nearest aircraft", backToNearest)
         .accessibilityAction(named: "Next aircraft") { step(by: 1) }
+        .accessibilityAction(named: "Previous aircraft") { step(by: -1) }
+    }
+
+    /// Left: next aircraft farther out. Right: back toward the nearest. Mostly-vertical
+    /// swipes are left to the pages.
+    private var swipe: some Gesture {
+        DragGesture(minimumDistance: 20)
+            .onEnded { value in
+                let dx = value.translation.width, dy = value.translation.height
+                guard abs(dx) > 30, abs(dx) > abs(dy) * 1.5, !model.contacts.isEmpty else { return }
+                step(by: dx < 0 ? 1 : -1)
+                WatchHaptics.play(.click, enabled: settings.hapticsEnabled)
+            }
+    }
+
+    private var pointerButton: some View {
+        let style = watchSettings.aimStyle
+        return Button {
+            if ignoreNextPointerTap {
+                ignoreNextPointerTap = false
+                return
+            }
+            open(.identify)
+        } label: {
+            Image(systemName: style.symbol)
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.5).onEnded { _ in toggleAimStyle() }
+        )
+        .accessibilityLabel("Identify: \(style == .point ? "point" : "aim") at a plane")
+        .accessibilityHint("Hold to switch to \(style == .point ? "Aim" : "Point")")
+        .accessibilityAction(named: "Switch to \(style == .point ? "Aim" : "Point")", toggleAimStyle)
+    }
+
+    private func toggleAimStyle() {
+        ignoreNextPointerTap = true
+        withAnimation(.snappy) {
+            watchSettings.aimStyle = watchSettings.aimStyle == .point ? .aim : .point
+        }
+        // Always felt, even with alert haptics off: it's the only sign the mode changed.
+        WatchHaptics.play(watchSettings.aimStyle == .aim ? .start : .stop)
+        AccessibilityNotification.Announcement("Aim with \(watchSettings.aimStyle.title)").post()
+        // If the press ended outside the button no tap follows; don't swallow the next one.
+        Task {
+            try? await Task.sleep(for: .seconds(1))
+            ignoreNextPointerTap = false
+        }
     }
 
     /// At accessibility text sizes the edge icons would crowd the hero; the list takes over.
@@ -177,11 +218,11 @@ struct WatchRadarLayout {
         PerimeterTrack(rect: CGRect(origin: .zero, size: size).insetBy(dx: 3, dy: 3), cornerRadius: displayCorner - 2)
     }
 
-    /// Settings, clock and the two bottom buttons sit in the corners; icons go around them.
+    /// The clock and the pointer button sit in the corners; icons go around them.
     var obstacles: [PerimeterTrack.Obstacle] {
         let track = iconTrack
-        // The clock is wider than the round buttons.
-        let corners: [(PerimeterTrack.Corner, CGFloat)] = [(.topLeft, 26), (.topRight, 34), (.bottomLeft, 26), (.bottomRight, 26)]
+        // The clock is wider than the round button.
+        let corners: [(PerimeterTrack.Corner, CGFloat)] = [(.topRight, 34), (.bottomRight, 26)]
         return corners.map { PerimeterTrack.Obstacle(s: track.arcLength(of: $0.0), halfWidth: $0.1) }
     }
 
@@ -189,7 +230,6 @@ struct WatchRadarLayout {
     /// Never negative: the first layout pass can arrive with a zero size.
     var centerWidth: CGFloat { max(0, size.width - 2 * (iconInset + 22)) }
     var centerNudge: CGFloat { 2 }
-    var noticeY: CGFloat { size.height * 0.2 }
 }
 
 // MARK: - Hero
@@ -357,14 +397,14 @@ struct WatchPerimeterLayer: View {
 
                 if index < labelCount || isFocused {
                     DistanceLabel(miles: placement.contact.distanceMiles, isFocused: isFocused,
-                                  kind: placement.contact.flight.kind, scale: 0.78)
+                                  flight: placement.contact.flight, scale: 0.78)
                         .opacity(isFocused ? 1 : fade)
                         .position(placement.labelPoint)
                         .animation(.interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.labelPoint)
                 }
 
-                AircraftBlip(kind: placement.contact.flight.kind, screenTrack: placement.screenTrack, isFocused: isFocused,
-                             scale: blipScale, notable: placement.contact.flight.notable.first?.tag)
+                AircraftBlip(flight: placement.contact.flight, screenTrack: placement.screenTrack, isFocused: isFocused,
+                             scale: blipScale)
                     .opacity(isFocused ? 1 : fade)
                     .position(placement.point)
                     .animation(.interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.point)
@@ -378,22 +418,7 @@ struct WatchPerimeterLayer: View {
     }
 }
 
-// MARK: - Notices & empty states
-
-struct NoticeCapsule: View {
-    let notice: RadarNotice
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: notice.symbol).font(.system(size: 10, weight: .bold))
-            Text(notice.text).font(.mono(10, .semibold)).lineLimit(2).minimumScaleFactor(0.8)
-        }
-        .foregroundStyle(Palette.value)
-        .padding(.horizontal, 9)
-        .padding(.vertical, 5)
-        .glassSurface(in: Capsule())
-    }
-}
+// MARK: - Empty states
 
 struct WatchCenterState: View {
     enum Kind: Equatable {
@@ -454,8 +479,8 @@ struct WatchCenterState: View {
     private var message: String {
         switch kind {
         case .needsLocation(let denied):
-            return denied ? "Turn on Location for WhatTheFlight in the Watch app on iPhone." : "Allow location to see what's overhead."
-        case .noPhoneSpot: return "Open WhatTheFlight on your iPhone once to share its spot."
+            return denied ? "Turn on Location for What The Flight? in the Watch app on iPhone." : "Allow location to see what's overhead."
+        case .noPhoneSpot: return "Open What The Flight? on your iPhone once to share its spot."
         case .scanning: return "Listening for aircraft"
         case .clearSkies(let radius): return "Nothing airborne within \(Int(radius)) mi."
         case .error(let text): return text

@@ -169,7 +169,7 @@ final class TVLocationProvider: NSObject, CLLocationManagerDelegate {
             isLocating = true
             manager.requestLocation()
         } else {
-            lastError = "Location access is off for WhatTheFlight in tvOS Settings."
+            lastError = "Location access is off for What The Flight? in tvOS Settings."
         }
     }
 

@@ -41,6 +41,8 @@ struct TVRadarSettingsView: View {
     let link: TVLinkReceiver
     let tvLocation: TVLocationProvider
     let initialPane: TVSettingsPane
+    /// Replays the first-run tour (About → Take the Tour).
+    var showTour: () -> Void = {}
 
     @State private var pane: TVSettingsPane
     @FocusState private var focusedPane: TVSettingsPane?
@@ -49,12 +51,14 @@ struct TVRadarSettingsView: View {
     @State private var confirmReset = false
     @State private var confirmClearLocation = false
 
-    init(settings: RadarSettings, model: RadarModel, link: TVLinkReceiver, tvLocation: TVLocationProvider, initialPane: TVSettingsPane) {
+    init(settings: RadarSettings, model: RadarModel, link: TVLinkReceiver, tvLocation: TVLocationProvider, initialPane: TVSettingsPane,
+         showTour: @escaping () -> Void = {}) {
         self.settings = settings
         self.model = model
         self.link = link
         self.tvLocation = tvLocation
         self.initialPane = initialPane
+        self.showTour = showTour
         _pane = State(initialValue: initialPane)
     }
 
@@ -243,8 +247,8 @@ struct TVRadarSettingsView: View {
                         .foregroundStyle(Palette.value)
                 }
                 VStack(alignment: .leading, spacing: 8) {
-                    step(1, "On your iPhone, open the WhatTheFlight app, tap its ⚙︎ Settings button, then Apple TV → Aim at Your Apple TV")
-                    step(2, "Stand directly in front of this TV, facing it, and hold the iPhone up so its camera points at the centre of the screen")
+                    step(1, "On your iPhone, open the What The Flight? app, tap its ⚙︎ Settings button, then Apple TV → Aim at Your Apple TV")
+                    step(2, "Stand directly in front of this TV, facing it, and hold the iPhone up so its camera points at the center of the screen")
                     step(3, "Hold it steady and tap Send — your location and the direction the TV faces arrive here")
                 }
             }
@@ -460,13 +464,16 @@ struct TVRadarSettingsView: View {
 
     @ViewBuilder
     private var aboutPane: some View {
-        TVSectionHeader(title: "WhatTheFlight")
+        TVSectionHeader(title: "What The Flight?")
         TVValueRow(title: "Version", value: appVersion, symbol: "app.badge") {}
         TVValueRow(title: "Flight data", subtitle: "Unofficial public feed — may change without notice", value: "Flightradar24", symbol: "antenna.radiowaves.left.and.right") {}
         TVValueRow(title: "Aircraft photos", value: "Planespotters.net", symbol: "camera.fill") {}
         TVValueRow(title: "Airports", subtitle: "Public domain", value: "OurAirports", symbol: "mappin.and.ellipse") {}
         TVValueRow(title: "Airlines", subtitle: "Open Database License (ODbL)", value: "OpenFlights", symbol: "airplane.circle") {}
         TVValueRow(title: "iPhone link code", value: link.code, symbol: "iphone") {}
+        TVValueRow(title: "Take the tour", subtitle: "What the radar shows and how to drive it", value: "", symbol: "sparkles") {
+            showTour()
+        }
         TVSectionHeader(title: "Reset")
         TVValueRow(title: "Reset all settings", value: "", symbol: "arrow.counterclockwise") {
             confirmReset = true

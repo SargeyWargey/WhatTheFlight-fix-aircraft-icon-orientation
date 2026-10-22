@@ -128,6 +128,16 @@ extension Sighting {
 
     var closestText: String { "\(RadarFormat.miles(closestMiles)) mi" }
 
+    /// "iPhone, Apple TV".
+    var devicesText: String? {
+        loggedOn.isEmpty ? nil : loggedOn.map(\.title).joined(separator: ", ")
+    }
+
+    /// Icon colour at rest: military olive, otherwise the standard blip.
+    var tint: Color {
+        Palette.blip(kind: kind, isMilitary: tags.contains(.military))
+    }
+
     /// "6 min", "Under a min".
     var inRangeText: String {
         let minutes = Int((lastSeen.timeIntervalSince(firstSeen) / 60).rounded())
@@ -142,6 +152,14 @@ enum LogbookGrouping {
         return groups.keys.sorted(by: >).map { day in
             (day, groups[day]!.sorted { $0.firstSeen > $1.firstSeen })
         }
+    }
+
+    /// "Atlanta, GA" or "Atlanta, GA + 2 more": where you watched from that day.
+    static func places(in items: [Sighting]) -> String? {
+        var seen = Set<String>()
+        let places = items.reversed().compactMap(\.placeName).filter { seen.insert($0).inserted }
+        guard let first = places.first else { return nil }
+        return places.count == 1 ? first : "\(first) + \(places.count - 1) more"
     }
 
     static func title(for day: Date, calendar: Calendar = .current) -> String {
@@ -161,6 +179,9 @@ struct LogbookView: View {
 
     @State private var query = ""
     @State private var confirmClear = false
+    /// The badge whose page is open. NavigationLinks inside one grid row would all fire
+    /// together, so the grid sets this instead.
+    @State private var openBadge: String?
 
     private var filtered: [Sighting] {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
@@ -194,6 +215,11 @@ struct LogbookView: View {
                     .listRowBackground(Color.clear)
                 }
 
+                let recap = DailyRecap(logbook.sightings)
+                if !recap.notable.isEmpty || !recap.newTypes.isEmpty || !recap.newAirlines.isEmpty {
+                    TodayHighlights(recap: recap, logbook: logbook, onTrack: onTrack, isLive: isLive)
+                }
+
                 Section("Records") {
                     if let s = stats.closest { record("Closest pass", s.closestText, s) }
                     if let s = stats.highest { record("Highest", "\(RadarFormat.wholeNumber(s.altitudeAtClosestFeet)) ft", s) }
@@ -203,12 +229,10 @@ struct LogbookView: View {
                 Section("Badges · \(achievements.filter(\.isUnlocked).count) of \(achievements.count)") {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 16) {
                         ForEach(achievements) { achievement in
-                            NavigationLink {
-                                AchievementDetailView(achievement: achievement, logbook: logbook, onTrack: onTrack, isLive: isLive)
-                            } label: {
+                            Button { openBadge = achievement.id } label: {
                                 AchievementBadge(achievement: achievement)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.borderless)
                         }
                     }
                     .padding(.vertical, 8)
@@ -228,11 +252,21 @@ struct LogbookView: View {
             }
 
             ForEach(LogbookGrouping.byDay(filtered), id: \.day) { group in
-                Section("\(LogbookGrouping.title(for: group.day)) · \(group.items.count)") {
+                Section {
                     ForEach(group.items) { row($0) }
                         .onDelete { offsets in
                             logbook.delete(Set(offsets.map { group.items[$0].id }))
                         }
+                } header: {
+                    HStack {
+                        Text("\(LogbookGrouping.title(for: group.day)) · \(group.items.count)")
+                        Spacer()
+                        if let places = LogbookGrouping.places(in: group.items) {
+                            Label(places, systemImage: "mappin.and.ellipse")
+                                .labelStyle(.titleAndIcon)
+                                .lineLimit(1)
+                        }
+                    }
                 }
             }
         }
@@ -241,6 +275,9 @@ struct LogbookView: View {
         .searchable(text: $query, prompt: "Flight, airline, type, airport…")
         .navigationTitle("Logbook")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationDestination(item: $openBadge) { id in
+            AchievementPager(achievements: achievements, selection: id, logbook: logbook, onTrack: onTrack, isLive: isLive)
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
@@ -251,10 +288,16 @@ struct LogbookView: View {
                 }
             }
         }
+        #if DEBUG
+        // `-wtf.debugBadge <id>` opens a badge's page (screenshots).
+        .task {
+            if let id = UserDefaults.standard.string(forKey: "wtf.debugBadge") { openBadge = id }
+        }
+        #endif
         .confirmationDialog("Clear the whole logbook?", isPresented: $confirmClear, titleVisibility: .visible) {
             Button("Clear Logbook", role: .destructive) { logbook.clear() }
         } message: {
-            Text("Every sighting and badge on this device will be removed.")
+            Text("Every sighting and badge will be removed, on all your devices if the logbook syncs with iCloud.")
         }
         .fontDesign(.monospaced)
     }
@@ -288,6 +331,89 @@ struct LogbookView: View {
     }
 }
 
+/// The day so far: notable aircraft, types and airlines new to the logbook.
+struct TodayHighlights: View {
+    let recap: DailyRecap
+    let logbook: Logbook
+    var onTrack: ((String) -> Void)?
+    var isLive: (String) -> Bool = { _ in false }
+
+    var body: some View {
+        Section {
+            HStack(spacing: 8) {
+                chip("\(recap.total)", "spotted")
+                if !recap.notable.isEmpty { chip("\(recap.notable.count)", "notable") }
+                if !recap.newTypes.isEmpty { chip("\(recap.newTypes.count)", recap.newTypes.count == 1 ? "new type" : "new types") }
+                if let closest = recap.closest { chip(closest.closestText, "closest") }
+            }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
+
+            ForEach(recap.notable) { s in
+                link(s, reason: s.tags.first.map(Self.reason))
+            }
+            let newTypes = recap.newTypes.filter { s in !recap.notable.contains { $0.id == s.id } }
+            ForEach(newTypes.prefix(Self.newTypeLimit)) { s in
+                link(s, reason: "First \(s.typeName ?? s.typeCode ?? "of its type") in your logbook")
+            }
+            if newTypes.count > Self.newTypeLimit {
+                Text("+ \(newTypes.count - Self.newTypeLimit) more new types today")
+                    .font(.mono(11))
+                    .foregroundStyle(Palette.caption)
+                    .listRowBackground(Palette.paperShade.opacity(0.25))
+            }
+            if !recap.newAirlines.isEmpty {
+                Label("New airline\(recap.newAirlines.count == 1 ? "" : "s"): \(recap.newAirlines.joined(separator: ", "))", systemImage: "globe.americas.fill")
+                    .font(.mono(12))
+                    .foregroundStyle(Palette.value)
+                    .listRowBackground(Palette.paperShade.opacity(0.25))
+            }
+        } header: {
+            Text("Today's highlights")
+        }
+    }
+
+    private static let newTypeLimit = 3
+
+    private func chip(_ value: String, _ label: String) -> some View {
+        VStack(spacing: 2) {
+            Text(value).font(.mono(16, .bold)).foregroundStyle(Palette.ink)
+            Text(label).font(.mono(9, .semibold)).textCase(.uppercase).foregroundStyle(Palette.caption)
+                .lineLimit(1).minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(Palette.paperShade.opacity(0.35), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func link(_ s: Sighting, reason: String?) -> some View {
+        NavigationLink {
+            SightingDetailView(sighting: s, logbook: logbook, onTrack: onTrack, isLive: isLive(s.id))
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                SightingRowLabel(sighting: s, isLive: isLive(s.id))
+                if let reason {
+                    Text(reason)
+                        .font(.mono(10, .semibold))
+                        .foregroundStyle(s.tags.first.map(Palette.color(for:)) ?? Palette.route)
+                        .padding(.leading, 42)
+                }
+            }
+        }
+        .listRowBackground(Palette.paperShade.opacity(0.25))
+    }
+
+    private static func reason(_ tag: NotableTag) -> String {
+        switch tag {
+        case .hijack, .emergency, .radioFailure: return "Emergency squawk"
+        case .medical: return "Air ambulance"
+        case .military: return "Military"
+        case .government: return "Government"
+        case .rare: return "Rare aircraft"
+        }
+    }
+}
+
 /// One sighting in a list: icon, flight, route, operator and type, closest pass and time.
 struct SightingRowLabel: View {
     let sighting: Sighting
@@ -298,10 +424,9 @@ struct SightingRowLabel: View {
     var body: some View {
         let s = sighting
         HStack(spacing: 12) {
-            Image(systemName: s.kind == .helicopter ? "fan.fill" : "airplane")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(isLive ? Palette.signal : Palette.blip)
-                .frame(width: 24)
+            AircraftGlyph(silhouette: s.silhouette, size: 28, spinsRotor: false)
+                .foregroundStyle(isLive ? Palette.signal : s.tint)
+                .frame(width: 30)
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     Text(s.displayIdentifier)
@@ -328,11 +453,19 @@ struct SightingRowLabel: View {
                 Text(s.closestText)
                     .font(.mono(13, .bold))
                     .foregroundStyle(Palette.value)
-                Text(showsDate ? s.firstSeen.formatted(.dateTime.month(.abbreviated).day().hour().minute()) : s.firstSeen.formatted(date: .omitted, time: .shortened))
-                    .font(.mono(10))
-                    .foregroundStyle(Palette.caption)
+                HStack(spacing: 4) {
+                    ForEach(s.loggedOn, id: \.self) { device in
+                        Image(systemName: device.symbol)
+                            .font(.system(size: 9, weight: .semibold))
+                    }
+                    Text(showsDate ? s.firstSeen.formatted(.dateTime.month(.abbreviated).day().hour().minute()) : s.firstSeen.formatted(date: .omitted, time: .shortened))
+                        .font(.mono(10))
+                }
+                .foregroundStyle(Palette.caption)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(s.devicesText.map { "Logged on \($0)" } ?? "")
     }
 }
 
@@ -471,6 +604,41 @@ struct AirframeHistoryView: View {
     }
 }
 
+/// Badge pages: swipe left and right through every badge; Back returns to the logbook.
+struct AchievementPager: View {
+    let achievements: [Achievement]
+    @State var selection: String
+    let logbook: Logbook
+    var onTrack: ((String) -> Void)?
+    var isLive: (String) -> Bool = { _ in false }
+
+    var body: some View {
+        TabView(selection: $selection) {
+            ForEach(achievements) { achievement in
+                AchievementDetailView(achievement: achievement, logbook: logbook, onTrack: onTrack, isLive: isLive)
+                    .tag(achievement.id)
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .background(Palette.paper.ignoresSafeArea())
+        .navigationTitle(achievements.first { $0.id == selection }?.title ?? "Badge")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                VStack(spacing: 1) {
+                    Text(achievements.first { $0.id == selection }?.title ?? "Badge")
+                        .font(.mono(15, .bold))
+                    if let index = achievements.firstIndex(where: { $0.id == selection }) {
+                        Text("\(index + 1) of \(achievements.count)")
+                            .font(.mono(10))
+                            .foregroundStyle(Palette.caption)
+                    }
+                }
+            }
+        }
+    }
+}
+
 struct AchievementDetailView: View {
     let achievement: Achievement
     let logbook: Logbook
@@ -541,8 +709,6 @@ struct AchievementDetailView: View {
         }
         .scrollContentBackground(.hidden)
         .background(Palette.paper.ignoresSafeArea())
-        .navigationTitle(a.title)
-        .navigationBarTitleDisplayMode(.inline)
         .fontDesign(.monospaced)
     }
 }
@@ -560,6 +726,9 @@ struct SightingDetailView: View {
         List {
             Section {
                 VStack(spacing: 6) {
+                    AircraftGlyph(silhouette: s.silhouette, size: 56, spinsRotor: false)
+                        .foregroundStyle(s.tint)
+                        .padding(.bottom, 4)
                     if let tag = s.tags.first {
                         Label(tag.rawValue.capitalized, systemImage: tag.symbol)
                             .font(.mono(11, .heavy))
@@ -591,6 +760,7 @@ struct SightingDetailView: View {
                 LabeledContent("Altitude then", value: "\(RadarFormat.wholeNumber(s.altitudeAtClosestFeet)) ft")
                 LabeledContent("Speed then", value: "\(RadarFormat.wholeNumber(s.speedKnots)) kts")
                 if let place = s.placeName { LabeledContent("Watching from", value: place) }
+                if let devices = s.devicesText { LabeledContent("Logged on", value: devices) }
             }
 
             Section("Aircraft") {

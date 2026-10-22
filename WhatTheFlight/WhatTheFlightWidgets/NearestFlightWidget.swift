@@ -123,7 +123,7 @@ struct NearestFlightView: View {
                     .lineLimit(1)
             } else {
                 Label("Clear skies", systemImage: "sun.haze").font(.mono(14, .bold))
-                Text(entry.needsSetup ? "Open WhatTheFlight to start" : "Nothing in range")
+                Text(entry.needsSetup ? "Open What The Flight? to start" : "Nothing in range")
                     .font(.mono(11))
             }
         }
@@ -258,7 +258,7 @@ struct NearestFlightView: View {
             Text(entry.needsSetup ? "Where are you?" : "Clear skies")
                 .font(.mono(15, .bold))
                 .foregroundStyle(Palette.ink)
-            Text(entry.needsSetup ? "Open WhatTheFlight once to start." : "Nothing airborne nearby.")
+            Text(entry.needsSetup ? "Open What The Flight? once to start." : "Nothing airborne nearby.")
                 .font(.mono(10))
                 .foregroundStyle(Palette.caption)
         }

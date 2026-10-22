@@ -64,6 +64,9 @@ final class RadarModel {
     /// unless `logsCustomSpot` (the Apple TV, whose "custom" spot is where the TV really is).
     @ObservationIgnored var logbook: Logbook?
     @ObservationIgnored var logsCustomSpot = false
+    /// "Atlanta, GA" for where you are now, stamped on sightings (set by the app as it
+    /// reverse-geocodes the observer).
+    @ObservationIgnored var logPlaceName: String?
     /// Called for every new overhead / notable alert. Unset, alerts become notices.
     @ObservationIgnored var onAlert: ((TrafficAlert) -> Void)?
 
@@ -322,8 +325,8 @@ final class RadarModel {
 
         if hasLoadedOnce {
             if isLogging {
-                logbook?.record(contacts, at: now, observer: observer,
-                                placeName: settings.locationMode == .custom ? settings.customPlaceName : nil)
+                let customName = settings.locationMode == .custom ? settings.customPlaceName : nil
+                logbook?.record(contacts, at: now, observer: observer, placeName: customName ?? logPlaceName)
             }
             for alert in alertEngine.evaluate(contacts, rules: settings.alertRules, now: now) {
                 if let onAlert { onAlert(alert) } else { post(notice: alert.title, symbol: alert.symbol) }

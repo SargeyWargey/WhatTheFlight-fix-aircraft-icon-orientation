@@ -218,7 +218,7 @@ struct TVLinkSetupView: View {
                 .font(.mono(12, .semibold))
                 .foregroundStyle(Palette.signal)
         default:
-            Text("Open WhatTheFlight on your Apple TV. Both devices must be on the same Wi-Fi.")
+            Text("Open What The Flight? on your Apple TV. Both devices must be on the same Wi-Fi.")
                 .font(.mono(11))
                 .foregroundStyle(Palette.caption)
         }

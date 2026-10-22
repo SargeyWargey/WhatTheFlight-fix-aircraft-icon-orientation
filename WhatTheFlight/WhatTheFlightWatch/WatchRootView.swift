@@ -3,7 +3,8 @@
 //  WhatTheFlightWatch
 //
 //  Owns the Watch's state and wires location, the iPhone link and the wrist (scene phase)
-//  into the same `RadarModel` the iPhone and Apple TV use.
+//  into the same `RadarModel` the iPhone and Apple TV use. The top level is three vertical
+//  pages: Settings above the radar, the Nearby list below it.
 //
 
 import SwiftUI
@@ -11,6 +12,10 @@ import WidgetKit
 import CoreLocation
 
 struct WatchRootView: View {
+    enum Page: Hashable {
+        case settings, radar, nearby
+    }
+
     enum Screen: Hashable {
         case detail(String)
         /// Guide the arm to this aircraft.
@@ -18,13 +23,13 @@ struct WatchRootView: View {
         /// "What am I pointing at?"
         case identify
         case nearby
-        case settings
     }
 
     @State private var settings: RadarSettings
     @State private var watchSettings = WatchSettings()
     @State private var model: RadarModel
     @State private var location = WatchLocationService()
+    @State private var page: Page = .radar
     @State private var path: [Screen] = []
     @State private var complications = ComplicationPublisher()
     /// A route that arrived before the first feed load (e.g. from a complication).
@@ -46,26 +51,35 @@ struct WatchRootView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            WatchRadarView(model: model, settings: settings, watchSettings: watchSettings, location: location,
-                           centerState: centerState, open: { path.append($0) }, retry: centerAction)
-                .navigationDestination(for: Screen.self) { screen in
-                    switch screen {
-                    case .detail(let id):
-                        WatchFlightDetail(flightID: id, model: model, settings: settings, watchSettings: watchSettings,
-                                          location: location, open: { path.append($0) })
-                    case .find(let id):
-                        PointAndFindView(model: model, settings: settings, watchSettings: watchSettings,
-                                         location: location, initialTargetID: id)
-                    case .identify:
-                        IdentifyView(model: model, settings: settings, watchSettings: watchSettings,
-                                     location: location, open: { path.append($0) })
-                    case .nearby:
-                        WatchNearbyList(model: model, settings: settings, location: location, watchSettings: watchSettings,
-                                        open: { path.append($0) })
-                    case .settings:
-                        WatchSettingsView(settings: settings, watchSettings: watchSettings, location: location, link: link)
-                    }
+            TabView(selection: $page) {
+                WatchSettingsView(settings: settings, watchSettings: watchSettings, location: location, link: link,
+                                  nearbyCount: model.contacts.count, open: { path.append($0) }, close: backToRadar)
+                    .tag(Page.settings)
+                WatchRadarView(model: model, settings: settings, watchSettings: watchSettings, location: location,
+                               centerState: centerState, isActive: page == .radar && path.isEmpty,
+                               open: { path.append($0) }, retry: centerAction)
+                    .tag(Page.radar)
+                WatchNearbyList(model: model, settings: settings, location: location, watchSettings: watchSettings,
+                                open: { path.append($0) }, close: backToRadar)
+                    .tag(Page.nearby)
+            }
+            .tabViewStyle(.verticalPage)
+            .navigationDestination(for: Screen.self) { screen in
+                switch screen {
+                case .detail(let id):
+                    WatchFlightDetail(flightID: id, model: model, settings: settings, watchSettings: watchSettings,
+                                      location: location, open: { path.append($0) })
+                case .find(let id):
+                    PointAndFindView(model: model, settings: settings, watchSettings: watchSettings,
+                                     location: location, initialTargetID: id)
+                case .identify:
+                    IdentifyView(model: model, settings: settings, watchSettings: watchSettings,
+                                 location: location, open: { path.append($0) })
+                case .nearby:
+                    WatchNearbyList(model: model, settings: settings, location: location, watchSettings: watchSettings,
+                                    open: { path.append($0) })
                 }
+            }
         }
         #if DEBUG
         .sheet(item: $debugNotification) { flight in
@@ -75,9 +89,9 @@ struct WatchRootView: View {
         }
         #endif
         .onAppear {
+            // A tap on the wrist only: the screen is too small for a banner over the radar.
             model.onAlert = { alert in
                 WatchHaptics.play(for: alert, enabled: settings.hapticsEnabled)
-                model.post(notice: alert.title, symbol: alert.symbol)
             }
             link.onContext = { context in
                 watchSettings.apply(context, to: settings)
@@ -190,6 +204,10 @@ struct WatchRootView: View {
         }
     }
 
+    private func backToRadar() {
+        withAnimation { page = .radar }
+    }
+
     private func centerAction() {
         switch centerState {
         case .needsLocation: location.requestPermission()
@@ -213,6 +231,7 @@ struct WatchRootView: View {
         switch route {
         case .radar:
             path = []
+            page = .radar
         case .flight(let id):
             if model.contact(id: id) != nil {
                 model.focus(on: id)
@@ -220,8 +239,9 @@ struct WatchRootView: View {
             } else if !model.hasLoadedOnce {
                 deferredRoute = route
             } else {
+                // It has left the area: the radar shows what's here now.
                 path = []
-                model.post(notice: "That aircraft has left the area", symbol: "airplane.departure")
+                page = .radar
             }
         case .find(let id):
             if model.contact(id: id) != nil {
@@ -230,8 +250,8 @@ struct WatchRootView: View {
             } else if !model.hasLoadedOnce {
                 deferredRoute = route
             } else {
+                // It has left the area: Identify still names whatever you point at.
                 path = [.identify]
-                model.post(notice: "That aircraft has left the area", symbol: "airplane.departure")
             }
         case .identify:
             path = [.identify]
@@ -255,8 +275,8 @@ struct WatchRootView: View {
             case "detail": if let id { path = [.detail(id)] }
             case "find": if let id { path = [.find(id)] }
             case "identify": path = [.identify]
-            case "nearby": path = [.nearby]
-            case "settings": path = [.settings]
+            case "nearby": page = .nearby
+            case "settings": page = .settings
             case "notification": debugNotification = (id.flatMap(model.contact(id:)) ?? model.contacts.first).map(SnapshotFlight.init)
             default: break
             }

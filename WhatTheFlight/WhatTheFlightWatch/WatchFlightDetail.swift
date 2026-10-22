@@ -200,7 +200,7 @@ struct WatchFlightDetail: View {
                 if model.focus.focusedID != contact.id { model.focus(on: contact.id) }
                 if model.focus.isPinned != !pinned { model.togglePin() }
             } label: {
-                Label(pinned ? "Unpin" : "Pin to Centre", systemImage: pinned ? "lock.open" : "lock")
+                Label(pinned ? "Unpin" : "Pin to Center", systemImage: pinned ? "lock.open" : "lock")
                     .font(.mono(11, .semibold))
                     .frame(maxWidth: .infinity)
             }

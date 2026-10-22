@@ -75,9 +75,7 @@ struct RadarSettingsSheet: View {
                 }
             }
         } header: {
-            Text("Location")
-        } footer: {
-            Text("A custom spot lets you watch the sky over home, an airport fence, anywhere.")
+            InfoHeader("Location", info: "A custom spot lets you watch the sky over home, an airport fence, anywhere. Aircraft seen at a custom spot aren't logged and don't count toward stats or badges: the logbook is what you saw yourself.")
         }
     }
 
@@ -92,17 +90,23 @@ struct RadarSettingsSheet: View {
                     Label("Logbook", systemImage: "book.closed.fill")
                 }
             }
-            Toggle("Keep a logbook", isOn: $settings.keepLogbook)
+            Toggle(isOn: $settings.keepLogbook) {
+                InfoLabel("Keep a logbook", info: "Every aircraft that comes inside your radius, with where you were, stats and badges. Demo traffic and custom spots aren't logged, only what's around you.")
+            }
+            Toggle(isOn: $settings.syncLogbook) {
+                InfoLabel("Sync with iCloud", info: "One logbook across your iPhone, iPad and Apple TV. Each sighting shows which device logged it, and a flight seen on two devices counts once.")
+            }
+            .disabled(!settings.keepLogbook)
         } header: {
             Text("Logbook")
-        } footer: {
-            Text("Every aircraft that comes inside your radius, with stats and badges. Stored only on this iPhone. Demo traffic and custom spots aren't logged, only what's around you.")
         }
     }
 
     private var alertsSection: some View {
         Section {
-            Toggle("Overhead alerts", isOn: $settings.overheadAlerts)
+            Toggle(isOn: $settings.overheadAlerts) {
+                InfoLabel("Overhead alerts", info: "A heads-up when an aircraft is about to pass within the distance below.")
+            }
             if settings.overheadAlerts {
                 VStack(alignment: .leading, spacing: 6) {
                     LabeledContent("Overhead means within", value: "\(settings.overheadAlertMiles.formatted(.number.precision(.fractionLength(0...1)))) mi")
@@ -110,18 +114,25 @@ struct RadarSettingsSheet: View {
                         .accessibilityLabel("Overhead distance in miles")
                 }
             }
-            Toggle("Notable aircraft", isOn: $settings.notableAlerts)
-            Button {
-                Task {
-                    if skyWatch.isActive {
-                        await skyWatch.stop()
-                    } else {
-                        await skyWatch.start(placeName: placeName, radiusMiles: settings.radiusMiles, contacts: model.contacts)
+            Toggle(isOn: $settings.notableAlerts) {
+                InfoLabel("Notable aircraft", info: "Emergencies, military, air ambulances and rare types.")
+            }
+            HStack {
+                Button {
+                    Task {
+                        if skyWatch.isActive {
+                            await skyWatch.stop()
+                        } else {
+                            await skyWatch.start(placeName: placeName, radiusMiles: settings.radiusMiles, contacts: model.contacts)
+                        }
                     }
+                } label: {
+                    Label(skyWatch.isActive ? "Stop Sky Watch" : "Start Sky Watch",
+                          systemImage: skyWatch.isActive ? "stop.circle.fill" : "dot.radiowaves.left.and.right")
                 }
-            } label: {
-                Label(skyWatch.isActive ? "Stop Sky Watch" : "Start Sky Watch",
-                      systemImage: skyWatch.isActive ? "stop.circle.fill" : "dot.radiowaves.left.and.right")
+                .buttonStyle(.borderless)
+                Spacer()
+                InfoButton(info: "Sky Watch keeps watching from your Lock Screen and Dynamic Island for two hours and sends alerts as notifications. It uses location in the background, so expect some battery use.")
             }
             if let ends = skyWatch.endsAt {
                 LabeledContent("Watching until", value: ends.formatted(date: .omitted, time: .shortened))
@@ -133,18 +144,16 @@ struct RadarSettingsSheet: View {
             }
         } header: {
             Text("Alerts")
-        } footer: {
-            Text("Overhead alerts fire when an aircraft is about to pass within that distance; notable ones cover emergencies, military, air ambulances and rare types. Sky Watch keeps watching from your Lock Screen and Dynamic Island for two hours and sends alerts as notifications. It uses location in the background, so expect some battery use.")
         }
     }
 
     private var skyViewSection: some View {
         Section {
-            Toggle("Lift to open Sky View", isOn: $settings.raiseToSkyView)
+            Toggle(isOn: $settings.raiseToSkyView) {
+                InfoLabel("Lift to open Sky View", info: "Raise your iPhone toward the sky and every aircraft is labeled through the camera; lower it or tap ✕ to return to the radar. With this off, open Sky View from Find in the Sky on any flight's details.")
+            }
         } header: {
             Text("Sky View")
-        } footer: {
-            Text("Raise your iPhone toward the sky and every aircraft is labelled through the camera; lower it or tap ✕ to return to the radar. With this off, open Sky View from Find in the Sky on any flight's details.")
         }
     }
 
@@ -156,9 +165,7 @@ struct RadarSettingsSheet: View {
                 Label("Aim at Your Apple TV", systemImage: "appletv")
             }
         } header: {
-            Text("Apple TV")
-        } footer: {
-            Text("Open WhatTheFlight on your Apple TV, then point your iPhone at the TV. It sends your location and the direction the screen faces, so every plane on the TV is where it really is.")
+            InfoHeader("Apple TV", info: "Open What The Flight? on your Apple TV, then point your iPhone at the TV. It sends your location and the direction the screen faces, so every plane on the TV is where it really is.")
         }
     }
 
@@ -170,15 +177,17 @@ struct RadarSettingsSheet: View {
                     .accessibilityLabel("Radius in miles")
             }
             VStack(alignment: .leading, spacing: 6) {
-                LabeledContent("Refresh every", value: "\(Int(settings.refreshSeconds)) s")
+                LabeledContent {
+                    Text("\(Int(settings.refreshSeconds)) s")
+                } label: {
+                    InfoLabel("Refresh every", info: "Positions are smoothed between refreshes, so a longer interval still moves fluidly and is kinder to your battery.")
+                }
                 Slider(value: $settings.refreshSeconds, in: RadarSettings.refreshRange, step: 5)
                     .accessibilityLabel("Refresh interval in seconds")
             }
             Toggle("Show helicopters", isOn: $settings.showHelicopters)
         } header: {
             Text("Radar")
-        } footer: {
-            Text("Positions are smoothed between refreshes, so a longer interval still moves fluidly and is kinder to your battery.")
         }
     }
 
@@ -198,15 +207,15 @@ struct RadarSettingsSheet: View {
         Section {
             Toggle("Haptics", isOn: $settings.hapticsEnabled)
             Toggle("Keep screen awake", isOn: $settings.keepScreenAwake)
-            Toggle("Demo traffic", isOn: $settings.demoTraffic)
-            Button("Show gesture guide") {
+            Toggle(isOn: $settings.demoTraffic) {
+                InfoLabel("Demo traffic", info: "Replaces live data with simulated aircraft around you, handy indoors or for showing the app off. Demo aircraft aren't logged.")
+            }
+            Button("Take the tour again") {
                 dismiss()
                 showWelcome()
             }
         } header: {
-            Text("Behaviour")
-        } footer: {
-            Text("Demo traffic replaces live data with simulated aircraft around you — handy indoors or for showing the app off.")
+            Text("Behavior")
         }
     }
 
@@ -222,9 +231,7 @@ struct RadarSettingsSheet: View {
                     Button("Reset", role: .destructive) { settings.resetToDefaults() }
                 }
         } header: {
-            Text("About")
-        } footer: {
-            Text("WhatTheFlight uses Flightradar24's public web feed, which is unofficial and may change without notice.")
+            InfoHeader("About", info: "What The Flight? uses Flightradar24's public web feed, which is unofficial and may change without notice.")
         }
     }
 
@@ -246,6 +253,71 @@ struct RadarSettingsSheet: View {
         let version = info?["CFBundleShortVersionString"] as? String ?? "—"
         let build = info?["CFBundleVersion"] as? String ?? "—"
         return "\(version) (\(build))"
+    }
+}
+
+// MARK: - Info buttons
+
+/// ⓘ that shows a setting's explanation in a small popover, instead of a long footer.
+struct InfoButton: View {
+    let info: String
+    @State private var isShown = false
+
+    var body: some View {
+        Button { isShown = true } label: {
+            Image(systemName: "info.circle")
+                .font(.system(size: 15))
+                .foregroundStyle(Palette.caption)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("More info")
+        .accessibilityHint(info)
+        .popover(isPresented: $isShown) {
+            Text(info)
+                .font(.mono(13))
+                .foregroundStyle(Palette.value)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(width: 280, alignment: .leading)
+                .padding(16)
+                .presentationCompactAdaptation(.popover)
+        }
+    }
+}
+
+/// A setting's title with its ⓘ right after it.
+struct InfoLabel: View {
+    let title: String
+    let info: String
+
+    init(_ title: String, info: String) {
+        self.title = title
+        self.info = info
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(title)
+            InfoButton(info: info)
+        }
+    }
+}
+
+/// A section header with an ⓘ for notes about the whole section.
+struct InfoHeader: View {
+    let title: String
+    let info: String
+
+    init(_ title: String, info: String) {
+        self.title = title
+        self.info = info
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(title)
+            InfoButton(info: info)
+                .textCase(nil)
+        }
     }
 }
 

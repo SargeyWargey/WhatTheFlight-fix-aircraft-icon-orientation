@@ -236,10 +236,9 @@ private struct TVSightingRow: View {
     var body: some View {
         let s = sighting
         HStack(spacing: 28) {
-            Image(systemName: s.kind == .helicopter ? "fan.fill" : "airplane")
-                .font(.system(size: 30, weight: .semibold))
-                .foregroundStyle(focused ? .white : (isLive ? Palette.signal : Palette.blip))
-                .frame(width: 44)
+            AircraftGlyph(silhouette: s.silhouette, size: 52, spinsRotor: false)
+                .foregroundStyle(focused ? .white : (isLive ? Palette.signal : s.tint))
+                .frame(width: 56)
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 16) {
                     Text(s.displayIdentifier)
@@ -555,7 +554,10 @@ struct TVSightingDetailView: View {
                     fact("Heading", s.trackAtClosest.map { "\(Int($0.rounded()) % 360)° \(GeoMath.cardinal($0))" } ?? "—")
                     fact("Registration", s.registration ?? "—")
                     fact("Callsign", s.callsign ?? "—")
-                    fact("Type · Hex", [s.typeCode, s.hex?.uppercased()].compactMap { $0 }.joined(separator: " · ").nilIfEmpty ?? "—")
+                    fact("Type", s.typeCode ?? "—")
+                    fact("ICAO hex", s.hex?.uppercased() ?? "—")
+                    fact("Watching from", s.placeName ?? "—")
+                    fact("Logged on", s.devicesText ?? "—")
                 }
                 if SightingMap.canShowNearby(s) || SightingMap.canShowRoute(s) {
                     SightingMap(sighting: s, showsRoute: showsRoute || !SightingMap.canShowNearby(s), height: 300)
@@ -795,8 +797,7 @@ struct TVSightingPhoto: View {
                         }
                     }
                 } else {
-                    Image(systemName: sighting.kind == .helicopter ? "fan.fill" : "airplane")
-                        .font(.system(size: height * 0.28, weight: .light))
+                    AircraftGlyph(silhouette: sighting.silhouette, size: height * 0.5, spinsRotor: false)
                         .foregroundStyle(Palette.faint)
                 }
             }
@@ -880,18 +881,9 @@ struct SightingMap: View {
 
             if let p = s.closestCoordinate {
                 Annotation(s.displayIdentifier, coordinate: p, anchor: .center) {
-                    Group {
-                        if s.kind == .helicopter {
-                            Image("helicopter-bottom-view").resizable().renderingMode(.template).scaledToFit()
-                                .frame(width: 30, height: 30)
-                                .rotationEffect(.degrees(s.trackAtClosest ?? 0))
-                        } else {
-                            Image(systemName: "airplane")
-                                .font(.system(size: 28, weight: .semibold))
-                                .rotationEffect(.degrees((s.trackAtClosest ?? 90) - 90))
-                        }
-                    }
-                    .foregroundStyle(Palette.signal)
+                    AircraftGlyph(silhouette: s.silhouette, size: 40, spinsRotor: false)
+                        .rotationEffect(.degrees(s.trackAtClosest ?? 90))
+                        .foregroundStyle(Palette.signal)
                     .shadow(color: .black.opacity(0.3), radius: 2)
                 }
             }

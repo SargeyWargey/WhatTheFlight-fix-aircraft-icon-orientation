@@ -3,7 +3,8 @@
 //  WhatTheFlight
 //
 //  The main screen. No cards, no chrome in the way: the focused flight in the middle,
-//  every other aircraft on the edge, a status badge bottom-left and settings bottom-right.
+//  every other aircraft on the edge, a status badge bottom-left (tap for the logbook) and
+//  settings bottom-right. Watching a custom spot shows its name along the bottom.
 //
 //  Gestures
 //    swipe →   back to the nearest aircraft      tap centre   flight details
@@ -27,6 +28,8 @@ struct RadarScreen: View {
         var openSettings: () -> Void
         var openSearch: () -> Void
         var openDetail: (String) -> Void
+        var openLogbook: () -> Void
+        var openSpotPicker: () -> Void
         var centerPrimary: () -> Void
         var centerSecondary: () -> Void
     }
@@ -62,8 +65,12 @@ struct RadarScreen: View {
                     onLongPress: { contact in actions.openDetail(contact.id) }
                 )
 
-                StatusBadge(model: model)
-                    .position(layout.statusPoint)
+                Button(action: actions.openLogbook) {
+                    StatusBadge(model: model)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens the logbook")
+                .position(layout.statusPoint)
 
                 SettingsButton(action: actions.openSettings)
                     .position(layout.gearPoint)
@@ -73,6 +80,14 @@ struct RadarScreen: View {
                     .position(x: geo.size.width / 2, y: layout.noticeY)
             }
             .frame(width: geo.size.width, height: geo.size.height)
+            .overlay(alignment: .bottom) {
+                if settings.locationMode == .custom {
+                    CustomSpotTag(name: settings.customPlaceName ?? settings.customCoordinate?.shortDescription,
+                                  action: actions.openSpotPicker)
+                        // In the home-indicator strip when there is one, else just above the bezel.
+                        .offset(y: geo.safeAreaInsets.bottom >= 20 ? geo.safeAreaInsets.bottom - 6 : -46)
+                }
+            }
         }
         .background {
             RadarBackdrop(
@@ -99,10 +114,8 @@ struct RadarScreen: View {
             } else if let contact = model.focusedContact {
                 FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading)
                     .id(contact.id)
-                    .transition(.asymmetric(
-                        insertion: .scale(scale: 0.92).combined(with: .opacity),
-                        removal: .opacity
-                    ))
+                    // A scale-in here could get stuck part-way and leave the hero off-centre.
+                    .transition(.opacity)
                     .contentShape(Rectangle())
                     .onTapGesture { actions.openDetail(contact.id) }
                     .onLongPressGesture(minimumDuration: 0.45) {
@@ -237,6 +250,35 @@ struct StatusBadge: View {
         case .loading, .idle: return "Connecting"
         case .error(let message): return "Connection problem: \(message)"
         }
+    }
+}
+
+/// "CUSTOM SPOT · ATLANTA, GA · NOT LOGGED" along the bottom of the screen.
+struct CustomSpotTag: View {
+    let name: String?
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 5) {
+                Image(systemName: "mappin.and.ellipse")
+                    .font(.system(size: 10, weight: .bold))
+                Text(["Custom spot", name, "not logged"].compactMap { $0 }.joined(separator: " · "))
+                    .font(.mono(10, .bold))
+                    .tracking(0.8)
+                    .textCase(.uppercase)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .foregroundStyle(Palette.warning)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 3)
+            .paperHalo()
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 60)
+        .accessibilityLabel("Watching a custom spot\(name.map { ", \($0)" } ?? ""). Sightings here aren't logged.")
+        .accessibilityHint("Pick a different spot")
     }
 }
 

@@ -2,8 +2,9 @@
 //  WatchSettingsView.swift
 //  WhatTheFlightWatch
 //
-//  A short list: where to watch from, how far, and how the Watch should behave. Helicopters
-//  and alert preferences follow the iPhone when it shares them.
+//  The page above the radar. Nearby aircraft first, then a short list: where to watch from,
+//  how far, and how the Watch should behave. Helicopters and alert preferences follow the
+//  iPhone when it shares them.
 //
 
 import SwiftUI
@@ -13,6 +14,10 @@ struct WatchSettingsView: View {
     @Bindable var watchSettings: WatchSettings
     let location: WatchLocationService
     let link: WatchPhoneLink
+    let nearbyCount: Int
+    let open: (WatchRootView.Screen) -> Void
+    /// Back to the radar. The radar is also below the end of the list.
+    let close: () -> Void
 
     @State private var skyWatchMessage: String?
     @State private var askingPhone = false
@@ -20,12 +25,27 @@ struct WatchSettingsView: View {
     var body: some View {
         List {
             Section {
+                Button { open(.nearby) } label: {
+                    HStack {
+                        Label("Nearby aircraft", systemImage: "list.bullet")
+                        Spacer()
+                        Text("\(nearbyCount)")
+                            .font(.mono(14, .bold))
+                            .monospacedDigit()
+                            .foregroundStyle(Palette.caption)
+                    }
+                }
+            } footer: {
+                Text("Or swipe up from the radar.")
+            }
+
+            Section {
                 Picker("Watch from", selection: $watchSettings.locationSource) {
                     ForEach(WatchSettings.LocationSource.allCases) { Text($0.title).tag($0) }
                 }
                 if watchSettings.locationSource == .phone {
                     Text(watchSettings.phoneObserver == nil
-                         ? "Your iPhone hasn't shared a spot yet. Open WhatTheFlight on it."
+                         ? "Your iPhone hasn't shared a spot yet. Open What The Flight? on it."
                          : watchSettings.phonePlaceName ?? "Where your iPhone's radar is watching")
                         .font(.mono(10))
                         .foregroundStyle(Palette.caption)
@@ -105,6 +125,12 @@ struct WatchSettingsView: View {
             }
         }
         .navigationTitle("Settings")
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: close) { Image(systemName: "xmark") }
+                    .accessibilityLabel("Back to radar")
+            }
+        }
     }
 
     private var radiusChoices: [Double] {

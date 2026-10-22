@@ -14,7 +14,9 @@ import TVServices
 struct TVRadarRootView: View {
     @State private var settings: RadarSettings
     @State private var model: RadarModel
-    @State private var logbook = Logbook()
+    @State private var logbook = Logbook(device: .current)
+    @State private var logbookSync: LogbookSync?
+    @State private var placeNamer = PlaceNamer()
     @State private var link = TVLinkReceiver()
     @State private var tvLocation = TVLocationProvider()
     @State private var presented: Presented?
@@ -29,6 +31,7 @@ struct TVRadarRootView: View {
         case detail(String)
         case aircraft
         case logbook
+        case tour
 
         var id: String {
             switch self {
@@ -36,6 +39,7 @@ struct TVRadarRootView: View {
             case .detail(let id): return "detail-\(id)"
             case .aircraft: return "aircraft"
             case .logbook: return "logbook"
+            case .tour: return "tour"
             }
         }
     }
@@ -76,7 +80,9 @@ struct TVRadarRootView: View {
         .fullScreenCover(item: $presented) { item in
             switch item {
             case .settings(let pane):
-                TVRadarSettingsView(settings: settings, model: model, link: link, tvLocation: tvLocation, initialPane: pane)
+                TVRadarSettingsView(settings: settings, model: model, link: link, tvLocation: tvLocation, initialPane: pane) {
+                    present(.tour)
+                }
             case .detail(let id):
                 TVFlightDetailView(flightID: id, model: model, settings: settings, logbook: logbook) { presented = nil }
             case .aircraft:
@@ -91,6 +97,11 @@ struct TVRadarRootView: View {
                     presented = nil
                 }
                 .preferredColorScheme(settings.appearance.colorScheme)
+            case .tour:
+                TVOnboardingView(hasLocation: observerCoordinate != nil,
+                                 placeName: settings.locationMode == .custom ? settings.customPlaceName : "this Apple TV's location",
+                                 showTopography: settings.showTopography, onExit: finishTour)
+                    .preferredColorScheme(settings.appearance.colorScheme)
             }
         }
         .environment(\.radarObserver, model.observer)
@@ -99,12 +110,14 @@ struct TVRadarRootView: View {
             model.logbook = logbook
             // The TV has no GPS, so its set place is where it really is: log from there.
             model.logsCustomSpot = true
+            updateLogbookSync()
             model.onAlert = announce
             updateIdleTimer()
             link.start()
             model.start()
             if settings.locationMode == .device { tvLocation.locate() }
             syncObserver()
+            if !settings.hasSeenWelcome { presented = .tour }
             #if DEBUG
             openDebugScreenIfRequested()
             #endif
@@ -115,6 +128,7 @@ struct TVRadarRootView: View {
                 link.start()
                 model.start()
                 model.refreshNow()
+                logbookSync?.fetchNow()
                 updateIdleTimer()
             case .background:
                 UIApplication.shared.isIdleTimerDisabled = false
@@ -131,6 +145,7 @@ struct TVRadarRootView: View {
         .onChange(of: settings.customLatitude) { _, _ in syncObserver() }
         .onChange(of: settings.customLongitude) { _, _ in syncObserver() }
         .onChange(of: settings.keepScreenAwake) { _, _ in updateIdleTimer() }
+        .onChange(of: settings.syncLogbook) { _, _ in updateLogbookSync() }
         .onChange(of: settings.showHelicopters) { _, _ in model.settingsDidChange(refetch: false) }
         .onChange(of: settings.demoTraffic) { _, _ in model.settingsDidChange(refetch: true) }
         .onChange(of: settings.radiusMiles) { _, _ in model.settingsDidChange(refetch: true) }
@@ -236,15 +251,36 @@ struct TVRadarRootView: View {
     }
 
     private func centerSecondary() {
-        if case .needsLocation = centerState {
-            settings.demoTraffic = true
-            if settings.customCoordinate == nil {
-                // Demo traffic needs somewhere to fly: default to Atlanta until set up properly.
-                settings.customCoordinate = CLLocationCoordinate2D(latitude: 33.749, longitude: -84.388)
-                settings.customPlaceName = "Atlanta, GA (demo)"
-                settings.locationMode = .custom
-            }
+        if case .needsLocation = centerState { startDemo() }
+    }
+
+    private func startDemo() {
+        settings.demoTraffic = true
+        if observerCoordinate == nil {
+            // Demo traffic needs somewhere to fly: default to Atlanta until set up properly.
+            settings.customCoordinate = CLLocationCoordinate2D(latitude: 33.749, longitude: -84.388)
+            settings.customPlaceName = "Atlanta, GA (demo)"
+            settings.locationMode = .custom
         }
+    }
+
+    // MARK: Tour
+
+    private func finishTour(_ exit: TVOnboardingView.Exit) {
+        settings.hasSeenWelcome = true
+        switch exit {
+        case .start: presented = nil
+        case .setLocation: present(.settings(.location))
+        case .demo:
+            startDemo()
+            presented = nil
+        }
+    }
+
+    /// Swaps one full-screen cover for another once the first has gone.
+    private func present(_ item: Presented) {
+        presented = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { presented = item }
     }
 
     private func syncObserver() {
@@ -253,10 +289,29 @@ struct TVRadarRootView: View {
         store.observer = observerCoordinate
         store.placeName = settings.customPlaceName
         store.radiusMiles = settings.radiusMiles
+        nameLoggingPlace()
+    }
+
+    /// "Atlanta, GA" on sightings, when the set place doesn't already carry a name.
+    private func nameLoggingPlace() {
+        model.logPlaceName = nil
+        guard settings.customPlaceName == nil || settings.locationMode == .device, let here = observerCoordinate else { return }
+        Task {
+            if let name = await placeNamer.name(for: here) { model.logPlaceName = name }
+        }
+    }
+
+    private func updateLogbookSync() {
+        if settings.syncLogbook {
+            if logbookSync == nil { logbookSync = LogbookSync(logbook: logbook) }
+            logbookSync?.start()
+        } else {
+            logbookSync?.stop()
+        }
     }
 
     #if DEBUG
-    /// `-wtf.debugScreen settings|detail|aircraft|logbook` and `-wtf.debugPane radar|display|about` for screenshots.
+    /// `-wtf.debugScreen settings|detail|aircraft|logbook|tour` and `-wtf.debugPane radar|display|about` for screenshots.
     private func openDebugScreenIfRequested() {
         let defaults = UserDefaults.standard
         guard let screen = defaults.string(forKey: "wtf.debugScreen") else { return }
@@ -267,6 +322,7 @@ struct TVRadarRootView: View {
             case "settings": presented = .settings(pane)
             case "aircraft": presented = .aircraft
             case "logbook": presented = .logbook
+            case "tour": presented = .tour
             case "detail": if let id = model.focus.focusedID { presented = .detail(id) }
             default: break
             }

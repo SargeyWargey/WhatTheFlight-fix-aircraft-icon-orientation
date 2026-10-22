@@ -14,6 +14,24 @@ enum AircraftKind: String, Codable, Sendable {
     case helicopter
 }
 
+/// The top-down shape drawn for an aircraft on the radar, picked from its ICAO type code.
+enum AircraftSilhouette: String, CaseIterable, Codable, Sendable {
+    /// Swept wing, two engines under it. Also the fallback for unknown types.
+    case airliner
+    case widebody
+    case fourEngine
+    /// Engines on the tail: CRJ, ERJ, E-Jets, MD-80 family.
+    case regional
+    case bizjet
+    /// Straight wing with a propeller on each engine.
+    case twinProp
+    /// Straight wing, propeller on the nose.
+    case light
+    case fighter
+    case militaryTransport
+    case helicopter
+}
+
 struct Flight: Identifiable, Hashable, Sendable {
     let id: String
     var hex: String?
@@ -52,6 +70,10 @@ struct Flight: Identifiable, Hashable, Sendable {
 
     var kind: AircraftKind {
         AircraftTypeCatalog.kind(forTypeCode: typeCode)
+    }
+
+    var silhouette: AircraftSilhouette {
+        AircraftTypeCatalog.silhouette(forTypeCode: typeCode)
     }
 
     var typeName: String? {

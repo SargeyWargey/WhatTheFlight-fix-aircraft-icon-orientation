@@ -148,7 +148,7 @@ struct TVRadarScreen: View {
                         .frame(width: width / Self.heroScale)
                         .scaleEffect(Self.heroScale)
                         .frame(width: width, height: 640)
-                        .transition(.asymmetric(insertion: .scale(scale: 0.94).combined(with: .opacity), removal: .opacity))
+                        .transition(.opacity)
                 }
                 .buttonStyle(TVQuietButtonStyle())
                 .focused($focus, equals: .radar)

@@ -76,19 +76,10 @@ struct FlightSearchSheet: View {
             dismiss()
         } label: {
             HStack(spacing: 14) {
-                Group {
-                    if f.kind == .helicopter {
-                        Image("helicopter-bottom-view").resizable().renderingMode(.template).scaledToFit()
-                            .frame(width: 22, height: 22)
-                            .rotationEffect(.degrees(f.track - heading))
-                    } else {
-                        Image(systemName: "airplane")
-                            .font(.system(size: 19, weight: .semibold))
-                            .rotationEffect(.degrees(f.track - heading - 90))
-                    }
-                }
-                .foregroundStyle(isFocused ? Palette.signal : Palette.blip)
-                .frame(width: 30)
+                AircraftGlyph(silhouette: f.silhouette, size: 28, spinsRotor: false)
+                    .rotationEffect(.degrees(f.track - heading))
+                    .foregroundStyle(isFocused ? Palette.signal : Palette.blip(for: f))
+                    .frame(width: 30)
 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
@@ -125,72 +116,6 @@ struct FlightSearchSheet: View {
             .padding(.vertical, 4)
         }
         .listRowBackground(isFocused ? Palette.signal.opacity(0.08) : Palette.paperShade.opacity(0.25))
-    }
-}
-
-// MARK: - Welcome
-
-struct WelcomeSheet: View {
-    let onStart: () -> Void
-    let onDemo: () -> Void
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 24)
-            Image(systemName: "airplane")
-                .font(.system(size: 46, weight: .semibold))
-                .foregroundStyle(Palette.ink)
-                .rotationEffect(.degrees(-45))
-                .padding(.bottom, 14)
-            Text("WhatTheFlight")
-                .font(.mono(32, .heavy))
-                .foregroundStyle(Palette.ink)
-            Text("Point your phone at the sky.\nEvery aircraft around you, where it really is.")
-                .font(.mono(13))
-                .foregroundStyle(Palette.caption)
-                .multilineTextAlignment(.center)
-                .padding(.top, 8)
-
-            VStack(alignment: .leading, spacing: 18) {
-                tip("hand.tap", "Tap an aircraft on the edge", "to bring it to the centre")
-                tip("arrow.right", "Swipe right", "to snap back to the nearest")
-                tip("arrow.left", "Swipe left", "to step to the next one out")
-                tip("lock", "Hold the flight number", "to pin it, even outside your radius")
-                tip("arrow.down", "Swipe down", "to search everything in the sky")
-                tip("location.north.line", "Turn around", "the edge rotates with your compass")
-                tip("camera.viewfinder", "Lift your phone to the sky", "to see every aircraft labelled")
-            }
-            .padding(.vertical, 28)
-            .padding(.horizontal, 6)
-
-            Spacer(minLength: 12)
-
-            Button(action: onStart) {
-                Text("Start Watching").frame(maxWidth: .infinity)
-            }
-            .buttonStyle(RadarButtonStyle(prominent: true))
-            Button("Try Demo Traffic", action: onDemo)
-                .font(.mono(13, .semibold))
-                .foregroundStyle(Palette.ink)
-                .padding(.top, 12)
-        }
-        .padding(.horizontal, 28)
-        .padding(.bottom, 20)
-        .background(Palette.paper.ignoresSafeArea())
-        .interactiveDismissDisabled()
-    }
-
-    private func tip(_ symbol: String, _ title: String, _ detail: String) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            Image(systemName: symbol)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Palette.signal)
-                .frame(width: 26)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.mono(14, .bold)).foregroundStyle(Palette.value)
-                Text(detail).font(.mono(12)).foregroundStyle(Palette.caption)
-            }
-        }
     }
 }
 #endif

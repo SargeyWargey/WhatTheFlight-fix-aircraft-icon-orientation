@@ -182,7 +182,7 @@ enum LocationError: LocalizedError {
     var recoverySuggestion: String? {
         switch self {
         case .permissionDenied:
-            return "Go to Settings > Privacy & Security > Location Services to enable location access for WhatTheFlight."
+            return "Go to Settings > Privacy & Security > Location Services to turn on location access for What The Flight?"
         case .locationUnavailable:
             return "Try again or manually enter your coordinates in the app settings."
         case .locationServicesDisabled:

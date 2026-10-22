@@ -908,7 +908,7 @@ struct TVSettingsView: View {
                                         .fontWeight(.bold)
                                         .foregroundColor(.white)
                                     
-                                    Text("WhatTheFlight")
+                                    Text("What The Flight?")
                                         .font(.title3)
                                         .foregroundColor(.secondary)
                                 }
@@ -1184,7 +1184,7 @@ struct TVSettingsView: View {
     private var aboutSettings: some View {
         VStack(alignment: .leading, spacing: 30) {
             TVDetailSettingItem(
-                title: "WhatTheFlight for Apple TV",
+                title: "What The Flight? for Apple TV",
                 subtitle: "Real-time flight tracking"
             ) {
                 VStack(alignment: .leading, spacing: 16) {

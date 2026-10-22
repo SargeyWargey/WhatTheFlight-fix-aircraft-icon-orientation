@@ -69,6 +69,8 @@ struct WhereaboutsMap: View {
     let observer: CLLocationCoordinate2D?
     var height: CGFloat = 280
     var iconScale: CGFloat = 1
+    /// iPhone: pinch to zoom and drag to pan, with a button to frame everything again.
+    var interactive = false
 
     @State private var camera: MapCameraPosition = .automatic
 
@@ -87,7 +89,7 @@ struct WhereaboutsMap: View {
 
     var body: some View {
         let here = whereabouts.coordinate
-        Map(position: $camera, interactionModes: []) {
+        Map(position: $camera, interactionModes: interactive ? [.pan, .zoom, .rotate] : []) {
             if let route {
                 MapPolyline(coordinates: [route.from, here], contourStyle: .geodesic)
                     .stroke(Palette.route, style: StrokeStyle(lineWidth: 3 * iconScale, lineCap: .round))
@@ -112,24 +114,37 @@ struct WhereaboutsMap: View {
                 }
             }
             Annotation(flight.displayIdentifier, coordinate: here, anchor: .center) {
-                Group {
-                    if flight.kind == .helicopter {
-                        Image("helicopter-bottom-view").resizable().renderingMode(.template).scaledToFit()
-                            .frame(width: 28 * iconScale, height: 28 * iconScale)
-                            .rotationEffect(.degrees(flight.track))
-                    } else {
-                        Image(systemName: "airplane")
-                            .font(.system(size: 26 * iconScale, weight: .semibold))
-                            .rotationEffect(.degrees(flight.track - 90))
-                    }
-                }
-                .foregroundStyle(Palette.signal)
+                AircraftGlyph(silhouette: flight.silhouette, size: 36 * iconScale)
+                    .rotationEffect(.degrees(flight.track))
+                    .foregroundStyle(Palette.signal)
                 .shadow(color: .black.opacity(0.3), radius: 2)
             }
         }
         .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
+        .mapControls {
+            if interactive {
+                MapCompass()
+                MapScaleView()
+            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if interactive {
+                Button {
+                    withAnimation(.smooth) { frame() }
+                } label: {
+                    Image(systemName: "arrow.up.left.and.down.right.magnifyingglass")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Palette.ink)
+                        .frame(width: 40, height: 40)
+                        .glassSurface(in: Circle(), interactive: true)
+                }
+                .buttonStyle(.plain)
+                .padding(10)
+                .accessibilityLabel("Show the whole route")
+            }
+        }
         .frame(height: height)
-        .allowsHitTesting(false)
+        .allowsHitTesting(interactive)
         .clipShape(RoundedRectangle(cornerRadius: 18 * iconScale, style: .continuous))
         .onAppear { frame() }
         .onChange(of: flight.id) { _, _ in frame() }

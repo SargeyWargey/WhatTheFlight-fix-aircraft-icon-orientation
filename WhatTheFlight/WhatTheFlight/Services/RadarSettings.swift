@@ -71,6 +71,8 @@ final class RadarSettings {
     var spokenAlerts: Bool { didSet { save(spokenAlerts, .spokenAlerts) } }
     /// Record every aircraft that comes inside the radius.
     var keepLogbook: Bool { didSet { save(keepLogbook, .keepLogbook) } }
+    /// Merge the logbook with your other devices through iCloud.
+    var syncLogbook: Bool { didSet { save(syncLogbook, .syncLogbook) } }
     /// iPhone: lifting the phone to the sky opens Sky View.
     var raiseToSkyView: Bool { didSet { save(raiseToSkyView, .raiseToSkyView) } }
 
@@ -113,6 +115,7 @@ final class RadarSettings {
         notableAlerts = value(.notableAlerts, true)
         spokenAlerts = value(.spokenAlerts, false)
         keepLogbook = value(.keepLogbook, true)
+        syncLogbook = value(.syncLogbook, true)
         raiseToSkyView = value(.raiseToSkyView, true)
     }
 
@@ -151,6 +154,7 @@ final class RadarSettings {
         notableAlerts = true
         spokenAlerts = false
         keepLogbook = true
+        syncLogbook = true
         raiseToSkyView = true
     }
 
@@ -161,6 +165,7 @@ final class RadarSettings {
         case showHelicopters, showTopography, showCompassBezel, radarSweep, showPhotos
         case haptics, keepAwake, demoTraffic, hasSeenWelcome, customPlaceName, tvFacing
         case overheadAlerts, overheadAlertMiles, notableAlerts, spokenAlerts, keepLogbook, raiseToSkyView
+        case syncLogbook = "iCloudLogbook"
 
         var name: String { "wtf.\(rawValue)" }
     }

@@ -17,7 +17,7 @@ struct WatchWhatsOverheadIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let store = SharedRadarStore()
         guard let observer = store.observer else {
-            return .result(dialog: "Open WhatTheFlight on your Watch once so I know where you are.")
+            return .result(dialog: "Open What The Flight? on your Watch once so I know where you are.")
         }
         let contacts: [RadarContact]
         do {

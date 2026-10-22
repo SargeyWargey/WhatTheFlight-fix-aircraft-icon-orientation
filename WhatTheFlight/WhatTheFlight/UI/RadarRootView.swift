@@ -15,7 +15,9 @@ struct RadarRootView: View {
     @State private var settings: RadarSettings
     @State private var model: RadarModel
     @State private var location = RadarLocationService()
-    @State private var logbook = Logbook()
+    @State private var logbook = Logbook(device: .current)
+    @State private var logbookSync: LogbookSync?
+    @State private var placeNamer = PlaceNamer()
     @State private var raise = RaiseToSkyDetector()
     @State private var widgets = WidgetPublisher()
     @State private var sheet: Sheet?
@@ -65,6 +67,8 @@ struct RadarRootView: View {
                 openSettings: { sheet = .settings },
                 openSearch: { if !model.allContacts.isEmpty { sheet = .search } },
                 openDetail: { sheet = .detail($0) },
+                openLogbook: { sheet = .logbook },
+                openSpotPicker: { sheet = .pickSpot },
                 centerPrimary: centerPrimary,
                 centerSecondary: { sheet = .pickSpot }
             )
@@ -84,6 +88,7 @@ struct RadarRootView: View {
         }
         .onAppear {
             model.logbook = logbook
+            updateLogbookSync()
             model.onAlert = deliver
             skyWatch.location = location
             skyWatch.endOrphanedActivities()
@@ -109,6 +114,7 @@ struct RadarRootView: View {
                 location.start()
                 model.start()
                 model.refreshNow()
+                logbookSync?.fetchNow()
             case .background:
                 logbook.flush()
                 // Sky Watch keeps the radar (and its alerts) running while the phone is locked.
@@ -153,6 +159,7 @@ struct RadarRootView: View {
         .onChange(of: settings.alertRules) { _, _ in sendWatchContext() }
         .onChange(of: settings.demoTraffic) { _, _ in model.settingsDidChange(refetch: true) }
         .onChange(of: settings.keepScreenAwake) { _, _ in updateIdleTimer() }
+        .onChange(of: settings.syncLogbook) { _, _ in updateLogbookSync() }
         .task(id: settings.radiusMiles) {
             // Re-filter instantly while the slider moves; re-query once it settles.
             model.settingsDidChange(refetch: false)
@@ -197,7 +204,7 @@ struct RadarRootView: View {
                     }
             }
         case .welcome:
-            WelcomeSheet(
+            OnboardingView(
                 onStart: {
                     settings.hasSeenWelcome = true
                     location.requestPermission()
@@ -273,11 +280,29 @@ struct RadarRootView: View {
 
     private func syncObserver() {
         model.setObserver(observerCoordinate)
+        nameLoggingPlace()
         let store = SharedRadarStore()
         store.observer = observerCoordinate
         store.placeName = placeName
         store.radiusMiles = settings.radiusMiles
         sendWatchContext()
+    }
+
+    /// "Atlanta, GA" on sightings logged from where you really are. A custom spot isn't logged.
+    private func nameLoggingPlace() {
+        guard settings.locationMode == .device, let here = location.location?.coordinate else { return }
+        Task {
+            if let name = await placeNamer.name(for: here) { model.logPlaceName = name }
+        }
+    }
+
+    private func updateLogbookSync() {
+        if settings.syncLogbook {
+            if logbookSync == nil { logbookSync = LogbookSync(logbook: logbook) }
+            logbookSync?.start()
+        } else {
+            logbookSync?.stop()
+        }
     }
 
     /// Tells Apple Watch where the iPhone is watching (for its "iPhone's spot" mode) and the
@@ -301,7 +326,7 @@ struct RadarRootView: View {
             return WatchSync.Reply(ok: true, message: "Sky Watch is already on.")
         }
         guard UIApplication.shared.applicationState == .active else {
-            return WatchSync.Reply(ok: false, message: "Open WhatTheFlight on your iPhone to start Sky Watch. iOS only allows it while the app is open.")
+            return WatchSync.Reply(ok: false, message: "Open What The Flight? on your iPhone to start Sky Watch. iOS only allows it while the app is open.")
         }
         await skyWatch.start(placeName: placeName, radiusMiles: settings.radiusMiles, contacts: model.contacts)
         guard skyWatch.isActive else {

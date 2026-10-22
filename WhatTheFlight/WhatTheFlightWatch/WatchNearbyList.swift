@@ -13,6 +13,8 @@ struct WatchNearbyList: View {
     let location: WatchLocationService
     let watchSettings: WatchSettings
     let open: (WatchRootView.Screen) -> Void
+    /// Set when the list is the page below the radar; when pushed, the back button does this.
+    var close: (() -> Void)? = nil
 
     private var heading: Double {
         watchSettings.northUp ? 0 : (location.heading ?? 0)
@@ -41,6 +43,14 @@ struct WatchNearbyList: View {
             }
         }
         .navigationTitle("Nearby")
+        .toolbar {
+            if let close {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(action: close) { Image(systemName: "xmark") }
+                        .accessibilityLabel("Back to radar")
+                }
+            }
+        }
     }
 
     private func row(_ contact: RadarContact) -> some View {

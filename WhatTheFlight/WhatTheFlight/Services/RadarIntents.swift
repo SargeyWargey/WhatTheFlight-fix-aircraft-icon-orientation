@@ -18,7 +18,7 @@ struct WhatsOverheadIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         let store = SharedRadarStore()
         guard let observer = store.observer else {
-            return .result(dialog: "Open WhatTheFlight once so I know where you're watching from.", view: OverheadSnippet(flight: nil, count: 0))
+            return .result(dialog: "Open What The Flight? once so I know where you're watching from.", view: OverheadSnippet(flight: nil, count: 0))
         }
         let contacts: [RadarContact]
         do {

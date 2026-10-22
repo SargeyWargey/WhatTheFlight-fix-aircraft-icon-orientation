@@ -186,7 +186,7 @@ struct OverheadComplicationView: View {
                         .foregroundStyle(.secondary)
                 }
             } else {
-                Label("WhatTheFlight", systemImage: "airplane")
+                Label("What The Flight?", systemImage: "airplane")
                     .font(.system(.headline, design: .monospaced))
                     .widgetAccentable()
                 Text(statusText)

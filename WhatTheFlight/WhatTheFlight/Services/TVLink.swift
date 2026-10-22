@@ -213,7 +213,7 @@ final class TVLinkSender: NSObject {
         if !connected.contains(tv.peer) {
             browser?.invitePeer(tv.peer, to: session, withContext: nil, timeout: 12)
             guard await waitUntil(seconds: 12, { self.connected.contains(tv.peer) }) else {
-                phase = .failed("Couldn't reach the Apple TV. Is WhatTheFlight open on it?")
+                phase = .failed("Couldn't reach the Apple TV. Make sure What The Flight? is open on it.")
                 return
             }
         }

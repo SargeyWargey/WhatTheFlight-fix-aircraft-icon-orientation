@@ -2,7 +2,7 @@
 //  AircraftTypeCatalog.swift
 //  WhatTheFlight
 //
-//  ICAO type designators → friendly names, and helicopter detection.
+//  ICAO type designators → friendly names, helicopter detection and radar silhouettes.
 //
 
 import Foundation
@@ -17,6 +17,72 @@ enum AircraftTypeCatalog {
         guard let code = code?.uppercased(), !code.isEmpty else { return .airplane }
         return helicopterCodes.contains(code) ? .helicopter : .airplane
     }
+
+    /// Unknown or missing codes get the airliner.
+    static func silhouette(forTypeCode code: String?) -> AircraftSilhouette {
+        guard let code = code?.uppercased(), !code.isEmpty else { return .airliner }
+        if helicopterCodes.contains(code) { return .helicopter }
+        return silhouettes[code] ?? .airliner
+    }
+
+    private static let silhouettes: [String: AircraftSilhouette] = {
+        var table: [String: AircraftSilhouette] = [:]
+        for (silhouette, codes) in silhouetteCodes {
+            for code in codes { table[code] = silhouette }
+        }
+        return table
+    }()
+
+    /// Airliner-shaped military jets (KC-46, P-8) are listed by shape; the military colour
+    /// comes from `NotableTraffic`.
+    static let silhouetteCodes: [AircraftSilhouette: Set<String>] = [
+        .widebody: [
+            "A306", "A30B", "A310", "A332", "A333", "A338", "A339", "A359", "A35K", "A3ST", "A337",
+            "B762", "B763", "B764", "B772", "B77L", "B773", "B77W", "B778", "B779", "B788", "B789", "B78X",
+            "MD11", "DC10", "L101", "KC46", "K46", "KC10", "IL96",
+        ],
+        .fourEngine: [
+            "A342", "A343", "A345", "A346", "A388", "B741", "B742", "B743", "B744", "B748", "B74S", "BLCF",
+            "B703", "B720", "DC8", "DC86", "DC87", "IL62", "K35R", "K35E", "E3TF", "E3CF", "E6", "VC25", "B52",
+            "R135", "C135", "BA46", "RJ85", "RJ1H",
+        ],
+        .regional: [
+            "CRJ1", "CRJ2", "CRJ7", "CRJ9", "CRJX", "E135", "E145", "E170", "E175", "E75L", "E75S", "E190",
+            "E195", "E290", "E295", "B712", "DC91", "DC93", "DC95", "MD80", "MD81", "MD82", "MD83", "MD87",
+            "MD88", "MD90", "F70", "F100",
+        ],
+        .bizjet: [
+            "C25A", "C25B", "C25C", "C25M", "C501", "C510", "C525", "C550", "C551", "C560", "C56X", "C650",
+            "C680", "C68A", "C700", "C750", "E35L", "E50P", "E55P", "E545", "E550", "PC24", "CL30", "CL35",
+            "CL60", "GL5T", "GLEX", "GL7T", "GL6T", "LJ31", "LJ35", "LJ40", "LJ45", "LJ55", "LJ60", "LJ70",
+            "LJ75", "GLF3", "GLF4", "GLF5", "GLF6", "GA5C", "GA6C", "GA7C", "GA8C", "G150", "G280", "GALX",
+            "ASTR", "F2TH", "F900", "FA10", "FA20", "FA50", "FA6X", "FA7X", "FA8X", "H25A", "H25B", "H25C",
+            "HA4T", "HDJT", "BE40", "PRM1", "SF50", "EA50", "C21A",
+        ],
+        .twinProp: [
+            "AT43", "AT44", "AT45", "AT46", "AT72", "AT73", "AT75", "AT76", "DH8A", "DH8B", "DH8C", "DH8D",
+            "DHC6", "DHC7", "SF34", "SB20", "JS31", "JS32", "JS41", "B190", "BE99", "BE20", "BE30", "BE9L",
+            "BE9T", "B350", "BE10", "BE55", "BE58", "BE60", "BE76", "C310", "C340", "C402", "C404", "C414",
+            "C421", "C425", "C441", "PA23", "PA27", "PA31", "PA34", "PA44", "P68", "DA42", "DA62", "PAY2",
+            "PAY3", "PAY4", "MU2", "SW4", "E120", "F50", "D228", "D328", "L410", "C212", "AN24", "AN26",
+            "P180", "AC90", "AC95",
+        ],
+        .light: [
+            "C150", "C152", "C162", "C170", "C172", "C177", "C180", "C182", "C185", "C195", "C206", "C207",
+            "C208", "C210", "P210", "PA18", "PA20", "PA22", "PA24", "PA28", "PA32", "PA38", "PA46", "P28A",
+            "P28B", "P28R", "P28T", "P32R", "P32T", "P46T", "SR20", "SR22", "S22T", "DA20", "DV20", "DA40",
+            "DA50", "BE23", "BE33", "BE35", "BE36", "M20P", "M20T", "M20J", "PC6T", "PC12", "PC21", "TBM7",
+            "TBM8", "TBM9", "KODI", "GA8", "AA5", "RV7", "RV8", "RV10", "CH7A", "J3", "T6", "TEX2", "GLID",
+        ],
+        .fighter: [
+            "F14", "F15", "F16", "F18H", "F18S", "F22", "F35", "F5", "F117", "A10", "A4", "AV8B", "B1", "B2",
+            "T38", "T45", "T7", "HAWK", "EUFI", "RFAL", "M2K", "TOR", "GRIF", "U2",
+        ],
+        .militaryTransport: [
+            "C17", "C130", "C30J", "C5", "C5M", "A400", "A124", "A225", "IL76", "C160", "C27J", "C295",
+            "CN35", "KC39", "AN12", "AN22",
+        ],
+    ]
 
     /// ICAO designators for rotorcraft.
     static let helicopterCodes: Set<String> = [
@@ -128,6 +194,7 @@ enum AircraftTypeCatalog {
     E50P|Embraer Phenom 100
     E55P|Embraer Phenom 300
     E545|Embraer Legacy 450
+    EA50|Eclipse 500
     E550|Embraer Praetor 600
     AT43|ATR 42-300
     AT45|ATR 42-500
