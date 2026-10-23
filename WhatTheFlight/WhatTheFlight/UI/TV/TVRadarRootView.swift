@@ -64,50 +64,7 @@ struct TVRadarRootView: View {
     }
 
     var body: some View {
-        TVRadarScreen(
-            model: model,
-            settings: settings,
-            centerState: centerState,
-            actions: .init(
-                openSettings: { presented = .settings($0) },
-                openDetail: { presented = .detail($0) },
-                openAircraft: { presented = .aircraft },
-                openLogbook: { presented = .logbook },
-                centerPrimary: centerPrimary,
-                centerSecondary: centerSecondary
-            )
-        )
-        .preferredColorScheme(settings.appearance.colorScheme)
-        .fullScreenCover(item: $presented) { item in
-            switch item {
-            case .settings(let pane):
-                TVRadarSettingsView(settings: settings, model: model, link: link, tvLocation: tvLocation, initialPane: pane) {
-                    present(.tour)
-                }
-            case .detail(let id):
-                TVFlightDetailView(flightID: id, model: model, settings: settings, logbook: logbook) { presented = nil }
-            case .aircraft:
-                TVAircraftListView(model: model, heading: settings.tvFacingDegrees) { id in
-                    // A pinned aircraft still on the ground isn't on the radar yet.
-                    if model.contact(id: id) != nil {
-                        withAnimation(.snappy) { model.focus(on: id) }
-                    }
-                    presented = nil
-                }
-            case .logbook:
-                TVLogbookView(logbook: logbook, showTopography: settings.showTopography, showPhotos: settings.showPhotos,
-                              isLive: { model.contact(id: $0) != nil }) { id in
-                    withAnimation(.snappy) { model.focus(on: id) }
-                    presented = nil
-                }
-                .preferredColorScheme(settings.appearance.colorScheme)
-            case .tour:
-                TVOnboardingView(hasLocation: observerCoordinate != nil,
-                                 placeName: settings.locationMode == .custom ? settings.customPlaceName : "this Apple TV's location",
-                                 showTopography: settings.showTopography, onExit: finishTour)
-                    .preferredColorScheme(settings.appearance.colorScheme)
-            }
-        }
+        screen
         .environment(\.radarObserver, model.observer)
         .onAppear {
             link.onPayload = { apply($0) }
@@ -157,16 +114,67 @@ struct TVRadarRootView: View {
         .onChange(of: settings.demoTraffic) { _, _ in model.settingsDidChange(refetch: true) }
         .onChange(of: settings.radiusMiles) { _, _ in model.settingsDidChange(refetch: true) }
         .onChange(of: model.lastUpdated) { _, _ in publishTopShelf() }
+        .onChange(of: AlertSpeaker.shared.speakingFlightID) { _, id in followAnnouncement(id) }
         .onChange(of: model.hasLoadedOnce) { _, loaded in
             if loaded, let id = pendingFlight {
                 pendingFlight = nil
                 showFlight(id)
             }
         }
-        .onOpenURL { url in
-            // whattheflight://flight/<id> from the Top Shelf.
-            guard url.host() == "flight", let id = url.pathComponents.dropFirst().first else { return }
-            if model.hasLoadedOnce { showFlight(id) } else { pendingFlight = id }
+        .onOpenURL(perform: open)
+    }
+
+    /// whattheflight://flight/<id> from the Top Shelf.
+    private func open(_ url: URL) {
+        guard url.host() == "flight", let id = url.pathComponents.dropFirst().first else { return }
+        if model.hasLoadedOnce { showFlight(id) } else { pendingFlight = id }
+    }
+
+    /// The radar and everything presented over it.
+    private var screen: some View {
+        TVRadarScreen(
+            model: model,
+            settings: settings,
+            centerState: centerState,
+            actions: .init(
+                openSettings: { presented = .settings($0) },
+                openDetail: { presented = .detail($0) },
+                openAircraft: { presented = .aircraft },
+                openLogbook: { presented = .logbook },
+                centerPrimary: centerPrimary,
+                centerSecondary: centerSecondary
+            )
+        )
+        .preferredColorScheme(settings.appearance.colorScheme)
+        .fullScreenCover(item: $presented) { item in
+            switch item {
+            case .settings(let pane):
+                TVRadarSettingsView(settings: settings, model: model, link: link, tvLocation: tvLocation, initialPane: pane) {
+                    present(.tour)
+                }
+            case .detail(let id):
+                TVFlightDetailView(flightID: id, model: model, settings: settings, logbook: logbook) { presented = nil }
+            case .aircraft:
+                TVAircraftListView(model: model, heading: settings.tvFacingDegrees) { id in
+                    // A pinned aircraft still on the ground isn't on the radar yet.
+                    if model.contact(id: id) != nil {
+                        withAnimation(.snappy) { model.focus(on: id) }
+                    }
+                    presented = nil
+                }
+            case .logbook:
+                TVLogbookView(logbook: logbook, showTopography: settings.showTopography, showPhotos: settings.showPhotos,
+                              isLive: { model.contact(id: $0) != nil }) { id in
+                    withAnimation(.snappy) { model.focus(on: id) }
+                    presented = nil
+                }
+                .preferredColorScheme(settings.appearance.colorScheme)
+            case .tour:
+                TVOnboardingView(hasLocation: observerCoordinate != nil,
+                                 placeName: settings.locationMode == .custom ? settings.customPlaceName : "this Apple TV's location",
+                                 showTopography: settings.showTopography, onExit: finishTour)
+                    .preferredColorScheme(settings.appearance.colorScheme)
+            }
         }
     }
 
@@ -181,6 +189,13 @@ struct TVRadarRootView: View {
         model.post(notice: alert.title, symbol: alert.symbol)
         guard settings.spokenAlerts, let contact = model.contact(id: alert.flightID) else { return }
         AlertSpeaker.shared.speak(SpokenTraffic.sentence(for: contact, reason: alert.reason), about: contact.id)
+    }
+
+    /// The aircraft being read out takes over the centre as its sentence starts, and stays
+    /// there like any focus: until it leaves the radius or the remote moves on.
+    private func followAnnouncement(_ id: String?) {
+        guard let id, model.contacts.contains(where: { $0.id == id }), model.focus.focusedID != id else { return }
+        withAnimation(.snappy) { model.focus(on: id) }
     }
 
     private func showFlight(_ id: String) {
