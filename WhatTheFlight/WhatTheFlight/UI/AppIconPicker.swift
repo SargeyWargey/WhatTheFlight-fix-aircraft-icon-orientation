@@ -46,7 +46,7 @@ struct AppIconPickerView: View {
                     }
                 }
                 if let problem {
-                    Text(problem).font(.mono(12)).foregroundStyle(Palette.warning)
+                    Text(problem).font(.footnote).foregroundStyle(Palette.warning)
                 }
             }
             .padding(20)
@@ -54,7 +54,6 @@ struct AppIconPickerView: View {
         .background(Palette.paper.ignoresSafeArea())
         .navigationTitle("App Icon")
         .navigationBarTitleDisplayMode(.inline)
-        .fontDesign(.monospaced)
     }
 
     private func cell(_ choice: AppIconChoice) -> some View {
@@ -67,16 +66,16 @@ struct AppIconPickerView: View {
                         .stroke(selected ? Palette.ink : .clear, lineWidth: 2.5)
                 )
             Text(choice.title)
-                .font(.mono(12, .bold))
+                .font(.footnote.weight(.semibold))
                 .foregroundStyle(selected ? Palette.ink : Palette.value)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             Text(choice.subtitle)
-                .font(.mono(9))
+                .font(.caption2)
                 .foregroundStyle(Palette.caption)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
-                .frame(height: 24, alignment: .top)
+                .frame(height: 28, alignment: .top)
         }
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())

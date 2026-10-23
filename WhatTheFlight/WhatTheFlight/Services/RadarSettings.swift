@@ -61,6 +61,75 @@ final class RadarSettings {
         }
     }
 
+    /// Apple TV: what the live map is drawn on. MapKit has no topographic style.
+    enum MapType: String, CaseIterable, Identifiable {
+        case standard, satellite, hybrid
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .standard: return "Standard"
+            case .satellite: return "Satellite"
+            case .hybrid: return "Hybrid"
+            }
+        }
+    }
+
+    /// The contour map behind the radar, drawn by `TopographyRenderer`: one generated terrain,
+    /// read four ways. Survey is the default.
+    enum TopographyStyle: String, CaseIterable, Identifiable {
+        case off, remaster, survey, highlands, relief
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .off: return "Off"
+            case .remaster: return "Remaster"
+            case .survey: return "Survey"
+            case .highlands: return "Highlands"
+            case .relief: return "Relief"
+            }
+        }
+
+        var subtitle: String {
+            switch self {
+            case .off: return "Plain paper"
+            case .remaster: return "Big gentle hills, one line weight"
+            case .survey: return "A survey map, every fifth line heavier"
+            case .highlands: return "Ridges and winding valleys, the most detail"
+            case .relief: return "Survey lines over faint hill shading"
+            }
+        }
+    }
+
+    /// Tide: the ground stays put while the contour heights creep, so lines slowly flow out
+    /// of the hilltops. 1× moves one line spacing every 20 seconds.
+    enum TopographyMotion: String, CaseIterable, Identifiable {
+        case off, half, normal, double
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .off: return "Off"
+            case .half: return "0.5×"
+            case .normal: return "1×"
+            case .double: return "2×"
+            }
+        }
+
+        var speed: Double {
+            switch self {
+            case .off: return 0
+            case .half: return 0.5
+            case .normal: return 1
+            case .double: return 2
+            }
+        }
+    }
+
+    /// Apple TV: the map's own ranges; nil (first) follows the radar's.
+    static let mapRadiusChoices: [Double?] = [nil, 2, 5, 10, 15, 20, 30, 50]
+
     static let radiusRange: ClosedRange<Double> = 2...100
     /// The Watch watches a tighter circle: roughly what you can see from where you stand.
     #if os(watchOS)
@@ -77,7 +146,12 @@ final class RadarSettings {
     var customLongitude: Double? { didSet { save(customLongitude, .customLongitude) } }
     var appearance: Appearance { didSet { save(appearance.rawValue, .appearance) } }
     var showHelicopters: Bool { didSet { save(showHelicopters, .showHelicopters) } }
-    var showTopography: Bool { didSet { save(showTopography, .showTopography) } }
+    /// The contours behind the radar; Off is plain paper.
+    var topography: TopographyStyle { didSet { save(topography.rawValue, .topography) } }
+    /// How fast the main radar's contours creep (Tide). Every other screen keeps them still.
+    var topographyMotion: TopographyMotion { didSet { save(topographyMotion.rawValue, .topographyMotion) } }
+    /// Whether any contours show (what the TV's secondary screens pass along).
+    var showTopography: Bool { topography != .off }
     var showCompassBezel: Bool { didSet { save(showCompassBezel, .showCompassBezel) } }
     var radarSweep: Bool { didSet { save(radarSweep, .radarSweep) } }
     var showPhotos: Bool { didSet { save(showPhotos, .showPhotos) } }
@@ -114,6 +188,11 @@ final class RadarSettings {
     var tvView: TVView { didSet { save(tvView.rawValue, .tvView) } }
     /// The map turns so "up" is the TV's facing direction, like the radar. On = north up.
     var mapNorthUp: Bool { didSet { save(mapNorthUp, .mapNorthUp) } }
+    /// Apple TV: how far the map reaches, independent of the radar. nil = the radar's radius.
+    /// Read it as `effectiveMapRadius`.
+    var mapRadiusMiles: Double? { didSet { save(mapRadiusMiles, .mapRadius) } }
+    /// Apple TV: standard, satellite or hybrid.
+    var mapType: MapType { didSet { save(mapType.rawValue, .mapType) } }
     /// Aircraft followed wherever they are, oldest first. Edit through `RadarModel.pin` / `unpin`.
     var pinnedAircraft: [PinnedAircraft] {
         didSet {
@@ -153,7 +232,10 @@ final class RadarSettings {
         #else
         showHelicopters = value(.showHelicopters, true)
         #endif
-        showTopography = value(.showTopography, true)
+        // Before styles this was one switch; anyone who turned it off stays off.
+        let hadTopographyOff = defaults.object(forKey: Key.showTopography.name) != nil && !defaults.bool(forKey: Key.showTopography.name)
+        topography = TopographyStyle(rawValue: value(.topography, hadTopographyOff ? "off" : "survey")) ?? .survey
+        topographyMotion = TopographyMotion(rawValue: value(.topographyMotion, "normal")) ?? .normal
         showCompassBezel = value(.showCompassBezel, true)
         radarSweep = value(.radarSweep, true)
         showPhotos = value(.showPhotos, true)
@@ -175,12 +257,17 @@ final class RadarSettings {
         mapView = value(.mapView, true)
         tvView = TVView(rawValue: value(.tvView, "radar")) ?? .radar
         mapNorthUp = value(.mapNorthUp, false)
+        mapRadiusMiles = optionalDouble(.mapRadius)?.clamped(to: Self.radiusRange)
+        mapType = MapType(rawValue: value(.mapType, "standard")) ?? .standard
         pinnedAircraft = defaults.data(forKey: Key.pinnedAircraft.name)
             .flatMap { try? JSONDecoder().decode([PinnedAircraft].self, from: $0) } ?? []
     }
 
     /// The TV's view, treated as the radar whenever the map is switched off.
     var effectiveTVView: TVView { mapView ? tvView : .radar }
+
+    /// The map's radius: its own, or the radar's.
+    var effectiveMapRadius: Double { mapRadiusMiles ?? radiusMiles }
 
     static let overheadAlertRange: ClosedRange<Double> = 0.5...5
     static let overheadAlertLeadRange: ClosedRange<Double> = 30...600
@@ -207,7 +294,8 @@ final class RadarSettings {
         refreshSeconds = 10
         appearance = .system
         showHelicopters = true
-        showTopography = true
+        topography = .survey
+        topographyMotion = .normal
         showCompassBezel = true
         radarSweep = true
         showPhotos = true
@@ -226,16 +314,19 @@ final class RadarSettings {
         mapView = true
         tvView = .radar
         mapNorthUp = false
+        mapRadiusMiles = nil
+        mapType = .standard
     }
 
     // MARK: - Persistence
 
     private enum Key: String {
         case radius, refresh, locationMode, customLatitude, customLongitude, appearance
-        case showHelicopters, showTopography, showCompassBezel, radarSweep, showPhotos
+        // `showTopography` is only read, to carry an old "off" over to `topography`.
+        case showHelicopters, showTopography, topography, topographyMotion, showCompassBezel, radarSweep, showPhotos
         case haptics, keepAwake, demoTraffic, hasSeenWelcome, customPlaceName, tvFacing
         case overheadAlerts, overheadAlertMiles, overheadAlertLead, notableAlerts, spokenAlerts, keepLogbook, raiseToSkyView
-        case mapView, tvView, mapNorthUp, skySaveToPhotos, pinnedAircraft
+        case mapView, tvView, mapNorthUp, mapRadius, mapType, skySaveToPhotos, pinnedAircraft
         case syncLogbook = "iCloudLogbook"
 
         var name: String { "wtf.\(rawValue)" }

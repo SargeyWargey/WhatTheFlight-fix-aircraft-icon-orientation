@@ -86,6 +86,15 @@ struct TourArt: View {
         .accessibilityHidden(true)
     }
 
+    /// Width in points of the real screen the miniature stands for.
+    static var screenWidth: CGFloat {
+        #if os(tvOS)
+        1920
+        #else
+        402
+        #endif
+    }
+
     /// The device the miniature radar is drawn in: a portrait phone, or a landscape TV.
     static var deviceSize: CGSize {
         #if os(tvOS)
@@ -130,7 +139,9 @@ private struct MiniRadar: View {
         let size = CGSize(width: TourArt.deviceSize.width * unit, height: TourArt.deviceSize.height * unit)
         DeviceFrame(unit: unit) {
             ZStack {
-                RadarBackdrop(showTopography: true, showSweep: sweep, isActive: true)
+                // A whole screen's worth of contours, shrunk to the miniature.
+                RadarBackdrop(showTopography: true, showSweep: sweep, isActive: true,
+                              topographyZoom: TourArt.screenWidth / size.width)
                 if showNorth {
                     Text("N")
                         .font(.mono(11 * unit, .heavy))

@@ -257,7 +257,7 @@ final class RadarSettingsTests: XCTestCase {
         let defaults = UserDefaults(suiteName: "RadarSettingsTests-\(UUID().uuidString)")!
         let settings = RadarSettings(defaults: defaults)
         settings.radiusMiles = 42
-        settings.showTopography = false
+        settings.topography = .off
         settings.customCoordinate = CLLocationCoordinate2D(latitude: 1, longitude: 2)
         let reloaded = RadarSettings(defaults: defaults)
         XCTAssertEqual(reloaded.radiusMiles, 42)
@@ -266,6 +266,39 @@ final class RadarSettingsTests: XCTestCase {
 
         defaults.set(5000.0, forKey: "wtf.radius")
         XCTAssertEqual(RadarSettings(defaults: defaults).radiusMiles, RadarSettings.radiusRange.upperBound)
+    }
+
+    func testTopographyDefaultsToSurveyAtOneTimes() {
+        let defaults = UserDefaults(suiteName: "RadarSettingsTests-\(UUID().uuidString)")!
+        let settings = RadarSettings(defaults: defaults)
+        XCTAssertEqual(settings.topography, .survey)
+        XCTAssertEqual(settings.topographyMotion, .normal)
+        XCTAssertTrue(settings.showTopography)
+    }
+
+    func testTopographyStyleAndMotionPersist() {
+        let defaults = UserDefaults(suiteName: "RadarSettingsTests-\(UUID().uuidString)")!
+        let settings = RadarSettings(defaults: defaults)
+        settings.topography = .highlands
+        settings.topographyMotion = .double
+        let reloaded = RadarSettings(defaults: defaults)
+        XCTAssertEqual(reloaded.topography, .highlands)
+        XCTAssertEqual(reloaded.topographyMotion, .double)
+        XCTAssertEqual(reloaded.topographyMotion.speed, 2)
+    }
+
+    func testOldTopographySwitchCarriesOver() {
+        let off = UserDefaults(suiteName: "RadarSettingsTests-\(UUID().uuidString)")!
+        off.set(false, forKey: "wtf.showTopography")
+        XCTAssertEqual(RadarSettings(defaults: off).topography, .off)
+
+        let on = UserDefaults(suiteName: "RadarSettingsTests-\(UUID().uuidString)")!
+        on.set(true, forKey: "wtf.showTopography")
+        XCTAssertEqual(RadarSettings(defaults: on).topography, .survey)
+
+        // A style chosen since wins over the old switch.
+        off.set("relief", forKey: "wtf.topography")
+        XCTAssertEqual(RadarSettings(defaults: off).topography, .relief)
     }
 
     func testLaunchArgumentStyleStringsAreUnderstood() {

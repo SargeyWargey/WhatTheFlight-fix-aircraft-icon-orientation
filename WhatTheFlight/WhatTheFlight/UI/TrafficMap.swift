@@ -45,7 +45,11 @@ struct TrafficMap: View {
         var showsLabels = true
         var showsProjectedPath = true    // focused aircraft only
         var showsFringe = true
-        var trailMinutes: Double = 15
+        /// Age bands, newest first; anything older isn't drawn.
+        var trailBands = TrafficMapGeometry.trailBands
+        var trailWidth: CGFloat = 3      // before `scale`
+        var ringOpacity: Double = 1      // TV: fainter, so more of the map shows
+        var mapType: RadarSettings.MapType = .standard
         var placeName: String? = nil     // "You · Atlanta"
         var cardInset: CGSize = .zero    // TV: keep the ring clear of the hero card
     }
@@ -66,8 +70,19 @@ struct TrafficMap: View {
     @State private var airports: [Airport] = []
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
 
     // MARK: What's drawn
+
+    private var isImagery: Bool { options.mapType != .standard }
+
+    private var mapStyle: MapStyle {
+        switch options.mapType {
+        case .standard: return .standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false)
+        case .satellite: return .imagery(elevation: .flat)
+        case .hybrid: return .hybrid(elevation: .flat, pointsOfInterest: .excludingAll, showsTraffic: false)
+        }
+    }
 
     private enum Role { case inRange, fringe, focused }
 
@@ -126,27 +141,31 @@ struct TrafficMap: View {
         Map(position: $camera, bounds: MapCameraBounds(maximumDistance: 2_000_000),
             interactionModes: options.interactive ? [.pan, .zoom] : []) {
             // `.muted` alone barely quietens the map (least of all in dark mode on tvOS): wash
-            // the roads and labels back in paper so the aircraft carry the screen. Everything
-            // drawn after it sits at the same level, so stays on top.
+            // the roads and labels back in paper so the aircraft carry the screen. Imagery gets
+            // a lighter, dark wash (see `isImagery`). Everything drawn after it sits at the same
+            // level, so stays on top.
             MapPolygon(coordinates: washCorners)
-                .foregroundStyle(Palette.paper.opacity(0.45))
+                .foregroundStyle(Palette.paper.opacity(isImagery ? 0.25 : 0.45))
                 .mapOverlayLevel(level: .aboveLabels)
 
-            RadiusRings(observer: observer, radiusMiles: radiusMiles, scale: options.scale, echoes: true)
+            RadiusRings(observer: observer, radiusMiles: radiusMiles, scale: options.scale, echoes: true,
+                        opacity: options.ringOpacity)
                 .mapOverlayLevel(level: .aboveLabels)
 
             ForEach(trails) { segment in
                 MapPolyline(coordinates: segment.coordinates)
                     .stroke(Palette.route.opacity(segment.opacity),
-                            style: StrokeStyle(lineWidth: 3 * options.scale, lineCap: .round, lineJoin: .round))
+                            style: StrokeStyle(lineWidth: options.trailWidth * options.scale, lineCap: .round, lineJoin: .round))
                     .mapOverlayLevel(level: .aboveLabels)
             }
-            // From the last reported position up to where the aircraft is now.
+            // From the last reported position up to where the aircraft is now, as bright as the
+            // newest stretch of trail.
             ForEach(blips) { blip in
                 if let last = trail(blip.id).last {
+                    let newest = options.trailBands.first?.opacity ?? 0.9
                     MapPolyline(coordinates: [last.coordinate, coordinate(of: blip)])
-                        .stroke(Palette.route.opacity(blip.role == .fringe ? 0.36 : 0.9),
-                                style: StrokeStyle(lineWidth: 3 * options.scale, lineCap: .round))
+                        .stroke(Palette.route.opacity(blip.role == .fringe ? newest * 0.4 : newest),
+                                style: StrokeStyle(lineWidth: options.trailWidth * options.scale, lineCap: .round))
                         .mapOverlayLevel(level: .aboveLabels)
                 }
             }
@@ -177,7 +196,9 @@ struct TrafficMap: View {
                 .annotationTitles(.hidden)
             }
         }
-        .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
+        .mapStyle(mapStyle)
+        // Imagery is dark whatever the appearance: draw labels and the wash for night.
+        .environment(\.colorScheme, isImagery ? .dark : colorScheme)
         .safeAreaPadding(.trailing, options.cardInset.width)
         .safeAreaPadding(.bottom, options.cardInset.height)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size in
@@ -259,10 +280,9 @@ struct TrafficMap: View {
     /// Runs once per feed (and when the set of aircraft changes), not on every tick.
     private func rebuildTrails() {
         let now = Date()
-        let bands = TrafficMapGeometry.trailBands.filter { $0.minutes <= options.trailMinutes }
         trails = blips.flatMap { blip in
             let fade = blip.role == .fringe ? 0.4 : 1
-            return TrafficMapGeometry.segments(trail(blip.id), now: now, bands: bands).enumerated().map { index, segment in
+            return TrafficMapGeometry.segments(trail(blip.id), now: now, bands: options.trailBands).enumerated().map { index, segment in
                 TrailSegment(id: "\(blip.id)-\(index)", coordinates: segment.coordinates, opacity: segment.opacity * fade)
             }
         }
@@ -354,18 +374,20 @@ struct RadiusRings: MapContent {
     let radiusMiles: Double
     var scale: CGFloat = 1
     var echoes = false
+    /// Scales the fill and strokes: below 1, more of the map shows through.
+    var opacity: Double = 1
 
     var body: some MapContent {
         if echoes {
             ForEach([0.25, 0.5], id: \.self) { fraction in
                 MapCircle(center: observer, radius: radiusMiles * fraction * GeoMath.kilometersPerMile * 1000)
                     .foregroundStyle(.clear)
-                    .stroke(Palette.ink.opacity(0.16), style: StrokeStyle(lineWidth: scale, dash: [3 * scale, 5 * scale]))
+                    .stroke(Palette.ink.opacity(0.16 * opacity), style: StrokeStyle(lineWidth: scale, dash: [3 * scale, 5 * scale]))
             }
         }
         MapCircle(center: observer, radius: radiusMiles * GeoMath.kilometersPerMile * 1000)
-            .foregroundStyle(Palette.ink.opacity(0.06))
-            .stroke(Palette.ink.opacity(0.35), style: StrokeStyle(lineWidth: scale, dash: [4 * scale, 4 * scale]))
+            .foregroundStyle(Palette.ink.opacity(0.06 * opacity))
+            .stroke(Palette.ink.opacity(0.35 * opacity), style: StrokeStyle(lineWidth: scale, dash: [4 * scale, 4 * scale]))
     }
 }
 

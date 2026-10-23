@@ -66,6 +66,7 @@ struct TVRadarRootView: View {
     var body: some View {
         screen
         .environment(\.radarObserver, model.observer)
+        .environment(\.topographyStyle, settings.topography)
         .onAppear {
             link.onPayload = { apply($0) }
             model.logbook = logbook
@@ -74,6 +75,7 @@ struct TVRadarRootView: View {
             updateLogbookSync()
             startPinSync()
             model.onAlert = announce
+            model.queryRadiusFloor = mapQueryFloor
             updateIdleTimer()
             link.start()
             model.start()
@@ -112,6 +114,11 @@ struct TVRadarRootView: View {
         .onChange(of: settings.syncLogbook) { _, _ in updateLogbookSync() }
         .onChange(of: settings.demoTraffic) { _, _ in model.settingsDidChange(refetch: true) }
         .onChange(of: settings.radiusMiles) { _, _ in model.settingsDidChange(refetch: true) }
+        .onChange(of: mapQueryFloor) { _, floor in
+            model.queryRadiusFloor = floor
+            // Only a map wider than the radar's own query needs fetching again now.
+            if floor > settings.radiusMiles * 1.5 + 3 { model.settingsDidChange(refetch: true) }
+        }
         .onChange(of: model.lastUpdated) { _, _ in publishTopShelf() }
         .onChange(of: AlertSpeaker.shared.speakingFlightID) { _, id in followAnnouncement(id) }
         .onChange(of: model.hasLoadedOnce) { _, loaded in
@@ -146,35 +153,47 @@ struct TVRadarRootView: View {
         )
         .preferredColorScheme(settings.appearance.colorScheme)
         .fullScreenCover(item: $presented) { item in
-            switch item {
-            case .settings(let pane):
-                TVRadarSettingsView(settings: settings, model: model, link: link, tvLocation: tvLocation, initialPane: pane) {
-                    present(.tour)
-                }
-            case .detail(let id):
-                TVFlightDetailView(flightID: id, model: model, settings: settings, logbook: logbook) { presented = nil }
-            case .aircraft:
-                TVAircraftListView(model: model, heading: settings.tvFacingDegrees) { id in
-                    // A pinned aircraft still on the ground isn't on the radar yet.
-                    if model.contact(id: id) != nil {
-                        withAnimation(.snappy) { model.focus(on: id) }
-                    }
-                    presented = nil
-                }
-            case .logbook:
-                TVLogbookView(logbook: logbook, showTopography: settings.showTopography, showPhotos: settings.showPhotos,
-                              isLive: { model.contact(id: $0) != nil }) { id in
-                    withAnimation(.snappy) { model.focus(on: id) }
-                    presented = nil
-                }
-                .preferredColorScheme(settings.appearance.colorScheme)
-            case .tour:
-                TVOnboardingView(hasLocation: observerCoordinate != nil,
-                                 placeName: settings.locationMode == .custom ? settings.customPlaceName : "this Apple TV's location",
-                                 showTopography: settings.showTopography, onExit: finishTour)
-                    .preferredColorScheme(settings.appearance.colorScheme)
-            }
+            presentation(item)
+                .environment(\.topographyStyle, settings.topography)
         }
+    }
+
+    @ViewBuilder
+    private func presentation(_ item: Presented) -> some View {
+        switch item {
+        case .settings(let pane):
+            TVRadarSettingsView(settings: settings, model: model, link: link, tvLocation: tvLocation, initialPane: pane) {
+                present(.tour)
+            }
+        case .detail(let id):
+            TVFlightDetailView(flightID: id, model: model, settings: settings, logbook: logbook) { presented = nil }
+        case .aircraft:
+            TVAircraftListView(model: model, heading: settings.tvFacingDegrees) { id in
+                // A pinned aircraft still on the ground isn't on the radar yet.
+                if model.contact(id: id) != nil {
+                    withAnimation(.snappy) { model.focus(on: id) }
+                }
+                presented = nil
+            }
+        case .logbook:
+            TVLogbookView(logbook: logbook, showTopography: settings.showTopography, showPhotos: settings.showPhotos,
+                          isLive: { model.contact(id: $0) != nil }) { id in
+                withAnimation(.snappy) { model.focus(on: id) }
+                presented = nil
+            }
+            .preferredColorScheme(settings.appearance.colorScheme)
+        case .tour:
+            TVOnboardingView(hasLocation: observerCoordinate != nil,
+                             placeName: settings.locationMode == .custom ? settings.customPlaceName : "this Apple TV's location",
+                             showTopography: settings.showTopography, onExit: finishTour)
+                .preferredColorScheme(settings.appearance.colorScheme)
+        }
+    }
+
+    /// The feed must reach past the map's ring too when the map's range is the wider one
+    /// (the same margin the radar's own query gets).
+    private var mapQueryFloor: Double {
+        settings.mapView ? settings.effectiveMapRadius * 1.5 + 3 : 0
     }
 
     /// "Keep screen awake" holds off the screen saver (and sleep) while the radar is open.

@@ -38,7 +38,8 @@ struct TVMapStack<Card: View>: View {
 }
 
 /// The live map of the model's traffic, turned to the TV's facing (or north up), bleeding
-/// into the overscan on every side it touches.
+/// into the overscan on every side it touches. It has its own range (`effectiveMapRadius`),
+/// so traffic is split again at its ring, and short thin trails that fade out.
 struct TVTrafficMap: View {
     let model: RadarModel
     let settings: RadarSettings
@@ -47,11 +48,13 @@ struct TVTrafficMap: View {
 
     var body: some View {
         if let observer = model.observer {
+            let radius = settings.effectiveMapRadius
+            let traffic = TrafficMapGeometry.split(model.contacts + model.outsideContacts, radiusMiles: radius)
             TrafficMap(
                 observer: observer,
-                radiusMiles: settings.radiusMiles,
-                contacts: model.contacts,
-                fringe: model.outsideContacts,
+                radiusMiles: radius,
+                contacts: traffic.inRange,
+                fringe: traffic.outside,
                 focused: model.focusedContact,
                 isPinned: model.focus.isPinned,
                 announcedID: AlertSpeaker.shared.speakingFlightID,
@@ -59,7 +62,11 @@ struct TVTrafficMap: View {
                 trail: model.trail(for:),
                 trailVersion: model.trailVersion,
                 headingUp: settings.mapNorthUp ? nil : settings.tvFacingDegrees,
-                options: .init(scale: TVMapLayout.scale, placeName: placeName, cardInset: cardInset)
+                options: .init(scale: TVMapLayout.scale, trailBands: TrafficMapGeometry.shortTrailBands,
+                               trailWidth: TVMapLayout.trailWidth,
+                               // Imagery is busy enough that a faded ring disappears.
+                               ringOpacity: settings.mapType == .standard ? TVMapLayout.ringOpacity : 1,
+                               mapType: settings.mapType, placeName: placeName, cardInset: cardInset)
             )
             .ignoresSafeArea()
             // Decorative, like the radar face: the hero and the dock's Aircraft list are the
@@ -82,6 +89,10 @@ enum TVMapLayout {
     static let cardWidth: CGFloat = 640
     /// Glyphs, labels and lines on the map, like the radar's `scale`.
     static let scale: CGFloat = 1.7
+    /// Trails at under half the iPad's weight (before `scale`), so crossing traffic doesn't clutter.
+    static let trailWidth: CGFloat = 1.3
+    /// The radius ring and its echoes on the standard map, faded so more of the map shows.
+    static let ringOpacity: Double = 0.45
 }
 
 /// Lays content out at `width / scale` and blows it up to `width`, reporting its real height

@@ -16,6 +16,10 @@
 //  all three. Left alone for 30 s, the full-screen map settles: the status badge and hints
 //  fade out until the next press.
 //
+//  With the map on screen, holding ● on the hero opens the map panel on the map's side: the
+//  map's own range (`wtf.mapRadius`, independent of the radar's) and its style. Picking a
+//  chip applies it and goes straight back to the hero.
+//
 
 #if os(tvOS)
 import SwiftUI
@@ -38,6 +42,9 @@ struct TVRadarScreen: View {
     enum Focus: Hashable {
         case radar
         case dock(DockItem)
+        /// The map panel's chips.
+        case mapRange(Double?)
+        case mapType(RadarSettings.MapType)
     }
 
     enum DockItem: CaseIterable {
@@ -46,6 +53,8 @@ struct TVRadarScreen: View {
 
     @FocusState private var focus: Focus?
     @State private var showDock = false
+    /// Hold ● with the map on screen: its range and style, on the map's side.
+    @State private var showMapPanel = false
     /// Ambient settle: the last remote input, and whether the chrome has faded since.
     @State private var lastInput = Date()
     @State private var isSettled = false
@@ -64,6 +73,8 @@ struct TVRadarScreen: View {
     private var showsMap: Bool { settings.effectiveTVView == .map }
     /// The radar on the left, the map on the right.
     private var showsSplit: Bool { settings.effectiveTVView == .split }
+    /// Split or Map: holding ● opens the map panel.
+    private var mapIsShowing: Bool { showsMap || showsSplit }
     /// The badge and hints, faded once the map has settled.
     private var chromeOpacity: Double { showsMap && isSettled && !showDock ? 0 : 1 }
 
@@ -74,6 +85,9 @@ struct TVRadarScreen: View {
                     .frame(width: showsSplit ? Self.splitRadarWidth(in: screen) : nil)
                 if showsSplit {
                     TVTrafficMap(model: model, settings: settings)
+                        .overlay {
+                            if showMapPanel { mapPanel.transition(.opacity.combined(with: .scale(scale: 0.96))) }
+                        }
                         .transition(.move(edge: .trailing))
                 }
             }
@@ -91,8 +105,8 @@ struct TVRadarScreen: View {
             guard !isOn, settings.tvView != .radar else { return }
             withAnimation(.smooth(duration: 0.6)) { settings.tvView = .radar }
         }
-        .onChange(of: showsMap || showsSplit, initial: true) { _, showsMap in
-            if showsMap { suggestKeepingAwake() }
+        .onChange(of: mapIsShowing, initial: true) { _, isShowing in
+            if isShowing { suggestKeepingAwake() } else if showMapPanel { closeMapPanel() }
         }
         .task(id: SettleKey(lastInput: lastInput, showsMap: showsMap)) {
             guard showsMap else { return }
@@ -106,6 +120,13 @@ struct TVRadarScreen: View {
             guard UserDefaults.standard.bool(forKey: "wtf.debugDock") else { return }
             try? await Task.sleep(for: .seconds(4))
             openDock()
+        }
+        .task(id: model.focusedContact == nil) {
+            // `-wtf.debugMapPanel YES` opens the map panel (Split or Map) for screenshots, once
+            // there's an aircraft on the hero, as for a real hold.
+            guard UserDefaults.standard.bool(forKey: "wtf.debugMapPanel"), model.focusedContact != nil else { return }
+            try? await Task.sleep(for: .seconds(1))
+            openMapPanel()
         }
         #endif
     }
@@ -176,7 +197,7 @@ struct TVRadarScreen: View {
                             .position(x: geo.size.width / 2, y: geo.size.height - 130)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
-                    RemoteHints(dockIsOpen: showDock, isPinned: model.focus.isPinned)
+                    RemoteHints(dockIsOpen: showDock || showMapPanel, isPinned: model.focus.isPinned, holdsForMap: mapIsShowing)
                         .opacity(chromeOpacity)
                         .position(x: geo.size.width / 2, y: Self.footerY(in: geo))
                 }
@@ -185,6 +206,13 @@ struct TVRadarScreen: View {
                     mapStatus
                         .opacity(chromeOpacity)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    if showMapPanel {
+                        // Left of centre, clear of the hero card bottom-right.
+                        mapPanel
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                            .padding(.leading, 60)
+                            .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    }
                 } else {
                     StatusBadge(model: model)
                         .scaleEffect(1.6)
@@ -200,7 +228,8 @@ struct TVRadarScreen: View {
         }
         .background {
             if !showsMap {
-                RadarBackdrop(showTopography: settings.showTopography, showSweep: settings.radarSweep, isActive: scenePhase == .active)
+                RadarBackdrop(showTopography: settings.showTopography, showSweep: settings.radarSweep, isActive: scenePhase == .active,
+                              topographyMotion: settings.topographyMotion)
                     .ignoresSafeArea()
             }
         }
@@ -270,6 +299,9 @@ struct TVRadarScreen: View {
         }
         .buttonStyle(TVQuietButtonStyle())
         .focused($focus, equals: .radar)
+        // While the map panel is open the remote stays in it.
+        .disabled(showMapPanel)
+        .simultaneousGesture(LongPressGesture(minimumDuration: 0.6).onEnded { _ in openMapPanel() })
         .onMoveCommand { direction in
             noteInput()
             switch direction {
@@ -283,7 +315,9 @@ struct TVRadarScreen: View {
             noteInput()
             withAnimation(.snappy) { model.togglePin() }
         }
-        .accessibilityHint("Left and right change aircraft. Click for details.")
+        .accessibilityHint(mapIsShowing ? "Left and right change aircraft. Click for details. Hold for the map's range and style."
+                                        : "Left and right change aircraft. Click for details.")
+        .accessibilityAction(named: "Map range and style") { openMapPanel() }
     }
 
     // MARK: Map chrome
@@ -303,10 +337,83 @@ struct TVRadarScreen: View {
         }
     }
 
-    /// "Atlanta, GA · 20 mi".
+    /// "Atlanta, GA · 20 mi": the map's range, which can differ from the radar's.
     private var mapCaption: String? {
         let place = settings.locationMode == .custom ? settings.customPlaceName : model.logPlaceName
-        return [place, "\(Int(settings.radiusMiles)) mi"].compactMap { $0 }.joined(separator: " · ")
+        return [place, "\(Int(settings.effectiveMapRadius)) mi"].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    // MARK: Map panel
+
+    /// Hold ● on the hero (Split or Map): the map's range and style. Picking one applies it
+    /// and hands the remote straight back to the hero; MENU closes it unchanged.
+    private var mapPanel: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text("Map")
+                .font(.mono(34, .heavy))
+                .foregroundStyle(Palette.ink)
+            HStack(alignment: .top, spacing: 40) {
+                panelColumn("Range") {
+                    ForEach(RadarSettings.mapRadiusChoices, id: \.self) { miles in
+                        panelChip(miles.map { "\(Int($0)) mi" } ?? "Same as radar",
+                                  isSelected: settings.mapRadiusMiles == miles, focus: .mapRange(miles)) {
+                            settings.mapRadiusMiles = miles
+                        }
+                    }
+                }
+                panelColumn("Style") {
+                    ForEach(RadarSettings.MapType.allCases) { type in
+                        panelChip(type.title, isSelected: settings.mapType == type, focus: .mapType(type)) {
+                            settings.mapType = type
+                        }
+                    }
+                }
+            }
+        }
+        .padding(36)
+        .glassSurface(in: RoundedRectangle(cornerRadius: 40, style: .continuous))
+        .focusSection()
+        .onExitCommand { closeMapPanel() }
+        .accessibilityIdentifier("tv_map_panel")
+    }
+
+    private func panelColumn<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(title)
+                .font(.mono(20, .bold))
+                .tracking(3)
+                .textCase(.uppercase)
+                .foregroundStyle(Palette.caption)
+            content()
+        }
+    }
+
+    private func panelChip(_ title: String, isSelected: Bool, focus item: Focus, action: @escaping () -> Void) -> some View {
+        Button(title) {
+            noteInput()
+            withAnimation(.snappy) { action() }
+            closeMapPanel()
+        }
+        .buttonStyle(TVChipButtonStyle(isSelected: isSelected))
+        .focused($focus, equals: item)
+    }
+
+    private func openMapPanel() {
+        guard mapIsShowing, centerState == nil, !showMapPanel else { return }
+        noteInput()
+        withAnimation(.smooth(duration: 0.25)) {
+            showDock = false
+            showMapPanel = true
+        }
+        // Focus can only move once the panel is on screen: start on the current range.
+        let range = RadarSettings.mapRadiusChoices.contains(settings.mapRadiusMiles) ? settings.mapRadiusMiles : nil
+        Task { @MainActor in focus = .mapRange(range) }
+    }
+
+    private func closeMapPanel() {
+        withAnimation(.smooth(duration: 0.25)) { showMapPanel = false }
+        // The hero is enabled again once the panel has gone: then it can take focus.
+        Task { @MainActor in focus = .radar }
     }
 
     // MARK: Ambient settle
@@ -392,10 +499,13 @@ struct TVRadarScreen: View {
     }
 }
 
-/// "◀ ▶ Aircraft · ● Details · ⏯ Pin · ▼ More", drawn with SF Symbols in key caps.
+/// "◀ ▶ Aircraft · ● Details · ⏯ Pin · ▼ More" (plus "● Hold: Map" with the map on screen),
+/// drawn with SF Symbols in key caps.
 private struct RemoteHints: View {
+    /// The dock or the map panel: MENU goes back.
     let dockIsOpen: Bool
     let isPinned: Bool
+    var holdsForMap = false
 
     var body: some View {
         HStack(spacing: 40) {
@@ -404,6 +514,7 @@ private struct RemoteHints: View {
             } else {
                 hint(["arrowtriangle.left.fill", "arrowtriangle.right.fill"], "Aircraft")
                 hint(["circle.circle"], "Details")
+                if holdsForMap { hint(["circle.circle"], "Hold: Map") }
                 hint(["playpause.fill"], isPinned ? "Unpin" : "Pin")
                 hint(["arrowtriangle.down.fill"], "More")
             }

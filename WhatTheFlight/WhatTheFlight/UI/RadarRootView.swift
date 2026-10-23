@@ -25,8 +25,10 @@ struct RadarRootView: View {
     @State private var sky: SkyRequest?
     /// A deep link that arrived before the first feed load (e.g. tapped from a widget).
     @State private var deferredRoute: AppRouter.Route?
-    /// `-wtf.debugLargeSheet YES` opens the detail sheet full height (screenshots).
+    /// `-wtf.debugLargeSheet YES` opens the detail and search sheets full height (screenshots).
     @State private var detailDetent: PresentationDetent = UserDefaults.standard.bool(forKey: "wtf.debugLargeSheet") ? .large : .medium
+    /// Search opens half height from a swipe, full height from the status badge.
+    @State private var searchDetent: PresentationDetent = UserDefaults.standard.bool(forKey: "wtf.debugLargeSheet") ? .large : .medium
 
     private let router = AppRouter.shared
     private let skyWatch = SkyWatch.shared
@@ -74,9 +76,10 @@ struct RadarRootView: View {
                     centerState: centerState,
                     actions: .init(
                         openSettings: { sheet = .settings },
-                        openSearch: { sheet = .search },  // even with an empty sky: search reaches the whole world
+                        // Even with an empty sky: search reaches the whole world.
+                        openSearch: { openSearch(detent: .medium) },
                         openDetail: { sheet = .detail($0) },
-                        openLogbook: { sheet = .logbook },
+                        openSearchFullHeight: { openSearch(detent: .large) },
                         openSpotPicker: { sheet = .pickSpot },
                         centerPrimary: centerPrimary,
                         centerSecondary: { sheet = .pickSpot }
@@ -105,10 +108,12 @@ struct RadarRootView: View {
                 }
             }
         }
+        .environment(\.topographyStyle, settings.topography)
         .preferredColorScheme(settings.appearance.colorScheme)
         .sheet(item: $sheet) { sheet in
             sheetContent(sheet)
                 .environment(\.radarObserver, model.observer)
+                .environment(\.topographyStyle, settings.topography)
         }
         .fullScreenCover(item: $sky) { request in
             SkyView(model: model, settings: settings, location: location, request: request,
@@ -207,6 +212,13 @@ struct RadarRootView: View {
 
     // MARK: Sheets
 
+    /// Search and the logbook live in one sheet: aircraft nearby, a worldwide search and the
+    /// Logbook button.
+    private func openSearch(detent: PresentationDetent) {
+        searchDetent = detent
+        sheet = .search
+    }
+
     @ViewBuilder
     private func sheetContent(_ sheet: Sheet) -> some View {
         switch sheet {
@@ -221,7 +233,7 @@ struct RadarRootView: View {
                 self.sheet = nil
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { self.sheet = .logbook }
             }
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.medium, .large], selection: $searchDetent)
                 .presentationDragIndicator(.visible)
         case .detail(let id):
             FlightDetailSheet(flightID: id, model: model, settings: settings, logbook: logbook) { id in

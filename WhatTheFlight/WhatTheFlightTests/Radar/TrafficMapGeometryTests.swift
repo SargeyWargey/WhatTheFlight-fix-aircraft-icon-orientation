@@ -92,6 +92,24 @@ final class TrafficMapGeometryTests: XCTestCase {
         XCTAssertEqual(segments[0].coordinates.count, 4)
     }
 
+    func testTheTVsShortTrailStopsAtFiveMinutesAndFadesTheWholeWay() {
+        let now = Date()
+        let trail = [8.0, 6, 4.5, 3.5, 2.5, 1.5, 0.5, 0].enumerated().map { point(minutesAgo: $1, now: now, east: Double($0)) }
+        let segments = TrafficMapGeometry.segments(trail, now: now, bands: TrafficMapGeometry.shortTrailBands)
+        // 8 and 6 minutes old are dropped; each minute older is fainter.
+        XCTAssertEqual(segments.map(\.opacity), [0.12, 0.26, 0.42, 0.6, 0.8])
+        XCTAssertEqual(segments.first?.coordinates.first?.longitude ?? 0, trail[2].longitude, accuracy: 1e-12)
+    }
+
+    func testTheMapSplitsTrafficAtItsOwnRadius() {
+        let all = TestTraffic.contacts([TestTraffic.flight("a", miles: 3), TestTraffic.flight("b", miles: 8),
+                                        TestTraffic.flight("c", miles: 18), TestTraffic.flight("d", miles: 26)], radius: 40)
+        let zoomedIn = TrafficMapGeometry.split(all, radiusMiles: 5)
+        XCTAssertEqual(zoomedIn.inRange.map(\.id), ["a"])
+        XCTAssertEqual(zoomedIn.outside.map(\.id), ["b", "c", "d"])
+        XCTAssertEqual(TrafficMapGeometry.split(all, radiusMiles: 30).inRange.map(\.id), ["a", "b", "c", "d"])
+    }
+
     // MARK: Airports
 
     func testOnlyOriginsAndDestinationsInsideTheBoundsGetAPin() {
@@ -159,6 +177,28 @@ final class TrafficMapGeometryTests: XCTestCase {
         let defaults = UserDefaults(suiteName: "TrafficMapGeometryTests-\(UUID().uuidString)")!
         RadarSettings(defaults: defaults).tvView = .split
         XCTAssertEqual(RadarSettings(defaults: defaults).effectiveTVView, .split)
+    }
+
+    @MainActor
+    func testTheMapRangeFollowsTheRadarUntilSetAndPersistsWithTheMapType() {
+        let defaults = UserDefaults(suiteName: "TrafficMapGeometryTests-\(UUID().uuidString)")!
+        let settings = RadarSettings(defaults: defaults)
+        settings.radiusMiles = 20
+        XCTAssertNil(settings.mapRadiusMiles)
+        XCTAssertEqual(settings.effectiveMapRadius, 20)
+        XCTAssertEqual(settings.mapType, .standard)
+
+        settings.mapRadiusMiles = 5
+        settings.mapType = .satellite
+        let reloaded = RadarSettings(defaults: defaults)
+        XCTAssertEqual(reloaded.effectiveMapRadius, 5)
+        XCTAssertEqual(reloaded.radiusMiles, 20)
+        XCTAssertEqual(reloaded.mapType, .satellite)
+
+        reloaded.mapRadiusMiles = nil
+        XCTAssertEqual(RadarSettings(defaults: defaults).effectiveMapRadius, 20)
+        reloaded.resetToDefaults()
+        XCTAssertEqual(reloaded.mapType, .standard)
     }
 
     func testMapLabelReadsNameOperatorDistanceAndAltitude() {

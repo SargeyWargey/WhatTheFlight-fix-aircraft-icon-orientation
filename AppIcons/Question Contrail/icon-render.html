@@ -80,23 +80,33 @@
     return svg(`0 0 ${vbW} 100`, mark(plane(way.plane)));
   }
 
-  /** Top Shelf banner. tvOS shows it full screen: scaled to the TV's height and cropped to its
-   *  width, so only the middle ~55% (wide) to ~67% of the width is visible, and the app row
-   *  covers the bottom quarter. The name and mark sit together inside that window. */
+  /** Top Shelf banner. The tvOS home screen (measured in the tvOS 27 simulator) draws the wide
+   *  banner about 1.09\u00d7 and top-aligned: the middle ~76% of its width and all of its height
+   *  show above the app row. The name and mark sit together, centred in that window, as wide
+   *  as the middle 55% allows (older tvOS cropped to that). */
   function topShelf() {
     const way = WAYS.light;
     const vbW = 100 * w / h, cx = vbW / 2;
-    const markSize = 56, markX = cx + 50, markY = 10;
-    const textX = cx - 74;
+    // SF Mono advances 0.6 em per character.
+    const titleSize = 13, titleTrack = -.26, titleW = 16 * .6 * titleSize + 15 * titleTrack;
+    const subSize = 4.3, subTrack = 1.43;
+    const markSize = 74, gap = 18;
+    // The mark's ink inside its 100-unit square: x 25.75\u202675.25, y 8.75\u202689.
+    const ink = { left: .2575 * markSize, top: .0875 * markSize, w: .495 * markSize, h: .8025 * markSize };
+    const left = cx - (titleW + gap + ink.w) / 2;
+    // The middle of the space above the app row; the name sits a touch below the mark's middle.
+    const midY = 48, baseline = midY + 3;
+    const markX = left + titleW + gap - ink.left, markY = midY - ink.top - ink.h / 2;
+    const inkCX = markX + ink.left + ink.w / 2;
     return svg(`0 0 ${vbW} 100`, `<defs>
         <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#235F66"/><stop offset=".6" stop-color="#123A3F"/><stop offset="1" stop-color="#0A2226"/></linearGradient>
         <linearGradient id="trail" x1=".1" y1=".1" x2=".5" y2=".9"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".22"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient>
       </defs>
       <rect width="${vbW}" height="100" fill="url(#bg)"/>
-      ${contours(markX + 14, 42, 22, 7, '#FFFFFF', .07, .3)}
-      <g transform="translate(${markX - markSize / 2} ${markY}) scale(${markSize / 100})">${trailPath}${plane(way.plane)}</g>
-      <text x="${textX}" y="42" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-weight="800" font-size="10" fill="#FFFFFF" letter-spacing="-.2">What The Flight?</text>
-      <text x="${textX + .4}" y="49.5" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-weight="600" font-size="3.3" fill="#FF6B5E" letter-spacing="1.1">WHAT\u2019S FLYING OVER YOU</text>`);
+      ${contours(inkCX + 14, midY + 5, 22, 7, '#FFFFFF', .07, .3)}
+      <g transform="translate(${markX} ${markY}) scale(${markSize / 100})">${trailPath}${plane(way.plane)}</g>
+      <text x="${left}" y="${baseline}" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-weight="800" font-size="${titleSize}" fill="#FFFFFF" letter-spacing="${titleTrack}">What The Flight?</text>
+      <text x="${left + .5}" y="${baseline + 9.75}" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-weight="600" font-size="${subSize}" fill="#FF6B5E" letter-spacing="${subTrack}">WHAT\u2019S FLYING OVER YOU</text>`);
   }
 
   let out;

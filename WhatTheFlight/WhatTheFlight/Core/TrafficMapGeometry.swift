@@ -90,6 +90,17 @@ enum TrafficMapGeometry {
     /// The ambient map's trail fade: brightest for the last five minutes, gone after fifteen.
     static let trailBands: [(minutes: Double, opacity: Double)] = [(5, 0.9), (10, 0.5), (15, 0.25)]
 
+    /// Apple TV: five minutes of trail, fading out the whole way so it trails off.
+    static let shortTrailBands: [(minutes: Double, opacity: Double)] = [(1, 0.8), (2, 0.6), (3, 0.42), (4, 0.26), (5, 0.12)]
+
+    /// Traffic split for a map whose ring is `radiusMiles`, which can differ from the radar's:
+    /// inside it, and everything further out (the map fades and trims that itself). `all`
+    /// nearest first, as `model.contacts + model.outsideContacts` is.
+    static func split(_ all: [RadarContact], radiusMiles: Double) -> (inRange: [RadarContact], outside: [RadarContact]) {
+        let index = all.firstIndex { $0.distanceMiles > radiusMiles } ?? all.count
+        return (Array(all[..<index]), Array(all[index...]))
+    }
+
     /// Trail split by age for fading: (points, opacity) oldest first. `bands` run newest
     /// first, each up to its age in minutes; anything older than the last band is dropped.
     /// Neighbouring segments share their boundary point so the line has no gaps.

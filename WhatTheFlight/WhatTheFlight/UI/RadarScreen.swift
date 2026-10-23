@@ -3,8 +3,9 @@
 //  WhatTheFlight
 //
 //  The main screen. No cards, no chrome in the way: the focused flight in the middle,
-//  every other aircraft on the edge, a status badge bottom-left (tap for the logbook) and
-//  settings bottom-right. Watching a custom spot shows its name along the bottom.
+//  every other aircraft on the edge, a status badge bottom-left (tap: search and the
+//  logbook, full height) and settings bottom-right. Demo traffic (a solid DEMO badge) and
+//  a custom spot each get a tag along the bottom.
 //
 //  Gestures
 //    swipe →   back to the nearest aircraft      tap centre   flight details
@@ -28,20 +29,23 @@ struct RadarScreen: View {
         var openSettings: () -> Void
         var openSearch: () -> Void
         var openDetail: (String) -> Void
-        var openLogbook: () -> Void
+        /// The status badge: search (and its Logbook button) straight to full height.
+        var openSearchFullHeight: () -> Void
         var openSpotPicker: () -> Void
         var centerPrimary: () -> Void
         var centerSecondary: () -> Void
     }
 
     @Environment(\.scenePhase) private var scenePhase
+    @State private var statusWidth: CGFloat = 52
+    @State private var confirmLiveTraffic = false
 
     private var heading: Double { location.heading ?? 0 }
 
     var body: some View {
         GeometryReader { geo in
             let layout = RadarLayout(size: geo.size)
-            let obstacles = layout.obstacles
+            let obstacles = layout.obstacles(statusWidth: statusWidth)
             let placements = PerimeterPlanner.plan(contacts: model.perimeterContacts, heading: heading, track: layout.iconTrack, obstacles: obstacles)
 
             ZStack {
@@ -66,12 +70,16 @@ struct RadarScreen: View {
                     onLongPress: { contact in actions.openDetail(contact.id) }
                 )
 
-                Button(action: actions.openLogbook) {
-                    StatusBadge(model: model)
+                Button(action: actions.openSearchFullHeight) {
+                    StatusBadge(model: model, highlightsDemo: true)
                 }
                 .buttonStyle(.plain)
-                .accessibilityHint("Opens the logbook")
-                .position(layout.statusPoint)
+                .accessibilityHint("Search aircraft, or open the logbook")
+                .fixedSize()
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { statusWidth = $0 }
+                // Pinned by its left edge so a wider badge grows into the screen, not off it.
+                .frame(width: geo.size.width / 2, alignment: .leading)
+                .position(x: layout.statusLeading + geo.size.width / 4, y: layout.statusPoint.y)
 
                 SettingsButton(action: actions.openSettings)
                     .position(layout.gearPoint)
@@ -82,19 +90,30 @@ struct RadarScreen: View {
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .overlay(alignment: .bottom) {
-                if settings.locationMode == .custom {
-                    CustomSpotTag(name: settings.customPlaceName ?? settings.customCoordinate?.shortDescription,
-                                  action: actions.openSpotPicker)
-                        // In the home-indicator strip when there is one, else just above the bezel.
-                        .offset(y: geo.safeAreaInsets.bottom >= 20 ? geo.safeAreaInsets.bottom - 6 : -46)
+                VStack(spacing: 0) {
+                    if model.isDemo {
+                        DemoTrafficTag { confirmLiveTraffic = true }
+                    }
+                    if settings.locationMode == .custom {
+                        CustomSpotTag(name: settings.customPlaceName ?? settings.customCoordinate?.shortDescription,
+                                      action: actions.openSpotPicker)
+                    }
                 }
+                // In the home-indicator strip when there is one, else just above the bezel.
+                .offset(y: geo.safeAreaInsets.bottom >= 20 ? geo.safeAreaInsets.bottom - 6 : -46)
             }
+        }
+        .confirmationDialog("Demo traffic", isPresented: $confirmLiveTraffic, titleVisibility: .visible) {
+            Button("Switch to Live Traffic") { settings.demoTraffic = false }
+        } message: {
+            Text("These aircraft are simulated, not what's really overhead, and they aren't logged.")
         }
         .background {
             RadarBackdrop(
                 showTopography: settings.showTopography,
                 showSweep: settings.radarSweep,
-                isActive: scenePhase == .active
+                isActive: scenePhase == .active,
+                topographyMotion: settings.topographyMotion
             )
             .ignoresSafeArea()
         }
@@ -179,12 +198,23 @@ struct RadarLayout {
 
     var gearPoint: CGPoint { iconTrack.point(at: iconTrack.arcLength(of: .bottomRight)) }
     var statusPoint: CGPoint { iconTrack.point(at: iconTrack.arcLength(of: .bottomLeft)) }
+    /// iPhone / iPad: the status badge's left edge, mirroring the gear's right edge. The badge
+    /// grows rightward from here ("DEMO 12" is twice as wide as "12"), so it never runs off.
+    var statusLeading: CGFloat { statusPoint.x - 22 * scale }
     var noticeY: CGFloat { 84 * scale }
 
-    var obstacles: [PerimeterTrack.Obstacle] {
-        [
+    /// The gear, and the status badge as far along the bottom edge as it actually reaches.
+    func obstacles(statusWidth: CGFloat) -> [PerimeterTrack.Obstacle] {
+        let corner = iconTrack.arcLength(of: .bottomLeft)
+        let halfCorner = CGFloat.pi / 4 * iconTrack.cornerRadius
+        let curveEnds = iconTrack.rect.minX + iconTrack.cornerRadius
+        // Up the left side the badge never reaches past the corner; along the bottom
+        // (lower arc length) it reaches its right end plus room for an icon.
+        let up = 38 * scale
+        let along = max(up, halfCorner + statusLeading + statusWidth + 14 * scale - curveEnds)
+        return [
             .init(s: iconTrack.arcLength(of: .bottomRight), halfWidth: 26 * scale),
-            .init(s: iconTrack.arcLength(of: .bottomLeft), halfWidth: 38 * scale),
+            .init(s: corner + (up - along) / 2, halfWidth: (up + along) / 2),
         ]
     }
 }
@@ -210,12 +240,17 @@ struct SettingsButton: View {
 
 struct StatusBadge: View {
     let model: RadarModel
+    /// iPhone / iPad: demo traffic turns the badge into a solid ink pill so nobody mistakes
+    /// simulated aircraft for the real sky. The TV keeps the plain glass badge.
+    var highlightsDemo = false
     @State private var blink = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private var isHighlightedDemo: Bool { highlightsDemo && model.isDemo }
+
     private var color: Color {
         switch model.status {
-        case .live: return model.isDemo ? Palette.ink : Palette.live
+        case .live: return model.isDemo ? (highlightsDemo ? Palette.paper : Palette.ink) : Palette.live
         case .loading, .idle: return Palette.warning
         case .error: return Palette.signal
         }
@@ -227,14 +262,25 @@ struct StatusBadge: View {
                 .fill(color)
                 .frame(width: 7, height: 7)
                 .opacity(blink ? 0.35 : 1)
-            Text(model.isDemo ? "DEMO \(model.contacts.count)" : "\(model.contacts.count)")
+            if isHighlightedDemo {
+                Text("DEMO")
+                    .font(.mono(13, .heavy))
+                    .tracking(1.2)
+            }
+            Text(model.isDemo && !highlightsDemo ? "DEMO \(model.contacts.count)" : "\(model.contacts.count)")
                 .font(.mono(13, .bold))
-                .foregroundStyle(Palette.value)
                 .contentTransition(.numericText(value: Double(model.contacts.count)))
                 .animation(.snappy, value: model.contacts.count)
         }
+        .foregroundStyle(isHighlightedDemo ? Palette.paper : Palette.value)
         .padding(.horizontal, 11)
         .frame(height: 32)
+        .background {
+            Capsule()
+                .fill(Palette.ink)
+                .shadow(color: Palette.ink.opacity(0.45), radius: 8)
+                .opacity(isHighlightedDemo ? 1 : 0)
+        }
         .glassSurface(in: Capsule())
         .onAppear {
             guard !reduceMotion else { return }
@@ -260,26 +306,55 @@ struct CustomSpotTag: View {
     let action: () -> Void
 
     var body: some View {
+        BottomTag(symbol: "mappin.and.ellipse",
+                  text: ["Custom spot", name, "not logged"].compactMap { $0 }.joined(separator: " · "),
+                  color: Palette.warning,
+                  action: action)
+            .accessibilityLabel("Watching a custom spot\(name.map { ", \($0)" } ?? ""). Sightings here aren't logged.")
+            .accessibilityHint("Pick a different spot")
+    }
+}
+
+/// "DEMO TRAFFIC · SIMULATED AIRCRAFT · NOT LOGGED" along the bottom; tap to go live.
+struct DemoTrafficTag: View {
+    let action: () -> Void
+
+    var body: some View {
+        BottomTag(symbol: "theatermasks.fill",
+                  text: "Demo traffic · simulated aircraft · not logged",
+                  color: Palette.ink,
+                  action: action)
+            .accessibilityLabel("Demo traffic. These aircraft are simulated and aren't logged.")
+            .accessibilityHint("Switch to live traffic")
+    }
+}
+
+/// A one-line note along the bottom of the radar, clear of the badge and the gear.
+private struct BottomTag: View {
+    let symbol: String
+    let text: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
         Button(action: action) {
             HStack(spacing: 5) {
-                Image(systemName: "mappin.and.ellipse")
+                Image(systemName: symbol)
                     .font(.system(size: 10, weight: .bold))
-                Text(["Custom spot", name, "not logged"].compactMap { $0 }.joined(separator: " · "))
+                Text(text)
                     .font(.mono(10, .bold))
                     .tracking(0.8)
                     .textCase(.uppercase)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
-            .foregroundStyle(Palette.warning)
+            .foregroundStyle(color)
             .padding(.horizontal, 10)
             .padding(.vertical, 3)
             .paperHalo()
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 60)
-        .accessibilityLabel("Watching a custom spot\(name.map { ", \($0)" } ?? ""). Sightings here aren't logged.")
-        .accessibilityHint("Pick a different spot")
     }
 }
 

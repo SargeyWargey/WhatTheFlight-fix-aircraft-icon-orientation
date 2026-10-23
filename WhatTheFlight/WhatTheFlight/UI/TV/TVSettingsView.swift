@@ -464,7 +464,24 @@ struct TVRadarSettingsView: View {
             label: { $0.title },
             onSelect: { settings.appearance = $0 }
         )
-        TVToggleRow(title: "Topographic background", symbol: "mountain.2.fill", isOn: $settings.showTopography)
+        TVChoiceRow(
+            title: "Topography",
+            subtitle: settings.topography.subtitle,
+            options: RadarSettings.TopographyStyle.allCases,
+            selection: settings.topography,
+            label: { $0.title },
+            onSelect: { settings.topography = $0 }
+        )
+        if settings.topography != .off {
+            TVChoiceRow(
+                title: "Contour motion",
+                subtitle: "The lines slowly flow out from the hilltops on the radar",
+                options: RadarSettings.TopographyMotion.allCases,
+                selection: settings.topographyMotion,
+                label: { $0.title },
+                onSelect: { settings.topographyMotion = $0 }
+            )
+        }
         TVToggleRow(title: "Compass bezel", symbol: "location.north.line.fill", isOn: $settings.showCompassBezel)
         TVToggleRow(title: "Radar sweep", symbol: "dot.radiowaves.right", isOn: $settings.radarSweep)
         TVToggleRow(title: "Aircraft photos", symbol: "photo.fill", isOn: $settings.showPhotos)
@@ -480,6 +497,21 @@ struct TVRadarSettingsView: View {
                 selection: settings.tvView,
                 label: { $0.title },
                 onSelect: { settings.tvView = $0 }
+            )
+            TVChoiceRow(
+                title: "Map range",
+                subtitle: "\(Int(settings.effectiveMapRadius)) mi · on the radar or map, hold ● to change it",
+                options: RadarSettings.mapRadiusChoices,
+                selection: settings.mapRadiusMiles,
+                label: { $0.map { "\(Int($0))" } ?? "Same as radar" },
+                onSelect: { settings.mapRadiusMiles = $0 }
+            )
+            TVChoiceRow(
+                title: "Map style",
+                options: RadarSettings.MapType.allCases,
+                selection: settings.mapType,
+                label: { $0.title },
+                onSelect: { settings.mapType = $0 }
             )
             TVToggleRow(title: "Map north up", subtitle: "Off, the map turns so the top of the screen is the way the TV faces",
                         symbol: "location.north.line.fill", isOn: $settings.mapNorthUp)

@@ -2,8 +2,8 @@
 //  RadarBackdrop.swift
 //  WhatTheFlight
 //
-//  Paper + topographic contours + faint range rings + a slow radar sweep, and the compass
-//  bezel that hugs the screen edge and turns with the phone.
+//  Paper + topographic contours (`TopographyRenderer`) + faint range rings + a slow radar
+//  sweep, and the compass bezel that hugs the screen edge and turns with the phone.
 //
 
 #if os(iOS) || os(tvOS) || os(watchOS)
@@ -13,9 +13,16 @@ struct RadarBackdrop: View {
     let showTopography: Bool
     let showSweep: Bool
     let isActive: Bool
+    /// The main radar only: how fast the contours creep (Tide). Every other screen keeps them still.
+    var topographyMotion: RadarSettings.TopographyMotion = .off
+    /// Terrain points per point: above 1, a miniature screen (the tour) shows a whole screen's worth.
+    var topographyZoom: CGFloat = 1
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    #if !os(watchOS)
+    @Environment(\.topographyStyle) private var topographyStyle
+    #endif
 
     var body: some View {
         GeometryReader { geo in
@@ -53,20 +60,11 @@ struct RadarBackdrop: View {
 
     @ViewBuilder
     private var topography: some View {
-        if colorScheme == .dark {
-            Image("Topography")
-                .resizable()
-                .scaledToFill()
-                .colorInvert()
-                .blendMode(.screen)
-                .opacity(0.22)
-        } else {
-            Image("Topography")
-                .resizable()
-                .scaledToFill()
-                .blendMode(.multiply)
-                .opacity(0.42)
-        }
+        #if !os(watchOS)
+        // Screens that always show contours (the tour, Aim at Apple TV) fall back to Survey.
+        TopographyLayer(style: topographyStyle == .off ? .survey : topographyStyle,
+                        motion: topographyMotion, isActive: isActive, zoom: topographyZoom)
+        #endif
     }
 }
 
