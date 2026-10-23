@@ -23,6 +23,12 @@ final class RadarLocationService: NSObject {
     private(set) var headingAccuracy: Double?
     let headingAvailable = CLLocationManager.headingAvailable()
 
+    /// The iPhone Duo's inner screen turns with the phone like an iPad's, so the compass
+    /// follows the phone there too. Set from `FoldMonitor.isOnInnerScreen`.
+    @ObservationIgnored var interfaceTurnsWithDevice = false {
+        didSet { if interfaceTurnsWithDevice != oldValue { syncHeadingOrientation() } }
+    }
+
     @ObservationIgnored private let manager = CLLocationManager()
     @ObservationIgnored private var orientationObserver: NSObjectProtocol?
     @ObservationIgnored private var isRunning = false
@@ -75,6 +81,12 @@ final class RadarLocationService: NSObject {
         isRunning = false
         manager.stopUpdatingLocation()
         manager.stopUpdatingHeading()
+        // Orientation updates run the accelerometer; `start()` turns them back on.
+        if let orientationObserver {
+            NotificationCenter.default.removeObserver(orientationObserver)
+            self.orientationObserver = nil
+            UIDevice.current.endGeneratingDeviceOrientationNotifications()
+        }
     }
 
     /// Sky Watch: keep location (and so the app) running while the phone is locked, with
@@ -93,9 +105,9 @@ final class RadarLocationService: NSObject {
     }
 
     /// The compass is relative to the top of the *interface*, so keep Core Location in sync
-    /// on iPad, which rotates. iPhone is portrait-only.
+    /// on iPad and the iPhone Duo's inner screen, which rotate. Other iPhones are portrait-only.
     private func syncHeadingOrientation() {
-        guard UIDevice.current.userInterfaceIdiom == .pad else {
+        guard UIDevice.current.userInterfaceIdiom == .pad || interfaceTurnsWithDevice else {
             manager.headingOrientation = .portrait
             return
         }
@@ -145,6 +157,7 @@ extension RadarLocationService: CLLocationManagerDelegate {
 
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         // Transient failures (e.g. no fix yet) are expected; the last good fix stays in use.
+        Log.sensors.info("Location update failed: \(error.localizedDescription, privacy: .public)")
     }
 
     nonisolated func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool {

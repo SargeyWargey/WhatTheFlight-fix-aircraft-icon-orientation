@@ -270,8 +270,8 @@ struct AzimuthStrip: View {
 
 extension AzimuthStrip.Mark {
     init(_ contact: RadarContact, isHighlighted: Bool) {
-        self.init(azimuth: contact.bearing, isHighlighted: isHighlighted, silhouette: contact.flight.silhouette,
-                  track: contact.flight.track, color: Palette.blip(for: contact.flight))
+        self.init(azimuth: contact.bearing, isHighlighted: isHighlighted, silhouette: contact.profile.silhouette,
+                  track: contact.flight.track, color: Palette.blip(for: contact.profile))
     }
 }
 

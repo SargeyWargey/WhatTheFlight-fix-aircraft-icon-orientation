@@ -137,6 +137,7 @@ enum PhotoLibrarySaver {
             }
             return .saved
         } catch {
+            Log.camera.error("Couldn't save to Photos: \(error.localizedDescription, privacy: .public)")
             return .failed
         }
     }

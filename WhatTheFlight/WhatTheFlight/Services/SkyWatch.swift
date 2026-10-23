@@ -51,6 +51,7 @@ final class SkyWatch {
                 lastState = state
                 lastPush = Date()
             } catch {
+                Log.alerts.error("Couldn't start the Sky Watch Live Activity: \(error.localizedDescription, privacy: .public)")
                 problem = "Live Activities are unavailable: \(error.localizedDescription)"
             }
         } else {

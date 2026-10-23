@@ -47,6 +47,10 @@ final class SkyCamera {
     @ObservationIgnored private var zoomObservation: NSKeyValueObservation?
     @ObservationIgnored private var inFlight: [PhotoCaptureDelegate] = []
     @ObservationIgnored private var isConfigured = false
+    /// Bumped by `stop()`. A `start()` that was waiting (for permission, or for the session
+    /// to start) when it changed must not carry on: lifting and lowering the phone quickly
+    /// would otherwise leave the camera on, or mark it running after it stopped.
+    @ObservationIgnored private var generation = 0
 
     init() {
         tracker.onFix = { [weak self] fix in
@@ -65,6 +69,9 @@ final class SkyCamera {
 
     func start() async {
         guard state == .idle || state == .denied else { return }
+        let attempt = generation
+        /// Stopped, or the calling view went away, during an await.
+        func superseded() -> Bool { generation != attempt || Task.isCancelled }
         // No camera (simulator, some iPads): don't ask for a permission we can't use.
         guard let device = device ?? Self.bestBackCamera() else {
             state = .unavailable
@@ -73,7 +80,9 @@ final class SkyCamera {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized: break
         case .notDetermined:
-            guard await AVCaptureDevice.requestAccess(for: .video) else { state = .denied; return }
+            let granted = await AVCaptureDevice.requestAccess(for: .video)
+            guard !superseded() else { return }
+            guard granted else { state = .denied; return }
         default:
             state = .denied
             return
@@ -81,7 +90,11 @@ final class SkyCamera {
         state = .starting
         self.device = device
         if !isConfigured {
-            guard let input = try? AVCaptureDeviceInput(device: device) else {
+            let input: AVCaptureDeviceInput
+            do {
+                input = try AVCaptureDeviceInput(device: device)
+            } catch {
+                Log.camera.error("Camera unavailable: \(error.localizedDescription, privacy: .public)")
                 state = .unavailable
                 return
             }
@@ -89,9 +102,19 @@ final class SkyCamera {
             let work = CaptureWork(session: session, input: input, photoOutput: photoOutput, videoOutput: videoOutput,
                                    tracker: tracker, frameQueue: frameQueue)
             await run { work.configure() }
+            guard !superseded() else {
+                if state == .starting { state = .idle }
+                return
+            }
         }
         let work = CaptureWork(session: session)
         await run { work.session.startRunning() }
+        guard !superseded() else {
+            // `stop()`'s own stopRunning may have run before this startRunning: undo it.
+            queue.async { work.session.stopRunning() }
+            if state == .starting { state = .idle }
+            return
+        }
 
         let format = device.activeFormat
         let dims = CMVideoFormatDescriptionGetDimensions(format.formatDescription)
@@ -109,6 +132,7 @@ final class SkyCamera {
     }
 
     func stop() {
+        generation += 1
         let work = CaptureWork(session: session)
         queue.async { work.session.stopRunning() }
         if state == .running || state == .starting { state = .idle }

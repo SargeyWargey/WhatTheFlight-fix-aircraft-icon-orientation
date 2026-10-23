@@ -32,6 +32,7 @@ struct NearestFlightProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<NearestFlightEntry>) -> Void) {
+        Catalogs.warmUp()
         Task {
             let entry = await entry()
             // Air traffic changes fast, but widget refreshes are rationed: ask every 15 min.

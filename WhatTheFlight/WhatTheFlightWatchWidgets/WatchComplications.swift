@@ -53,6 +53,7 @@ struct OverheadProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<OverheadEntry>) -> Void) {
+        Catalogs.warmUp()
         Task { completion(Timeline(entries: await entries(), policy: .atEnd)) }
     }
 

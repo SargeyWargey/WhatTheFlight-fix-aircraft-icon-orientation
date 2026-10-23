@@ -188,6 +188,11 @@ final class TVLocationProvider: NSObject, CLLocationManagerDelegate {
             if wantsFix, isAuthorized {
                 isLocating = true
                 self.manager.requestLocation()
+            } else if wantsFix, isDenied {
+                // "Don't Allow" on the first prompt: say so now, not on the next tap.
+                wantsFix = false
+                isLocating = false
+                lastError = "Location access is off for What The Flight? in tvOS Settings."
             }
         }
     }

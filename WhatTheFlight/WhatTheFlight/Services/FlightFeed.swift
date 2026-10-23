@@ -25,6 +25,8 @@ extension FlightFeed {
 
 enum FeedError: LocalizedError, Equatable {
     case offline
+    /// Online, but the server can't be reached (DNS, TLS, refused connection…).
+    case unreachable
     case timedOut
     case rateLimited
     case http(Int)
@@ -33,6 +35,7 @@ enum FeedError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .offline: return "You're offline"
+        case .unreachable: return "Can't reach Flightradar24 right now"
         case .timedOut: return "Flightradar24 took too long to answer"
         case .rateLimited: return "Flightradar24 is rate limiting us — slowing down"
         case .http(let code): return "Flightradar24 returned HTTP \(code)"
@@ -178,18 +181,25 @@ struct FlightRadarFeed: FlightFeed {
             (data, response) = try await session.data(from: url)
         } catch let error as URLError {
             switch error.code {
-            case .timedOut: throw FeedError.timedOut
-            case .cancelled: throw CancellationError()
-            default: throw FeedError.offline
+            case .cancelled:
+                throw CancellationError()
+            case .timedOut:
+                throw FeedError.timedOut
+            case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed, .internationalRoamingOff:
+                throw FeedError.offline
+            default:
+                Log.feed.error("feed.js: URLError \(error.code.rawValue, privacy: .public)")
+                throw FeedError.unreachable
             }
         }
-        if let http = response as? HTTPURLResponse {
-            if http.statusCode == 429 { throw FeedError.rateLimited }
-            guard (200..<300).contains(http.statusCode) else { throw FeedError.http(http.statusCode) }
+        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+            Log.feed.error("feed.js: HTTP \(http.statusCode, privacy: .public)")
+            throw http.statusCode == 429 ? FeedError.rateLimited : FeedError.http(http.statusCode)
         }
         do {
             return try FlightFeedParser.parse(data, receivedAt: Date())
         } catch {
+            Log.feed.error("feed.js: unreadable response, \(data.count, privacy: .public) bytes: \(error.localizedDescription, privacy: .public)")
             throw FeedError.badData
         }
     }

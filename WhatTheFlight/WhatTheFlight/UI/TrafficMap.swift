@@ -252,7 +252,7 @@ struct TrafficMap: View {
         let flight = blip.contact.flight
         let isFocused = blip.role == .focused
         let isAnnounced = blip.id == announcedID
-        AircraftBlip(flight: flight, screenTrack: flight.track - heading, isFocused: isFocused,
+        AircraftBlip(profile: blip.contact.profile, screenTrack: flight.track - heading, isFocused: isFocused,
                      isAnnounced: isAnnounced, isPinned: pinnedIDs.contains(blip.id), scale: options.scale)
             .overlay(alignment: .bottom) {
                 if options.showsLabels && blip.role != .fringe {

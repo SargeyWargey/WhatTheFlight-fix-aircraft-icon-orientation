@@ -190,12 +190,8 @@ struct TVFlightDetailView: View {
     @ViewBuilder
     private var photoView: some View {
         if let photo {
-            AsyncImage(url: photo.imageURL, transaction: Transaction(animation: .smooth)) { phase in
-                if case .success(let image) = phase {
-                    image.resizable().scaledToFill()
-                } else {
-                    Palette.paperShade.opacity(0.4).overlay(ProgressView())
-                }
+            ProviderPhoto(photo: photo) {
+                Palette.paperShade.opacity(0.4).overlay(ProgressView())
             }
         } else {
             ZStack {
@@ -445,7 +441,7 @@ struct TVAircraftListView: View {
         var body: some View {
             let f = contact.flight
             HStack(spacing: 28) {
-                AircraftBlip(flight: f, screenTrack: f.track - heading, isFocused: isFocusedAircraft, isPinned: isPinned, scale: 1.3)
+                AircraftBlip(profile: contact.profile, screenTrack: f.track - heading, isFocused: isFocusedAircraft, isPinned: isPinned, scale: 1.3)
                     .opacity(f.isOnGround ? 0.5 : 1)
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 16) {

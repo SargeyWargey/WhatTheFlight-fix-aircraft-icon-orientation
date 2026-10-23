@@ -78,9 +78,8 @@ final class TopographyRenderer {
         do {
             return try device.makeLibrary(source: TopographyShader.source, options: nil)
         } catch {
-            #if DEBUG
-            print("Topography shader:", error)
-            #endif
+            // The radar falls back to plain paper.
+            Log.ui.fault("Topography shader didn't compile: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }

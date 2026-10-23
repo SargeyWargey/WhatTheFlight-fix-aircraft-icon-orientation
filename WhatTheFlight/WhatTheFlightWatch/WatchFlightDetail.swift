@@ -8,6 +8,8 @@
 
 import SwiftUI
 import UIKit
+import ImageIO
+import WatchKit
 
 struct WatchFlightDetail: View {
     let flightID: String
@@ -236,6 +238,16 @@ struct WatchAircraftPhoto: View {
     let hex: String?
     let allowCellular: Bool
 
+    nonisolated static func downsample(_ data: Data, maxPixels: Int) -> UIImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixels,
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary).map(UIImage.init(cgImage:))
+    }
+
     @State private var photo: AircraftPhoto?
     @State private var image: UIImage?
     @State private var loaded = false
@@ -269,7 +281,9 @@ struct WatchAircraftPhoto: View {
                 return
             }
             photo = found
-            image = UIImage(data: data)
+            // Decoded off the main thread at the screen's width, not the photo's.
+            let maxPixels = Int(WKInterfaceDevice.current().screenBounds.width * WKInterfaceDevice.current().screenScale)
+            image = await Task.detached(priority: .userInitiated) { Self.downsample(data, maxPixels: maxPixels) }.value
             loaded = true
         }
     }

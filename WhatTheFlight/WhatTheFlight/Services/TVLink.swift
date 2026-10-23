@@ -92,6 +92,12 @@ final class TVLinkReceiver: NSObject {
         status = .idle
     }
 
+    /// After a failure (Local Network refused, then allowed in tvOS Settings): advertise afresh.
+    func retry() {
+        stop()
+        start()
+    }
+
     /// Forgets the last hand-off (the "Received 8:41 PM" line), e.g. when the location is cleared.
     func forgetLastPayload() {
         lastPayload = nil
@@ -113,6 +119,10 @@ final class TVLinkReceiver: NSObject {
     }
 
     fileprivate func fail(_ message: String) {
+        Log.link.error("Apple TV link: \(message, privacy: .public)")
+        // Drop the dead advertiser, or `start()` would think it's still listening.
+        advertiser?.stopAdvertisingPeer()
+        advertiser = nil
         status = .failed(message)
     }
 
@@ -204,7 +214,8 @@ final class TVLinkSender: NSObject {
         phase = .idle
     }
 
-    /// Connects (if needed), sends the payload, and waits for the TV to confirm.
+    /// Connects (if needed), sends the payload, and waits for the TV to confirm. Cancelling
+    /// the calling task (the screen went away) stops it without touching `phase`.
     func send(_ payload: TVLink.Payload, to tv: FoundTV) async {
         guard let data = TVLink.encode(payload) else { return }
         phase = .sending
@@ -212,7 +223,10 @@ final class TVLinkSender: NSObject {
 
         if !connected.contains(tv.peer) {
             browser?.invitePeer(tv.peer, to: session, withContext: nil, timeout: 12)
-            guard await waitUntil(seconds: 12, { self.connected.contains(tv.peer) }) else {
+            let reached = await waitUntil(seconds: 12, { self.connected.contains(tv.peer) })
+            guard !Task.isCancelled else { return }
+            guard reached else {
+                Log.link.notice("Couldn't connect to the Apple TV")
                 phase = .failed("Couldn't reach the Apple TV. Make sure What The Flight? is open on it.")
                 return
             }
@@ -220,21 +234,23 @@ final class TVLinkSender: NSObject {
         do {
             try session.send(data, toPeers: [tv.peer], with: .reliable)
         } catch {
+            Log.link.error("Couldn't send to the Apple TV: \(error.localizedDescription, privacy: .public)")
             phase = .failed(error.localizedDescription)
             return
         }
-        if await waitUntil(seconds: 8, { self.ackReceived }) {
-            phase = .sent(Date())
-        } else {
-            phase = .failed("The Apple TV didn't confirm. Try again.")
-        }
+        let confirmed = await waitUntil(seconds: 8, { self.ackReceived })
+        guard !Task.isCancelled else { return }
+        if !confirmed { Log.link.notice("The Apple TV didn't confirm the hand-off") }
+        phase = confirmed ? .sent(Date()) : .failed("The Apple TV didn't confirm. Try again.")
     }
 
+    /// Polls `condition` until it holds, the time is up, or the task is cancelled.
     private func waitUntil(seconds: Double, _ condition: @escaping () -> Bool) async -> Bool {
         let deadline = Date().addingTimeInterval(seconds)
         while Date() < deadline {
             if condition() { return true }
-            try? await Task.sleep(for: .milliseconds(100))
+            // A cancelled sleep returns at once: stop rather than spin until the deadline.
+            do { try await Task.sleep(for: .milliseconds(100)) } catch { return false }
         }
         return condition()
     }

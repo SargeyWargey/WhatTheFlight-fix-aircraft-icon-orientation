@@ -30,7 +30,7 @@ struct PerimeterLayer: View {
                 let isPinned = pinnedIDs.contains(placement.id)
                 let fade = isPinned ? 1 : 1 - 0.4 * min(1, placement.contact.distanceMiles / max(radiusMiles, 1))
 
-                DistanceLabel(miles: placement.contact.distanceMiles, isFocused: isFocused, flight: placement.contact.flight, scale: scale)
+                DistanceLabel(miles: placement.contact.distanceMiles, isFocused: isFocused, profile: placement.contact.profile, scale: scale)
                     .opacity(isFocused ? 1 : fade)
                     .position(placement.labelPoint)
                     .animation(.interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.labelPoint)
@@ -38,7 +38,7 @@ struct PerimeterLayer: View {
                     .zIndex(3)
 
                 AircraftBlip(
-                    flight: placement.contact.flight,
+                    profile: placement.contact.profile,
                     screenTrack: placement.screenTrack,
                     isFocused: isFocused,
                     isAnnounced: isAnnounced,
@@ -73,14 +73,14 @@ struct PerimeterLayer: View {
     private func accessibilityText(for contact: RadarContact) -> String {
         let dir = GeoMath.cardinal(contact.bearing)
         let motion = contact.isApproaching ? "approaching" : "moving away"
-        let badge = contact.flight.notable.first.map { ", \($0.badge.capitalized)" } ?? ""
+        let badge = contact.profile.notable.first.map { ", \($0.badge.capitalized)" } ?? ""
         let pinned = pinnedIDs.contains(contact.id) ? ", pinned" : ""
         return "\(contact.flight.displayIdentifier)\(badge)\(pinned), \(RadarFormat.miles(contact.distanceMiles)) miles \(dir), \(motion)"
     }
 }
 
 struct AircraftBlip: View {
-    let flight: Flight
+    let profile: FlightProfile
     let screenTrack: Double
     let isFocused: Bool
     /// Being read out by a spoken alert: a purple pulse in place of the red focus one.
@@ -93,7 +93,7 @@ struct AircraftBlip: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let tags = flight.notable.map(\.tag)
+        let tags = profile.notable.map(\.tag)
         // Emergencies turn the whole blip red. Military already shows in the icon's colour,
         // so the corner marker shows the next most urgent tag.
         let tint = isAnnounced
@@ -114,7 +114,7 @@ struct AircraftBlip: View {
                     .fill(halo.opacity(isAnnounced ? 0.24 : 0.16))
                     .frame(width: 40 * scale, height: 40 * scale)
             }
-            AircraftGlyph(silhouette: flight.silhouette, size: (isFocused ? 34 : 30) * scale)
+            AircraftGlyph(silhouette: profile.silhouette, size: (isFocused ? 34 : 30) * scale)
                 .foregroundStyle(tint)
                 .continuousRotation(screenTrack)
                 .shadow(color: tint.opacity(0.35), radius: 3 * scale, y: scale)
@@ -134,9 +134,7 @@ struct AircraftBlip: View {
         .animation(.snappy, value: isPinned)
         .frame(width: 44 * scale, height: 44 * scale)
         .contentShape(Circle())
-        .onAppear { startPulse() }
-        .onChange(of: isFocused) { _, _ in startPulse() }
-        .onChange(of: isAnnounced) { _, _ in startPulse() }
+        .onChange(of: [isFocused, isAnnounced], initial: true) { _, _ in startPulse() }
     }
 
     private func startPulse() {
@@ -167,14 +165,14 @@ struct PinMarker: View {
 struct DistanceLabel: View {
     let miles: Double
     let isFocused: Bool
-    let flight: Flight
+    let profile: FlightProfile
     var scale: CGFloat = 1
 
     var body: some View {
         Text(RadarFormat.miles(miles))
             .font(.mono((isFocused ? 15 : 13) * scale, .bold))
             .monospacedDigit()
-            .foregroundStyle(isFocused ? Palette.signal : Palette.blip(for: flight))
+            .foregroundStyle(isFocused ? Palette.signal : Palette.blip(for: profile))
             .contentTransition(.numericText(value: miles))
             .paperHalo()
             .fixedSize()

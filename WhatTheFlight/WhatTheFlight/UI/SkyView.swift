@@ -39,8 +39,8 @@ struct SkyView: View {
     let onClose: () -> Void
     let onDetail: (String) -> Void
 
-    @State private var motion = SkyMotion()
-    @State private var camera = SkyCamera()
+    @LazyState private var motion = SkyMotion()
+    @LazyState private var camera = SkyCamera()
     @State private var dragAzimuth: Double?
     @State private var dragPitch = 25.0
     @State private var dragStart: (az: Double, pitch: Double)?
@@ -90,7 +90,7 @@ struct SkyView: View {
 
                     ForEach(frame.onScreen) { target in
                         SkyMarker(isLocked: target.id == frame.locked?.id, isVisual: target.isVisual,
-                                  notable: target.contact.flight.notable.first?.tag)
+                                  notable: target.contact.profile.notable.first?.tag)
                             .position(target.projection.point)
                             .allowsHitTesting(false)
                     }
@@ -220,7 +220,7 @@ struct SkyView: View {
         let pool = model.contacts + model.outsideContacts.filter { $0.distanceMiles <= reach || $0.id == request.targetID }
         let fix = camera.latestFix.flatMap { $0.isFresh(at: date) ? $0 : nil }
         return pool.map { pooled in
-            let contact = model.observer.map { RadarContact(flight: pooled.flight, observer: $0, at: date) } ?? pooled
+            let contact = model.observer.map { RadarContact(flight: pooled.flight, observer: $0, at: date, profile: pooled.profile) } ?? pooled
             let elevation = GeoMath.elevationDegrees(groundDistanceMiles: contact.distanceMiles,
                                                      altitudeFeet: Double(contact.flight.altitudeFeet),
                                                      observerAltitudeFeet: observerFeet)
@@ -324,7 +324,7 @@ struct SkyView: View {
     private func learn(from fix: VisualFix?) {
         guard let fix, let observer = model.observer,
               let pooled = (model.contacts + model.outsideContacts).first(where: { $0.id == fix.flightID }) else { return }
-        let contact = RadarContact(flight: pooled.flight, observer: observer, at: fix.time)
+        let contact = RadarContact(flight: pooled.flight, observer: observer, at: fix.time, profile: pooled.profile)
         let elevation = GeoMath.elevationDegrees(groundDistanceMiles: contact.distanceMiles,
                                                  altitudeFeet: Double(contact.flight.altitudeFeet),
                                                  observerAltitudeFeet: (location.location?.altitude ?? 0) * 3.28084)
@@ -658,8 +658,10 @@ struct SkyView: View {
         }
     }
 
+    /// Against the phone's body, which is what Core Motion measures from (the iPhone Duo's
+    /// inner screen reports a quarter turn round from it).
     private var currentInterfaceOrientation: UIInterfaceOrientation {
-        (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.effectiveGeometry.interfaceOrientation ?? .portrait
+        (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.bodyInterfaceOrientation ?? .portrait
     }
 }
 

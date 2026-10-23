@@ -18,7 +18,7 @@ final class PlaceNamer {
 
     /// nil while offline or when the spot has no town nearby.
     func name(for coordinate: CLLocationCoordinate2D) async -> String? {
-        let key = Self.key(for: coordinate)
+        let key = Self.area(of: coordinate)
         if let cached = cache[key] { return cached }
         guard inFlight != key else { return nil }
         inFlight = key
@@ -29,8 +29,8 @@ final class PlaceNamer {
         return name
     }
 
-    /// ~0.05° squares: about 5 km, a town-sized step.
-    private static func key(for c: CLLocationCoordinate2D) -> String {
+    /// The ~0.05° square (about 5 km, a town-sized step) answers are cached by.
+    static func area(of c: CLLocationCoordinate2D) -> String {
         "\((c.latitude * 20).rounded()),\((c.longitude * 20).rounded())"
     }
 

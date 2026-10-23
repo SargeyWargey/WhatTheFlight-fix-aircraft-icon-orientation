@@ -314,14 +314,9 @@ struct PhotoCard: View {
         Group {
             if let photo {
                 VStack(alignment: .trailing, spacing: 6) {
-                    AsyncImage(url: photo.imageURL, transaction: Transaction(animation: .smooth)) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image.resizable().scaledToFill()
-                        default:
-                            Rectangle().fill(Palette.paperShade.opacity(0.4))
-                                .overlay(ProgressView())
-                        }
+                    ProviderPhoto(photo: photo) {
+                        Rectangle().fill(Palette.paperShade.opacity(0.4))
+                            .overlay(ProgressView())
                     }
                     .frame(height: 200)
                     .frame(maxWidth: .infinity)
@@ -421,8 +416,7 @@ struct DetailMap: View {
         .frame(height: height)
         .disabled(!interactive)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .onAppear { frame() }
-        .onChange(of: contact.id) { _, _ in frame() }
+        .onChange(of: contact.id, initial: true) { _, _ in frame() }
         .onChange(of: mode) { _, _ in withAnimation(.smooth) { frame() } }
     }
 

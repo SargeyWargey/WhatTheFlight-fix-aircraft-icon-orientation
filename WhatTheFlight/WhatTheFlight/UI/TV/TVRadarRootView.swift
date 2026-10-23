@@ -14,16 +14,20 @@ import TVServices
 struct TVRadarRootView: View {
     @State private var settings: RadarSettings
     @State private var model: RadarModel
-    @State private var logbook = Logbook(device: .current)
+    @LazyState private var logbook = Logbook(device: .current)
     @State private var logbookSync: LogbookSync?
     @State private var pinSync: PinSync?
-    @State private var placeNamer = PlaceNamer()
-    @State private var link = TVLinkReceiver()
-    @State private var tvLocation = TVLocationProvider()
+    @LazyState private var placeNamer = PlaceNamer()
+    @LazyState private var link = TVLinkReceiver()
+    @LazyState private var tvLocation = TVLocationProvider()
     @State private var presented: Presented?
     /// A Top Shelf selection that arrived before the first feed load.
     @State private var pendingFlight: String?
     @State private var lastTopShelfRefresh = Date.distantPast
+    /// Bumped on every radius change; the re-query waits for the chips to settle.
+    @State private var radiusEdits = 0
+    /// Naming a place the iPhone sent; a newer hand-off replaces it.
+    @State private var placeLookup: Task<Void, Never>?
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -72,15 +76,12 @@ struct TVRadarRootView: View {
             model.logbook = logbook
             // The TV has no GPS, so its set place is where it really is: log from there.
             model.logsCustomSpot = true
-            updateLogbookSync()
             startPinSync()
             model.onAlert = announce
             model.queryRadiusFloor = mapQueryFloor
-            updateIdleTimer()
             link.start()
             model.start()
             if settings.locationMode == .device { tvLocation.locate() }
-            syncObserver()
             if !settings.hasSeenWelcome { presented = .tour }
             #if DEBUG
             openDebugScreenIfRequested()
@@ -95,9 +96,7 @@ struct TVRadarRootView: View {
                 model.refreshNow()
                 logbookSync?.fetchNow()
                 pinSync?.refresh()
-                updateIdleTimer()
             case .background:
-                UIApplication.shared.isIdleTimerDisabled = false
                 model.stop()
                 link.stop()
                 logbook.flush()
@@ -105,15 +104,26 @@ struct TVRadarRootView: View {
                 break
             }
         }
-        .onChange(of: tvLocation.coordinate?.latitude) { _, _ in syncObserver() }
-        .onChange(of: tvLocation.coordinate?.longitude) { _, _ in syncObserver() }
-        .onChange(of: settings.locationMode) { _, _ in syncObserver() }
-        .onChange(of: settings.customLatitude) { _, _ in syncObserver() }
-        .onChange(of: settings.customLongitude) { _, _ in syncObserver() }
-        .onChange(of: settings.keepScreenAwake) { _, _ in updateIdleTimer() }
-        .onChange(of: settings.syncLogbook) { _, _ in updateLogbookSync() }
+        // Also names the place for the logbook; a newer spot cancels the lookup for the old one.
+        .task(id: observerKey) {
+            syncObserver()
+            await nameLoggingPlace()
+        }
+        // "Keep screen awake" holds off the screen saver (and sleep) while the radar is open.
+        .onChange(of: keepsScreenAwake, initial: true) { _, awake in UIApplication.shared.isIdleTimerDisabled = awake }
+        .onChange(of: settings.syncLogbook, initial: true) { _, _ in updateLogbookSync() }
         .onChange(of: settings.demoTraffic) { _, _ in model.settingsDidChange(refetch: true) }
-        .onChange(of: settings.radiusMiles) { _, _ in model.settingsDidChange(refetch: true) }
+        .onChange(of: settings.radiusMiles) { _, _ in
+            // Re-filter at once while the chips move; re-query once they settle.
+            model.settingsDidChange(refetch: false)
+            radiusEdits += 1
+        }
+        .task(id: radiusEdits) {
+            guard radiusEdits > 0 else { return }
+            try? await Task.sleep(for: .milliseconds(700))
+            guard !Task.isCancelled else { return }
+            model.settingsDidChange(refetch: true)
+        }
         .onChange(of: mapQueryFloor) { _, floor in
             model.queryRadiusFloor = floor
             // Only a map wider than the radar's own query needs fetching again now.
@@ -196,10 +206,7 @@ struct TVRadarRootView: View {
         settings.mapView ? settings.effectiveMapRadius * 1.5 + 3 : 0
     }
 
-    /// "Keep screen awake" holds off the screen saver (and sleep) while the radar is open.
-    private func updateIdleTimer() {
-        UIApplication.shared.isIdleTimerDisabled = settings.keepScreenAwake && scenePhase == .active
-    }
+    private var keepsScreenAwake: Bool { settings.keepScreenAwake && scenePhase == .active }
 
     /// Banner always; spoken too when "Speak alerts" is on, with the aircraft pulsing purple
     /// on the radar and map while it's read out.
@@ -251,7 +258,12 @@ struct TVRadarRootView: View {
         } else {
             model.post(notice: "Location received from iPhone", symbol: "iphone.radiowaves.left.and.right")
         }
-        Task { settings.customPlaceName = await PlaceServices.name(for: coordinate) }
+        placeLookup?.cancel()
+        placeLookup = Task {
+            let name = await PlaceServices.name(for: coordinate)
+            guard !Task.isCancelled else { return }
+            settings.customPlaceName = name
+        }
     }
 
     // MARK: State
@@ -261,6 +273,19 @@ struct TVRadarRootView: View {
         case .custom: return settings.customCoordinate
         case .device: return tvLocation.coordinate ?? settings.customCoordinate
         }
+    }
+
+    /// What `syncObserver` and the logbook's place name depend on, as one value to watch.
+    private var observerKey: ObserverKey {
+        ObserverKey(latitude: observerCoordinate?.latitude, longitude: observerCoordinate?.longitude,
+                    placeName: settings.customPlaceName, mode: settings.locationMode)
+    }
+
+    private struct ObserverKey: Equatable {
+        let latitude: Double?
+        let longitude: Double?
+        let placeName: String?
+        let mode: RadarSettings.LocationMode
     }
 
     private var centerState: CenterStateView.Kind? {
@@ -330,16 +355,15 @@ struct TVRadarRootView: View {
         store.observer = observerCoordinate
         store.placeName = settings.customPlaceName
         store.radiusMiles = settings.radiusMiles
-        nameLoggingPlace()
     }
 
     /// "Atlanta, GA" on sightings, when the set place doesn't already carry a name.
-    private func nameLoggingPlace() {
+    private func nameLoggingPlace() async {
         model.logPlaceName = nil
         guard settings.customPlaceName == nil || settings.locationMode == .device, let here = observerCoordinate else { return }
-        Task {
-            if let name = await placeNamer.name(for: here) { model.logPlaceName = name }
-        }
+        let name = await placeNamer.name(for: here)
+        guard !Task.isCancelled, let name else { return }
+        model.logPlaceName = name
     }
 
     /// Pins follow you between devices through iCloud (`PinSync`).

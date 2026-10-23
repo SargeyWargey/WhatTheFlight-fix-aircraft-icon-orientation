@@ -14,13 +14,13 @@ import UserNotifications
 struct RadarRootView: View {
     @State private var settings: RadarSettings
     @State private var model: RadarModel
-    @State private var location = RadarLocationService()
-    @State private var logbook = Logbook(device: .current)
+    @LazyState private var location = RadarLocationService()
+    @LazyState private var logbook = Logbook(device: .current)
     @State private var logbookSync: LogbookSync?
     @State private var pinSync: PinSync?
-    @State private var placeNamer = PlaceNamer()
-    @State private var raise = RaiseToSkyDetector()
-    @State private var widgets = WidgetPublisher()
+    @LazyState private var placeNamer = PlaceNamer()
+    @LazyState private var raise = RaiseToSkyDetector()
+    @LazyState private var widgets = WidgetPublisher()
     @State private var sheet: Sheet?
     @State private var sky: SkyRequest?
     /// A deep link that arrived before the first feed load (e.g. tapped from a widget).
@@ -34,8 +34,10 @@ struct RadarRootView: View {
     private let skyWatch = SkyWatch.shared
     private let watchLink = PhoneWatchLink.shared
 
-    /// iPad: the direction the map pane turns to, following the compass in steps.
+    /// iPad and iPhone Duo: the direction the map pane turns to, following the compass in steps.
     @State private var mapHeading: Double?
+    /// iPhone Duo: half open, the radar and the map get half the screen each.
+    @LazyState private var fold = FoldMonitor()
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
@@ -67,13 +69,13 @@ struct RadarRootView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let showsMap = showsMapPane(in: geo.size)
-            HStack(spacing: 0) {
+            let panes = panes(in: geo)
+            PaneLayout(frames: panes.frames) {
                 RadarScreen(
                     model: model,
                     settings: settings,
                     location: location,
-                    centerState: centerState,
+                    centerState: { centerState },
                     actions: .init(
                         openSettings: { sheet = .settings },
                         // Even with an empty sky: search reaches the whole world.
@@ -85,35 +87,33 @@ struct RadarRootView: View {
                         centerSecondary: { sheet = .pickSpot }
                     )
                 )
-                // Square-ish beside the map: as wide as the screen is tall.
-                .frame(width: showsMap ? geo.size.height : nil)
 
-                if showsMap, let observer = model.observer {
-                    TrafficMap(
-                        observer: observer,
-                        radiusMiles: settings.radiusMiles,
-                        contacts: model.contacts,
-                        fringe: model.outsideContacts,
-                        focused: model.focusedContact,
-                        isPinned: model.focus.isPinned,
-                        pinnedIDs: model.pinnedIDs,
-                        trail: model.trail(for:),
-                        trailVersion: model.trailVersion,
-                        headingUp: settings.mapNorthUp ? nil : mapHeading,
-                        options: .init(interactive: true),
-                        onTap: { id in withAnimation(.snappy) { model.focus(on: id) } }
-                    )
-                    .ignoresSafeArea()
-                    .transition(.move(edge: .trailing))
+                if let gutter = panes.gutter {
+                    FoldGutter(axis: gutter.width < gutter.height ? .vertical : .horizontal)
+                        .ignoresSafeArea()
+                }
+
+                if panes.map != nil, let observer = model.observer {
+                    RadarMapPane(model: model, settings: settings, observer: observer, mapHeading: mapHeading)
+                        .ignoresSafeArea()
+                    .transition(.move(edge: panes.mapEdge).combined(with: .opacity))
                 }
             }
         }
         .environment(\.topographyStyle, settings.topography)
+        .background { FoldSensor(monitor: fold).ignoresSafeArea() }
+        // The compass and the 1 Hz clock change many times a minute; watching them here keeps
+        // the root (and any sheet over it) from re-evaluating with them.
+        .background {
+            ChangeObserver(value: { [location] in location.heading }) { followHeading($0) }
+            ChangeObserver(value: { [model] in model.now }) { [model, skyWatch] _ in skyWatch.update(contacts: model.contacts) }
+        }
         .preferredColorScheme(settings.appearance.colorScheme)
         .sheet(item: $sheet) { sheet in
             sheetContent(sheet)
                 .environment(\.radarObserver, model.observer)
                 .environment(\.topographyStyle, settings.topography)
+                .environment(\.isFoldable, fold.isFoldable)
         }
         .fullScreenCover(item: $sky) { request in
             SkyView(model: model, settings: settings, location: location, request: request,
@@ -125,7 +125,6 @@ struct RadarRootView: View {
         }
         .onAppear {
             model.logbook = logbook
-            updateLogbookSync()
             startPinSync()
             model.onAlert = deliver
             skyWatch.location = location
@@ -135,13 +134,11 @@ struct RadarRootView: View {
             watchLink.activate()
             location.start()
             model.start()
-            syncObserver()
             if !settings.hasSeenWelcome {
                 sheet = .welcome
             } else {
                 location.requestPermission()
             }
-            updateIdleTimer()
             #if DEBUG
             openDebugSheetIfRequested()
             model.debugPinIfRequested()
@@ -165,14 +162,13 @@ struct RadarRootView: View {
             default:
                 break
             }
-            updateIdleTimer()
-            updateRaiseDetector()
         }
-        .onChange(of: sheet) { _, _ in updateRaiseDetector() }
-        .onChange(of: sky) { _, _ in updateRaiseDetector() }
-        .onChange(of: settings.raiseToSkyView) { _, _ in updateRaiseDetector() }
+        .onChange(of: keepsScreenAwake, initial: true) { _, awake in UIApplication.shared.isIdleTimerDisabled = awake }
+        .onChange(of: listensForRaise, initial: true) { _, listening in
+            if listening { raise.start() } else { raise.stop() }
+        }
+        .onChange(of: fold.isOnInnerScreen, initial: true) { _, inner in location.interfaceTurnsWithDevice = inner }
         .onChange(of: model.lastUpdated) { _, _ in widgets.publish(model: model, settings: settings, placeName: placeName) }
-        .onChange(of: model.now) { _, _ in skyWatch.update(contacts: model.contacts) }
         .onChange(of: model.hasLoadedOnce) { _, loaded in
             if loaded, let route = deferredRoute {
                 deferredRoute = nil
@@ -188,19 +184,17 @@ struct RadarRootView: View {
             router.pending = nil
             handle(route)
         }
-        .onChange(of: location.heading) { _, heading in followHeading(heading) }
-        .onChange(of: location.location) { _, _ in syncObserver() }
-        .onChange(of: settings.locationMode) { _, _ in syncObserver() }
-        .onChange(of: settings.customLatitude) { _, _ in syncObserver() }
-        .onChange(of: settings.customLongitude) { _, _ in syncObserver() }
+        .onChange(of: observerKey, initial: true) { _, _ in syncObserver() }
+        // Restarts only on moving to a new ~5 km square, so a slow lookup isn't cancelled by
+        // every GPS fix; a stale one is.
+        .task(id: loggingPlaceArea) { await nameLoggingPlace() }
         .onChange(of: settings.showHelicopters) { _, _ in
             model.settingsDidChange(refetch: false)
             sendWatchContext()
         }
         .onChange(of: settings.alertRules) { _, _ in sendWatchContext() }
         .onChange(of: settings.demoTraffic) { _, _ in model.settingsDidChange(refetch: true) }
-        .onChange(of: settings.keepScreenAwake) { _, _ in updateIdleTimer() }
-        .onChange(of: settings.syncLogbook) { _, _ in updateLogbookSync() }
+        .onChange(of: settings.syncLogbook, initial: true) { _, _ in updateLogbookSync() }
         .task(id: settings.radiusMiles) {
             // Re-filter instantly while the slider moves; re-query once it settles.
             model.settingsDidChange(refetch: false)
@@ -287,14 +281,50 @@ struct RadarRootView: View {
 
     // MARK: Map pane
 
-    /// iPad in landscape at full width, with Map view on. Portrait, Split View and iPhone keep
-    /// the radar alone.
-    private func showsMapPane(in size: CGSize) -> Bool {
-        UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular
-            && size.width > size.height && settings.mapView && model.observer != nil
+    /// Where the radar, the fold and the map go, in the reader's (safe-area) coordinates.
+    private struct Panes {
+        var radar: CGRect
+        var map: CGRect?
+        var gutter: CGRect?
+        /// The map slides in from this side.
+        var mapEdge: Edge = .trailing
+
+        /// In the order `body` lists the panes: radar, gutter, map.
+        var frames: [CGRect] { [radar] + [gutter, map].compactMap { $0 } }
     }
 
-    /// The map turns with the iPad, but only once the heading has moved 10°, so compass
+    /// With Map view on: iPhone Duo half open, a half each side of the fold (radar on the left
+    /// page or the standing half); iPad in landscape at full width, the map beside a
+    /// square-ish radar. Otherwise the radar alone.
+    private func panes(in geo: GeometryProxy) -> Panes {
+        let size = geo.size
+        let whole = CGRect(origin: .zero, size: size)
+        guard settings.mapView, model.observer != nil else { return Panes(radar: whole) }
+
+        // The fold strip is in window coordinates, safe areas included: split the whole
+        // screen, then bring the halves into the reader's coordinates.
+        let insets = geo.safeAreaInsets
+        let screen = CGSize(width: size.width + insets.leading + insets.trailing,
+                            height: size.height + insets.top + insets.bottom)
+        if let split = FoldLayout.split(fold.posture, size: screen, division: fold.division) {
+            let origin = geo.frame(in: .global).origin
+            func local(_ rect: CGRect) -> CGRect {
+                let clipped = rect.offsetBy(dx: -origin.x, dy: -origin.y).intersection(whole)
+                return clipped.isNull ? .zero : clipped
+            }
+            return Panes(radar: local(split.radar), map: local(split.map), gutter: local(split.gutter),
+                         mapEdge: split.posture == .tabletop ? .bottom : .trailing)
+        }
+
+        // iPad only: portrait, Split View and iPhone keep the radar alone.
+        if UIDevice.current.userInterfaceIdiom == .pad, horizontalSizeClass == .regular, size.width > size.height {
+            return Panes(radar: CGRect(x: 0, y: 0, width: size.height, height: size.height),
+                         map: CGRect(x: size.height, y: 0, width: size.width - size.height, height: size.height))
+        }
+        return Panes(radar: whole)
+    }
+
+    /// The map turns with the phone, but only once the heading has moved 10°, so compass
     /// jitter doesn't keep it rocking.
     private func followHeading(_ heading: Double?) {
         guard let heading else { return }
@@ -347,9 +377,25 @@ struct RadarRootView: View {
         }
     }
 
+    /// What `syncObserver` publishes, as one value to watch.
+    private var observerKey: ObserverKey {
+        ObserverKey(latitude: observerCoordinate?.latitude, longitude: observerCoordinate?.longitude, placeName: placeName)
+    }
+
+    private struct ObserverKey: Equatable {
+        let latitude: Double?
+        let longitude: Double?
+        let placeName: String
+    }
+
+    /// The `PlaceNamer` square you're in, when sightings are being stamped with it.
+    private var loggingPlaceArea: String? {
+        guard settings.locationMode == .device, let here = location.location?.coordinate else { return nil }
+        return PlaceNamer.area(of: here)
+    }
+
     private func syncObserver() {
         model.setObserver(observerCoordinate)
-        nameLoggingPlace()
         let store = SharedRadarStore()
         store.observer = observerCoordinate
         store.placeName = placeName
@@ -358,11 +404,11 @@ struct RadarRootView: View {
     }
 
     /// "Atlanta, GA" on sightings logged from where you really are. A custom spot isn't logged.
-    private func nameLoggingPlace() {
+    private func nameLoggingPlace() async {
         guard settings.locationMode == .device, let here = location.location?.coordinate else { return }
-        Task {
-            if let name = await placeNamer.name(for: here) { model.logPlaceName = name }
-        }
+        let name = await placeNamer.name(for: here)
+        guard !Task.isCancelled, let name else { return }
+        model.logPlaceName = name
     }
 
     /// Pins follow you between devices through iCloud (`PinSync`).
@@ -484,14 +530,14 @@ struct RadarRootView: View {
         }
     }
 
-    private func updateRaiseDetector() {
-        let listening = scenePhase == .active && settings.raiseToSkyView && sheet == nil && sky == nil
-        if listening { raise.start() } else { raise.stop() }
+    /// Lifting the phone opens Sky View, except over a sheet, and not while an iPhone Duo is
+    /// half open: then the camera and the motion sensors can sit in different halves, and a
+    /// phone standing in tabletop keeps looking "raised".
+    private var listensForRaise: Bool {
+        scenePhase == .active && settings.raiseToSkyView && sheet == nil && sky == nil && !fold.posture.isHalfOpen
     }
 
-    private func updateIdleTimer() {
-        UIApplication.shared.isIdleTimerDisabled = settings.keepScreenAwake && scenePhase == .active
-    }
+    private var keepsScreenAwake: Bool { settings.keepScreenAwake && scenePhase == .active }
 
     #if DEBUG
     /// `-wtf.debugSheet settings|search|detail|welcome|tvlink|logbook|sky` opens a sheet at launch and
@@ -503,7 +549,7 @@ struct RadarRootView: View {
             Task { @MainActor in
                 // iOS only changes the icon once the app is on screen.
                 try? await Task.sleep(for: .seconds(2))
-                do { try await choice.apply() } catch { print("debugIcon:", error) }
+                do { try await choice.apply() } catch { Log.ui.error("debugIcon: \(error.localizedDescription, privacy: .public)") }
             }
         }
         let focusName = defaults.string(forKey: "wtf.debugFocus")
@@ -531,6 +577,44 @@ struct RadarRootView: View {
     #endif
 }
 
+/// Puts each pane at its frame, in order. Unlike `.offset`, a placed pane knows where it
+/// really is, so its safe area and `ignoresSafeArea()` work from its own edges.
+private struct PaneLayout: Layout {
+    let frames: [CGRect]
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for (subview, frame) in zip(subviews, frames) {
+            subview.place(at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
+                          anchor: .topLeading, proposal: ProposedViewSize(frame.size))
+        }
+    }
+}
+
+/// iPhone Duo, half open: the strip over the fold between the radar and the map, shaded in
+/// to a hairline at the crease like the gutter of a book. Nothing to tap lives here.
+private struct FoldGutter: View {
+    /// Which way the fold runs on screen.
+    let axis: Axis
+
+    var body: some View {
+        let across: (UnitPoint, UnitPoint) = axis == .vertical ? (.leading, .trailing) : (.top, .bottom)
+        ZStack {
+            Palette.paper
+            LinearGradient(colors: [.clear, Palette.paperShade.opacity(0.7), .clear],
+                           startPoint: across.0, endPoint: across.1)
+            Rectangle()
+                .fill(Palette.faint.opacity(0.45))
+                .frame(width: axis == .vertical ? 1 : nil, height: axis == .horizontal ? 1 : nil)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
 /// Keeps the widgets' snapshot fresh without asking WidgetKit to reload on every poll.
 @MainActor
 final class WidgetPublisher {
@@ -551,7 +635,9 @@ final class WidgetPublisher {
     }
 }
 
-/// iPhone stays in portrait — the radar is a compass, and a compass doesn't rotate.
+/// iPhone stays in portrait — the radar is a compass, and a compass doesn't rotate. iOS
+/// doesn't ask on the iPhone Duo's inner screen, which turns with the phone like an iPad's
+/// (book and tabletop need both ways round); its cover screen stays portrait.
 final class RadarAppDelegate: NSObject, UIApplicationDelegate {
     private let notifications = AlertNotificationDelegate()
 
@@ -563,6 +649,46 @@ final class RadarAppDelegate: NSObject, UIApplicationDelegate {
 
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
         UIDevice.current.userInterfaceIdiom == .phone ? .portrait : .all
+    }
+}
+/// Runs `action` when `value()` changes. The value is read in this empty view's own body,
+/// so a source that changes many times a second (the compass, the 1 Hz clock) re-evaluates
+/// only this view, not the caller.
+private struct ChangeObserver<Value: Equatable>: View {
+    let value: () -> Value
+    let action: (Value) -> Void
+
+    var body: some View {
+        Color.clear
+            .onChange(of: value()) { _, new in action(new) }
+            .accessibilityHidden(true)
+            .allowsHitTesting(false)
+    }
+}
+
+/// The iPad's and the iPhone Duo's map pane. Its own view, so per-tick traffic redraws the
+/// map rather than the whole root.
+private struct RadarMapPane: View {
+    let model: RadarModel
+    let settings: RadarSettings
+    let observer: CLLocationCoordinate2D
+    let mapHeading: Double?
+
+    var body: some View {
+        TrafficMap(
+            observer: observer,
+            radiusMiles: settings.radiusMiles,
+            contacts: model.contacts,
+            fringe: model.outsideContacts,
+            focused: model.focusedContact,
+            isPinned: model.focus.isPinned,
+            pinnedIDs: model.pinnedIDs,
+            trail: model.trail(for:),
+            trailVersion: model.trailVersion,
+            headingUp: settings.mapNorthUp ? nil : mapHeading,
+            options: .init(interactive: true),
+            onTap: { id in withAnimation(.snappy) { model.focus(on: id) } }
+        )
     }
 }
 #endif

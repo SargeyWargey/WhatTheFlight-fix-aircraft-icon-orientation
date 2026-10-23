@@ -146,8 +146,7 @@ struct WhereaboutsMap: View {
         .frame(height: height)
         .allowsHitTesting(interactive)
         .clipShape(RoundedRectangle(cornerRadius: 18 * iconScale, style: .continuous))
-        .onAppear { frame() }
-        .onChange(of: flight.id) { _, _ in frame() }
+        .onChange(of: flight.id, initial: true) { _, _ in frame() }
     }
 
     /// You, the aircraft and both ends of its route, so the picture answers "how far?".

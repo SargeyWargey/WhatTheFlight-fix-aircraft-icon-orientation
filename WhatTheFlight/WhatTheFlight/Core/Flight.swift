@@ -108,9 +108,51 @@ struct Flight: Identifiable, Hashable, Sendable {
     }
 }
 
+/// What a flight's identity says about it: operator, notable tags, type. These are catalog
+/// lookups and string work, so `RadarModel` works them out once per flight per feed rather
+/// than on every tick, and the radar, logbook and alerts read them from `RadarContact.profile`.
+struct FlightProfile: Equatable, Sendable {
+    let operatorInfo: OperatorInfo
+    let notable: [NotableInfo]
+    let kind: AircraftKind
+    let silhouette: AircraftSilhouette
+    let typeName: String?
+    let airline: Airline?
+    private let key: Key
+
+    init(_ flight: Flight) {
+        let operatorInfo = flight.operatorInfo
+        self.operatorInfo = operatorInfo
+        notable = NotableTraffic.classify(flight, operatorKind: operatorInfo.kind)
+        kind = flight.kind
+        silhouette = flight.silhouette
+        typeName = flight.typeName
+        airline = flight.airline
+        key = Key(flight)
+    }
+
+    /// False once the feed changes a field the profile was built from (a new squawk, say).
+    func isCurrent(for flight: Flight) -> Bool { key == Key(flight) }
+
+    /// Everything the derived values read.
+    private struct Key: Equatable, Sendable {
+        let typeCode, callsign, registration, airlineICAO, flightNumber, squawk: String?
+
+        init(_ f: Flight) {
+            typeCode = f.typeCode
+            callsign = f.callsign
+            registration = f.registration
+            airlineICAO = f.airlineICAO
+            flightNumber = f.flightNumber
+            squawk = f.squawk
+        }
+    }
+}
+
 /// A flight as seen from the observer at a moment in time.
 struct RadarContact: Identifiable, Equatable, Sendable {
     let flight: Flight
+    let profile: FlightProfile
     let coordinate: CLLocationCoordinate2D
     let distanceMiles: Double
     /// True bearing from the observer to the aircraft.
@@ -123,8 +165,12 @@ struct RadarContact: Identifiable, Equatable, Sendable {
     var isApproaching: Bool { closestApproach.isAhead }
 
     /// `maxExtrapolation` caps dead reckoning; complication timelines project further ahead.
-    init(flight: Flight, observer: CLLocationCoordinate2D, at date: Date, maxExtrapolation: TimeInterval = 90) {
+    /// Pass a `profile` already built for this flight to skip rebuilding it; a stale one is
+    /// ignored.
+    init(flight: Flight, observer: CLLocationCoordinate2D, at date: Date, maxExtrapolation: TimeInterval = 90,
+         profile: FlightProfile? = nil) {
         self.flight = flight
+        self.profile = profile.flatMap { $0.isCurrent(for: flight) ? $0 : nil } ?? FlightProfile(flight)
         let position = flight.predictedCoordinate(at: date, maxExtrapolation: maxExtrapolation)
         self.coordinate = position
         self.distanceMiles = GeoMath.distanceMiles(from: observer, to: position)

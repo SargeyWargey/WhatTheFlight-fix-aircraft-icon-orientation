@@ -84,7 +84,10 @@ extension WatchLocationService: CLLocationManagerDelegate {
         }
     }
 
-    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
+    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        // Transient failures (e.g. no fix yet) are expected; the last good fix stays in use.
+        Log.sensors.info("Location update failed: \(error.localizedDescription, privacy: .public)")
+    }
 }
 
 // MARK: - Point & Find

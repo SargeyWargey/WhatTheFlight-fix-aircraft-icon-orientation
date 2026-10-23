@@ -18,12 +18,15 @@ struct FlightHero: View {
     var wideStats = false
     /// Enlarges the type, stats and approach chip (the TV reads them from across the room).
     var detailScale: CGFloat = 1
+    /// A short radar (the iPhone Duo's standing half in tabletop): no type line or approach
+    /// chip, so the rest stays full size.
+    var compact = false
 
     private var flight: Flight { contact.flight }
 
     var body: some View {
         VStack(spacing: 0) {
-            if let top = flight.notable.first {
+            if let top = contact.profile.notable.first {
                 NotableBadge(info: top, scale: detailScale)
                     .padding(.bottom, 8)
                     .transition(.scale.combined(with: .opacity))
@@ -45,14 +48,18 @@ struct FlightHero: View {
                     .padding(.top, 2)
             }
 
-            typeLine
-                .padding(.top, 12)
+            if !compact {
+                typeLine
+                    .padding(.top, 12)
+            }
 
             stats
-                .padding(.top, 26)
+                .padding(.top, compact ? 18 : 26)
 
-            ApproachChip(contact: contact, scale: detailScale)
-                .padding(.top, 18)
+            if !compact {
+                ApproachChip(contact: contact, scale: detailScale)
+                    .padding(.top, 18)
+            }
         }
         .multilineTextAlignment(.center)
     }
@@ -66,7 +73,7 @@ struct FlightHero: View {
                     .foregroundStyle(Palette.signal)
                     .transition(.scale.combined(with: .opacity))
             }
-            Text(flight.operatorInfo.headline)
+            Text(contact.profile.operatorInfo.headline)
                 .radarCaption()
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -86,7 +93,7 @@ struct FlightHero: View {
                     .padding(.vertical, 3 * detailScale)
                     .background(Palette.chip, in: Capsule())
             }
-            if let name = flight.typeName {
+            if let name = contact.profile.typeName {
                 Text(name)
                     .font(.mono(12 * detailScale, .medium))
                     .foregroundStyle(Palette.caption)

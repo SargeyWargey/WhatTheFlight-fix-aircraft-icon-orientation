@@ -1,0 +1,746 @@
+<title>What The Flight? Asset Studio</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground: #E4E1DA;
+    --card: #F3F1EC;
+    --field: #FFFFFF;
+    --text: #2E2D2A;
+    --caption: #75726C;
+    --faint: #A29E95;
+    --rule: #D3D0C8;
+    --ink: #3A33D6;
+    --ink-text: #FFFFFF;
+    --signal: #E5483B;
+    --live: #23A55A;
+    --warn: #B7860B;
+    --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #070A0F; --card: #0F141D; --field: #151B26; --text: #E7EAF0; --caption: #8790A0;
+      --faint: #465061; --rule: #222B3A; --ink: #A8A4FF; --ink-text: #0A0E14; --signal: #FF6B5E;
+      --live: #3DDC84; --warn: #FFCB45;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #070A0F; --card: #0F141D; --field: #151B26; --text: #E7EAF0; --caption: #8790A0;
+    --faint: #465061; --rule: #222B3A; --ink: #A8A4FF; --ink-text: #0A0E14; --signal: #FF6B5E;
+    --live: #3DDC84; --warn: #FFCB45;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--ground); color: var(--text); font: 15px/1.45 var(--sans); }
+  .app { max-width: 1480px; margin: 0 auto; padding-inline: 20px; padding-block: 0 64px; }
+
+  .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+         padding-block: 14px; background: var(--ground); border-bottom: 1px solid var(--rule); }
+  .brand { display: grid; gap: 2px; margin-right: auto; }
+  .brand h1 { margin: 0; font: 600 17px var(--mono); letter-spacing: -0.01em; }
+  .brand span { font: 12px var(--mono); color: var(--caption); }
+  .target { font: 12px var(--mono); color: var(--caption); max-width: 46ch; }
+  .target b { color: var(--text); font-weight: 500; }
+  button, select, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  .btn { border: 1px solid var(--rule); background: var(--card); border-radius: 9px; padding: 7px 12px; font: 500 13px var(--mono); }
+  .btn:hover { border-color: var(--caption); }
+  .btn.primary { background: var(--ink); border-color: var(--ink); color: var(--ink-text); }
+  .btn:disabled { opacity: .5; cursor: progress; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-block: 18px 14px; }
+  .slot { text-align: left; display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--rule); background: var(--card); }
+  .slot[aria-selected="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .slot .top { display: flex; align-items: center; gap: 8px; }
+  .slot .name { font-weight: 600; }
+  .slot .px { font: 11px var(--mono); color: var(--caption); font-variant-numeric: tabular-nums; }
+  .pill { margin-left: auto; font: 500 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 99px; border: 1px solid currentColor; }
+  .pill.req { color: var(--signal); }
+  .pill.ok { color: var(--live); }
+  .pill.opt { color: var(--caption); }
+  .pill.later { color: var(--warn); }
+
+  .intro { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: baseline; margin-block: 4px 18px; }
+  .intro p { margin: 0; max-width: 78ch; color: var(--caption); }
+  .intro p b { color: var(--text); font-weight: 600; }
+  .intro label { font: 12px var(--mono); display: inline-flex; gap: 6px; align-items: center; }
+
+  .cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(var(--min, 250px), 1fr)); align-items: start; }
+  .cards.wide { --min: 420px; }
+  .cards.huge { --min: 560px; }
+  .card { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 10px; display: grid; gap: 10px; }
+  .card.off { opacity: .55; }
+  .shot { position: relative; border-radius: 8px; overflow: hidden; background: var(--rule); }
+  .shot canvas { display: block; width: 100%; height: auto; }
+  .order { position: absolute; bottom: 8px; left: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .order span { font: 600 11px var(--mono); background: rgba(10,14,20,.78); color: #fff; padding: 3px 7px; border-radius: 6px; }
+  .order .search { background: rgba(58,51,214,.88); }
+  .fields { display: grid; gap: 8px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .fields label { display: grid; gap: 3px; font: 500 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--caption); }
+  .fields input, .fields textarea, .fields select { width: 100%; border: 1px solid var(--rule); background: var(--field); border-radius: 8px; padding: 6px 8px;
+         font: 14px var(--sans); letter-spacing: 0; text-transform: none; color: var(--text); }
+  .fields textarea { resize: vertical; min-height: 52px; }
+  .fields label.inline { display: inline-flex; grid-template-columns: none; gap: 6px; align-items: center; letter-spacing: .04em; }
+  .fields label.inline input { width: auto; }
+  .seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; background: var(--field); padding: 5px 9px; font: 500 11px var(--mono); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--ink-text); }
+  .icon-btn { border: 1px solid var(--rule); background: var(--field); border-radius: 8px; width: 30px; height: 28px; font: 13px var(--mono); }
+  .foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--rule); padding-top: 9px; }
+  .file { font: 11px var(--mono); color: var(--caption); font-variant-numeric: tabular-nums; margin-right: auto; overflow-wrap: anywhere; }
+  .status { font: 11px var(--mono); color: var(--live); }
+  .shows { font: 11px/1.45 var(--mono); color: var(--caption); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .status.err { color: var(--signal); }
+  .note { font: 12px var(--mono); color: var(--caption); border: 1px dashed var(--rule); border-radius: 12px; padding: 14px; }
+  .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--text); color: var(--ground);
+           font: 500 13px var(--mono); padding: 9px 14px; border-radius: 10px; max-width: calc(100% - 32px); }
+  @media (max-width: 520px) { .app { padding-inline: 16px; } .cards, .cards.wide, .cards.huge { --min: 100%; } }
+</style>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand">
+      <h1>Asset Studio</h1>
+      <span>What The Flight? · App Store 1.0</span>
+    </div>
+    <div class="target" id="target">Checking where saves go…</div>
+    <button class="btn" id="reset" type="button">Reset edits</button>
+    <button class="btn primary" id="saveAll" type="button">Save all</button>
+  </header>
+  <nav class="slots" id="slots" role="tablist" aria-label="App Store Connect slots"></nav>
+  <section class="intro" id="intro"></section>
+  <main class="cards" id="cards"></main>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="studio-data.js"></script>
+<script src="raw-index.js"></script>
+<script>
+(() => {
+  const DATA = window.STUDIO || { base: "", raw: {}, plan: {} };
+  // The local server lists Screenshots/Raw live; the published copy ships its own raw-index.js.
+  if (window.STUDIO_RAW) DATA.raw = Object.assign({}, DATA.raw, window.STUDIO_RAW);
+
+  // ---- App Store Connect slots ------------------------------------------------------------
+  const SLOTS = [
+    { id: "iphone", name: "iPhone", px: "6.3″ · 1206 × 2622", folder: "iPhone 6.3", mode: "framed", device: "iphone", need: "req",
+      intro: "<b>Required.</b> App Store Connect → iOS App Version → App Previews and Screenshots → <b>iPhone</b>. One set at this size is scaled for every smaller iPhone. The first three show in search results." },
+    { id: "ipad", name: "iPad", px: "13″ · 2064 × 2752", folder: "iPad 13", mode: "framed", device: "ipad", need: "req",
+      intro: "<b>Required</b> because the app runs on iPad. Same page, <b>iPad</b> row. Portrait and landscape can be mixed." },
+    { id: "watch", name: "Apple Watch", px: "Ultra · 422 × 514", folder: "Apple Watch Ultra", mode: "raw", need: "req",
+      intro: "<b>Required</b> once a build with the Watch app is attached; the <b>Apple Watch</b> row appears then. Watch screenshots go up as plain screens, no captions." },
+    { id: "tv", name: "Apple TV", px: "4K · 3840 × 2160", folder: "Apple TV", mode: "raw", need: "later",
+      intro: "<b>For later:</b> the tvOS App Version page, when you add the Apple TV platform. Plain screens." },
+    { id: "header", name: "Header & Search", px: "5244 × 2950 · 21:9 · 3:2", folder: "Header Art", mode: "header", need: "opt",
+      intro: "<b>Optional.</b> Header and Search Results → upload the <b>Universal</b> PNG for both places, or the 21:9 header plus the 3:2 search image. Keep words and the mark inside the dashed safe area: Apple crops everything else on some devices." },
+  ];
+
+  const HEADERS = [
+    { id: "universal", label: "Universal · 16:9", w: 5244, h: 2950, safe: [1921, 660, 1402, 962], file: "universal-5244x2950.png", note: "Header and search, one PNG" },
+    { id: "header", label: "Product page header · 21:9", w: 3840, h: 1646, safe: [1097, 493, 1646, 661], file: "header-3840x1646.png", note: "Header only" },
+    { id: "search", label: "Search results · 3:2", w: 3840, h: 2560, safe: [836, 765, 2168, 1030], file: "search-3840x2560.png", note: "Search results only" },
+  ];
+
+  // ---- Looks (from the app's Palette) ------------------------------------------------------
+  const LOOKS = {
+    paper: { name: "Paper", bg: ["#E9E7E2", "#E2DFD8"], line: "rgba(58,51,214,0.085)", major: "rgba(58,51,214,0.15)",
+             eyebrow: "#E5483B", head: "#3A33D6", sub: "#75726C", edge: "#A7A39B", bezel: "#121214", shadow: "rgba(46,40,30,0.30)",
+             ring: "rgba(58,51,214,0.26)", blip: "#2D56B9", label: "#75726C", trail: "#3A33D6", plane: "#E5483B" },
+    night: { name: "Night", bg: ["#0A0E14", "#05080C"], line: "rgba(168,164,255,0.07)", major: "rgba(168,164,255,0.13)",
+             eyebrow: "#FF6B5E", head: "#E7EAF0", sub: "#8790A0", edge: "#3A4150", bezel: "#000000", shadow: "rgba(0,0,0,0.65)",
+             ring: "rgba(168,164,255,0.26)", blip: "#72AAFF", label: "#8790A0", trail: "#E7EAF0", plane: "#FF6B5E" },
+    teal:  { name: "Teal", bg: ["#1F565C", "#0D2A2F"], line: "rgba(255,255,255,0.065)", major: "rgba(255,255,255,0.12)",
+             eyebrow: "#FF8A7F", head: "#FFFFFF", sub: "rgba(231,234,240,0.72)", edge: "#6F9599", bezel: "#050808", shadow: "rgba(0,0,0,0.5)",
+             ring: "rgba(255,255,255,0.26)", blip: "#FFFFFF", label: "rgba(231,234,240,0.62)", trail: "#FFFFFF", plane: "#FF6B5E" },
+  };
+  const MONO = '"Geist Mono", ui-monospace, Menlo, monospace';
+  const SANS = '-apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", sans-serif';
+
+  // ---- State --------------------------------------------------------------------------------
+  const KEY = "wtf.assetStudio.v1";
+  const clone = o => JSON.parse(JSON.stringify(o));
+  let state = clone(DATA.plan);
+  try { const saved = JSON.parse(localStorage.getItem(KEY) || "null"); if (saved && saved.version === DATA.version) state = saved.plan; } catch (e) {}
+  for (const s of SLOTS) if (!state[s.id]) state[s.id] = s.mode === "header" ? {} : [];
+  let current = "iphone";
+  try { const tab = localStorage.getItem(KEY + ".tab"); if (SLOTS.some(s => s.id === tab)) current = tab; } catch (e) {}
+  if (/^#[a-z]+$/.test(location.hash) && SLOTS.some(s => s.id === location.hash.slice(1))) current = location.hash.slice(1);
+  let showSafe = true;
+  const saved = {};
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify({ version: DATA.version, plan: state })); } catch (e) {} }
+
+  // ---- Images -------------------------------------------------------------------------------
+  const images = {};
+  function rawList(slot) { return DATA.raw[slot.folder] || []; }
+  function rawInfo(slot, file) { return rawList(slot).find(r => r.file === file); }
+  function loadImage(slot, file) {
+    const key = slot.folder + "/" + file;
+    if (!images[key]) images[key] = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Couldn't load " + key));
+      const info = rawInfo(slot, file);
+      img.src = info && info.url ? info.url : DATA.base + encodeURI(slot.folder) + "/" + encodeURI(file);
+    });
+    return images[key];
+  }
+
+  // ---- Noise + contours (the app's topography, drawn as marching squares) -------------------
+  const perm = new Uint8Array(512);
+  (() => { const p = []; for (let i = 0; i < 256; i++) p[i] = i; let s = 1;
+    for (let i = 255; i > 0; i--) { s = (s * 16807) % 2147483647; const j = s % (i + 1); [p[i], p[j]] = [p[j], p[i]]; }
+    for (let i = 0; i < 512; i++) perm[i] = p[i & 255]; })();
+  const G = [[1,1],[-1,1],[1,-1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1]];
+  function simplex(x, y) {
+    const F2 = 0.5 * (Math.sqrt(3) - 1), G2 = (3 - Math.sqrt(3)) / 6;
+    const s = (x + y) * F2, i = Math.floor(x + s), j = Math.floor(y + s);
+    const t = (i + j) * G2, x0 = x - (i - t), y0 = y - (j - t);
+    const i1 = x0 > y0 ? 1 : 0, j1 = 1 - i1;
+    const x1 = x0 - i1 + G2, y1 = y0 - j1 + G2, x2 = x0 - 1 + 2 * G2, y2 = y0 - 1 + 2 * G2;
+    const ii = i & 255, jj = j & 255;
+    let n = 0;
+    for (const [dx, dy, gi] of [[x0, y0, perm[ii + perm[jj]]], [x1, y1, perm[ii + i1 + perm[jj + j1]]], [x2, y2, perm[ii + 1 + perm[jj + 1]]]]) {
+      let tt = 0.5 - dx * dx - dy * dy;
+      if (tt > 0) { const g = G[gi & 7]; tt *= tt; n += tt * tt * (g[0] * dx + g[1] * dy); }
+    }
+    return 70 * n;
+  }
+  const fbm = (x, y) => simplex(x, y) + 0.5 * simplex(2 * x + 17.3, 2 * y - 9.1) + 0.25 * simplex(4 * x - 3.7, 4 * y + 5.2);
+  // Marching-squares edge pairs per case. Edges: 0 top, 1 right, 2 bottom, 3 left.
+  const CASES = [[], [[3,2]], [[2,1]], [[3,1]], [[0,1]], [[3,0],[2,1]], [[0,2]], [[3,0]], [[3,0]], [[0,2]], [[3,2],[0,1]], [[0,1]], [[3,1]], [[2,1]], [[3,2]], []];
+
+  /** Contours over the canvas. `fx` maps canvas px to full-size px so previews match exports. */
+  function drawTopography(ctx, W, H, look, opts) {
+    const g = opts.step;
+    const cols = Math.ceil(W / g) + 1, rows = Math.ceil(H / g) + 1;
+    const f = new Float32Array(cols * rows);
+    const k = opts.fx / opts.feature;
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
+      f[r * cols + c] = fbm((c * g) * k + opts.ox / opts.feature, (r * g) * k + opts.oy / opts.feature);
+    const minor = new Path2D(), major = new Path2D();
+    const levels = 30, lo = -1.05, hi = 1.05;
+    for (let l = 1; l < levels; l++) {
+      const L = lo + (hi - lo) * l / levels, path = l % 5 === 0 ? major : minor;
+      for (let r = 0; r < rows - 1; r++) for (let c = 0; c < cols - 1; c++) {
+        const tl = f[r * cols + c], tr = f[r * cols + c + 1], br = f[(r + 1) * cols + c + 1], bl = f[(r + 1) * cols + c];
+        const idx = (tl > L ? 8 : 0) | (tr > L ? 4 : 0) | (br > L ? 2 : 0) | (bl > L ? 1 : 0);
+        if (idx === 0 || idx === 15) continue;
+        const x0 = c * g, y0 = r * g;
+        const pt = e => e === 0 ? [x0 + g * (L - tl) / (tr - tl), y0]
+                     : e === 1 ? [x0 + g, y0 + g * (L - tr) / (br - tr)]
+                     : e === 2 ? [x0 + g * (L - bl) / (br - bl), y0 + g]
+                     :           [x0, y0 + g * (L - tl) / (bl - tl)];
+        for (const [a, b] of CASES[idx]) { const p = pt(a), q = pt(b); path.moveTo(p[0], p[1]); path.lineTo(q[0], q[1]); }
+      }
+    }
+    const lw = 1.7 * Math.max(1, opts.full / 1600) / opts.fx;
+    ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.strokeStyle = look.line; ctx.lineWidth = lw; ctx.stroke(minor);
+    ctx.strokeStyle = look.major; ctx.lineWidth = lw * 1.9; ctx.stroke(major);
+    ctx.restore();
+  }
+
+  function paintGround(ctx, W, H, look) {
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, look.bg[0]); grad.addColorStop(1, look.bg[1]);
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+  }
+
+  // ---- Text ---------------------------------------------------------------------------------
+  function wrap(ctx, text, maxW) {
+    const out = [];
+    for (const para of String(text || "").split("\n")) {
+      let line = "";
+      for (const word of para.split(/\s+/).filter(Boolean)) {
+        const test = line ? line + " " + word : word;
+        if (ctx.measureText(test).width > maxW && line) { out.push(line); line = word; } else line = test;
+      }
+      out.push(line);
+    }
+    return out;
+  }
+  function tracked(ctx, text, x, y, tracking) {
+    let cx = x;
+    for (const ch of text) { ctx.fillText(ch, cx, y); cx += ctx.measureText(ch).width + tracking; }
+    return cx - x - tracking;
+  }
+  function trackedWidth(ctx, text, tracking) { let w = 0; for (const ch of text) w += ctx.measureText(ch).width + tracking; return w - tracking; }
+
+  /** Eyebrow + headline from (x, y) down; returns the bottom edge. */
+  function drawCaption(ctx, frame, look, x, y, maxW, unit) {
+    const eb = (frame.eyebrow || "").toUpperCase();
+    let bottom = y;
+    if (eb) {
+      const size = unit * 0.031;
+      ctx.font = `600 ${size}px ${MONO}`; ctx.fillStyle = look.eyebrow; ctx.textBaseline = "alphabetic";
+      tracked(ctx, eb, x, y + size, size * 0.16);
+      bottom = y + size * 1.9;
+    }
+    if (frame.headline) {
+      let size = unit * 0.082;
+      ctx.font = `800 ${size}px ${SANS}`;
+      let lines = wrap(ctx, frame.headline, maxW);
+      while (lines.length > 3 && size > unit * 0.05) { size *= 0.92; ctx.font = `800 ${size}px ${SANS}`; lines = wrap(ctx, frame.headline, maxW); }
+      ctx.fillStyle = look.head;
+      lines.forEach((ln, i) => ctx.fillText(ln, x - size * 0.04, bottom + size * (0.86 + i * 1.04)));
+      bottom += size * (lines.length * 1.04 - 0.04);
+    }
+    return bottom;
+  }
+
+  // ---- Device ---------------------------------------------------------------------------------
+  function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+  function drawDevice(ctx, img, x, y, sw, sh, kind, look) {
+    const short = Math.min(sw, sh);
+    const bezel = kind === "iphone" ? sw * 0.030 : short * 0.034;
+    const edge = kind === "iphone" ? sw * 0.007 : short * 0.006;
+    const rs = kind === "iphone" ? sw * 0.135 : short * 0.032;
+    const ro = rs + bezel, re = ro + edge;
+    ctx.save();
+    ctx.shadowColor = look.shadow; ctx.shadowBlur = short * 0.07; ctx.shadowOffsetY = short * 0.03;
+    rr(ctx, x - bezel - edge, y - bezel - edge, sw + 2 * (bezel + edge), sh + 2 * (bezel + edge), re);
+    ctx.fillStyle = look.edge; ctx.fill();
+    ctx.restore();
+    rr(ctx, x - bezel, y - bezel, sw + 2 * bezel, sh + 2 * bezel, ro); ctx.fillStyle = look.bezel; ctx.fill();
+    ctx.save(); rr(ctx, x, y, sw, sh, rs); ctx.clip();
+    if (img) ctx.drawImage(img, x, y, sw, sh); else { ctx.fillStyle = "#222"; ctx.fillRect(x, y, sw, sh); }
+    ctx.restore();
+    // Simulator screenshots already include the Dynamic Island, so it isn't drawn here.
+  }
+
+  // ---- Frames ---------------------------------------------------------------------------------
+  function frameSize(slot, frame) {
+    const info = rawInfo(slot, frame.src);
+    if (slot.id === "iphone") return [1206, 2622];
+    if (slot.id === "ipad") return info && info.w > info.h ? [2752, 2064] : [2064, 2752];
+    if (info) return [info.w, info.h];
+    return slot.id === "watch" ? [422, 514] : [3840, 2160];
+  }
+
+  /** Draws one screenshot frame at W × H (the full size is fullW wide). */
+  function renderFrame(ctx, W, H, slot, frame, img, index, fullW) {
+    if (slot.mode === "raw") { if (img) ctx.drawImage(img, 0, 0, W, H); return; }
+    const look = LOOKS[frame.look] || LOOKS.paper;
+    const fx = fullW / W;
+    paintGround(ctx, W, H, look);
+    drawTopography(ctx, W, H, look, { fx, full: fullW, step: Math.max(4, 7 / fx), feature: slot.id === "iphone" ? 950 : 1350,
+                                      ox: index * fullW * 1.06, oy: slot.id === "iphone" ? 0 : 5000 });
+    const landscape = W > H, unit = landscape ? H : W;
+    const screenW = landscape ? W * 0.70 : W * (slot.id === "iphone" ? 0.84 : 0.76);
+    const aspect = img ? img.naturalHeight / img.naturalWidth : H / W;
+    const screenH = screenW * aspect;
+    const sx = (W - screenW) / 2;
+    const bezelOut = slot.id === "iphone" ? screenW * 0.037 : Math.min(screenW, screenH) * 0.040;
+    const captionX = sx - bezelOut + unit * 0.004;
+    const top = unit * (landscape ? 0.065 : 0.075);
+    const bottom = drawCaption(ctx, frame, look, captionX, top, screenW + 2 * bezelOut, landscape ? unit * 0.78 : unit);
+    const sy = bottom + unit * (landscape ? 0.06 : 0.075) + bezelOut;
+    drawDevice(ctx, img, sx, sy, screenW, screenH, slot.device, look);
+  }
+
+  // ---- Header art -----------------------------------------------------------------------------
+  const C = 32, m = x => +(64 - x).toFixed(2);
+  const fus = ({ n, t, w, nose, tw, taper }) => `M ${C} ${n} C ${C + w * .55} ${n}, ${C + w} ${n + nose * .45}, ${C + w} ${n + nose} L ${C + w} ${taper} L ${C + tw} ${t} L ${C - tw} ${t} L ${C - w} ${taper} L ${C - w} ${n + nose} C ${C - w} ${n + nose * .45}, ${C - w * .55} ${n}, ${C} ${n} Z`;
+  const poly = pts => "M " + pts.concat(pts.slice().reverse().map(([x, y]) => [m(x), y])).map(p => p.join(" ")).join(" L ") + " Z";
+  const AIRLINER = new Path2D([fus({ n: 5, t: 60, w: 3.6, nose: 7, tw: 1.2, taper: 46 }),
+    poly([[32.5, 25], [57, 37.5], [57.5, 40.5], [32.5, 36]]), poly([[32.5, 51], [43, 56.5], [43.3, 59], [32.5, 57]])].join(" "));
+  function airliner(ctx, color) {
+    ctx.fillStyle = color; ctx.fill(AIRLINER);
+    for (const cx of [42.5, m(42.5)]) { ctx.beginPath(); ctx.roundRect(cx - 2.3, 25.5, 4.6, 7.5, 2.3); ctx.fill(); }
+  }
+  const TRAIL = new Path2D("M 30 36 C 30 20, 41 13, 51 13 C 63 13, 71 21, 71 31 C 71 43, 52 45, 51 57 L 51 61");
+
+  /** The contrail question mark from the app icon, in a box `size` tall at (x, y). */
+  function drawMark(ctx, x, y, size, look) {
+    ctx.save(); ctx.translate(x - size * 0.24, y - size * 0.10); ctx.scale(size / 82, size / 82);
+    const grad = ctx.createLinearGradient(34.1, 17.8, 50.5, 56.2);
+    grad.addColorStop(0, hexA(look.trail, 0.22)); grad.addColorStop(1, hexA(look.trail, 1));
+    ctx.strokeStyle = grad; ctx.lineWidth = 8.5; ctx.lineCap = "round"; ctx.stroke(TRAIL);
+    ctx.translate(51, 77); ctx.rotate(Math.PI); ctx.scale(24 / 64, 24 / 64); ctx.translate(-32, -32);
+    airliner(ctx, look.plane);
+    ctx.restore();
+  }
+  function hexA(hex, a) {
+    if (!hex.startsWith("#")) return hex;
+    const n = parseInt(hex.slice(1), 16);
+    return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+  }
+
+  // Traffic around the header's radar: bearing (deg), distance (in safe-area heights), heading, label.
+  const TRAFFIC = [
+    [18, 1.55, 205, "DAL 1176 · 4 mi"], [52, 2.25, 300, "JBU 619 · 7 mi"], [78, 1.3, 95, "N512WB · 3 mi"],
+    [104, 2.9, 250, "UAL 2204 · 11 mi"], [131, 1.8, 20, "AAL 88 · 5 mi"], [160, 2.6, 330, "SWA 2471 · 9 mi"],
+    [198, 1.45, 140, "EJA 344 · 4 mi"], [226, 2.3, 60, "BAW 117 · 8 mi"], [251, 3.1, 170, "RPA 4410 · 12 mi"],
+    [282, 1.65, 10, "N91ME · 5 mi"], [309, 2.5, 235, "DLH 400 · 9 mi"], [338, 1.9, 120, "FDX 1304 · 6 mi"],
+    [6, 3.3, 280, "CPZ 5721 · 13 mi"], [146, 3.4, 300, "AFR 22 · 14 mi"],
+  ];
+
+  function renderHeader(ctx, W, H, variant, cfg, fullW, overlay) {
+    const look = LOOKS[cfg.look] || LOOKS.teal;
+    const s = W / fullW, fx = fullW / W;
+    paintGround(ctx, W, H, look);
+    drawTopography(ctx, W, H, look, { fx, full: fullW, step: Math.max(4, 8 / fx), feature: 1500, ox: 9000, oy: 2000 });
+    const [sx, sy, sw, sh] = variant.safe.map(v => v * s);
+    const cx = sx + sw / 2, cy = sy + sh / 2;
+    const unit = Math.min(sh, sw / 1.6);
+    // Range rings and their half echoes.
+    ctx.save(); ctx.strokeStyle = look.ring;
+    [0.82, 1.62, 2.42, 3.22, 4.02].forEach((k, i) => {
+      ctx.lineWidth = (i === 1 ? 6 : 3.6) * s * (fullW / 3840);
+      ctx.setLineDash(i % 2 ? [] : [unit * 0.02, unit * 0.03]);
+      ctx.beginPath(); ctx.arc(cx, cy, unit * k, 0, Math.PI * 2); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    const tickR = unit * 3.22;
+    for (let d = 0; d < 360; d += 5) {
+      const a = (d - 90) * Math.PI / 180, len = d % 30 === 0 ? unit * 0.07 : unit * 0.03;
+      ctx.lineWidth = (d % 30 === 0 ? 3 : 1.6) * s * 2.2;
+      ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * tickR, cy + Math.sin(a) * tickR);
+      ctx.lineTo(cx + Math.cos(a) * (tickR - len), cy + Math.sin(a) * (tickR - len)); ctx.stroke();
+    }
+    ctx.fillStyle = look.label; ctx.font = `600 ${unit * 0.075}px ${MONO}`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    [["N", 0], ["E", 90], ["S", 180], ["W", 270]].forEach(([t, d]) => {
+      const a = (d - 90) * Math.PI / 180, r = tickR - unit * 0.16;
+      ctx.fillStyle = d === 0 ? look.eyebrow : look.label;
+      ctx.fillText(t, cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    });
+    ctx.restore();
+    // Aircraft, kept clear of the safe area.
+    const pad = unit * 0.12;
+    ctx.save(); ctx.font = `500 ${unit * 0.052}px ${MONO}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    for (const [bearing, dist, heading, label] of TRAFFIC) {
+      const a = (bearing - 90) * Math.PI / 180, px = cx + Math.cos(a) * unit * dist, py = cy + Math.sin(a) * unit * dist;
+      if (px > sx - pad && px < sx + sw + pad && py > sy - pad && py < sy + sh + pad) continue;
+      const size = unit * 0.21;
+      ctx.save(); ctx.translate(px, py); ctx.rotate(heading * Math.PI / 180); ctx.scale(size / 64, size / 64); ctx.translate(-32, -32);
+      airliner(ctx, look.blip); ctx.restore();
+      ctx.fillStyle = look.label; ctx.fillText(label, px, py + size * 0.62);
+    }
+    ctx.restore();
+    // The words (and, if chosen, the contrail mark), inside the safe area.
+    let tx = sx, tw = sw;
+    if (cfg.mark) {
+      const markH = sh * 0.86, markW = markH * 0.64;
+      drawMark(ctx, sx + sw * 0.02, sy + (sh - markH) / 2, markH, look);
+      tx = sx + sw * 0.02 + markW + sw * 0.05; tw = sx + sw - tx;
+    }
+    const centered = !cfg.mark, mid = tx + tw / 2;
+    const eb = (cfg.eyebrow || "").toUpperCase();
+    ctx.save(); ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+    let ebSize = unit * 0.085;
+    ctx.font = `600 ${ebSize}px ${MONO}`;
+    while (eb && trackedWidth(ctx, eb, ebSize * 0.16) > tw && ebSize > 4) { ebSize *= 0.94; ctx.font = `600 ${ebSize}px ${MONO}`; }
+    let hs = unit * 0.30;
+    ctx.font = `800 ${hs}px ${SANS}`;
+    let lines = wrap(ctx, cfg.headline, tw);
+    while ((lines.length > 2 || lines.some(l => ctx.measureText(l).width > tw)) && hs > 6) { hs *= 0.95; ctx.font = `800 ${hs}px ${SANS}`; lines = wrap(ctx, cfg.headline, tw); }
+    const sub = cfg.sub || "";
+    let subSize = unit * 0.07;
+    ctx.font = `500 ${subSize}px ${MONO}`;
+    while (sub && ctx.measureText(sub).width > tw && subSize > 4) { subSize *= 0.94; ctx.font = `500 ${subSize}px ${MONO}`; }
+    const blockH = (eb ? ebSize * 1.9 : 0) + hs * (lines.length * 1.02) + (sub ? subSize * 1.9 : 0);
+    let y = cy - blockH / 2;
+    if (eb) {
+      ctx.font = `600 ${ebSize}px ${MONO}`; ctx.fillStyle = look.eyebrow;
+      tracked(ctx, eb, centered ? mid - trackedWidth(ctx, eb, ebSize * 0.16) / 2 : tx, y + ebSize, ebSize * 0.16);
+      y += ebSize * 1.9;
+    }
+    ctx.font = `800 ${hs}px ${SANS}`; ctx.fillStyle = look.head;
+    if (centered) ctx.textAlign = "center";
+    lines.forEach((ln, i) => ctx.fillText(ln, centered ? mid : tx - hs * 0.04, y + hs * (0.84 + i * 1.02)));
+    y += hs * lines.length * 1.02;
+    if (sub) { ctx.font = `500 ${subSize}px ${MONO}`; ctx.fillStyle = look.sub; ctx.fillText(sub, centered ? mid : tx, y + subSize * 1.5); }
+    ctx.restore();
+    if (overlay) {
+      ctx.save(); ctx.strokeStyle = "#FF3B30"; ctx.lineWidth = Math.max(1, 3 * s * 2); ctx.setLineDash([10 * s * 3, 7 * s * 3]);
+      ctx.strokeRect(sx, sy, sw, sh);
+      ctx.fillStyle = "#FF3B30"; ctx.font = `600 ${Math.max(9, 34 * s)}px ${MONO}`; ctx.textBaseline = "bottom";
+      ctx.fillText("SAFE AREA", sx, sy - 6 * s); ctx.restore();
+    }
+  }
+
+  // ---- PNG without an alpha channel (App Store Connect rejects alpha) -------------------------
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  function crc32(bytes) { let c = 0xFFFFFFFF; for (let i = 0; i < bytes.length; i++) c = CRC[(c ^ bytes[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function chunk(type, data) {
+    const out = new Uint8Array(12 + data.length), dv = new DataView(out.buffer);
+    dv.setUint32(0, data.length); for (let i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
+    out.set(data, 8); dv.setUint32(8 + data.length, crc32(out.subarray(4, 8 + data.length)));
+    return out;
+  }
+  async function encodeRGBPNG(rgba, w, h) {
+    const stride = w * 3 + 1, raw = new Uint8Array(stride * h);
+    for (let y = 0; y < h; y++) {
+      const o = y * stride, row = y * w * 4;
+      raw[o] = 1; // "Sub" filter
+      for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) {
+        const cur = rgba[row + x * 4 + c], left = x ? rgba[row + (x - 1) * 4 + c] : 0;
+        raw[o + 1 + x * 3 + c] = (cur - left) & 255;
+      }
+    }
+    const z = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate"))).arrayBuffer());
+    const ihdr = new Uint8Array(13), dv = new DataView(ihdr.buffer);
+    dv.setUint32(0, w); dv.setUint32(4, h); ihdr[8] = 8; ihdr[9] = 2; // 8-bit RGB
+    const sig = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+    return new Blob([sig, chunk("IHDR", ihdr), chunk("sRGB", new Uint8Array([0])), chunk("IDAT", z), chunk("IEND", new Uint8Array(0))], { type: "image/png" });
+  }
+
+  // ---- Export -------------------------------------------------------------------------------
+  const slug = s => String(s || "shot").toLowerCase().replace(/\.png$/, "").replace(/^\d+-/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  function included(slotId) { return (state[slotId] || []).filter(f => f.include !== false); }
+  function fileFor(slot, frame) {
+    if (slot.mode === "header") return { dir: "Header Art", name: frame.file };
+    const n = included(slot.id).indexOf(frame) + 1;
+    return { dir: "Screenshots/Final/" + slot.folder, name: String(n).padStart(2, "0") + "-" + slug(frame.src) + ".png" };
+  }
+  async function renderFull(slot, frame) {
+    await fontsReady;
+    let W, H;
+    const canvas = document.createElement("canvas");
+    if (slot.mode === "header") {
+      W = frame.w; H = frame.h; canvas.width = W; canvas.height = H;
+      renderHeader(canvas.getContext("2d"), W, H, frame, state.header, W, false);
+    } else {
+      [W, H] = frameSize(slot, frame); canvas.width = W; canvas.height = H;
+      const img = await loadImage(slot, frame.src);
+      renderFrame(canvas.getContext("2d"), W, H, slot, frame, img, state[slot.id].indexOf(frame), W);
+    }
+    const rgba = canvas.getContext("2d").getImageData(0, 0, W, H).data;
+    return encodeRGBPNG(rgba, W, H);
+  }
+
+  // Where saves go: the local server (into the repo), the artifact viewer's downloads, or the browser.
+  let saveMode = "browser", downloads = null;
+  const ready = (async () => {
+    try { const r = await fetch("/__ping", { cache: "no-store" }); if (r.ok && (await r.text()) === "ok") { saveMode = "repo"; return; } } catch (e) {}
+    if (window.claude && typeof window.claude.use === "function") {
+      try { downloads = await window.claude.use("downloads"); } catch (e) { downloads = null; }
+      if (downloads) { saveMode = "downloads"; return; }
+      saveMode = "none";
+    }
+  })().then(() => {
+    const t = document.getElementById("target");
+    if (saveMode === "repo") t.innerHTML = "Saves go into <b>AppStore/Screenshots/Final</b> and <b>AppStore/Header Art</b>.";
+    else if (saveMode === "downloads") t.innerHTML = "Save downloads a PNG. <b>Save all</b> downloads one zip.";
+    else if (saveMode === "none") { t.textContent = "Saving isn't available in this view. Open the studio from Open Asset Studio.command."; document.getElementById("saveAll").disabled = true; }
+    else t.innerHTML = location.protocol === "file:" ? "Opened as a file, so saving won't work. Double-click <b>Open Asset Studio.command</b> instead." : "Save downloads each PNG.";
+  });
+
+  async function deliver(path, blob) {
+    if (saveMode === "repo") {
+      const r = await fetch("/__save?path=" + encodeURIComponent(path), { method: "POST", body: blob });
+      if (!r.ok) throw new Error(await r.text());
+      return "Saved to " + path;
+    }
+    if (saveMode === "downloads") {
+      await downloads.save({ filename: path.split("/").pop(), data: blob });
+      return "Downloaded";
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = path.split("/").pop(); document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 20000);
+    return "Downloaded";
+  }
+
+  function toast(text) {
+    const el = document.getElementById("toast"); el.textContent = text; el.hidden = false;
+    clearTimeout(toast.t); toast.t = setTimeout(() => (el.hidden = true), 3200);
+  }
+  function errorText(e) {
+    if (e && e.code === "declined") return "Not saved.";
+    if (e && e.name === "SecurityError") return "The browser blocked reading the image. Open the studio from Open Asset Studio.command.";
+    return (e && e.message) || "Couldn't save that file.";
+  }
+
+  async function saveOne(slot, frame, statusEl, button) {
+    await ready;
+    button.disabled = true; statusEl.className = "status"; statusEl.textContent = "Rendering…";
+    try {
+      const { dir, name } = fileFor(slot, frame);
+      const msg = await deliver(dir + "/" + name, await renderFull(slot, frame));
+      saved[dir + "/" + name] = true;
+      statusEl.textContent = "✓ " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      toast(msg); renderSlots();
+    } catch (e) { statusEl.className = "status err"; statusEl.textContent = errorText(e); }
+    button.disabled = false;
+  }
+
+  function allJobs() {
+    const jobs = [];
+    for (const slot of SLOTS) {
+      if (slot.mode === "header") HEADERS.forEach(v => jobs.push([slot, v]));
+      else included(slot.id).forEach(f => jobs.push([slot, f]));
+    }
+    return jobs;
+  }
+  async function saveAll() {
+    await ready;
+    const btn = document.getElementById("saveAll"); btn.disabled = true;
+    const jobs = allJobs();
+    try {
+      if (saveMode === "downloads") {
+        if (!window.JSZip) await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"; s.onload = res; s.onerror = () => rej(new Error("Couldn't load the zip tool.")); document.head.appendChild(s); });
+        const zip = new JSZip();
+        for (let i = 0; i < jobs.length; i++) {
+          const [slot, f] = jobs[i]; btn.textContent = `Rendering ${i + 1} of ${jobs.length}`;
+          const { dir, name } = fileFor(slot, f); zip.file(dir + "/" + name, await renderFull(slot, f));
+        }
+        btn.textContent = "Zipping…";
+        await downloads.save({ filename: "What The Flight App Store assets.zip", data: await zip.generateAsync({ type: "blob", compression: "STORE" }) });
+        toast("Downloaded the zip");
+      } else {
+        if (saveMode === "repo") for (const slot of SLOTS) if (slot.mode !== "header") await fetch("/__clear?dir=" + encodeURIComponent("Screenshots/Final/" + slot.folder), { method: "POST" });
+        for (let i = 0; i < jobs.length; i++) {
+          const [slot, f] = jobs[i]; btn.textContent = `Saving ${i + 1} of ${jobs.length}`;
+          const { dir, name } = fileFor(slot, f); await deliver(dir + "/" + name, await renderFull(slot, f)); saved[dir + "/" + name] = true;
+        }
+        toast(saveMode === "repo" ? `Saved ${jobs.length} files into AppStore/` : `Downloaded ${jobs.length} files`);
+      }
+    } catch (e) { toast(errorText(e)); }
+    btn.disabled = false; btn.textContent = "Save all"; renderSlots();
+    return jobs.length;
+  }
+  window.studioSaveAll = saveAll;
+
+  // ---- UI -----------------------------------------------------------------------------------
+  const fontsReady = Promise.all([document.fonts.load(`600 40px "Geist Mono"`), document.fonts.load(`500 40px "Geist Mono"`)]).catch(() => {});
+  const el = (tag, attrs = {}, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) { if (k === "class") n.className = v; else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else if (v !== undefined && v !== false) n.setAttribute(k, v === true ? "" : v); }
+    for (const kid of kids.flat()) if (kid != null) n.append(kid.nodeType ? kid : document.createTextNode(kid));
+    return n;
+  };
+
+  function renderSlots() {
+    const nav = document.getElementById("slots"); nav.replaceChildren();
+    for (const slot of SLOTS) {
+      const count = slot.mode === "header" ? HEADERS.length : included(slot.id).length;
+      const savedCount = slot.mode === "header" ? HEADERS.filter(v => saved["Header Art/" + v.file]).length
+                       : included(slot.id).filter(f => { const { dir, name } = fileFor(slot, f); return saved[dir + "/" + name]; }).length;
+      const pill = slot.need === "req" ? (count ? el("span", { class: "pill ok" }, `${count} ready`) : el("span", { class: "pill req" }, "Required"))
+                 : slot.need === "later" ? el("span", { class: "pill later" }, "tvOS · later") : el("span", { class: "pill opt" }, "Optional");
+      nav.append(el("button", { class: "slot", role: "tab", type: "button", "aria-selected": String(slot.id === current),
+          onclick: () => { current = slot.id; try { localStorage.setItem(KEY + ".tab", current); } catch (e) {} renderAll(); } },
+        el("div", { class: "top" }, el("span", { class: "name" }, slot.name), pill),
+        el("span", { class: "px" }, slot.px + (savedCount ? ` · ${savedCount} saved` : ""))));
+    }
+  }
+
+  const previewQueue = new Map();
+  function schedulePreview(key, fn) {
+    clearTimeout(previewQueue.get(key)); previewQueue.set(key, setTimeout(fn, 90));
+  }
+
+  function previewCanvas(W, H, max) {
+    const scale = Math.min(1, max / Math.max(W, H));
+    const c = el("canvas", { width: Math.round(W * scale), height: Math.round(H * scale) });
+    return c;
+  }
+
+  function lookButtons(currentLook, onPick, options) {
+    return el("div", { class: "seg", role: "group", "aria-label": "Look" },
+      options.map(k => el("button", { type: "button", "aria-pressed": String(currentLook === k), onclick: () => onPick(k) }, LOOKS[k].name)));
+  }
+
+  function frameCard(slot, frame, i, list) {
+    const pos = included(slot.id).indexOf(frame);
+    const [W, H] = frameSize(slot, frame);
+    const canvas = previewCanvas(W, H, slot.mode === "raw" && W > H ? 1100 : 640);
+    const draw = async () => {
+      await fontsReady;
+      const ctx = canvas.getContext("2d");
+      let img = null; try { img = await loadImage(slot, frame.src); } catch (e) {}
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      renderFrame(ctx, canvas.width, canvas.height, slot, frame, img, i, W);
+    };
+    draw();
+    const statusEl = el("span", { class: "status" });
+    const update = (k, v, redraw = true) => { frame[k] = v; persist(); if (redraw) schedulePreview(slot.id + i, draw); };
+    const move = d => { const j = i + d; if (j < 0 || j >= list.length) return; [list[i], list[j]] = [list[j], list[i]]; persist(); renderAll(); };
+    const { name } = fileFor(slot, frame);
+    const info = rawInfo(slot, frame.src);
+    const badges = el("div", { class: "order" },
+      el("span", {}, frame.include === false ? "Off" : String(pos + 1)),
+      slot.id === "iphone" && pos >= 0 && pos < 3 ? el("span", { class: "search" }, "Shown in search") : null);
+    const fields = el("div", { class: "fields" });
+    if (slot.mode === "framed") {
+      fields.append(
+        el("label", {}, "Eyebrow", el("input", { id: `eb-${slot.id}-${i}`, value: frame.eyebrow || "", oninput: e => update("eyebrow", e.target.value) })),
+        el("label", {}, "Headline", el("textarea", { id: `hl-${slot.id}-${i}`, rows: 2, oninput: e => update("headline", e.target.value) }, frame.headline || "")),
+        el("div", { class: "row" }, lookButtons(frame.look || "paper", k => { update("look", k, false); renderAll(); }, ["paper", "night", "teal"])));
+    }
+    fields.append(el("label", {}, "Screenshot",
+      el("select", { id: `src-${slot.id}-${i}`, onchange: e => { update("src", e.target.value, false); renderAll(); } },
+        rawList(slot).map(r => el("option", { value: r.file, selected: r.file === frame.src }, r.file)))));
+    if (info && info.shows) fields.append(el("span", { class: "shows", title: info.shows }, info.shows));
+    const saveBtn = el("button", { class: "btn", type: "button", onclick: () => saveOne(slot, frame, statusEl, saveBtn), disabled: frame.include === false }, "Save PNG");
+    return el("article", { class: "card" + (frame.include === false ? " off" : "") },
+      el("div", { class: "shot" }, canvas, badges),
+      fields,
+      el("div", { class: "foot" },
+        el("button", { class: "icon-btn", type: "button", "aria-label": "Move earlier", onclick: () => move(-1) }, "←"),
+        el("button", { class: "icon-btn", type: "button", "aria-label": "Move later", onclick: () => move(1) }, "→"),
+        el("button", { class: "btn", type: "button", onclick: () => { frame.include = frame.include === false; persist(); renderAll(); } }, frame.include === false ? "Include" : "Leave out"),
+        el("span", { class: "file" }, frame.include === false ? "Not exported" : `${name} · ${W} × ${H}`),
+        statusEl, saveBtn));
+  }
+
+  function headerCards() {
+    const cfg = state.header;
+    const out = [];
+    const controls = el("article", { class: "card" },
+      el("div", { class: "fields" },
+        el("label", {}, "Eyebrow", el("input", { id: "hdr-eb", value: cfg.eyebrow || "", oninput: e => { cfg.eyebrow = e.target.value; persist(); schedulePreview("hdr", drawAll); } })),
+        el("label", {}, "Headline", el("textarea", { id: "hdr-hl", rows: 2, oninput: e => { cfg.headline = e.target.value; persist(); schedulePreview("hdr", drawAll); } }, cfg.headline || "")),
+        el("label", {}, "Line under it (optional)", el("input", { id: "hdr-sub", value: cfg.sub || "", oninput: e => { cfg.sub = e.target.value; persist(); schedulePreview("hdr", drawAll); } })),
+        el("div", { class: "row" }, lookButtons(cfg.look || "teal", k => { cfg.look = k; persist(); renderAll(); }, ["teal", "night", "paper"]),
+          el("label", { class: "inline" }, el("input", { type: "checkbox", id: "hdr-mark", checked: !!cfg.mark, onchange: e => { cfg.mark = e.target.checked; persist(); drawAll(); } }), "Contrail mark beside the words"))),
+      el("p", { class: "file" }, "Apple's rules for this art: a short phrase at most, no prices, URLs, © symbols or other platforms' logos, and it must suit a 4+ rating. It's reviewed like the rest of the page."));
+    out.push(controls);
+    const draws = [];
+    for (const v of HEADERS) {
+      const canvas = previewCanvas(v.w, v.h, 1400);
+      const draw = async () => { await fontsReady; renderHeader(canvas.getContext("2d"), canvas.width, canvas.height, v, cfg, v.w, showSafe); };
+      draws.push(draw); draw();
+      const statusEl = el("span", { class: "status" });
+      const saveBtn = el("button", { class: "btn", type: "button", onclick: () => saveOne(SLOTS[4], v, statusEl, saveBtn) }, "Save PNG");
+      out.push(el("article", { class: "card" },
+        el("div", { class: "shot" }, canvas, el("div", { class: "order" }, el("span", {}, v.label))),
+        el("div", { class: "foot" }, el("span", { class: "file" }, `${v.file} · ${v.note}`), statusEl, saveBtn)));
+    }
+    function drawAll() { draws.forEach(d => d()); }
+    return out;
+  }
+
+  function renderAll() {
+    renderSlots();
+    const slot = SLOTS.find(s => s.id === current);
+    const intro = document.getElementById("intro"); intro.replaceChildren();
+    const p = el("p"); p.innerHTML = slot.intro; intro.append(p);
+    if (slot.mode === "header") intro.append(el("label", {}, el("input", { type: "checkbox", id: "safe", checked: showSafe, onchange: e => { showSafe = e.target.checked; renderAll(); } }), "Show safe area (never exported)"));
+    const cards = document.getElementById("cards");
+    cards.className = "cards" + (slot.mode === "header" ? " huge" : (slot.id === "tv" || slot.id === "ipad") ? " wide" : "");
+    cards.replaceChildren();
+    if (slot.mode === "header") { cards.append(...headerCards()); return; }
+    const list = state[slot.id];
+    if (!rawList(slot).length) { cards.append(el("p", { class: "note" }, "No screenshots captured for this slot yet. Raw captures go in AppStore/Screenshots/Raw/" + slot.folder + ".")); return; }
+    list.forEach((f, i) => cards.append(frameCard(slot, f, i, list)));
+    const unused = rawList(slot).filter(r => !list.some(f => f.src === r.file));
+    if (unused.length) cards.append(el("article", { class: "card" }, el("div", { class: "fields" },
+      el("p", { class: "file" }, `${unused.length} more capture${unused.length > 1 ? "s" : ""} not in this set.`),
+      el("button", { class: "btn", type: "button", onclick: () => { list.push({ src: unused[0].file, eyebrow: "", headline: "", look: "paper" }); persist(); renderAll(); } }, "Add a frame"))));
+  }
+
+  document.getElementById("saveAll").addEventListener("click", saveAll);
+  const resetBtn = document.getElementById("reset");
+  resetBtn.addEventListener("click", () => {
+    if (resetBtn.dataset.armed) { state = clone(DATA.plan); persist(); delete resetBtn.dataset.armed; resetBtn.textContent = "Reset edits"; renderAll(); toast("Back to the original captions and order"); return; }
+    resetBtn.dataset.armed = "1"; resetBtn.textContent = "Click again to reset";
+    setTimeout(() => { delete resetBtn.dataset.armed; resetBtn.textContent = "Reset edits"; }, 4000);
+  });
+  renderAll();
+})();
+</script>

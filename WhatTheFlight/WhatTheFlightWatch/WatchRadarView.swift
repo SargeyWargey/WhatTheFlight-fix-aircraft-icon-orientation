@@ -23,6 +23,8 @@ struct WatchRadarView: View {
     let isActive: Bool
     let open: (WatchRootView.Screen) -> Void
     let retry: () -> Void
+    /// Turns to the Nearby page below the radar.
+    let showNearby: () -> Void
 
     @State private var crown = 0
     @FocusState private var crownFocused: Bool
@@ -53,7 +55,7 @@ struct WatchRadarView: View {
                         .opacity(0.8)
                 }
 
-                Group {
+                VStack(spacing: 6) {
                     if let contact = model.focusedContact {
                         WatchFlightHero(contact: contact, isPinned: model.focus.isPinned, isCompact: layout.isCompact,
                                         showNearest: !isOnNearest && !isLuminanceReduced,
@@ -65,6 +67,20 @@ struct WatchRadarView: View {
                             }
                     } else if let centerState {
                         WatchCenterState(kind: centerState, action: retry)
+                    }
+                    // At accessibility text sizes the edge icons are hidden: say what else is
+                    // there, and go to the list.
+                    if perimeterHidden, otherCount > 0 {
+                        Button(action: showNearby) {
+                            Text("\(otherCount) more nearby")
+                                .font(.system(.footnote, design: .monospaced, weight: .semibold))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                        }
+                        .buttonStyle(.bordered)
+                        .buttonBorderShape(.capsule)
+                        .tint(Palette.signal)
+                        .accessibilityHint("Shows the nearby list")
                     }
                 }
                 .frame(width: layout.centerWidth)
@@ -82,7 +98,8 @@ struct WatchRadarView: View {
                         onTap: { contact in
                             withAnimation(.snappy) { model.focus(on: contact.id) }
                             WatchHaptics.play(.click, enabled: settings.hapticsEnabled)
-                        }
+                        },
+                        onShowList: showNearby
                     )
                     .opacity(isLuminanceReduced ? 0.6 : 1)
                 }
@@ -162,6 +179,11 @@ struct WatchRadarView: View {
     /// At accessibility text sizes the edge icons would crowd the hero; the list takes over.
     private var perimeterHidden: Bool { dynamicTypeSize.isAccessibilitySize }
 
+    /// In range, not counting the aircraft in the centre.
+    private var otherCount: Int {
+        model.contacts.filter { $0.id != model.focus.focusedID }.count
+    }
+
     @ViewBuilder
     private func backdrop(_ layout: WatchRadarLayout) -> some View {
         ZStack {
@@ -199,6 +221,19 @@ struct WatchRadarLayout {
     static let maxIcons = 8
 
     let size: CGSize
+    let iconTrack: PerimeterTrack
+    let bezelTrack: PerimeterTrack
+
+    init(size: CGSize) {
+        self.size = size
+        let isCompact = size.width < 185
+        let iconInset: CGFloat = 22 * (isCompact ? 0.56 : 0.62)
+        // The display's own corner radius, roughly.
+        let displayCorner = min(size.width, size.height) * 0.25
+        iconTrack = PerimeterTrack(rect: CGRect(origin: .zero, size: size).insetBy(dx: iconInset, dy: iconInset),
+                                   cornerRadius: max(0, displayCorner - iconInset * 0.6))
+        bezelTrack = PerimeterTrack(rect: CGRect(origin: .zero, size: size).insetBy(dx: 3, dy: 3), cornerRadius: displayCorner - 2)
+    }
 
     /// 40–42 mm Watches.
     var isCompact: Bool { size.width < 185 }
@@ -206,24 +241,12 @@ struct WatchRadarLayout {
     /// Mile labels on the nearest few only on small screens.
     var labelCount: Int { isCompact ? 4 : Self.maxIcons }
     private var iconInset: CGFloat { 22 * blipScale }
-    /// The display's own corner radius, roughly.
-    private var displayCorner: CGFloat { min(size.width, size.height) * 0.25 }
-
-    var iconTrack: PerimeterTrack {
-        PerimeterTrack(rect: CGRect(origin: .zero, size: size).insetBy(dx: iconInset, dy: iconInset),
-                       cornerRadius: max(0, displayCorner - iconInset * 0.6))
-    }
-
-    var bezelTrack: PerimeterTrack {
-        PerimeterTrack(rect: CGRect(origin: .zero, size: size).insetBy(dx: 3, dy: 3), cornerRadius: displayCorner - 2)
-    }
 
     /// The clock and the pointer button sit in the corners; icons go around them.
     var obstacles: [PerimeterTrack.Obstacle] {
-        let track = iconTrack
         // The clock is wider than the round button.
         let corners: [(PerimeterTrack.Corner, CGFloat)] = [(.topRight, 34), (.bottomRight, 26)]
-        return corners.map { PerimeterTrack.Obstacle(s: track.arcLength(of: $0.0), halfWidth: $0.1) }
+        return corners.map { PerimeterTrack.Obstacle(s: iconTrack.arcLength(of: $0.0), halfWidth: $0.1) }
     }
 
     /// Room for the hero between the edge icons and their labels.
@@ -245,11 +268,11 @@ struct WatchFlightHero: View {
 
     var body: some View {
         VStack(spacing: 1) {
-            if let top = flight.notable.first {
+            if let top = contact.profile.notable.first {
                 NotableBadge(info: top, scale: 0.72)
                     .padding(.bottom, 2)
             }
-            Text(flight.operatorInfo.compact)
+            Text(contact.profile.operatorInfo.compact)
                 .font(.mono(9, .semibold))
                 .tracking(0.8)
                 .textCase(.uppercase)
@@ -276,7 +299,7 @@ struct WatchFlightHero: View {
                 }
                 .font(.mono(13, .bold))
                 .foregroundStyle(Palette.route)
-            } else if let type = flight.typeName ?? flight.typeCode {
+            } else if let type = contact.profile.typeName ?? flight.typeCode {
                 Text(type)
                     .font(.mono(10, .medium))
                     .foregroundStyle(Palette.caption)
@@ -325,7 +348,7 @@ struct WatchFlightHero: View {
     }
 
     private var accessibilityText: String {
-        var parts = [flight.operatorInfo.title, flight.displayIdentifier]
+        var parts = [contact.profile.operatorInfo.title, flight.displayIdentifier]
         if let from = flight.origin?.city ?? flight.originIATA, let to = flight.destination?.city ?? flight.destinationIATA {
             parts.append("\(from) to \(to)")
         }
@@ -388,6 +411,8 @@ struct WatchPerimeterLayer: View {
     let labelCount: Int
     let blipScale: CGFloat
     let onTap: (RadarContact) -> Void
+    /// VoiceOver's way into the list: the icons themselves aren't separate elements.
+    let onShowList: () -> Void
 
     var body: some View {
         ZStack {
@@ -397,13 +422,13 @@ struct WatchPerimeterLayer: View {
 
                 if index < labelCount || isFocused {
                     DistanceLabel(miles: placement.contact.distanceMiles, isFocused: isFocused,
-                                  flight: placement.contact.flight, scale: 0.78)
+                                  profile: placement.contact.profile, scale: 0.78)
                         .opacity(isFocused ? 1 : fade)
                         .position(placement.labelPoint)
                         .animation(.interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.labelPoint)
                 }
 
-                AircraftBlip(flight: placement.contact.flight, screenTrack: placement.screenTrack, isFocused: isFocused,
+                AircraftBlip(profile: placement.contact.profile, screenTrack: placement.screenTrack, isFocused: isFocused,
                              scale: blipScale)
                     .opacity(isFocused ? 1 : fade)
                     .position(placement.point)
@@ -415,6 +440,7 @@ struct WatchPerimeterLayer: View {
         .animation(.smooth(duration: 0.5), value: placements.map(\.id))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(placements.count > 1 ? "\(placements.count - 1) more aircraft. Use the list for details." : "")
+        .accessibilityAction(named: "Show nearby list", onShowList)
     }
 }
 

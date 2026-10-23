@@ -175,6 +175,7 @@ private struct DisplaySettingsPage: View {
     @Bindable var settings: RadarSettings
 
     @State private var appIcon = AppIconChoice.current
+    @Environment(\.isFoldable) private var isFoldable
 
     var body: some View {
         Form {
@@ -209,8 +210,8 @@ private struct DisplaySettingsPage: View {
                 SettingsHeader("Radar face")
             }
 
-            // The map pane is an iPad thing: the iPhone keeps the radar face.
-            if UIDevice.current.userInterfaceIdiom == .pad {
+            // The map pane is for iPad and the folding iPhone Duo: other iPhones keep the radar face.
+            if UIDevice.current.userInterfaceIdiom == .pad || isFoldable {
                 Section {
                     Toggle("Map view", isOn: $settings.mapView)
                     if settings.mapView {
@@ -219,7 +220,11 @@ private struct DisplaySettingsPage: View {
                 } header: {
                     SettingsHeader("Map")
                 } footer: {
-                    Text("Map view: in landscape, shows a live map beside the radar.")
+                    if isFoldable {
+                        Text("Map view: half open like a book or standing like a laptop, shows the radar on one side of the fold and a live map on the other.")
+                    } else {
+                        Text("Map view: in landscape, shows a live map beside the radar.")
+                    }
                 }
             }
         }

@@ -16,6 +16,10 @@ import UserNotifications
 struct WhatTheFlightWatchApp: App {
     @WKApplicationDelegateAdaptor(WatchAppDelegate.self) private var delegate
 
+    init() {
+        Catalogs.warmUp()
+    }
+
     var body: some Scene {
         WindowGroup {
             WatchRootView()

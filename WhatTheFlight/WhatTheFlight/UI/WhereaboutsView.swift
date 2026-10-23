@@ -18,7 +18,7 @@ struct WhereaboutsView: View {
     var seenFlightID: String?
     var observer: CLLocationCoordinate2D?
 
-    @State private var lookup = WhereaboutsLookup()
+    @LazyState private var lookup = WhereaboutsLookup()
 
     var body: some View {
         ScrollView {

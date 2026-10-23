@@ -24,7 +24,7 @@ final class LogbookSync: CKSyncEngineDelegate {
     private static let recordType = "Sighting"
     private static let photoRecordType = "SpotPhoto"
     private static let photoPrefix = "photo-"
-    private static let log = Logger(subsystem: "SargeyWargey.WhatTheFlight", category: "LogbookSync")
+    private static let log = Log.sync
 
     private let logbook: Logbook
     private let stateURL: URL?
@@ -59,7 +59,7 @@ final class LogbookSync: CKSyncEngineDelegate {
             engine.state.add(pendingDatabaseChanges: [.saveZone(CKRecordZone(zoneID: Self.zoneID))])
             queueEverything()
         }
-        Task { try? await engine.fetchChanges() }
+        Task { await Self.fetchChanges(engine) }
     }
 
     /// Stops syncing; the logbook stays on this device.
@@ -72,7 +72,7 @@ final class LogbookSync: CKSyncEngineDelegate {
     /// Pulls anything new from other devices now (the app came to the foreground).
     func fetchNow() {
         guard let engine else { return }
-        Task { try? await engine.fetchChanges() }
+        Task { await Self.fetchChanges(engine) }
     }
 
     private func queue(saved: Set<String>, deleted: Set<String>) {
@@ -278,8 +278,21 @@ final class LogbookSync: CKSyncEngineDelegate {
 
     private func saveState(_ state: CKSyncEngine.State.Serialization) {
         guard let stateURL, let data = try? JSONEncoder().encode(state) else { return }
-        try? FileManager.default.createDirectory(at: stateURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try? data.write(to: stateURL, options: .atomic)
+        do {
+            try FileManager.default.createDirectory(at: stateURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try data.write(to: stateURL, options: .atomic)
+        } catch {
+            // Next launch starts from an older state: it re-fetches, nothing is lost.
+            Self.log.error("Couldn't save the sync state: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private static func fetchChanges(_ engine: CKSyncEngine) async {
+        do {
+            try await engine.fetchChanges()
+        } catch {
+            log.error("Couldn't fetch logbook changes: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     private func removeState() {

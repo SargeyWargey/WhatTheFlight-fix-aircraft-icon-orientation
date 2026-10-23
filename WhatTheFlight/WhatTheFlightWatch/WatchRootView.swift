@@ -26,17 +26,19 @@ struct WatchRootView: View {
     }
 
     @State private var settings: RadarSettings
-    @State private var watchSettings = WatchSettings()
+    @LazyState private var watchSettings = WatchSettings()
     @State private var model: RadarModel
-    @State private var location = WatchLocationService()
+    @LazyState private var location = WatchLocationService()
     @State private var page: Page = .radar
     @State private var path: [Screen] = []
-    @State private var complications = ComplicationPublisher()
+    @LazyState private var complications = ComplicationPublisher()
     @State private var pinSync: PinSync?
     /// First run: the tour, before the location prompt.
     @State private var showTour = false
     /// A route that arrived before the first feed load (e.g. from a complication).
     @State private var deferredRoute: WatchRouter.Route?
+    /// Bumped on every radius change; the re-query waits for it to settle.
+    @State private var radiusEdits = 0
     #if DEBUG
     @State private var debugNotification: SnapshotFlight?
     #endif
@@ -61,7 +63,8 @@ struct WatchRootView: View {
                     .tag(Page.settings)
                 WatchRadarView(model: model, settings: settings, watchSettings: watchSettings, location: location,
                                centerState: centerState, isActive: page == .radar && path.isEmpty,
-                               open: { path.append($0) }, retry: centerAction)
+                               open: { path.append($0) }, retry: centerAction,
+                               showNearby: { withAnimation { page = .nearby } })
                     .tag(Page.radar)
                 WatchNearbyList(model: model, settings: settings, location: location, watchSettings: watchSettings,
                                 open: { path.append($0) }, close: backToRadar)
@@ -118,7 +121,6 @@ struct WatchRootView: View {
             }
             location.start()
             model.start()
-            syncObserver()
             #if DEBUG
             openDebugScreenIfRequested()
             #endif
@@ -130,22 +132,29 @@ struct WatchRootView: View {
                 model.start()
                 model.refreshNow()
                 pinSync?.refresh()
-            case .inactive:
-                // Pointing at the sky can look like "wrist down" to watchOS: keep tracking.
-                guard !isPointing else { break }
-                // Wrist down (Always-On): stop polling and GPS; the clock keeps the icons moving.
-                model.stop()
-                location.stop()
             case .background:
                 model.stop()
                 location.stop()
                 complications.publish(model: model, settings: settings, placeName: placeName, force: true)
-            @unknown default:
+            default:
                 break
             }
         }
-        .task(id: scenePhase) {
-            guard scenePhase == .inactive, !isPointing else { return }
+        // Wrist down (Always-On) stops polling and GPS, unless Find or Identify is open. This
+        // follows `isTracking` rather than the scene phase, so backing out of Find with the
+        // wrist still down stops them too.
+        .onChange(of: isTracking) { _, tracking in
+            if tracking {
+                location.start()
+                model.start()
+            } else {
+                model.stop()
+                location.stop()
+            }
+        }
+        .task(id: isDimmedRadar) {
+            // The clock keeps the icons moving, once a minute.
+            guard isDimmedRadar else { return }
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(60))
                 guard !Task.isCancelled else { return }
@@ -167,13 +176,17 @@ struct WatchRootView: View {
             router.pending = nil
             handle(route)
         }
-        .onChange(of: location.location) { _, _ in syncObserver() }
-        .onChange(of: watchSettings.locationSource) { _, _ in syncObserver() }
+        .onChange(of: observerKey, initial: true) { _, _ in syncObserver() }
         .onChange(of: settings.showHelicopters) { _, _ in model.settingsDidChange(refetch: false) }
         .onChange(of: settings.demoTraffic) { _, _ in model.settingsDidChange(refetch: true) }
-        .task(id: settings.radiusMiles) {
+        .onChange(of: settings.radiusMiles) { _, radius in
+            // Re-filter at once while the radius moves; re-query once it settles.
             model.settingsDidChange(refetch: false)
-            SharedRadarStore().radiusMiles = settings.radiusMiles
+            SharedRadarStore().radiusMiles = radius
+            radiusEdits += 1
+        }
+        .task(id: radiusEdits) {
+            guard radiusEdits > 0 else { return }
             try? await Task.sleep(for: .milliseconds(700))
             guard !Task.isCancelled else { return }
             model.settingsDidChange(refetch: true)
@@ -188,6 +201,26 @@ struct WatchRootView: View {
         case .find, .identify: return true
         default: return false
         }
+    }
+
+    /// Polling and GPS run while the screen is up, and while pointing (an arm held up at the
+    /// sky can look like "wrist down" to watchOS). In the background they always stop.
+    private var isTracking: Bool {
+        scenePhase == .active || (scenePhase == .inactive && isPointing)
+    }
+
+    /// The Always-On radar: dimmed, not pointing.
+    private var isDimmedRadar: Bool { scenePhase == .inactive && !isPointing }
+
+    /// What `syncObserver` publishes, as one value to watch.
+    private var observerKey: ObserverKey {
+        ObserverKey(latitude: observerCoordinate?.latitude, longitude: observerCoordinate?.longitude, placeName: placeName)
+    }
+
+    private struct ObserverKey: Equatable {
+        let latitude: Double?
+        let longitude: Double?
+        let placeName: String
     }
 
     private var observerCoordinate: CLLocationCoordinate2D? {

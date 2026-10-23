@@ -48,7 +48,9 @@ enum AlertNotifier {
         content.userInfo = info
         content.interruptionLevel = alert.reason == .overhead ? .timeSensitive : .active
         let request = UNNotificationRequest(identifier: alert.id, content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error { Log.alerts.error("Couldn't post the alert: \(error.localizedDescription, privacy: .public)") }
+        }
     }
 }
 

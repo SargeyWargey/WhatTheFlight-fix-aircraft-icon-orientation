@@ -67,8 +67,9 @@ struct TrafficAlertEngine {
 
     private func candidates(for contact: RadarContact, rules: TrafficAlertRules) -> [TrafficAlert] {
         let f = contact.flight
+        let profile = contact.profile
         let name = f.displayIdentifier
-        let what = f.typeName ?? f.typeCode ?? (f.kind == .helicopter ? "Helicopter" : "Aircraft")
+        let what = profile.typeName ?? f.typeCode ?? (profile.kind == .helicopter ? "Helicopter" : "Aircraft")
         var result: [TrafficAlert] = []
 
         if rules.overhead {
@@ -87,7 +88,7 @@ struct TrafficAlertEngine {
             }
         }
 
-        if rules.notable, let top = f.notable.first {
+        if rules.notable, let top = profile.notable.first {
             result.append(TrafficAlert(
                 flightID: f.id, reason: .notable,
                 title: "\(name) \(top.reason)",

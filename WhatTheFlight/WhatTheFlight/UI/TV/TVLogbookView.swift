@@ -796,12 +796,8 @@ struct TVSightingPhoto: View {
                         .resizable()
                         .scaledToFill()
                 } else if let photo {
-                    AsyncImage(url: photo.imageURL, transaction: Transaction(animation: .smooth)) { phase in
-                        if case .success(let image) = phase {
-                            image.resizable().scaledToFill()
-                        } else {
-                            ProgressView()
-                        }
+                    ProviderPhoto(photo: photo) {
+                        ProgressView()
                     }
                 } else {
                     AircraftGlyph(silhouette: sighting.silhouette, size: height * 0.5, spinsRotor: false)
@@ -910,8 +906,7 @@ struct SightingMap: View {
         .frame(height: height)
         .allowsHitTesting(false)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .onAppear { frame() }
-        .onChange(of: sighting.id) { _, _ in frame() }
+        .onChange(of: sighting.id, initial: true) { _, _ in frame() }
         .onChange(of: showsRoute) { _, _ in withAnimation(.smooth) { frame() } }
     }
 

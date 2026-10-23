@@ -18,7 +18,7 @@ struct TVWhereaboutsView: View {
     var observer: CLLocationCoordinate2D?
     var showTopography = true
 
-    @State private var lookup = WhereaboutsLookup()
+    @LazyState private var lookup = WhereaboutsLookup()
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

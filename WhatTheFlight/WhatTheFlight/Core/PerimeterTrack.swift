@@ -23,21 +23,63 @@ struct PerimeterTrack: Equatable {
         let r = max(0, min(cornerRadius, rect.width / 2, rect.height / 2))
         self.cornerRadius = r
         let straight = 2 * (rect.width - 2 * r) + 2 * (rect.height - 2 * r)
-        self.length = max(1, straight + 2 * .pi * r)
+        let length = max(1, straight + 2 * .pi * r)
+        self.length = length
+        self.sampleAngles = Self.samples.angles(for: SampleKey(rect: rect, r: r)) {
+            Self.buildSamples(rect: rect, r: r, length: length)
+        }
+    }
 
+    private static func buildSamples(rect: CGRect, r: CGFloat, length: CGFloat) -> [Double] {
         var angles: [Double] = []
-        angles.reserveCapacity(Self.sampleCount + 1)
+        angles.reserveCapacity(sampleCount + 1)
         let center = CGPoint(x: rect.midX, y: rect.midY)
-        for i in 0...Self.sampleCount {
-            let s = length * CGFloat(i) / CGFloat(Self.sampleCount)
-            let p = Self.point(at: s, rect: rect, r: r, length: length)
-            var angle = Self.screenAngle(of: p, from: center)
+        for i in 0...sampleCount {
+            let s = length * CGFloat(i) / CGFloat(sampleCount)
+            let p = point(at: s, rect: rect, r: r, length: length)
+            var angle = screenAngle(of: p, from: center)
             // Keep the sequence monotonic: the last sample closes the loop at 360°.
             if i > 0, angle < (angles.last ?? 0) - 180 { angle += 360 }
-            if i == Self.sampleCount { angle = 360 }
+            if i == sampleCount { angle = 360 }
             angles.append(angle)
         }
-        self.sampleAngles = angles
+        return angles
+    }
+
+    // MARK: - Sample cache
+
+    /// Screens rebuild their layout on every tick and heading change, but only ever ask for
+    /// a handful of tracks (bezel and icons, per screen size), so the samples are shared.
+    private static let samples = SampleCache()
+
+    /// How many times the samples have actually been computed (tests).
+    static var sampleBuilds: Int { samples.builds }
+
+    private struct SampleKey: Hashable {
+        let x, y, width, height, r: CGFloat
+
+        init(rect: CGRect, r: CGFloat) {
+            x = rect.minX; y = rect.minY; width = rect.width; height = rect.height
+            self.r = r
+        }
+    }
+
+    private final class SampleCache: @unchecked Sendable {
+        private let lock = NSLock()
+        private var store: [SampleKey: [Double]] = [:]
+        private(set) var builds = 0
+
+        func angles(for key: SampleKey, build: () -> [Double]) -> [Double] {
+            if let hit = lock.withLock({ store[key] }) { return hit }
+            let built = build()
+            lock.withLock {
+                // Sizes change rarely (rotation, Split View); a full cache is just stale ones.
+                if store.count >= 16 { store.removeAll() }
+                store[key] = built
+                builds += 1
+            }
+            return built
+        }
     }
 
     var center: CGPoint { CGPoint(x: rect.midX, y: rect.midY) }

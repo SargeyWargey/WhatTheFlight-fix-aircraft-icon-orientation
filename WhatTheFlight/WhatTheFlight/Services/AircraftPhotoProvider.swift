@@ -82,6 +82,7 @@ actor AircraftPhotoProvider {
                   let image = first.thumbnail_large?.src ?? first.thumbnail?.src else { return nil }
             return AircraftPhoto(imageURL: image, pageURL: first.link, photographer: first.photographer)
         } catch {
+            Log.feed.debug("Planespotters \(path, privacy: .public) lookup failed: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }

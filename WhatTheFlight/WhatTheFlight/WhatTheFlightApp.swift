@@ -16,6 +16,10 @@ struct WhatTheFlightApp: App {
     @UIApplicationDelegateAdaptor(RadarAppDelegate.self) private var appDelegate
     #endif
 
+    init() {
+        Catalogs.warmUp()
+    }
+
     var body: some Scene {
         WindowGroup {
             #if os(macOS)

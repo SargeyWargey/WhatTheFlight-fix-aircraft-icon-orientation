@@ -177,8 +177,14 @@ final class Logbook {
 
     @ObservationIgnored private let fileURL: URL?
     @ObservationIgnored private var index: [String: Int] = [:]
+    /// Where each airframe's sightings sit in `sightings`, oldest first, so an aircraft's
+    /// count and history don't scan the whole book. Observed, so a count on screen updates
+    /// when a new visit is logged.
+    private var byAirframe: [String: [Int]] = [:]
     @ObservationIgnored private var isDirty = false
     @ObservationIgnored private var lastSave = Date.distantPast
+    /// Off when the file is there but couldn't be read: a save would replace it.
+    @ObservationIgnored private var canSave = true
     @ObservationIgnored private let maxEntries: Int
     /// Stamped on everything this device logs.
     @ObservationIgnored let device: LogDevice?
@@ -226,7 +232,7 @@ final class Logbook {
                     s.noteClosest(contact, observer: observer)
                     if s.placeName == nil { s.placeName = placeName }
                 }
-                let tags = Set(s.tags).union(f.notable.map(\.tag))
+                let tags = Set(s.tags).union(contact.profile.notable.map(\.tag))
                 if tags.count != s.tags.count { s.tags = tags.sorted() }
                 if let device, !s.loggedOn.contains(device) { s.devices = (s.loggedOn + [device]).sorted() }
                 // Only write back meaningful changes so observers aren't churned every second.
@@ -237,19 +243,20 @@ final class Logbook {
                     changed.insert(s.id)
                 }
             } else {
-                let info = f.operatorInfo
+                let info = contact.profile.operatorInfo
                 var s = Sighting(
                     id: f.id, firstSeen: date, lastSeen: date, displayIdentifier: f.displayIdentifier,
                     callsign: f.callsign, registration: f.registration, hex: f.hex, typeCode: f.typeCode,
-                    kind: f.kind, operatorName: info.title, isAirline: info.kind == .airline,
+                    kind: contact.profile.kind, operatorName: info.title, isAirline: info.kind == .airline,
                     originIATA: f.originIATA, destinationIATA: f.destinationIATA,
                     closestMiles: contact.distanceMiles, altitudeAtClosestFeet: f.altitudeFeet,
-                    speedKnots: f.groundSpeedKnots, tags: f.notable.map(\.tag), placeName: placeName
+                    speedKnots: f.groundSpeedKnots, tags: contact.profile.notable.map(\.tag), placeName: placeName
                 )
                 s.noteClosest(contact, observer: observer)
                 s.devices = device.map { [$0] }
                 sightings.append(s)
                 index[f.id] = sightings.count - 1
+                if let airframe = s.airframe { byAirframe[airframe, default: []].append(sightings.count - 1) }
                 isDirty = true
                 changed.insert(s.id)
             }
@@ -284,7 +291,12 @@ final class Logbook {
             record([contact], at: photo.takenAt, observer: observer, placeName: placeName)
         }
         guard let i = index[photo.flightID] else { return false }
-        do { try photoStore.write(imageData, id: photo.id) } catch { return false }
+        do {
+            try photoStore.write(imageData, id: photo.id)
+        } catch {
+            Log.logbook.error("Couldn't store a Sky View photo: \(error.localizedDescription, privacy: .public)")
+            return false
+        }
         var s = sightings[i]
         s.photos = (s.photos ?? []).filter { $0.id != photo.id } + [photo]
         sightings[i] = s
@@ -324,9 +336,12 @@ final class Logbook {
         guard !remote.isEmpty else { return [] }
         var differs = Set<String>()
         var appended = false
+        var airframeChanged = false
         for incoming in remote {
             if let i = index[incoming.id] {
                 let merged = sightings[i].merged(with: incoming)
+                // The other copy can fill in a registration this one only knew by hex.
+                if merged.airframe != sightings[i].airframe { airframeChanged = true }
                 // Deleted on another device: drop our copy of the image too.
                 let gone = Set(merged.removedPhotoIDs ?? []).subtracting(sightings[i].removedPhotoIDs ?? [])
                 if !gone.isEmpty { photoStore.delete(gone) }
@@ -342,6 +357,8 @@ final class Logbook {
             // Keep oldest first; remote sightings can be older than local ones.
             sightings.sort { $0.firstSeen < $1.firstSeen }
             trimIfNeeded()
+            rebuildIndex()
+        } else if airframeChanged {
             rebuildIndex()
         }
         isDirty = true
@@ -364,13 +381,18 @@ final class Logbook {
 
     func timesSeen(airframe: String?) -> Int {
         guard let airframe else { return 0 }
-        return sightings.reduce(0) { $0 + ($1.airframe == airframe ? 1 : 0) }
+        return byAirframe[airframe]?.count ?? 0
+    }
+
+    /// Every sighting of this airframe, oldest first.
+    private func visits(of airframe: String?) -> [Sighting] {
+        guard let airframe, let positions = byAirframe[airframe] else { return [] }
+        return positions.map { sightings[$0] }
     }
 
     /// Every sighting of this airframe, newest first.
     func history(airframe: String?) -> [Sighting] {
-        guard let airframe else { return [] }
-        return sightings.filter { $0.airframe == airframe }.reversed()
+        visits(of: airframe).reversed()
     }
 
     /// The all-time numbers behind an aircraft's "Logbook" button and its history screen.
@@ -380,13 +402,13 @@ final class Logbook {
 
     func firstSighting(airframe: String?) -> Sighting? {
         guard let airframe else { return nil }
-        return sightings.first { $0.airframe == airframe }
+        return byAirframe[airframe]?.first.map { sightings[$0] }
     }
 
     /// "Seen 3 times before · first Oct 2, 2026" for an airframe already in the logbook.
     func seenBeforeSummary(for flight: Flight) -> String? {
         guard let airframe = flight.registration ?? flight.hex else { return nil }
-        let earlier = sightings.filter { $0.airframe == airframe && $0.id != flight.id }
+        let earlier = visits(of: airframe).filter { $0.id != flight.id }
         guard let first = earlier.first else { return nil }
         let times = earlier.count == 1 ? "Seen once before" : "Seen \(earlier.count) times before"
         return "\(times) · first \(first.firstSeen.formatted(date: .abbreviated, time: .omitted))"
@@ -411,6 +433,7 @@ final class Logbook {
         if !photoIDs.isEmpty { onLocalPhotoChange?([], photoIDs) }
         sightings = []
         index = [:]
+        byAirframe = [:]
         isDirty = true
         save()
         onLocalChange?([], ids)
@@ -426,7 +449,7 @@ final class Logbook {
     private func save() {
         lastSave = Date()
         isDirty = false
-        guard let fileURL else { return }
+        guard let fileURL, canSave else { return }
         let snapshot = sightings
         Task.detached(priority: .utility) {
             do {
@@ -435,15 +458,44 @@ final class Logbook {
                 try data.write(to: fileURL, options: .atomic)
             } catch {
                 // A failed write just means the next save tries again with everything.
+                Log.logbook.error("Couldn't save the logbook: \(error.localizedDescription, privacy: .public)")
             }
         }
     }
 
     private func load() {
-        guard let fileURL, let data = try? Data(contentsOf: fileURL),
-              let decoded = try? JSONDecoder().decode([Sighting].self, from: data) else { return }
-        sightings = decoded
-        rebuildIndex()
+        guard let fileURL, FileManager.default.fileExists(atPath: fileURL.path) else { return }
+        let data: Data
+        do {
+            data = try Data(contentsOf: fileURL)
+        } catch {
+            // There but not readable yet (still locked after a restart?): don't save over it
+            // this session; the next launch reads it.
+            canSave = false
+            Log.logbook.error("Couldn't open the logbook, not saving this session: \(error.localizedDescription, privacy: .public)")
+            return
+        }
+        do {
+            sightings = try JSONDecoder().decode([Sighting].self, from: data)
+            rebuildIndex()
+        } catch {
+            // Unreadable for good (damaged, or written by a newer version): set it aside so the
+            // next save can't replace it, and start a fresh logbook.
+            let aside = Self.unreadableCopyURL(for: fileURL)
+            do {
+                try FileManager.default.moveItem(at: fileURL, to: aside)
+                Log.logbook.fault("Logbook unreadable (\(error.localizedDescription, privacy: .public)); kept as \(aside.lastPathComponent, privacy: .public)")
+            } catch let moveError {
+                canSave = false
+                Log.logbook.fault("Logbook unreadable and couldn't be set aside (\(moveError.localizedDescription, privacy: .public)); not saving this session")
+            }
+        }
+    }
+
+    /// Where an unreadable logbook is kept: "Logbook-unreadable-1792771200.json" beside it.
+    nonisolated static func unreadableCopyURL(for url: URL, at date: Date = Date()) -> URL {
+        let name = "\(url.deletingPathExtension().lastPathComponent)-unreadable-\(Int(date.timeIntervalSince1970)).\(url.pathExtension)"
+        return url.deletingLastPathComponent().appendingPathComponent(name)
     }
 
     private func trimIfNeeded() {
@@ -455,6 +507,11 @@ final class Logbook {
 
     private func rebuildIndex() {
         index = Dictionary(sightings.enumerated().map { ($1.id, $0) }, uniquingKeysWith: { _, last in last })
+        var airframes: [String: [Int]] = [:]
+        for (i, s) in sightings.enumerated() {
+            if let airframe = s.airframe { airframes[airframe, default: []].append(i) }
+        }
+        byAirframe = airframes
     }
 }
 

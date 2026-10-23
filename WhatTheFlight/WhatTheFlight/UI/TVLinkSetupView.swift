@@ -15,13 +15,15 @@ struct TVLinkSetupView: View {
     let settings: RadarSettings
     let location: RadarLocationService
 
-    @State private var compass = AimingCompass()
-    @State private var link = TVLinkSender()
+    @LazyState private var compass = AimingCompass()
+    @LazyState private var link = TVLinkSender()
     @State private var selectedTV: TVLinkSender.FoundTV?
     @State private var includeDirection = true
     @State private var manualFacing: Double = 0
     @State private var cameraAllowed = false
     @State private var sentHeading: Double?
+    /// The hand-off in progress; leaving the screen cancels it.
+    @State private var sending: Task<Void, Never>?
 
     private var liveFacing: Double? {
         compass.isAvailable ? compass.heading : manualFacing
@@ -51,6 +53,7 @@ struct TVLinkSetupView: View {
             requestCamera()
         }
         .onDisappear {
+            sending?.cancel()
             compass.stop()
             link.stop()
         }
@@ -257,8 +260,10 @@ struct TVLinkSetupView: View {
             senderName: UIDevice.current.name,
             sentAt: Date()
         )
-        Task {
+        sending?.cancel()
+        sending = Task {
             await link.send(payload, to: tv)
+            guard !Task.isCancelled else { return }
             if case .sent = link.phase { sentHeading = facing ?? -1 }
         }
     }

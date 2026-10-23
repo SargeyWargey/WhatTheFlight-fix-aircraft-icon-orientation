@@ -63,8 +63,16 @@ final class RadarModel {
     /// Pinned aircraft found by a worldwide lookup because the main feed's box missed them.
     @ObservationIgnored private var pinnedFlights: [Flight] = []
     @ObservationIgnored private var lastPinLookup = Date.distantPast
+    /// Each flight's operator, tags and type, built once per feed instead of every tick.
+    @ObservationIgnored private var profiles: [String: FlightProfile] = [:]
 
     static let maxPins = 5
+    /// Apple Watch polls no faster than every 10 s, whatever is overhead (battery).
+    #if os(watchOS)
+    static let pollFloor: TimeInterval = 10
+    #else
+    static let pollFloor = PollingPolicy.fastestSeconds
+    #endif
     /// Worldwide lookups for far-away pins are a separate request, so they run less often.
     static let pinLookupInterval: TimeInterval = 20
 
@@ -379,15 +387,16 @@ final class RadarModel {
             [f.registration?.replacingOccurrences(of: "-", with: ""), f.flightNumber, f.callsign].contains { $0?.uppercased() == bare }
         }
         let now = Date()
-        return found
-            .map { RadarContact(flight: $0, observer: observer, at: now) }
+        // Rank first and build contacts (and their profiles) for the 40 kept only.
+        let ranked = found
+            .map { (flight: $0, miles: GeoMath.distanceMiles(from: observer, to: $0.predictedCoordinate(at: now))) }
             .sorted { a, b in
                 let ka = (isExact(a.flight) ? 0 : 1, a.flight.isOnGround ? 1 : 0)
                 let kb = (isExact(b.flight) ? 0 : 1, b.flight.isOnGround ? 1 : 0)
-                return ka != kb ? ka < kb : a.distanceMiles < b.distanceMiles
+                return ka != kb ? ka < kb : a.miles < b.miles
             }
             .prefix(40)
-            .map { $0 }
+        return ranked.map { RadarContact(flight: $0.flight, observer: observer, at: now, profile: profiles[$0.flight.id]) }
     }
 
     func dismissNotice(_ id: RadarNotice.ID) {
@@ -421,19 +430,26 @@ final class RadarModel {
             try Task.checkCancellation()
             lastQueryCenter = observer
             lastFeedWasDemo = useDemo
+            if consecutiveFailures > 0 { Log.feed.notice("Feed back after \(self.consecutiveFailures) failed polls") }
             consecutiveFailures = 0
             apply(result)
             status = .live
             if !useDemo { await refreshPins() }
-            return settings.refreshSeconds
+            let next = PollingPolicy.interval(base: settings.refreshSeconds, contacts: contacts, outside: outsideContacts,
+                                              floor: Self.pollFloor)
+            Log.feed.debug("\(self.contacts.count) in range, \(self.outsideContacts.count) outside; next poll in \(next, format: .fixed(precision: 0)) s")
+            return next
         } catch is CancellationError {
             return 0
         } catch {
             consecutiveFailures += 1
-            status = .error((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
+            let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            status = .error(message)
             let backoff = settings.refreshSeconds * pow(2, Double(min(consecutiveFailures, 3)))
             let floor = (error as? FeedError) == .rateLimited ? 30.0 : 0
-            return min(90, max(floor, backoff))
+            let delay = min(90, max(floor, backoff))
+            Log.feed.error("Poll failed (\(self.consecutiveFailures) in a row): \(message, privacy: .public); retrying in \(delay, format: .fixed(precision: 0)) s")
+            return delay
         }
     }
 
@@ -446,9 +462,25 @@ final class RadarModel {
             !settings.pinnedAircraft.contains { pin in pin.matches(old) && !result.contains(where: pin.matches) }
         }
         updateTrails(with: result)
+        pruneProfiles()
         hasLoadedOnce = true
         now = Date()
         recompute()
+    }
+
+    // MARK: Profiles
+
+    private func profile(for flight: Flight) -> FlightProfile {
+        if let cached = profiles[flight.id], cached.isCurrent(for: flight) { return cached }
+        let fresh = FlightProfile(flight)
+        profiles[flight.id] = fresh
+        return fresh
+    }
+
+    /// Forgets flights the feed no longer reports.
+    private func pruneProfiles() {
+        let live = Set((flights + pinnedFlights).map(\.id))
+        profiles = profiles.filter { live.contains($0.key) }
     }
 
     // MARK: Pins
@@ -462,9 +494,15 @@ final class RadarModel {
         lastPinLookup = Date()
         let registrations = missing.compactMap(\.registration)
         let callsigns = missing.filter { $0.registration == nil }.compactMap(\.callsign)
-        guard !registrations.isEmpty || !callsigns.isEmpty,
-              let found = try? await liveFeed.lookup(registrations: registrations, callsigns: callsigns),
-              !Task.isCancelled else { return }
+        guard !registrations.isEmpty || !callsigns.isEmpty else { return }
+        let found: [Flight]
+        do {
+            found = try await liveFeed.lookup(registrations: registrations, callsigns: callsigns)
+        } catch {
+            Log.feed.info("Pin lookup failed: \(error.localizedDescription, privacy: .public)")
+            return
+        }
+        guard !Task.isCancelled else { return }
         let located = missing.compactMap { pin in
             found.filter(pin.matches).max { $0.positionTime < $1.positionTime }
         }
@@ -476,6 +514,7 @@ final class RadarModel {
         pinnedFlights = located + kept
         adoptPinIDs(from: located)
         updateTrails(with: located)
+        pruneProfiles()
         recompute()
     }
 
@@ -525,7 +564,7 @@ final class RadarModel {
     private var visibleFlights: [Flight] {
         let ids = Set(flights.map(\.id))
         return (flights + pinnedFlights.filter { !ids.contains($0.id) })
-            .filter { !$0.isOnGround && (settings.showHelicopters || $0.kind != .helicopter || isPinned($0.id)) }
+            .filter { !$0.isOnGround && (settings.showHelicopters || profile(for: $0).kind != .helicopter || isPinned($0.id)) }
     }
 
     func recompute() {
@@ -537,7 +576,7 @@ final class RadarModel {
         let previousFocus = focusedContact
         let radius = settings.radiusMiles
         let all = visibleFlights
-            .map { RadarContact(flight: $0, observer: observer, at: now) }
+            .map { RadarContact(flight: $0, observer: observer, at: now, profile: profile(for: $0)) }
             .sorted { $0.distanceMiles < $1.distanceMiles }
         let split = all.firstIndex { $0.distanceMiles > radius } ?? all.count
         contacts = Array(all[..<split])

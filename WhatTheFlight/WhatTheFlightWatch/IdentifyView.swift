@@ -22,9 +22,9 @@ struct IdentifyView: View {
     let location: WatchLocationService
     let open: (WatchRootView.Screen) -> Void
 
-    @State private var pointer = WristPointer()
+    @LazyState private var pointer = WristPointer()
     @State private var tracker = IdentifyTracker()
-    @State private var speaker = IdentifySpeaker()
+    @LazyState private var speaker = IdentifySpeaker()
     @State private var candidates: [WristPointing.Candidate] = []
     @State private var leadID: String?
     @State private var lastSpoken: (id: String, at: Date)?
@@ -91,7 +91,7 @@ struct IdentifyView: View {
                     .frame(maxWidth: .infinity)
                     ElevationGauge(target: leadDirection?.elevation, arm: armDirection?.elevation,
                                    isLevel: leadGuidance?.isLevel == true, isOnTarget: tracker.isLocked,
-                                   silhouette: lead?.flight.silhouette ?? .airliner, isPreview: current == nil)
+                                   silhouette: lead?.profile.silhouette ?? .airliner, isPreview: current == nil)
                         .frame(width: 30)
                         .padding(.bottom, metrics.gaugeBottomInset)
                 }

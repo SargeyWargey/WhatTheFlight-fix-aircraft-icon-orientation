@@ -186,9 +186,9 @@ struct FlightSearchSheet: View {
                 open(contact, isRemote: isRemote)
             } label: {
                 HStack(spacing: 14) {
-                    AircraftGlyph(silhouette: f.silhouette, size: 28, spinsRotor: false)
+                    AircraftGlyph(silhouette: contact.profile.silhouette, size: 28, spinsRotor: false)
                         .rotationEffect(.degrees(f.track - heading))
-                        .foregroundStyle(isFocused ? Palette.signal : f.isOnGround ? Palette.faint : Palette.blip(for: f))
+                        .foregroundStyle(isFocused ? Palette.signal : f.isOnGround ? Palette.faint : Palette.blip(for: contact.profile))
                         .frame(width: 30)
                         .overlay(alignment: .bottomLeading) {
                             if isPinned { PinMarker(scale: 0.9).offset(x: -4, y: 4) }

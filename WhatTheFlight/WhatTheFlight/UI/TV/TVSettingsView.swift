@@ -300,9 +300,13 @@ struct TVRadarSettingsView: View {
                         .foregroundStyle(Palette.caption)
                 }
             case .failed(let message):
-                Text(message)
-                    .font(.mono(18))
-                    .foregroundStyle(Palette.signal)
+                VStack(alignment: .trailing, spacing: 14) {
+                    Text(message)
+                        .font(.mono(18))
+                        .foregroundStyle(Palette.signal)
+                    Button("Try Again") { link.retry() }
+                        .buttonStyle(TVPillButtonStyle(prominent: true, compact: true))
+                }
             case .idle:
                 EmptyView()
             }
@@ -371,7 +375,13 @@ struct TVRadarSettingsView: View {
         if let name {
             settings.customPlaceName = name
         } else {
-            Task { settings.customPlaceName = await PlaceServices.name(for: coordinate) }
+            Task {
+                let name = await PlaceServices.name(for: coordinate)
+                // Another spot may have been picked while this one was being named.
+                guard settings.customCoordinate?.latitude == coordinate.latitude,
+                      settings.customCoordinate?.longitude == coordinate.longitude else { return }
+                settings.customPlaceName = name
+            }
         }
     }
 
@@ -579,7 +589,7 @@ struct TVPlaceSearchView: View {
     #else
     @State private var query = ""
     #endif
-    @State private var completer = PlaceCompleter()
+    @LazyState private var completer = PlaceCompleter()
     /// Plain search results, used when the suggestions come up empty.
     @State private var fallback: [PlaceResult] = []
     @State private var resolvingID: String?
@@ -617,8 +627,7 @@ struct TVPlaceSearchView: View {
             }
             .scrollClipDisabled()
             .searchable(text: $query, prompt: "Address, city or airport")
-            .onAppear { completer.update(query, near: near) }
-            .onChange(of: query) { _, newValue in
+            .onChange(of: query, initial: true) { _, newValue in
                 failedID = nil
                 completer.update(newValue, near: near)
             }

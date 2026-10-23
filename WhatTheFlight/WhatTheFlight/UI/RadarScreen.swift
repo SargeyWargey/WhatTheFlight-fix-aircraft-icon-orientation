@@ -22,7 +22,9 @@ struct RadarScreen: View {
     let model: RadarModel
     let settings: RadarSettings
     let location: RadarLocationService
-    let centerState: CenterStateView.Kind?
+    /// Read in this view's body, so the per-tick traffic it depends on redraws the radar
+    /// screen only, not the root view and whatever sheet it's presenting.
+    let centerState: () -> CenterStateView.Kind?
     let actions: Actions
 
     struct Actions {
@@ -39,6 +41,12 @@ struct RadarScreen: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var statusWidth: CGFloat = 52
     @State private var confirmLiveTraffic = false
+    /// The hero's height before scaling, so it can shrink to fit a short radar.
+    @State private var heroHeight: CGFloat = 0
+    /// The demo / custom-spot tags along the bottom (0 = none showing).
+    @State private var tagsHeight: CGFloat = 0
+    /// Without a home-indicator strip the tags sit this far up from the bottom, inside the bezel.
+    private static let tagsLift: CGFloat = 46
 
     private var heading: Double { location.heading ?? 0 }
 
@@ -54,10 +62,16 @@ struct RadarScreen: View {
                         .animation(.interactiveSpring(response: 0.45, dampingFraction: 0.86), value: heading)
                 }
 
-                center
-                    .frame(width: layout.heroWidth / layout.heroScale)
-                    .scaleEffect(layout.heroScale)
-                    .position(x: geo.size.width / 2, y: geo.size.height / 2)
+                // Tags inside the bezel (no home-indicator strip, e.g. the iPhone Duo's standing
+                // half in tabletop) push the hero up out of their way.
+                let tagsInside = geo.safeAreaInsets.bottom < 20 && tagsHeight > 0
+                let bottomRoom = tagsInside ? max(layout.heroClearance, Self.tagsLift + tagsHeight + 8) : layout.heroClearance
+                let heroScale = layout.heroScale(fitting: heroHeight, room: geo.size.height - layout.heroClearance - bottomRoom)
+                center(layout)
+                    .frame(width: layout.heroWidth / heroScale)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { heroHeight = $0 }
+                    .scaleEffect(heroScale)
+                    .position(x: geo.size.width / 2, y: (layout.heroClearance + geo.size.height - bottomRoom) / 2)
 
                 PerimeterLayer(
                     placements: placements,
@@ -99,8 +113,9 @@ struct RadarScreen: View {
                                       action: actions.openSpotPicker)
                     }
                 }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tagsHeight = $0 }
                 // In the home-indicator strip when there is one, else just above the bezel.
-                .offset(y: geo.safeAreaInsets.bottom >= 20 ? geo.safeAreaInsets.bottom - 6 : -46)
+                .offset(y: geo.safeAreaInsets.bottom >= 20 ? geo.safeAreaInsets.bottom - 6 : -Self.tagsLift)
             }
         }
         .confirmationDialog("Demo traffic", isPresented: $confirmLiveTraffic, titleVisibility: .visible) {
@@ -126,13 +141,15 @@ struct RadarScreen: View {
     // MARK: Centre
 
     @ViewBuilder
-    private var center: some View {
+    private func center(_ layout: RadarLayout) -> some View {
+        let centerState = centerState()
         ZStack {
             if let centerState {
                 CenterStateView(kind: centerState, onPrimary: actions.centerPrimary, onSecondary: actions.centerSecondary)
                     .transition(.opacity)
             } else if let contact = model.focusedContact {
-                FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading)
+                FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading,
+                           wideStats: layout.prefersWideStats, compact: layout.prefersCompactHero)
                     .id(contact.id)
                     // A scale-in here could get stuck part-way and leave the hero off-centre.
                     .transition(.opacity)
@@ -175,16 +192,17 @@ struct RadarScreen: View {
 /// All the screen geometry in one place. `scale` blows everything up for the 10-foot TV view.
 struct RadarLayout {
     let size: CGSize
-    var scale: CGFloat = 1
-
+    let scale: CGFloat
     /// Ticks and N/E/S/W hug the safe-area edge.
-    var bezelTrack: PerimeterTrack {
-        PerimeterTrack(rect: CGRect(origin: .zero, size: size).insetBy(dx: 5 * scale, dy: 5 * scale), cornerRadius: 40 * scale)
-    }
-
+    let bezelTrack: PerimeterTrack
     /// Icons ride just inside the bezel.
-    var iconTrack: PerimeterTrack {
-        PerimeterTrack(rect: CGRect(origin: .zero, size: size).insetBy(dx: 27 * scale, dy: 27 * scale), cornerRadius: 34 * scale)
+    let iconTrack: PerimeterTrack
+
+    init(size: CGSize, scale: CGFloat = 1) {
+        self.size = size
+        self.scale = scale
+        bezelTrack = PerimeterTrack(rect: CGRect(origin: .zero, size: size).insetBy(dx: 5 * scale, dy: 5 * scale), cornerRadius: 40 * scale)
+        iconTrack = PerimeterTrack(rect: CGRect(origin: .zero, size: size).insetBy(dx: 27 * scale, dy: 27 * scale), cornerRadius: 34 * scale)
     }
 
     var heroWidth: CGFloat {
@@ -195,6 +213,26 @@ struct RadarLayout {
     var heroScale: CGFloat {
         min(1.7, max(1, min(size.width, size.height) / 430))
     }
+
+    /// Room the hero leaves above and below it for the icons on the edge and their labels.
+    var heroClearance: CGFloat { 64 * scale }
+
+    /// `heroScale`, shrunk (in steps, never below 0.75) when a hero `height` tall wouldn't fit
+    /// in `room` (the height between the top and bottom icons): the iPhone Duo's radar half,
+    /// or its whole inner screen held flat in landscape. A height of 0 = not measured yet.
+    func heroScale(fitting height: CGFloat, room: CGFloat) -> CGFloat {
+        guard height > 0 else { return heroScale }
+        let fit = (room / height * 20).rounded(.down) / 20
+        return max(0.75, min(heroScale, fit))
+    }
+
+    /// Short and wide (the iPhone Duo's standing half in tabletop): altitude, speed and
+    /// distance on one row, as on the TV.
+    var prefersWideStats: Bool { size.width > size.height && size.height < 560 * scale }
+
+    /// Shorter still (tabletop with the camera cutout along the top): drop the type line and
+    /// the approach chip rather than shrink everything.
+    var prefersCompactHero: Bool { size.height < 420 * scale }
 
     var gearPoint: CGPoint { iconTrack.point(at: iconTrack.arcLength(of: .bottomRight)) }
     var statusPoint: CGPoint { iconTrack.point(at: iconTrack.arcLength(of: .bottomLeft)) }

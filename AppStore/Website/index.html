@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What The Flight?</title>
+<link rel="icon" href="icon.png">
+<style>
+  :root {
+    --paper: #E9E7E2; --card: #F3F1EC; --ink: #3A33D6; --signal: #E5483B;
+    --text: #2E2D2A; --caption: #75726C; --rule: #D3D0C8;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #0A0E14; --card: #111722; --ink: #A8A4FF; --signal: #FF6B5E;
+            --text: #E7EAF0; --caption: #8790A0; --rule: #273042; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--text); font: 17px/1.6 var(--sans); }
+  main { max-width: 700px; margin: 0 auto; padding: 48px 20px 80px; }
+  header { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
+  header img { width: 52px; height: 52px; border-radius: 12px; }
+  header a { color: inherit; text-decoration: none; font: 600 18px var(--mono); letter-spacing: -0.02em; }
+  nav { margin-left: auto; display: flex; gap: 18px; font: 14px var(--mono); }
+  nav a { color: var(--caption); text-decoration: none; }
+  nav a[aria-current] { color: var(--ink); }
+  .eyebrow { font: 600 12px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--signal); margin: 0 0 8px; }
+  h1 { font: 700 36px/1.15 var(--sans); letter-spacing: -0.02em; margin: 0 0 8px; }
+  h2 { font: 600 15px var(--mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); margin: 40px 0 8px; }
+  .meta { color: var(--caption); font: 14px var(--mono); margin: 0 0 28px; }
+  .summary { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 18px 22px; }
+  .summary p { margin: 0; }
+  ul { padding-left: 22px; }
+  li { margin: 6px 0; }
+  a { color: var(--ink); }
+  details { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 14px 20px; margin: 10px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p, details ul { margin: 10px 0 2px; }
+  .contact { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 22px; margin-top: 40px; }
+  .contact a { font: 600 18px var(--mono); }
+  .hero { display: grid; gap: 22px; }
+  .lead { font-size: 21px; line-height: 1.5; margin: 12px 0 0; }
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 32px; }
+  .feature { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 16px 18px; }
+  .feature b { display: block; font: 600 13px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); margin-bottom: 4px; }
+  .feature span { color: var(--caption); font-size: 15px; line-height: 1.45; }
+  .cta { display: inline-block; margin-top: 28px; padding: 12px 22px; border-radius: 999px; background: var(--ink); color: var(--paper); font: 600 15px var(--mono); text-decoration: none; }
+  footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--caption); font: 13px var(--mono); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="icon.png" alt="">
+    <a href="./">What The Flight?</a>
+    <nav><a href="support.html">Support</a><a href="privacy.html">Privacy</a></nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <p class="eyebrow">For iPhone, iPad, Apple Watch and Apple TV</p>
+      <h1>What's that plane?</h1>
+      <p class="lead">What The Flight? shows every aircraft in the sky around you, live, on a radar that turns as you turn. Tap the nearest for its flight, route and photo, or raise your iPhone to see them labeled in the sky.</p>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature"><b>Radar</b><span>The nearest aircraft in the center, the rest on the edge in their real direction.</span></div>
+    <div class="feature"><b>Sky View</b><span>Point your iPhone up and the camera labels the planes you can see.</span></div>
+    <div class="feature"><b>Logbook</b><span>Every plane that passes is logged, with records and badges to earn.</span></div>
+    <div class="feature"><b>Alerts</b><span>A heads-up when something passes overhead or something rare flies by.</span></div>
+    <div class="feature"><b>Apple Watch</b><span>Point your arm at a plane to find out what it is.</span></div>
+    <div class="feature"><b>Apple TV</b><span>The sky on the big screen: radar, map, or both.</span></div>
+  </div>
+
+  <h2>Credits</h2>
+  <p>Flight data: Flightradar24. Aircraft photos: Planespotters.net and their photographers. Airlines: OpenFlights (ODbL). Airports: OurAirports.</p>
+
+  <footer>What The Flight? · <a href="support.html">Support</a> · <a href="privacy.html">Privacy</a></footer>
+</main>
+</body>
+</html>

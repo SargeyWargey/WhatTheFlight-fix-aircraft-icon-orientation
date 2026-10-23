@@ -18,7 +18,13 @@ import UniformTypeIdentifiers
 /// when the record arrived before its photo (or tvOS purged its copy).
 @MainActor
 enum SpotPhotoImages {
-    private static let cache = NSCache<NSString, UIImage>()
+    /// Decoded photos, bounded by their decoded size: a 1600 px photo page is about 7 MB, a
+    /// thumbnail well under 1. NSCache also empties itself under memory pressure.
+    private static let cache: NSCache<NSString, UIImage> = {
+        let cache = NSCache<NSString, UIImage>()
+        cache.totalCostLimit = 50 << 20
+        return cache
+    }()
 
     static func load(_ id: String, store: SpotPhotoStore, maxPixels: Int) async -> UIImage? {
         let key = "\(id)-\(maxPixels)" as NSString
@@ -29,7 +35,7 @@ enum SpotPhotoImages {
         }
         guard let data else { return nil }
         let image = await Task.detached(priority: .userInitiated) { decode(data, maxPixels: maxPixels) }.value
-        if let image { cache.setObject(image, forKey: key) }
+        if let image { cache.setObject(image, forKey: key, cost: image.decodedByteCount) }
         return image
     }
 

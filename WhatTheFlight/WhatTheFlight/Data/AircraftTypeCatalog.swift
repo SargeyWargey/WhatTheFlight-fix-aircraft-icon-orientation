@@ -344,3 +344,21 @@ enum AircraftTypeCatalog {
     V22|Bell Boeing V-22 Osprey
     """
 }
+
+/// The catalogs parse thousands of embedded lines into dictionaries the first time they're
+/// used, which would otherwise land in the radar's first update on the main thread (or, in
+/// a widget, after the network fetch). Call once at launch; static lets initialise once, so
+/// a lookup racing the warm-up just waits for it.
+enum Catalogs {
+    static func warmUp() {
+        Task.detached(priority: .utility) {
+            _ = AirlineCatalog.airline(icao: "DAL")
+            _ = AirlineCatalog.airline(icao: nil, callsign: "SAM1", flightNumber: nil)
+            _ = AirlineCatalog.airline(icao: nil, callsign: nil, flightNumber: "DL1")
+            _ = AirportCatalog.airport(iata: "ATL")
+            _ = AircraftTypeCatalog.name(forTypeCode: "B738")
+            _ = AircraftTypeCatalog.silhouette(forTypeCode: "B738")
+            _ = RegistrationCountry.countryCode(forRegistration: "G-XLEI")
+        }
+    }
+}

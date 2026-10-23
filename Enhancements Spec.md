@@ -22,7 +22,8 @@ your logbook" should mean across devices.
 
 ## Part A — Bugs
 
-### A1 · P1 · Watch keeps GPS and polling running after leaving Find / Identify with the wrist down
+### A1 · P1 · Watch keeps GPS and polling running after leaving Find / Identify with the wrist down <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* `WatchRootView.isTracking` (active, or inactive while pointing) drives start/stop, and `isDimmedRadar` keys the once-a-minute clock task.
 - Where: `WhatTheFlightWatch/WatchRootView.swift` — `.onChange(of: scenePhase)` (~112) and
   `.task(id: scenePhase)` (~132) both guard on `isPointing` (~171), but only run when the
   scene phase *changes*.
@@ -62,7 +63,7 @@ your logbook" should mean across devices.
 - Change: in the callback, `else if wantsFix, isDenied { lastError = "Location access is off for WhatTheFlight in tvOS Settings."; wantsFix = false }`.
 - Done when: fresh install, Use This Apple TV → Don't Allow → the tile explains it at once.
 
-### A4 · P1 · Aircraft photo bytes bypass the compliant session
+### A4 · P1 · Aircraft photo bytes bypass the compliant session <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Where: `UI/FlightDetailSheet.swift` `PhotoCard` (~314), `UI/TV/TVFlightScreens.swift` (~193),
   `UI/TV/TVLogbookView.swift` (~790). All use `AsyncImage(url:)`.
 - What happens: `AircraftPhotoProvider` exists because Planespotters requires a descriptive
@@ -146,14 +147,16 @@ your logbook" should mean across devices.
   failed state in `TVSettingsView` (~283–306) that calls `stop()` then `start()`.
 - Done when: deny Local Network, allow it in tvOS Settings, press Try again → "Waiting for iPhone".
 
-### A12 · P3 · iPhone → TV send task outlives the screen
+### A12 · P3 · iPhone → TV send task outlives the screen <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* also fixed `waitUntil`, which swallowed the sleep's cancellation and would have spun until its deadline once cancelled.
 - Where: `UI/TVLinkSetupView.swift` `send()` (~260) wraps `link.send` in a bare `Task`;
   `.onDisappear` stops the link but never cancels the task, which can wait twenty seconds.
 - Change: keep the task in `@State`, cancel it in `onDisappear`, and have
   `TVLinkSender.send` check `Task.isCancelled` between its waits.
 - Done when: back out mid-send → no later state change, no log noise.
 
-### A13 · P3 · Apple TV refetches on every radius step
+### A13 · P3 · Apple TV refetches on every radius step <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* re-filters on every step and re-queries once the chips have been still for 700 ms (`radiusEdits` + `.task(id:)`), without the iPhone pattern's extra fetch at launch.
 - Where: `UI/TV/TVRadarRootView.swift:151`, `.onChange(of: settings.radiusMiles) { model.settingsDidChange(refetch: true) }`.
 - Change: mirror the iPhone's pattern in `RadarRootView` (`.task(id: settings.radiusMiles)`,
   re-filter now, refetch after 700 ms of quiet).
@@ -163,7 +166,7 @@ your logbook" should mean across devices.
 
 ## Part B — Performance and engineering
 
-### B1 · P2 · Resolve per-flight derived data once per feed, not every tick
+### B1 · P2 · Resolve per-flight derived data once per feed, not every tick <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Where: `Core/Flight.swift` (`kind`, `silhouette`, `typeName`, `airline`), `Core/OperatorInfo.swift`,
   `Core/NotableTraffic.swift` are computed properties doing catalog lookups and string
   work. `Radar/RadarModel.recompute()` calls them for every contact every second through
@@ -179,7 +182,8 @@ your logbook" should mean across devices.
   `NotableTraffic.classify` or `AirlineCatalog.airline` frames under the tick; tests for
   profile reuse in `FocusAndRadarModelTests`.
 
-### B2 · P2 · The perimeter track is rebuilt about seven times per frame
+### B2 · P2 · The perimeter track is rebuilt about seven times per frame <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* the samples are cached inside `PerimeterTrack` by rect and corner radius (`PerimeterTrack.sampleBuilds` counts real builds), and `RadarLayout` / `WatchRadarLayout` store their tracks, so no `@State` layout was needed.
 - Where: `UI/RadarScreen.swift` `RadarLayout.iconTrack` / `bezelTrack` (~146–152) are
   computed properties; each `PerimeterTrack.init` samples 1,440 points with `atan2`
   (`Core/PerimeterTrack.swift` ~13–41). The body reads them through `obstacles`,
@@ -191,7 +195,8 @@ your logbook" should mean across devices.
 - Done when: a debug counter on `PerimeterTrack.init` increments once per size change,
   not per tick.
 
-### B3 · P2 · Warm the catalogs off the main thread
+### B3 · P2 · Warm the catalogs off the main thread <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* `Catalogs.warmUp()` (end of `Data/AircraftTypeCatalog.swift`), called from the iPhone/TV and Watch `App` inits and at the top of the widget, complication and Top Shelf providers.
 - Where: `Data/AirlineCatalog.swift` and `Data/AirportCatalog.swift` parse ~14,600 lines of
   embedded text into dictionaries on first access, which lands inside the first
   `recompute()` on the main actor; `AircraftTypeCatalog` is smaller but the same.
@@ -219,7 +224,8 @@ your logbook" should mean across devices.
 - Done when: iOS and tvOS builds contain no legacy symbols (check with `nm` or the link
   map), the Xcode test action runs the radar tests, macOS still launches.
 
-### B5 · P2 · Adaptive polling
+### B5 · P2 · Adaptive polling <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* "passing close" = within a mile now, or a closest pass under a mile within 90 s (`PollingPolicy.isPassingClose`), so a hub's distant traffic doesn't keep it at 5 s.
 - Where: `Radar/RadarModel.pollOnce()` returns `settings.refreshSeconds` on success.
 - Change: a pure `PollingPolicy.interval(base:contacts:outside:)` in `Core/`:
   any in-range contact with a closest pass ahead within 90 s or under a mile → `min(base, 5)`;
@@ -251,7 +257,7 @@ your logbook" should mean across devices.
   `CODE_SIGNING_ALLOWED=NO`. Cache DerivedData.
 - Done when: a pull request shows four green checks.
 
-### B9 · P3 · Index the logbook by airframe
+### B9 · P3 · Index the logbook by airframe <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Where: `Radar/Logbook.swift` `timesSeen`, `history(airframe:)`, `seenBeforeSummary` scan
   all sightings; they run from detail sheets and the hero's "seen before" line.
 - Change: `byAirframe: [String: [Int]]` maintained next to `index`, rebuilt in

@@ -33,17 +33,18 @@ struct SnapshotFlight: Codable, Hashable, Identifiable, Sendable {
 
     init(_ contact: RadarContact) {
         let f = contact.flight
+        let profile = contact.profile
         id = f.id
         identifier = f.displayIdentifier
-        operatorName = f.operatorInfo.compact
+        operatorName = profile.operatorInfo.compact
         route = f.hasRoute ? "\(f.originIATA ?? "") → \(f.destinationIATA ?? "")" : nil
-        typeName = f.typeName ?? f.typeCode
+        typeName = profile.typeName ?? f.typeCode
         distanceMiles = contact.distanceMiles
         bearing = contact.bearing
         altitudeFeet = f.altitudeFeet
         speedKnots = f.groundSpeedKnots
-        isHelicopter = f.kind == .helicopter
-        let notable = f.notable.first
+        isHelicopter = profile.kind == .helicopter
+        let notable = profile.notable.first
         notableBadge = notable?.badge
         notableTag = notable?.tag
         closestPassSeconds = contact.isApproaching ? contact.closestApproach.secondsFromNow : nil
@@ -138,9 +139,10 @@ enum NearbyTraffic {
 
     /// In-range contacts at `date`, nearest first, dead-reckoned up to `maxExtrapolation`.
     static func contacts(_ flights: [Flight], observer: CLLocationCoordinate2D, radiusMiles: Double,
-                         at date: Date, maxExtrapolation: TimeInterval = 90) -> [RadarContact] {
+                         at date: Date, maxExtrapolation: TimeInterval = 90,
+                         profiles: [String: FlightProfile] = [:]) -> [RadarContact] {
         flights
-            .map { RadarContact(flight: $0, observer: observer, at: date, maxExtrapolation: maxExtrapolation) }
+            .map { RadarContact(flight: $0, observer: observer, at: date, maxExtrapolation: maxExtrapolation, profile: profiles[$0.id]) }
             .filter { $0.distanceMiles <= radiusMiles }
             .sorted { $0.distanceMiles < $1.distanceMiles }
     }
@@ -151,10 +153,13 @@ enum NearbyTraffic {
     /// so callers keep the horizon short.
     static func projectedSnapshots(_ flights: [Flight], observer: CLLocationCoordinate2D, radiusMiles: Double,
                                    placeName: String?, start: Date, count: Int, step: TimeInterval) -> [RadarSnapshot] {
-        (0..<max(0, count)).map { i in
+        // The same aircraft at every step: work out who they are once.
+        let profiles = Dictionary(flights.map { ($0.id, FlightProfile($0)) }, uniquingKeysWith: { first, _ in first })
+        return (0..<max(0, count)).map { i in
             let date = start.addingTimeInterval(Double(i) * step)
             let horizon = date.timeIntervalSince(start) + 90
-            let inRange = contacts(flights, observer: observer, radiusMiles: radiusMiles, at: date, maxExtrapolation: horizon)
+            let inRange = contacts(flights, observer: observer, radiusMiles: radiusMiles, at: date, maxExtrapolation: horizon,
+                                   profiles: profiles)
             return RadarSnapshot(date: date, placeName: placeName, radiusMiles: radiusMiles, contacts: inRange)
         }
     }
@@ -166,6 +171,7 @@ enum NearbyTraffic {
             let contacts = try await contacts(around: observer, radiusMiles: store.radiusMiles)
             return RadarSnapshot(placeName: store.placeName, radiusMiles: store.radiusMiles, contacts: contacts)
         } catch {
+            Log.feed.info("Couldn't fetch traffic, using the app's last snapshot: \(error.localizedDescription, privacy: .public)")
             return store.snapshot
         }
     }

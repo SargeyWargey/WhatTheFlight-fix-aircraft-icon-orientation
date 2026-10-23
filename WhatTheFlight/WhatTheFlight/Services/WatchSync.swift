@@ -116,6 +116,7 @@ final class PhoneWatchLink: NSObject {
             try session.updateApplicationContext(WatchSync.encode(context))
             lastSent = context
         } catch {
+            Log.link.error("Couldn't send the Watch context, will retry: \(error.localizedDescription, privacy: .public)")
             pending = context
         }
     }

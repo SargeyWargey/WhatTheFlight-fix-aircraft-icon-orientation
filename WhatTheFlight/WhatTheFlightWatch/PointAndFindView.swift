@@ -19,7 +19,7 @@ struct PointAndFindView: View {
     let location: WatchLocationService
     let initialTargetID: String
 
-    @State private var pointer = WristPointer()
+    @LazyState private var pointer = WristPointer()
     @State private var targetID: String?
     @State private var crown = 0
     @State private var locked = false

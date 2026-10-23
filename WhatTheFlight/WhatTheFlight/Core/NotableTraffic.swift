@@ -39,7 +39,8 @@ struct NotableInfo: Equatable, Sendable {
 }
 
 enum NotableTraffic {
-    static func classify(_ flight: Flight) -> [NotableInfo] {
+    /// `operatorKind` saves working out `flight.operatorInfo` again when the caller has it.
+    static func classify(_ flight: Flight, operatorKind: OperatorInfo.Kind? = nil) -> [NotableInfo] {
         var found: [NotableInfo] = []
         switch flight.squawk {
         case "7500": found.append(NotableInfo(tag: .hijack, badge: "SQUAWK 7500", reason: "squawking 7500 (unlawful interference)"))
@@ -48,7 +49,7 @@ enum NotableTraffic {
         default: break
         }
 
-        let operatorKind = flight.operatorInfo.kind
+        let operatorKind = operatorKind ?? flight.operatorInfo.kind
         let type = flight.typeCode?.uppercased() ?? ""
         if operatorKind == .medical || isAirAmbulanceCallsign(flight.callsign) {
             found.append(NotableInfo(tag: .medical, badge: "AIR AMBULANCE", reason: "is an air ambulance"))

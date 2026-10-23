@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy · What The Flight?</title>
+<link rel="icon" href="icon.png">
+<style>
+  :root {
+    --paper: #E9E7E2; --card: #F3F1EC; --ink: #3A33D6; --signal: #E5483B;
+    --text: #2E2D2A; --caption: #75726C; --rule: #D3D0C8;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #0A0E14; --card: #111722; --ink: #A8A4FF; --signal: #FF6B5E;
+            --text: #E7EAF0; --caption: #8790A0; --rule: #273042; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--text); font: 17px/1.6 var(--sans); }
+  main { max-width: 700px; margin: 0 auto; padding: 48px 20px 80px; }
+  header { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
+  header img { width: 52px; height: 52px; border-radius: 12px; }
+  header a { color: inherit; text-decoration: none; font: 600 18px var(--mono); letter-spacing: -0.02em; }
+  nav { margin-left: auto; display: flex; gap: 18px; font: 14px var(--mono); }
+  nav a { color: var(--caption); text-decoration: none; }
+  nav a[aria-current] { color: var(--ink); }
+  .eyebrow { font: 600 12px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--signal); margin: 0 0 8px; }
+  h1 { font: 700 36px/1.15 var(--sans); letter-spacing: -0.02em; margin: 0 0 8px; }
+  h2 { font: 600 15px var(--mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); margin: 40px 0 8px; }
+  .meta { color: var(--caption); font: 14px var(--mono); margin: 0 0 28px; }
+  .summary { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 18px 22px; }
+  .summary p { margin: 0; }
+  ul { padding-left: 22px; }
+  li { margin: 6px 0; }
+  a { color: var(--ink); }
+  footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--caption); font: 13px var(--mono); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="icon.png" alt="">
+    <a href="./">What The Flight?</a>
+    <nav><a href="support.html">Support</a><a href="privacy.html" aria-current="page">Privacy</a></nav>
+  </header>
+
+  <p class="eyebrow">Privacy policy</p>
+  <h1>Your sky, not your data</h1>
+  <p class="meta">Effective October 23, 2026</p>
+
+  <div class="summary">
+    <p><strong>The short version:</strong> What The Flight? has no accounts, no ads, no analytics and no tracking. I (the developer) never receive your location or anything else about you. To show the aircraft around you, the app asks a flight-data service for the traffic in an area around your position. Everything else stays on your devices or in your own iCloud.</p>
+  </div>
+
+  <h2>Who this covers</h2>
+  <p>This policy covers the What The Flight? apps for iPhone, iPad, Apple Watch and Apple TV, made by Josh Sargent ("I", "me"). Questions go to <a href="mailto:[your support email]">[your support email]</a>.</p>
+
+  <h2>Your location</h2>
+  <ul>
+    <li>The app uses your location, with your permission, to find the aircraft near you. It asks for access only while you're using it.</li>
+    <li>To get live traffic, the app sends Flightradar24 the boundaries of an area around your position (the size of the radius you choose). Your position can be worked out from that area. The request doesn't include your name, an account or any device identifier, but like any internet request it comes from your IP address. Flightradar24 handles requests under its own <a href="https://www.flightradar24.com/privacy-policy">privacy policy</a>.</li>
+    <li>When you turn on <strong>Sky Watch</strong>, the app keeps using your location in the background for up to two hours so it can alert you to aircraft passing overhead. iOS shows the blue location indicator while it runs, and you can stop it at any time.</li>
+    <li>The Apple TV app has no GPS. It uses a location you type in, search for, send from your iPhone, or the Apple TV's own approximate location.</li>
+    <li>Place names in your logbook come from Apple's geocoding service, and maps come from Apple Maps, both under <a href="https://www.apple.com/legal/privacy/">Apple's privacy policy</a>.</li>
+  </ul>
+
+  <h2>Aircraft photos</h2>
+  <p>Aircraft photos come from Planespotters.net. To find one, the app sends the aircraft's registration or transponder code. Nothing about you is sent beyond the IP address every internet request has.</p>
+
+  <h2>Your logbook and Sky View photos</h2>
+  <ul>
+    <li>Your logbook (the aircraft you've seen, where and when) and the photos you take in Sky View are stored on your device.</li>
+    <li>If you turn on <strong>Sync with iCloud</strong>, they're also stored in your private iCloud account so your iPhone, iPad and Apple TV share one logbook. Your pinned aircraft sync the same way. Only you can read your private iCloud data. I can't see it.</li>
+    <li>When you save a Sky View photo to your photo library, it includes the flight details and the location where you took it, like any camera photo. The app can only add photos to your library. It can't read them.</li>
+  </ul>
+
+  <h2>Camera, motion and local network</h2>
+  <ul>
+    <li><strong>Camera:</strong> Sky View shows the camera image with labels on top. The image is processed on your device to find aircraft and is never uploaded.</li>
+    <li><strong>Motion (Apple Watch):</strong> Point &amp; Find reads the Watch's motion sensors on the Watch to tell which way your arm points.</li>
+    <li><strong>Local network:</strong> linking your iPhone to your Apple TV sends your location and the direction your TV faces directly to the Apple TV on your own network. It doesn't go over the internet.</li>
+  </ul>
+
+  <h2>Notifications, widgets and Siri</h2>
+  <p>Alerts are created on your device. Widgets, the Live Activity and Siri read the latest radar data that the app shares with them on your device.</p>
+
+  <h2>What I don't do</h2>
+  <ul>
+    <li>No accounts or sign-in.</li>
+    <li>No advertising, analytics or third-party tracking code.</li>
+    <li>No selling or sharing of personal data.</li>
+    <li>No collection of data from children. The app is rated 4+ and doesn't ask anyone for personal information.</li>
+  </ul>
+
+  <h2>Your choices</h2>
+  <ul>
+    <li>Turn location access off at any time in Settings → Privacy &amp; Security → Location Services. Demo traffic still works without it.</li>
+    <li>Turn off <strong>Keep a logbook</strong> or <strong>Sync with iCloud</strong> in the app's Settings → Logbook, and delete sightings or photos from the logbook.</li>
+    <li>Deleting the app deletes everything it stored on that device. Data in your iCloud can be removed in Settings → [your name] → iCloud → Manage Storage.</li>
+  </ul>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, the new version will be posted here with a new effective date.</p>
+
+  <footer>What The Flight? · <a href="support.html">Support</a></footer>
+</main>
+</body>
+</html>
