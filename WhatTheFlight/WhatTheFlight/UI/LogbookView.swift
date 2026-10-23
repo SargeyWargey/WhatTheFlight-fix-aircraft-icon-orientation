@@ -135,7 +135,7 @@ extension Sighting {
 
     /// Icon colour at rest: military olive, otherwise the standard blip.
     var tint: Color {
-        Palette.blip(kind: kind, isMilitary: tags.contains(.military))
+        Palette.blip(isMilitary: tags.contains(.military))
     }
 
     /// "6 min", "Under a min".

@@ -13,7 +13,7 @@ import SwiftUI
 import CoreLocation
 
 enum TVSettingsPane: String, CaseIterable, Identifiable {
-    case location, radar, display, about
+    case radar, display, location, about
     var id: String { rawValue }
 
     var title: String {
@@ -397,7 +397,6 @@ struct TVRadarSettingsView: View {
             onSelect: { settings.refreshSeconds = $0 }
         )
         TVSectionHeader(title: "Traffic")
-        TVToggleRow(title: "Show helicopters", symbol: "fan.fill", isOn: $settings.showHelicopters)
         TVToggleRow(title: "Demo traffic", subtitle: "Simulated aircraft — great for trying it out", symbol: "sparkles", isOn: $settings.demoTraffic)
 
         TVSectionHeader(title: "Alerts")
@@ -420,7 +419,6 @@ struct TVRadarSettingsView: View {
                 onSelect: { settings.overheadAlertLeadSeconds = $0 }
             )
         }
-        TVToggleRow(title: "Notable aircraft", subtitle: "Emergencies, military, air ambulances and rare types", symbol: "star.fill", isOn: $settings.notableAlerts)
         TVToggleRow(title: "Speak alerts", subtitle: "Also announce them out loud: “Delta Air Lines flight 1199 is approaching overhead…”",
                     symbol: "speaker.wave.2.fill", isOn: $settings.spokenAlerts)
         if settings.spokenAlerts {
@@ -428,6 +426,7 @@ struct TVRadarSettingsView: View {
                 AlertSpeaker.shared.speak(sampleAnnouncement)
             }
         }
+        TVToggleRow(title: "Notable aircraft", subtitle: "Emergencies, military, air ambulances and rare types", symbol: "star.fill", isOn: $settings.notableAlerts)
 
         TVSectionHeader(title: "Logbook")
         TVToggleRow(title: "Keep a logbook", subtitle: "Record every aircraft that comes inside your radius. Kept on this Apple TV only; demo traffic is never logged",
@@ -471,9 +470,17 @@ struct TVRadarSettingsView: View {
         TVToggleRow(title: "Aircraft photos", symbol: "photo.fill", isOn: $settings.showPhotos)
 
         TVSectionHeader(title: "Map")
-        TVToggleRow(title: "Map view", subtitle: "Adds a Map item to the dock: a live map of every aircraft around you",
+        TVToggleRow(title: "Map view", subtitle: "A live map of every aircraft around you, beside the radar or full screen",
                     symbol: "map.fill", isOn: $settings.mapView)
         if settings.mapView {
+            TVChoiceRow(
+                title: "View",
+                subtitle: "Split puts the map beside the radar. The dock's view button steps through all three",
+                options: RadarSettings.TVView.allCases,
+                selection: settings.tvView,
+                label: { $0.title },
+                onSelect: { settings.tvView = $0 }
+            )
             TVToggleRow(title: "Map north up", subtitle: "Off, the map turns so the top of the screen is the way the TV faces",
                         symbol: "location.north.line.fill", isOn: $settings.mapNorthUp)
         }

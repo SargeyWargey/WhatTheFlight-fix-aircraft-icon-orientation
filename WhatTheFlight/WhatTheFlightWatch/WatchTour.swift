@@ -212,7 +212,7 @@ private struct MiniWatchRadar: View {
                 ForEach(Array(tourBlips.enumerated()), id: \.offset) { index, blip in
                     let focused = index == 0
                     AircraftGlyph(silhouette: blip.silhouette, size: 15, spinsRotor: false)
-                        .foregroundStyle(focused ? Palette.signal : (blip.silhouette == .helicopter ? Palette.heliBlip : Palette.blip))
+                        .foregroundStyle(focused ? Palette.signal : Palette.blip)
                         .rotationEffect(.degrees(blip.track))
                         .position(edgePoint(blip.bearing, size: size, inset: 10))
                     Text("\(blip.miles)")

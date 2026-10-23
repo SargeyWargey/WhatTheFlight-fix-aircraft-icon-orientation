@@ -237,15 +237,14 @@ private struct SilhouetteDrawing {
 }
 
 extension Palette {
-    /// Resting colour for an aircraft's icon and distance label: military olive, helicopter
-    /// blue, otherwise the standard blip.
+    /// Resting colour for an aircraft's icon and distance label: military olive, otherwise
+    /// the standard blip.
     static func blip(for flight: Flight) -> Color {
-        blip(kind: flight.kind, isMilitary: flight.notable.contains { $0.tag == .military })
+        blip(isMilitary: flight.notable.contains { $0.tag == .military })
     }
 
-    static func blip(kind: AircraftKind, isMilitary: Bool) -> Color {
-        if isMilitary { return military }
-        return kind == .helicopter ? heliBlip : blip
+    static func blip(isMilitary: Bool) -> Color {
+        isMilitary ? military : blip
     }
 }
 #endif

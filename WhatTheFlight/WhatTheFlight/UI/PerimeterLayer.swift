@@ -100,7 +100,7 @@ struct AircraftBlip: View {
             ? Palette.announce
             : isFocused || tags.first?.isEmergency == true
             ? Palette.signal
-            : Palette.blip(kind: flight.kind, isMilitary: tags.contains(.military))
+            : Palette.blip(isMilitary: tags.contains(.military))
         let halo = isAnnounced ? Palette.announce : Palette.signal
         let markerTag = tags.first { $0 != .military }
         ZStack {

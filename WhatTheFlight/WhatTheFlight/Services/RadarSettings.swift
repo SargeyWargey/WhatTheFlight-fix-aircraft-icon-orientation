@@ -33,10 +33,32 @@ final class RadarSettings {
         }
     }
 
-    /// Apple TV: the radar face or the live map.
+    /// Apple TV: the radar face, the radar with the live map beside it, or the map alone. The
+    /// dock's view button steps through them in this order.
     enum TVView: String, CaseIterable, Identifiable {
-        case radar, map
+        case radar, split, map
         var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .radar: return "Radar"
+            case .split: return "Split"
+            case .map: return "Map"
+            }
+        }
+
+        var symbol: String {
+            switch self {
+            case .radar: return "scope"
+            case .split: return "rectangle.split.2x1.fill"
+            case .map: return "map.fill"
+            }
+        }
+
+        var next: TVView {
+            let all = Self.allCases
+            return all[(all.firstIndex(of: self)! + 1) % all.count]
+        }
     }
 
     static let radiusRange: ClosedRange<Double> = 2...100
@@ -85,8 +107,8 @@ final class RadarSettings {
     var raiseToSkyView: Bool { didSet { save(raiseToSkyView, .raiseToSkyView) } }
     /// iPhone: Sky View photos also go to the camera roll at full resolution.
     var skySaveToPhotos: Bool { didSet { save(skySaveToPhotos, .skySaveToPhotos) } }
-    /// The ambient map: a Map item in the TV dock and a map pane beside the radar on iPad
-    /// in landscape. Off, nothing else changes.
+    /// The ambient map: the Split and Map views on the TV and a map pane beside the radar on
+    /// iPad in landscape. Off, nothing else changes.
     var mapView: Bool { didSet { save(mapView, .mapView) } }
     /// Apple TV: which view is showing. Read it through `effectiveTVView`.
     var tvView: TVView { didSet { save(tvView.rawValue, .tvView) } }
@@ -125,7 +147,12 @@ final class RadarSettings {
         customLatitude = optionalDouble(.customLatitude)
         customLongitude = optionalDouble(.customLongitude)
         appearance = Appearance(rawValue: value(.appearance, "system")) ?? .system
+        #if os(tvOS)
+        // Apple TV has no switch for it: helicopters always show.
+        showHelicopters = true
+        #else
         showHelicopters = value(.showHelicopters, true)
+        #endif
         showTopography = value(.showTopography, true)
         showCompassBezel = value(.showCompassBezel, true)
         radarSweep = value(.radarSweep, true)

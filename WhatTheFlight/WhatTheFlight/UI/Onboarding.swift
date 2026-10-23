@@ -30,7 +30,7 @@ struct TourPage: Identifiable {
         TourPage(art: .edge, eyebrow: "Reading the radar", title: "The edge is a compass",
                  body: "Each icon sits on the edge of the screen in the direction of a real aircraft. The top of the screen is the way you face when you watch the TV: set it in Settings, or let the iPhone app measure it for you."),
         TourPage(art: .distance, eyebrow: "The icons", title: "The number is miles away",
-                 body: "Beside each icon is how far that aircraft is from you, in whole miles. The nose points the way it's flying. Helicopters are a lighter blue, military aircraft are olive, and a colored dot means something notable."),
+                 body: "Beside each icon is how far that aircraft is from you, in whole miles. The nose points the way it's flying. Military aircraft are olive, and a colored dot means something notable."),
         TourPage(art: .remote, eyebrow: "The Siri Remote", title: "The nearest takes the center",
                  body: "The closest aircraft fills the middle and stays there until it leaves your radius. Press ◀ ▶ to step through the others, play/pause to pin one, and ▼ for the dock: Nearest, Aircraft, Logbook and Settings."),
         TourPage(art: .details, eyebrow: "Details", title: "Click for the full story",
@@ -47,7 +47,7 @@ struct TourPage: Identifiable {
         TourPage(art: .edge, eyebrow: "Reading the radar", title: "The edge is a compass",
                  body: "Each icon sits on the edge of the screen in the direction of a real aircraft. Turn around and they slide around the edge, so whatever is at the top is in front of you."),
         TourPage(art: .distance, eyebrow: "The icons", title: "The number is miles away",
-                 body: "Beside each icon is how far that aircraft is from you, in whole miles. The nose points the way it's flying. Helicopters are a lighter blue, military aircraft are olive, and a colored dot means something notable."),
+                 body: "Beside each icon is how far that aircraft is from you, in whole miles. The nose points the way it's flying. Military aircraft are olive, and a colored dot means something notable."),
         TourPage(art: .center, eyebrow: "The center", title: "The nearest takes the center",
                  body: "The closest aircraft fills the middle and stays there until it leaves your radius. Swipe left for the next one out, right to come back to the nearest. Tap an icon to bring it in; hold the center to pin it."),
         TourPage(art: .details, eyebrow: "Details", title: "Tap the center for the full story",
@@ -105,8 +105,6 @@ private struct TourTraffic {
     let track: Double
     let silhouette: AircraftSilhouette
 
-    var tint: Color { silhouette == .helicopter ? Palette.heliBlip : Palette.blip }
-
     static let all: [TourTraffic] = [
         TourTraffic(flight: "DL1199", route: "ATL → ORD", bearing: 35, miles: 4, track: 250, silhouette: .airliner),
         TourTraffic(flight: "N911LF", route: "LOCAL FLIGHT", bearing: 250, miles: 6, track: 80, silhouette: .helicopter),
@@ -144,7 +142,7 @@ private struct MiniRadar: View {
                     let isFocused = index == focused
                     Text("\(traffic.miles)")
                         .font(.mono((isFocused ? 10 : 9) * unit, .bold))
-                        .foregroundStyle(isFocused ? Palette.signal : traffic.tint)
+                        .foregroundStyle(isFocused ? Palette.signal : Palette.blip)
                         .paperHalo()
                         .position(Self.edgePoint(angle, in: size, inset: 34 * unit))
                     ZStack {
@@ -152,7 +150,7 @@ private struct MiniRadar: View {
                             Circle().fill(Palette.signal.opacity(0.16)).frame(width: 26 * unit, height: 26 * unit)
                         }
                         AircraftGlyph(silhouette: traffic.silhouette, size: 20 * unit)
-                            .foregroundStyle(isFocused ? Palette.signal : traffic.tint)
+                            .foregroundStyle(isFocused ? Palette.signal : Palette.blip)
                             .rotationEffect(.degrees(traffic.track - heading))
                     }
                     .position(Self.edgePoint(angle, in: size, inset: 17 * unit))
@@ -313,7 +311,7 @@ private struct TourDistance: View {
 
             HStack(spacing: 14 * unit) {
                 key(.airliner, Palette.blip, "Aircraft")
-                key(.helicopter, Palette.heliBlip, "Helicopter")
+                key(.helicopter, Palette.blip, "Helicopter")
                 key(.fighter, Palette.military, "Military")
                 VStack(spacing: 6 * unit) {
                     ZStack(alignment: .topTrailing) {

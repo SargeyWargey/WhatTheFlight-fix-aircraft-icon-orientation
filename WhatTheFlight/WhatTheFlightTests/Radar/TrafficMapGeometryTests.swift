@@ -150,6 +150,17 @@ final class TrafficMapGeometryTests: XCTestCase {
         XCTAssertFalse(reloaded.mapNorthUp)
     }
 
+    @MainActor
+    func testTheTVViewButtonStepsRadarSplitMapAndSplitPersists() {
+        XCTAssertEqual(RadarSettings.TVView.radar.next, .split)
+        XCTAssertEqual(RadarSettings.TVView.split.next, .map)
+        XCTAssertEqual(RadarSettings.TVView.map.next, .radar)
+
+        let defaults = UserDefaults(suiteName: "TrafficMapGeometryTests-\(UUID().uuidString)")!
+        RadarSettings(defaults: defaults).tvView = .split
+        XCTAssertEqual(RadarSettings(defaults: defaults).effectiveTVView, .split)
+    }
+
     func testMapLabelReadsNameOperatorDistanceAndAltitude() {
         let contact = TestTraffic.contacts([TestTraffic.flight("dl570", miles: 3, bearing: 45)])[0]
         let label = SpokenTraffic.mapLabel(for: contact)

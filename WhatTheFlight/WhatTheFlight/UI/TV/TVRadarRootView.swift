@@ -110,7 +110,6 @@ struct TVRadarRootView: View {
         .onChange(of: settings.customLongitude) { _, _ in syncObserver() }
         .onChange(of: settings.keepScreenAwake) { _, _ in updateIdleTimer() }
         .onChange(of: settings.syncLogbook) { _, _ in updateLogbookSync() }
-        .onChange(of: settings.showHelicopters) { _, _ in model.settingsDidChange(refetch: false) }
         .onChange(of: settings.demoTraffic) { _, _ in model.settingsDidChange(refetch: true) }
         .onChange(of: settings.radiusMiles) { _, _ in model.settingsDidChange(refetch: true) }
         .onChange(of: model.lastUpdated) { _, _ in publishTopShelf() }

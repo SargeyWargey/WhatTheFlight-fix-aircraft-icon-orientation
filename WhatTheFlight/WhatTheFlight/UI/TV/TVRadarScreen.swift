@@ -7,12 +7,14 @@
 //
 //  Siri Remote
 //    ◀ ▶      closer / farther aircraft      click      details
-//    ⏯        pin / unpin                    ▼          dock: Nearest · Pin · Aircraft · Logbook · Map · Settings
+//    ⏯        pin / unpin                    ▼          dock: Nearest · Pin · Aircraft · Logbook · View · Settings
 //
 //  The remote hints sit in a footer below the bezel; the dock only appears after ▼.
-//  With Map view on, the dock's Map item swaps the radar face for the live map
-//  (`TVMapStack`); the remote works the same on both. Left alone for 30 s, the map settles:
-//  the status badge and hints fade out until the next press.
+//  With Map view on, the dock's view item steps Radar → Split → Map: Split narrows the radar
+//  to the left 60 % of the screen and puts the live map beside it (`TVTrafficMap`); Map
+//  swaps the radar face for the map full screen (`TVMapStack`). The remote works the same on
+//  all three. Left alone for 30 s, the full-screen map settles: the status badge and hints
+//  fade out until the next press.
 //
 
 #if os(tvOS)
@@ -39,7 +41,7 @@ struct TVRadarScreen: View {
     }
 
     enum DockItem: CaseIterable {
-        case nearest, pin, aircraft, logbook, map, settings
+        case nearest, pin, aircraft, logbook, view, settings
     }
 
     @FocusState private var focus: Focus?
@@ -47,18 +49,77 @@ struct TVRadarScreen: View {
     /// Ambient settle: the last remote input, and whether the chrome has faded since.
     @State private var lastInput = Date()
     @State private var isSettled = false
+    /// The dock's own width, so it can shrink to fit beside the map.
+    @State private var dockWidth: CGFloat = 0
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let scale: CGFloat = 1.7
     private static let heroScale: CGFloat = 1.55
+    /// Split view: the radar's share of the screen's width; the map takes the rest.
+    private static let splitRadarShare: CGFloat = 0.6
 
     private var heading: Double { settings.tvFacingDegrees }
+    /// The map full screen, in place of the radar.
     private var showsMap: Bool { settings.effectiveTVView == .map }
+    /// The radar on the left, the map on the right.
+    private var showsSplit: Bool { settings.effectiveTVView == .split }
     /// The badge and hints, faded once the map has settled.
     private var chromeOpacity: Double { showsMap && isSettled && !showDock ? 0 : 1 }
 
     var body: some View {
+        GeometryReader { screen in
+            HStack(spacing: 0) {
+                face
+                    .frame(width: showsSplit ? Self.splitRadarWidth(in: screen) : nil)
+                if showsSplit {
+                    TVTrafficMap(model: model, settings: settings)
+                        .transition(.move(edge: .trailing))
+                }
+            }
+        }
+        .defaultFocus($focus, .radar)
+        .onChange(of: focus) { _, newValue in
+            noteInput()
+            // Leaving the dock (MENU, or ▲ back to the aircraft) tucks it away again.
+            if case .dock = newValue { return }
+            withAnimation(.smooth(duration: 0.25)) { showDock = false }
+        }
+        .onChange(of: centerState) { _, _ in showDock = false }
+        .onChange(of: settings.mapView) { _, isOn in
+            // Switching Map view off while the map shows goes straight back to the radar.
+            guard !isOn, settings.tvView != .radar else { return }
+            withAnimation(.smooth(duration: 0.6)) { settings.tvView = .radar }
+        }
+        .onChange(of: showsMap || showsSplit, initial: true) { _, showsMap in
+            if showsMap { suggestKeepingAwake() }
+        }
+        .task(id: SettleKey(lastInput: lastInput, showsMap: showsMap)) {
+            guard showsMap else { return }
+            try? await Task.sleep(for: .seconds(30))
+            guard !Task.isCancelled else { return }
+            withAnimation(reduceMotion ? nil : .smooth(duration: 1.2)) { isSettled = true }
+        }
+        #if DEBUG
+        .task {
+            // `-wtf.debugDock YES` opens the dock for screenshots.
+            guard UserDefaults.standard.bool(forKey: "wtf.debugDock") else { return }
+            try? await Task.sleep(for: .seconds(4))
+            openDock()
+        }
+        #endif
+    }
+
+    /// The radar pane's width in Split view: its share of the whole screen, overscan
+    /// included, less the left overscan it bleeds into.
+    private static func splitRadarWidth(in screen: GeometryProxy) -> CGFloat {
+        let insets = screen.safeAreaInsets
+        return (screen.size.width + insets.leading + insets.trailing) * splitRadarShare - insets.leading
+    }
+
+    /// The radar face (or the full-screen map) with the hero, badge, hints and dock laid
+    /// over it. In Split view it fills the left pane.
+    private var face: some View {
         GeometryReader { geo in
             let layout = RadarLayout(size: geo.size, scale: Self.scale)
             let placements = PerimeterPlanner.plan(
@@ -71,7 +132,9 @@ struct TVRadarScreen: View {
                 ],
                 scale: Self.scale
             )
-            let heroWidth = geo.size.width * 0.62
+            // Beside the map the pane is narrower, so the hero takes more of it to keep its stats
+            // on one line.
+            let heroWidth = geo.size.width * (showsSplit ? 0.8 : 0.62)
 
             ZStack {
                 if showsMap {
@@ -104,7 +167,12 @@ struct TVRadarScreen: View {
 
                 if centerState == nil {
                     if showDock {
+                        // Laid out at its natural width, then shrunk to fit the pane if need be,
+                        // so the labels never wrap.
                         dock
+                            .fixedSize()
+                            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { dockWidth = $0 }
+                            .scaleEffect(dockWidth > 0 ? min(1, (geo.size.width - 40) / dockWidth) : 1)
                             .position(x: geo.size.width / 2, y: geo.size.height - 130)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
@@ -125,7 +193,7 @@ struct TVRadarScreen: View {
 
                 NoticeBanner(model: model)
                     .scaleEffect(1.6)
-                    .frame(width: 700)
+                    .frame(width: min(700, geo.size.width / 1.6 - 20))
                     .position(x: geo.size.width / 2, y: 70)
             }
             .frame(width: geo.size.width, height: geo.size.height)
@@ -136,36 +204,6 @@ struct TVRadarScreen: View {
                     .ignoresSafeArea()
             }
         }
-        .defaultFocus($focus, .radar)
-        .onChange(of: focus) { _, newValue in
-            noteInput()
-            // Leaving the dock (MENU, or ▲ back to the aircraft) tucks it away again.
-            if case .dock = newValue { return }
-            withAnimation(.smooth(duration: 0.25)) { showDock = false }
-        }
-        .onChange(of: centerState) { _, _ in showDock = false }
-        .onChange(of: settings.mapView) { _, isOn in
-            // Switching Map view off while the map shows goes straight back to the radar.
-            guard !isOn, settings.tvView == .map else { return }
-            withAnimation(.smooth(duration: 0.6)) { settings.tvView = .radar }
-        }
-        .onChange(of: showsMap, initial: true) { _, showsMap in
-            if showsMap { suggestKeepingAwake() }
-        }
-        .task(id: SettleKey(lastInput: lastInput, showsMap: showsMap)) {
-            guard showsMap else { return }
-            try? await Task.sleep(for: .seconds(30))
-            guard !Task.isCancelled else { return }
-            withAnimation(reduceMotion ? nil : .smooth(duration: 1.2)) { isSettled = true }
-        }
-        #if DEBUG
-        .task {
-            // `-wtf.debugDock YES` opens the dock for screenshots.
-            guard UserDefaults.standard.bool(forKey: "wtf.debugDock") else { return }
-            try? await Task.sleep(for: .seconds(4))
-            openDock()
-        }
-        #endif
     }
 
     /// The footer lives in the bottom overscan margin, below the bezel and the aircraft icons.
@@ -317,14 +355,16 @@ struct TVRadarScreen: View {
                 actions.openLogbook()
             }
             if settings.mapView {
-                dockButton(.map, title: showsMap ? "Radar" : "Map", symbol: showsMap ? "scope" : "map.fill") {
-                    withAnimation(.smooth(duration: 0.6)) { settings.tvView = showsMap ? .radar : .map }
+                // Named for the view it switches to: Radar → Split → Map → Radar.
+                let next = settings.effectiveTVView.next
+                dockButton(.view, title: next.title, symbol: next.symbol) {
+                    withAnimation(.smooth(duration: 0.6)) { settings.tvView = next }
                     // The hero is rebuilt for the other view: focus it once it's there.
                     Task { @MainActor in focus = .radar }
                 }
             }
             dockButton(.settings, title: "Settings", symbol: "gearshape.fill") {
-                actions.openSettings(.location)
+                actions.openSettings(.radar)
             }
         }
         .padding(.horizontal, 26)
@@ -342,7 +382,10 @@ struct TVRadarScreen: View {
             noteInput()
             action()
         } label: {
+            // The dock is laid out at its natural width; without this, rounding can leave a
+            // label a hair short and wrap it ("Aircraf / t").
             Label(title, systemImage: symbol)
+                .fixedSize()
         }
         .buttonStyle(TVPillButtonStyle(prominent: false, compact: true))
         .focused($focus, equals: .dock(item))

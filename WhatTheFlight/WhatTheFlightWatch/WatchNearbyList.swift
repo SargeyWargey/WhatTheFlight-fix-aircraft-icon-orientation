@@ -59,7 +59,7 @@ struct WatchNearbyList: View {
         return HStack(spacing: 8) {
             Image(systemName: f.kind == .helicopter ? "fan.fill" : "airplane")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(tag.map(Palette.color(for:)) ?? (f.kind == .helicopter ? Palette.heliBlip : Palette.blip))
+                .foregroundStyle(tag.map(Palette.color(for:)) ?? Palette.blip)
                 .rotationEffect(.degrees(f.kind == .helicopter ? 0 : f.track - heading - 90))
                 .frame(width: 18)
             VStack(alignment: .leading, spacing: 1) {
