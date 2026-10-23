@@ -3,8 +3,8 @@
 //  WhatTheFlight
 //
 //  Sensors behind Sky View: where the camera is looking in 3D (Core Motion attitude
-//  against true north), the back camera feed and its field of view, and the "lift the phone
-//  to the sky" gesture that opens Sky View from the radar.
+//  against true north) and the "lift the phone to the sky" gesture that opens Sky View from
+//  the radar. The camera itself is `SkyCamera`.
 //
 
 #if os(iOS)
@@ -16,7 +16,7 @@ import UIKit
 import simd
 
 /// The screen's right / up edges and the camera's view direction, as east-north-up vectors.
-struct SkyBasis: Equatable {
+struct SkyBasis: Equatable, Sendable {
     var right: SIMD3<Double>
     var up: SIMD3<Double>
     var forward: SIMD3<Double>
@@ -30,6 +30,8 @@ final class SkyMotion {
     let isAvailable: Bool
     /// Keep in sync with the interface so "right" and "up" follow the screen on iPad.
     @ObservationIgnored var interfaceOrientation: UIInterfaceOrientation = .portrait
+    /// Every new basis, as it arrives (the camera's frame tracker needs it off the main actor).
+    @ObservationIgnored var onBasis: ((SkyBasis) -> Void)?
 
     @ObservationIgnored private let motion = CMMotionManager()
     @ObservationIgnored private var axesAreRows = true
@@ -85,12 +87,14 @@ final class SkyMotion {
         let target = SkyBasis(right: right, up: up, forward: -z)
 
         // Low-pass the raw attitude so labels don't shimmer, then re-orthonormalise.
-        guard let current = basis else { basis = target; return }
+        guard let current = basis else { basis = target; onBasis?(target); return }
         let a = 0.3
         let f = simd_normalize(current.forward + (target.forward - current.forward) * a)
         var rt = current.right + (target.right - current.right) * a
         rt = simd_normalize(rt - simd_dot(rt, f) * f)
-        basis = SkyBasis(right: rt, up: simd_cross(rt, f), forward: f)
+        let smoothed = SkyBasis(right: rt, up: simd_cross(rt, f), forward: f)
+        basis = smoothed
+        onBasis?(smoothed)
     }
 
     /// Same check as `AimingCompass`: pick the matrix convention that reproduces gravity.
@@ -104,86 +108,6 @@ final class SkyMotion {
             basis = nil
         }
     }
-}
-
-// MARK: - Camera
-
-@MainActor
-@Observable
-final class SkyCamera {
-    enum State: Equatable { case idle, starting, running, denied, unavailable }
-
-    private(set) var state: State = .idle
-    /// Horizontal field of view of the sensor's long side, in degrees.
-    private(set) var fieldOfView: Double = 0
-    /// Sensor frame in pixels (long side, short side).
-    private(set) var sensorSize = CGSize(width: 1920, height: 1080)
-
-    @ObservationIgnored let session = AVCaptureSession()
-    @ObservationIgnored private(set) var device: AVCaptureDevice?
-    @ObservationIgnored private let queue = DispatchQueue(label: "wtf.skycamera")
-
-    func start() async {
-        guard state == .idle || state == .denied else { return }
-        // No camera (simulator, some iPads): don't ask for a permission we can't use.
-        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
-            state = .unavailable
-            return
-        }
-        switch AVCaptureDevice.authorizationStatus(for: .video) {
-        case .authorized: break
-        case .notDetermined:
-            guard await AVCaptureDevice.requestAccess(for: .video) else { state = .denied; return }
-        default:
-            state = .denied
-            return
-        }
-        guard let input = try? AVCaptureDeviceInput(device: device) else {
-            state = .unavailable
-            return
-        }
-        state = .starting
-        self.device = device
-        let work = CaptureWork(session: session, input: input)
-        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
-            queue.async {
-                let session = work.session
-                session.beginConfiguration()
-                session.sessionPreset = .high
-                if let input = work.input, session.canAddInput(input) { session.addInput(input) }
-                session.commitConfiguration()
-                session.startRunning()
-                done.resume()
-            }
-        }
-        fieldOfView = Double(device.activeFormat.videoFieldOfView)
-        let dims = CMVideoFormatDescriptionGetDimensions(device.activeFormat.formatDescription)
-        sensorSize = CGSize(width: CGFloat(max(dims.width, dims.height)), height: CGFloat(min(dims.width, dims.height)))
-        state = session.isRunning ? .running : .unavailable
-    }
-
-    func stop() {
-        let work = CaptureWork(session: session)
-        queue.async { work.session.stopRunning() }
-        if state == .running || state == .starting { state = .idle }
-    }
-
-    /// Focal length in points for a preview that aspect-fills `size`.
-    func focalLength(for size: CGSize) -> Double? {
-        guard state == .running, fieldOfView > 1 else { return nil }
-        let long = Double(sensorSize.width), short = Double(sensorSize.height)
-        let viewLong = Double(max(size.width, size.height)), viewShort = Double(min(size.width, size.height))
-        let fill = max(viewLong / long, viewShort / short)
-        return (long / 2) / tan(fieldOfView.radians / 2) * fill
-    }
-}
-
-/// Carries the capture session onto its serial queue. AVFoundation's types aren't Sendable, but
-/// Apple's guidance is exactly this: configure, start and stop the session on one dedicated
-/// queue (it blocks), never on the main thread. Nothing else touches it concurrently.
-private struct CaptureWork: @unchecked Sendable {
-    let session: AVCaptureSession
-    var input: AVCaptureDeviceInput? = nil
 }
 
 // MARK: - Raise to look

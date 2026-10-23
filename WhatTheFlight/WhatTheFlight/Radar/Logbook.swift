@@ -2,10 +2,11 @@
 //  Logbook.swift
 //  WhatTheFlight
 //
-//  Every aircraft that came inside the radius: when you saw it, how close it came, where
-//  you were, which device logged it, and whether it was anything special. Feeds the stats
-//  and the badges. Kept on each device and merged across them through iCloud
-//  (`LogbookSync`); the same flight logged on two devices becomes one sighting.
+//  Every aircraft that came inside the radius (or that you photographed in Sky View): when
+//  you saw it, how close it came, where you were, which device logged it, whether it was
+//  anything special, and your photos of it. Feeds the stats and the badges. Kept on each
+//  device and merged across them through iCloud (`LogbookSync`); the same flight logged on
+//  two devices becomes one sighting.
 //
 
 import Foundation
@@ -86,6 +87,10 @@ struct Sighting: Codable, Identifiable, Hashable, Sendable {
     var observerLongitude: Double?
     /// Devices that logged it. Missing on sightings logged before devices were recorded.
     var devices: [LogDevice]?
+    /// Sky View photos of it. Read them through `spotPhotos`.
+    var photos: [SpotPhoto]?
+    /// Photos deleted on any device, so a merge with an older copy doesn't bring them back.
+    var removedPhotoIDs: [String]?
 
     /// The airframe, for "seen N times" (falls back to the hex code).
     var airframe: String? { registration ?? hex }
@@ -106,6 +111,12 @@ struct Sighting: Codable, Identifiable, Hashable, Sendable {
     var destination: Airport? { destinationIATA.flatMap(AirportCatalog.airport(iata:)) }
 
     var loggedOn: [LogDevice] { devices ?? [] }
+
+    /// Photos still in the logbook, oldest first.
+    var spotPhotos: [SpotPhoto] {
+        let removed = Set(removedPhotoIDs ?? [])
+        return (photos ?? []).filter { !removed.contains($0.id) }.sorted { $0.takenAt < $1.takenAt }
+    }
 
     /// The same flight as logged by another device: the longest time in range, the closest
     /// pass (with where it was watched from), every tag and every device.
@@ -134,6 +145,13 @@ struct Sighting: Codable, Identifiable, Hashable, Sendable {
         m.tags = Set(tags).union(other.tags).sorted()
         let devices = Set(loggedOn).union(other.loggedOn)
         m.devices = devices.isEmpty ? nil : devices.sorted()
+        // Photos: every one either copy has, minus any either copy deleted.
+        let removed = Set(removedPhotoIDs ?? []).union(other.removedPhotoIDs ?? [])
+        var byID = Dictionary((other.photos ?? []).map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        for photo in photos ?? [] { byID[photo.id] = photo }
+        let kept = byID.values.filter { !removed.contains($0.id) }.sorted { ($0.takenAt, $0.id) < ($1.takenAt, $1.id) }
+        m.photos = kept.isEmpty ? nil : kept
+        m.removedPhotoIDs = removed.isEmpty ? nil : removed.sorted()
         return m
     }
 
@@ -166,12 +184,18 @@ final class Logbook {
     @ObservationIgnored let device: LogDevice?
     /// Sightings this device created or changed, and ones it deleted, for iCloud.
     @ObservationIgnored var onLocalChange: ((_ saved: Set<String>, _ deleted: Set<String>) -> Void)?
+    /// Photo images this device added or deleted (by photo id), for iCloud.
+    @ObservationIgnored var onLocalPhotoChange: ((_ saved: Set<String>, _ deleted: Set<String>) -> Void)?
+    /// The logbook's copies of Sky View photos.
+    @ObservationIgnored let photoStore: SpotPhotoStore
 
-    /// `fileURL == nil` keeps everything in memory (tests, previews).
-    init(fileURL: URL? = Logbook.defaultURL, maxEntries: Int = 10_000, device: LogDevice? = nil) {
+    /// `fileURL == nil` keeps everything in memory (tests, previews), photos included unless
+    /// `photoDirectory` says otherwise.
+    init(fileURL: URL? = Logbook.defaultURL, photoDirectory: URL? = nil, maxEntries: Int = 10_000, device: LogDevice? = nil) {
         self.fileURL = fileURL
         self.maxEntries = maxEntries
         self.device = device
+        photoStore = SpotPhotoStore(directory: photoDirectory ?? fileURL.flatMap { _ in SpotPhotoStore.defaultDirectory })
         load()
     }
 
@@ -235,6 +259,62 @@ final class Logbook {
         if !changed.isEmpty { onLocalChange?(changed, []) }
     }
 
+    // MARK: Photos
+
+    /// Every photo in the logbook, newest first.
+    var allPhotos: [SpotPhoto] {
+        sightings.flatMap(\.spotPhotos).sorted { $0.takenAt > $1.takenAt }
+    }
+
+    func photo(id: String) -> SpotPhoto? {
+        for s in sightings { if let p = s.photos?.first(where: { $0.id == id }) { return p } }
+        return nil
+    }
+
+    /// Every photo id still in the logbook, for a first upload to iCloud.
+    var allPhotoIDs: Set<String> { Set(sightings.flatMap { $0.spotPhotos.map(\.id) }) }
+
+    /// Files a photographed aircraft under its sighting, creating the sighting if it was
+    /// never inside the radius (photographing it counts as seeing it). `imageData` is the
+    /// logbook's copy. Returns false if there's no sighting to attach it to.
+    @discardableResult
+    func addPhoto(_ photo: SpotPhoto, imageData: Data, contact: RadarContact?,
+                  observer: CLLocationCoordinate2D? = nil, placeName: String? = nil) -> Bool {
+        if index[photo.flightID] == nil, let contact {
+            record([contact], at: photo.takenAt, observer: observer, placeName: placeName)
+        }
+        guard let i = index[photo.flightID] else { return false }
+        do { try photoStore.write(imageData, id: photo.id) } catch { return false }
+        var s = sightings[i]
+        s.photos = (s.photos ?? []).filter { $0.id != photo.id } + [photo]
+        sightings[i] = s
+        isDirty = true
+        save()
+        onLocalChange?([s.id], [])
+        onLocalPhotoChange?([photo.id], [])
+        return true
+    }
+
+    func removePhoto(id: String) {
+        guard let i = sightings.firstIndex(where: { $0.photos?.contains { $0.id == id } == true }) else { return }
+        var s = sightings[i]
+        s.photos = s.photos?.filter { $0.id != id }
+        if s.photos?.isEmpty == true { s.photos = nil }
+        s.removedPhotoIDs = Array(Set(s.removedPhotoIDs ?? []).union([id])).sorted()
+        sightings[i] = s
+        photoStore.delete([id])
+        isDirty = true
+        save()
+        onLocalChange?([s.id], [])
+        onLocalPhotoChange?([], [id])
+    }
+
+    private func deletePhotoFiles(of removed: [Sighting]) {
+        let ids = removed.flatMap { ($0.photos ?? []).map(\.id) }
+        guard !ids.isEmpty else { return }
+        photoStore.delete(ids)
+    }
+
     // MARK: Merging (iCloud)
 
     /// Folds in sightings from other devices. Returns the ids whose merged copy differs from
@@ -247,6 +327,9 @@ final class Logbook {
         for incoming in remote {
             if let i = index[incoming.id] {
                 let merged = sightings[i].merged(with: incoming)
+                // Deleted on another device: drop our copy of the image too.
+                let gone = Set(merged.removedPhotoIDs ?? []).subtracting(sightings[i].removedPhotoIDs ?? [])
+                if !gone.isEmpty { photoStore.delete(gone) }
                 if merged != sightings[i] { sightings[i] = merged }
                 if merged != incoming { differs.insert(incoming.id) }
             } else {
@@ -269,6 +352,7 @@ final class Logbook {
     /// Sightings another device deleted.
     func applyRemoteDeletions(_ ids: Set<String>) {
         guard !ids.isEmpty, ids.contains(where: { index[$0] != nil }) else { return }
+        deletePhotoFiles(of: sightings.filter { ids.contains($0.id) })
         sightings.removeAll { ids.contains($0.id) }
         rebuildIndex()
         isDirty = true
@@ -309,15 +393,22 @@ final class Logbook {
     }
 
     func delete(_ ids: Set<String>) {
+        let removed = sightings.filter { ids.contains($0.id) }
+        deletePhotoFiles(of: removed)
         sightings.removeAll { ids.contains($0.id) }
         rebuildIndex()
         isDirty = true
         save()
         onLocalChange?([], ids)
+        let photoIDs = Set(removed.flatMap { ($0.photos ?? []).map(\.id) })
+        if !photoIDs.isEmpty { onLocalPhotoChange?([], photoIDs) }
     }
 
     func clear() {
         let ids = allIDs
+        let photoIDs = Set(sightings.flatMap { ($0.photos ?? []).map(\.id) })
+        deletePhotoFiles(of: sightings)
+        if !photoIDs.isEmpty { onLocalPhotoChange?([], photoIDs) }
         sightings = []
         index = [:]
         isDirty = true
@@ -357,6 +448,7 @@ final class Logbook {
 
     private func trimIfNeeded() {
         guard sightings.count > maxEntries else { return }
+        deletePhotoFiles(of: Array(sightings.prefix(sightings.count - maxEntries)))
         sightings.removeFirst(sightings.count - maxEntries)
         rebuildIndex()
     }

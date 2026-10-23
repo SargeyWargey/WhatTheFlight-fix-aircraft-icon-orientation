@@ -231,8 +231,8 @@ final class SmallScreenPerimeterTests: XCTestCase {
 }
 
 final class IdentifyTests: XCTestCase {
-    private func contact(_ id: String, miles: Double, bearing: Double, altitude: Int = 30_000) -> RadarContact {
-        var f = TestTraffic.flight(id, miles: miles, bearing: bearing)
+    private func contact(_ id: String, miles: Double, bearing: Double, altitude: Int = 30_000, type: String = "B738") -> RadarContact {
+        var f = TestTraffic.flight(id, miles: miles, bearing: bearing, type: type)
         f.altitudeFeet = altitude
         return RadarContact(flight: f, observer: TestTraffic.observer, at: Date())
     }
@@ -258,6 +258,31 @@ final class IdentifyTests: XCTestCase {
         XCTAssertTrue(WristPointing.candidates(pointing: arm(at: tooLow), contacts: [tooLow]).isEmpty)
         XCTAssertTrue(WristPointing.candidates(pointing: arm(at: contact("x", miles: 5, bearing: 0), offsetAzimuth: 40),
                                                contacts: [contact("x", miles: 5, bearing: 0)]).isEmpty)
+    }
+
+    func testLowHelicoptersStillCount() {
+        // 800 ft, 6 mi out: about 1.4° up — too low for an aeroplane, fine for a helicopter.
+        let heli = contact("heli", miles: 6, bearing: 45, altitude: 800, type: "EC35")
+        let plane = contact("plane", miles: 6, bearing: 45, altitude: 800)
+        XCTAssertTrue(WristPointing.isIdentifiable(heli))
+        XCTAssertFalse(WristPointing.isIdentifiable(plane))
+        XCTAssertEqual(WristPointing.candidates(pointing: arm(at: heli), contacts: [heli, plane]).map(\.id), ["heli"])
+        // Hidden below 1°.
+        XCTAssertFalse(WristPointing.isIdentifiable(contact("hidden", miles: 12, bearing: 45, altitude: 800, type: "EC35")))
+    }
+
+    func testLeadIsNearestOnTheCompassAndSticks() {
+        let a = contact("a", miles: 8, bearing: 100)
+        let b = contact("b", miles: 8, bearing: 112)
+        let behind = contact("behind", miles: 8, bearing: 250)
+        XCTAssertEqual(WristPointing.lead(armAzimuth: 80, contacts: [b, a, behind]), "a")
+        XCTAssertNil(WristPointing.lead(armAzimuth: 180, contacts: [a, b]))
+        // Arm at 107: "b" is 2° nearer than "a", not enough to take over…
+        XCTAssertEqual(WristPointing.lead(armAzimuth: 107, contacts: [a, b], current: "a"), "a")
+        // …at 110 it's 8° nearer.
+        XCTAssertEqual(WristPointing.lead(armAzimuth: 110, contacts: [a, b], current: "a"), "b")
+        // Wraps through north.
+        XCTAssertEqual(WristPointing.lead(armAzimuth: 355, contacts: [contact("n", miles: 5, bearing: 10), b]), "n")
     }
 
     func testNamesOnlyAfterAHoldThenKeepsTheName() {

@@ -20,6 +20,8 @@
 		<string>_wtf-radar._tcp</string>
 		<string>_wtf-radar._udp</string>
 	</array>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Photos you take in Sky View are saved to your camera roll, with the flight in the caption.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>SargeyWargey.WhatTheFlight.flight</string>

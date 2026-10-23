@@ -73,3 +73,37 @@ enum FocusPolicy {
         return RadarFocus(focusedID: inRange[max(0, index - 1)].id, isPinned: false)
     }
 }
+
+/// An aircraft the user pinned. It's followed wherever it is (looked up worldwide when it's
+/// outside the feed's box) and drawn on the radar edge and the map with a pin. Remembered by
+/// airframe, because Flightradar24 gives each leg a new flight id.
+struct PinnedAircraft: Codable, Equatable, Sendable, Identifiable {
+    /// The flight id it was last seen under.
+    var flightID: String
+    var registration: String?
+    var callsign: String?
+    /// "DL570", for lists while it isn't transmitting.
+    var label: String
+    /// Orders pins across devices (oldest make way first). nil for pins made before syncing.
+    var pinnedAt: Date?
+
+    var id: String { registration ?? callsign ?? flightID }
+    /// Demo traffic only exists on the device running the demo, so its pins never sync.
+    var isDemo: Bool { flightID.hasPrefix("demo-") }
+
+    init(_ flight: Flight, pinnedAt: Date = Date()) {
+        flightID = flight.id
+        registration = flight.registration?.uppercased()
+        callsign = flight.callsign?.uppercased()
+        label = flight.displayIdentifier
+        self.pinnedAt = pinnedAt
+    }
+
+    /// Same airframe (or, with no registration, same callsign), whatever the flight id.
+    func matches(_ flight: Flight) -> Bool {
+        if flight.id == flightID { return true }
+        if let registration { return flight.registration?.uppercased() == registration }
+        if let callsign { return flight.callsign?.uppercased() == callsign }
+        return false
+    }
+}

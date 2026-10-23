@@ -17,6 +17,7 @@ struct RadarRootView: View {
     @State private var location = RadarLocationService()
     @State private var logbook = Logbook(device: .current)
     @State private var logbookSync: LogbookSync?
+    @State private var pinSync: PinSync?
     @State private var placeNamer = PlaceNamer()
     @State private var raise = RaiseToSkyDetector()
     @State private var widgets = WidgetPublisher()
@@ -73,7 +74,7 @@ struct RadarRootView: View {
                     centerState: centerState,
                     actions: .init(
                         openSettings: { sheet = .settings },
-                        openSearch: { if !model.allContacts.isEmpty { sheet = .search } },
+                        openSearch: { sheet = .search },  // even with an empty sky: search reaches the whole world
                         openDetail: { sheet = .detail($0) },
                         openLogbook: { sheet = .logbook },
                         openSpotPicker: { sheet = .pickSpot },
@@ -92,6 +93,7 @@ struct RadarRootView: View {
                         fringe: model.outsideContacts,
                         focused: model.focusedContact,
                         isPinned: model.focus.isPinned,
+                        pinnedIDs: model.pinnedIDs,
                         trail: model.trail(for:),
                         trailVersion: model.trailVersion,
                         headingUp: settings.mapNorthUp ? nil : mapHeading,
@@ -119,6 +121,7 @@ struct RadarRootView: View {
         .onAppear {
             model.logbook = logbook
             updateLogbookSync()
+            startPinSync()
             model.onAlert = deliver
             skyWatch.location = location
             skyWatch.endOrphanedActivities()
@@ -136,6 +139,7 @@ struct RadarRootView: View {
             updateIdleTimer()
             #if DEBUG
             openDebugSheetIfRequested()
+            model.debugPinIfRequested()
             #endif
         }
         .onChange(of: scenePhase) { _, phase in
@@ -145,6 +149,7 @@ struct RadarRootView: View {
                 model.start()
                 model.refreshNow()
                 logbookSync?.fetchNow()
+                pinSync?.refresh()
             case .background:
                 logbook.flush()
                 // Sky Watch keeps the radar (and its alerts) running while the phone is locked.
@@ -346,6 +351,15 @@ struct RadarRootView: View {
         Task {
             if let name = await placeNamer.name(for: here) { model.logPlaceName = name }
         }
+    }
+
+    /// Pins follow you between devices through iCloud (`PinSync`).
+    private func startPinSync() {
+        guard pinSync == nil else { return }
+        let sync = PinSync(settings: settings)
+        sync.onRemoteChange = { model.pinsDidChangeElsewhere(arrived: $0) }
+        sync.start()
+        pinSync = sync
     }
 
     private func updateLogbookSync() {

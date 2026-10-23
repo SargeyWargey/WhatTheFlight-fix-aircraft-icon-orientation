@@ -16,6 +16,7 @@ struct TVRadarRootView: View {
     @State private var model: RadarModel
     @State private var logbook = Logbook(device: .current)
     @State private var logbookSync: LogbookSync?
+    @State private var pinSync: PinSync?
     @State private var placeNamer = PlaceNamer()
     @State private var link = TVLinkReceiver()
     @State private var tvLocation = TVLocationProvider()
@@ -87,7 +88,10 @@ struct TVRadarRootView: View {
                 TVFlightDetailView(flightID: id, model: model, settings: settings, logbook: logbook) { presented = nil }
             case .aircraft:
                 TVAircraftListView(model: model, heading: settings.tvFacingDegrees) { id in
-                    withAnimation(.snappy) { model.focus(on: id) }
+                    // A pinned aircraft still on the ground isn't on the radar yet.
+                    if model.contact(id: id) != nil {
+                        withAnimation(.snappy) { model.focus(on: id) }
+                    }
                     presented = nil
                 }
             case .logbook:
@@ -111,6 +115,7 @@ struct TVRadarRootView: View {
             // The TV has no GPS, so its set place is where it really is: log from there.
             model.logsCustomSpot = true
             updateLogbookSync()
+            startPinSync()
             model.onAlert = announce
             updateIdleTimer()
             link.start()
@@ -120,6 +125,7 @@ struct TVRadarRootView: View {
             if !settings.hasSeenWelcome { presented = .tour }
             #if DEBUG
             openDebugScreenIfRequested()
+            model.debugPinIfRequested()
             #endif
         }
         .onChange(of: scenePhase) { _, phase in
@@ -129,6 +135,7 @@ struct TVRadarRootView: View {
                 model.start()
                 model.refreshNow()
                 logbookSync?.fetchNow()
+                pinSync?.refresh()
                 updateIdleTimer()
             case .background:
                 UIApplication.shared.isIdleTimerDisabled = false
@@ -168,11 +175,12 @@ struct TVRadarRootView: View {
         UIApplication.shared.isIdleTimerDisabled = settings.keepScreenAwake && scenePhase == .active
     }
 
-    /// Banner always; spoken too when "Speak alerts" is on.
+    /// Banner always; spoken too when "Speak alerts" is on, with the aircraft pulsing purple
+    /// on the radar and map while it's read out.
     private func announce(_ alert: TrafficAlert) {
         model.post(notice: alert.title, symbol: alert.symbol)
         guard settings.spokenAlerts, let contact = model.contact(id: alert.flightID) else { return }
-        AlertSpeaker.shared.speak(SpokenTraffic.sentence(for: contact, reason: alert.reason))
+        AlertSpeaker.shared.speak(SpokenTraffic.sentence(for: contact, reason: alert.reason), about: contact.id)
     }
 
     private func showFlight(_ id: String) {
@@ -299,6 +307,15 @@ struct TVRadarRootView: View {
         Task {
             if let name = await placeNamer.name(for: here) { model.logPlaceName = name }
         }
+    }
+
+    /// Pins follow you between devices through iCloud (`PinSync`).
+    private func startPinSync() {
+        guard pinSync == nil else { return }
+        let sync = PinSync(settings: settings)
+        sync.onRemoteChange = { model.pinsDidChangeElsewhere(arrived: $0) }
+        sync.start()
+        pinSync = sync
     }
 
     private func updateLogbookSync() {

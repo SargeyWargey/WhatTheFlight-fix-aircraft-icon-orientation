@@ -411,6 +411,14 @@ struct TVRadarSettingsView: View {
                 label: { "\($0.formatted(.number.precision(.fractionLength(0...1)))) mi" },
                 onSelect: { settings.overheadAlertMiles = $0 }
             )
+            TVChoiceRow(
+                title: "Alert ahead",
+                subtitle: "\(Self.leadLabel(settings.overheadAlertLeadSeconds)) before it passes over",
+                options: [30.0, 60, 90, 120, 150, 180, 300],
+                selection: settings.overheadAlertLeadSeconds,
+                label: Self.leadLabel,
+                onSelect: { settings.overheadAlertLeadSeconds = $0 }
+            )
         }
         TVToggleRow(title: "Notable aircraft", subtitle: "Emergencies, military, air ambulances and rare types", symbol: "star.fill", isOn: $settings.notableAlerts)
         TVToggleRow(title: "Speak alerts", subtitle: "Also announce them out loud: “Delta Air Lines flight 1199 is approaching overhead…”",
@@ -432,6 +440,13 @@ struct TVRadarSettingsView: View {
             return SpokenTraffic.sentence(for: contact, reason: .overhead)
         }
         return "Delta Air Lines flight 1199, from Atlanta to Chicago, is approaching overhead, about 2 minutes away, at 9,500 feet. Look northeast."
+    }
+
+    /// "30 s", "1 min", "2½ min".
+    private static func leadLabel(_ seconds: Double) -> String {
+        guard seconds >= 60 else { return "\(Int(seconds)) s" }
+        let whole = Int(seconds) / 60
+        return Int(seconds) % 60 == 0 ? "\(whole) min" : "\(whole)½ min"
     }
 
     private var sampleSubtitle: String {

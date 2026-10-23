@@ -26,6 +26,10 @@ struct TrafficMap: View {
     /// The aircraft owning the centre (`model.focusedContact`). Drawn wherever it is.
     let focused: RadarContact?
     var isPinned = false
+    /// The aircraft a spoken alert is reading out (Apple TV), pulsed in purple.
+    var announcedID: String? = nil
+    /// Pinned aircraft: drawn with a pin wherever they are, not just near the ring.
+    var pinnedIDs: Set<String> = []
     /// `model.trail(for:)`.
     let trail: (String) -> [RadarModel.TrailPoint]
     /// Bump to rebuild trails and airport pins (`model.trailVersion`).
@@ -84,9 +88,12 @@ struct TrafficMap: View {
         var result: [Blip] = []
         if options.showsFringe {
             result += fringe
-                .filter { $0.id != focusedID && $0.distanceMiles <= radiusMiles * 1.5 }
+                .filter { $0.id != focusedID && !pinnedIDs.contains($0.id) && $0.distanceMiles <= radiusMiles * 1.5 }
                 .map { Blip(contact: $0, role: .fringe) }
         }
+        result += fringe
+            .filter { $0.id != focusedID && pinnedIDs.contains($0.id) }
+            .map { Blip(contact: $0, role: .inRange) }
         result += contacts.filter { $0.id != focusedID }.map { Blip(contact: $0, role: .inRange) }
         // Last, so it draws on top. A pinned aircraft is drawn even far outside the radius.
         if let focused { result.append(Blip(contact: focused, role: .focused)) }
@@ -95,9 +102,11 @@ struct TrafficMap: View {
 
     private var heading: Double { headingUp ?? 0 }
 
-    /// A box well beyond anything the camera can show around the observer.
+    /// A box well beyond anything the camera can show around what it's framing (home, or a
+    /// far-away pinned aircraft it's following).
     private var washCorners: [CLLocationCoordinate2D] {
-        let lat = observer.latitude, lon = observer.longitude
+        let center = frame?.center ?? observer
+        let lat = center.latitude, lon = center.longitude
         return [(30.0, -40.0), (30, 40), (-30, 40), (-30, -40)].map {
             CLLocationCoordinate2D(latitude: max(-85, min(85, lat + $0.0)), longitude: lon + $0.1)
         }
@@ -219,13 +228,15 @@ struct TrafficMap: View {
     private func blipView(_ blip: Blip) -> some View {
         let flight = blip.contact.flight
         let isFocused = blip.role == .focused
-        AircraftBlip(flight: flight, screenTrack: flight.track - heading, isFocused: isFocused, scale: options.scale)
+        let isAnnounced = blip.id == announcedID
+        AircraftBlip(flight: flight, screenTrack: flight.track - heading, isFocused: isFocused,
+                     isAnnounced: isAnnounced, isPinned: pinnedIDs.contains(blip.id), scale: options.scale)
             .overlay(alignment: .bottom) {
                 if options.showsLabels && blip.role != .fringe {
                     VStack(spacing: 0) {
                         Text(flight.displayIdentifier)
                             .font(.mono(13 * options.scale, .bold))
-                            .foregroundStyle(isFocused ? Palette.signal : Palette.value)
+                            .foregroundStyle(isAnnounced ? Palette.announce : isFocused ? Palette.signal : Palette.value)
                         Text("\(RadarFormat.wholeNumber(flight.altitudeFeet)) ft")
                             .font(.mono(11 * options.scale))
                             .foregroundStyle(Palette.caption)
@@ -267,13 +278,17 @@ struct TrafficMap: View {
     // MARK: Camera
 
     private func reframe(animated: Bool) {
-        var extra: [CLLocationCoordinate2D] = []
+        var target = TrafficMapGeometry.frame(observer: observer, radiusMiles: radiusMiles, padding: 1.08)
         if let pinned = pinnedOutside {
             // Room for where it'll be in five minutes, so the frame doesn't widen every tick.
-            extra = [pinned.coordinate, GeoMath.extrapolate(pinned.coordinate, trackDegrees: pinned.flight.track,
-                                                             speedKnots: Double(pinned.flight.groundSpeedKnots), seconds: 300)]
+            let ahead = GeoMath.extrapolate(pinned.coordinate, trackDegrees: pinned.flight.track,
+                                            speedKnots: Double(pinned.flight.groundSpeedKnots), seconds: 300)
+            if TrafficMapGeometry.followsPinnedAlone(observer: observer, aircraft: pinned.coordinate, radiusMiles: radiusMiles) {
+                target = TrafficMapGeometry.frame(observer: pinned.coordinate, radiusMiles: max(radiusMiles, 40), extra: [ahead], padding: 1.08)
+            } else {
+                target = TrafficMapGeometry.frame(observer: observer, radiusMiles: radiusMiles, extra: [pinned.coordinate, ahead], padding: 1.08)
+            }
         }
-        let target = TrafficMapGeometry.frame(observer: observer, radiusMiles: radiusMiles, extra: extra, padding: 1.08)
         frame = target
         let position: MapCameraPosition
         if heading != 0, let metresPerMile {

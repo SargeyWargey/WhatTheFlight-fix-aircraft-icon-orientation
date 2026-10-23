@@ -232,6 +232,14 @@ final class TrafficAlertTests: XCTestCase {
         XCTAssertTrue(engine.evaluate([contact], rules: TrafficAlertRules()).isEmpty)
     }
 
+    func testOverheadAlertLeadTimeIsAdjustable() {
+        // 20 mi north, flying south at 300 kts: passes straight over in ~3½ minutes.
+        let contact = RadarContact(flight: flight(callsign: "DAL570", miles: 20, bearing: 0, track: 180, speed: 300), observer: TestTraffic.observer, at: Date())
+        var engine = TrafficAlertEngine()
+        XCTAssertTrue(engine.evaluate([contact], rules: TrafficAlertRules()).isEmpty)
+        XCTAssertEqual(engine.evaluate([contact], rules: TrafficAlertRules(leadSeconds: 300)).map(\.reason), [.overhead])
+    }
+
     func testNoAlertForDistantOrDepartingTraffic() {
         let away = RadarContact(flight: flight(miles: 3, bearing: 0, track: 0, speed: 300), observer: TestTraffic.observer, at: Date())
         let wide = RadarContact(flight: flight(miles: 6, bearing: 0, track: 90, speed: 300, id: "f2"), observer: TestTraffic.observer, at: Date())

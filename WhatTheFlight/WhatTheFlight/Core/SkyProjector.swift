@@ -43,6 +43,15 @@ struct SkyProjector: Equatable, Sendable {
         (points / 2) / tan(degrees.radians / 2)
     }
 
+    /// The same camera seen through a different frame: a captured photo or video frame whose
+    /// long side spans `longSideFieldOfView` degrees (the full sensor, uncropped).
+    func reframed(to size: CGSize, longSideFieldOfView: Double) -> SkyProjector {
+        var copy = self
+        copy.size = size
+        copy.focalLength = Self.focalLength(fieldOfView: longSideFieldOfView, across: Double(max(size.width, size.height)))
+        return copy
+    }
+
     /// East-north-up unit vector for a direction in the sky.
     static func direction(azimuth: Double, elevation: Double) -> SIMD3<Double> {
         let az = azimuth.radians, el = elevation.radians
@@ -79,6 +88,18 @@ struct SkyProjector: Equatable, Sendable {
         }
         let point = CGPoint(x: cx + focalLength * x / z, y: cy - focalLength * y / z)
         return Projection(point: point, isInFront: true, screenAngle: angle)
+    }
+
+    /// The sky direction behind a screen point (the inverse of `project`).
+    func unproject(_ point: CGPoint) -> SIMD3<Double> {
+        let x = (Double(point.x) - Double(size.width) / 2) / focalLength
+        let y = (Double(size.height) / 2 - Double(point.y)) / focalLength
+        return simd_normalize(forward + right * x + up * y)
+    }
+
+    /// Compass azimuth and elevation of an east-north-up direction.
+    static func azimuthElevation(_ v: SIMD3<Double>) -> (azimuth: Double, elevation: Double) {
+        (GeoMath.normalize(atan2(v.x, v.y).degrees), asin(max(-1, min(1, v.z))).degrees)
     }
 
     /// Where the camera is looking, as compass azimuth and elevation.

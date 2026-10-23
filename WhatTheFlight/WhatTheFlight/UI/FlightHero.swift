@@ -61,7 +61,7 @@ struct FlightHero: View {
     private var operatorLine: some View {
         HStack(spacing: 6) {
             if isPinned {
-                Image(systemName: "lock.fill")
+                Image(systemName: "pin.fill")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(Palette.signal)
                     .transition(.scale.combined(with: .opacity))

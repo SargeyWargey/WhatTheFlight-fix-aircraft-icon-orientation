@@ -153,6 +153,9 @@ struct RadarSettingsSheet: View {
             Toggle(isOn: $settings.raiseToSkyView) {
                 InfoLabel("Lift to open Sky View", info: "Raise your iPhone toward the sky and every aircraft is labeled through the camera; lower it or tap ✕ to return to the radar. With this off, open Sky View from Find in the Sky on any flight's details.")
             }
+            Toggle(isOn: $settings.skySaveToPhotos) {
+                InfoLabel("Save photos to camera roll", info: "Photos you take in Sky View go to your camera roll at full resolution, with the flight in the caption. The logbook keeps its own smaller copy either way, for the boarding pass and iCloud.")
+            }
         } header: {
             Text("Sky View")
         }

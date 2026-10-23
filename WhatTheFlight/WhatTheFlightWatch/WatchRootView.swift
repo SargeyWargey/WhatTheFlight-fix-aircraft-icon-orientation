@@ -32,6 +32,7 @@ struct WatchRootView: View {
     @State private var page: Page = .radar
     @State private var path: [Screen] = []
     @State private var complications = ComplicationPublisher()
+    @State private var pinSync: PinSync?
     /// First run: the tour, before the location prompt.
     @State private var showTour = false
     /// A route that arrived before the first feed load (e.g. from a complication).
@@ -107,6 +108,7 @@ struct WatchRootView: View {
                 model.settingsDidChange(refetch: false)
             }
             link.activate()
+            startPinSync()
             // Identify names anything you can see within 15 mi, whatever the radar's radius.
             model.queryRadiusFloor = WristPointing.identifyRangeMiles + 1
             if watchSettings.hasSeenTour {
@@ -127,6 +129,7 @@ struct WatchRootView: View {
                 location.start()
                 model.start()
                 model.refreshNow()
+                pinSync?.refresh()
             case .inactive:
                 // Pointing at the sky can look like "wrist down" to watchOS: keep tracking.
                 guard !isPointing else { break }
@@ -242,6 +245,15 @@ struct WatchRootView: View {
         }
     }
 
+
+    /// Pins follow you between devices through iCloud (`PinSync`).
+    private func startPinSync() {
+        guard pinSync == nil else { return }
+        let sync = PinSync(settings: settings)
+        sync.onRemoteChange = { model.pinsDidChangeElsewhere(arrived: $0) }
+        sync.start()
+        pinSync = sync
+    }
     private func syncObserver() {
         let observer = observerCoordinate
         model.setObserver(observer)

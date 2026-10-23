@@ -149,7 +149,8 @@ struct RadarContact: Identifiable, Equatable, Sendable {
 enum RadarFormat {
     /// Whole miles, per spec. Anything under half a mile reads "<1".
     static func miles(_ value: Double) -> String {
-        value < 0.5 ? "<1" : "\(Int(value.rounded()))"
+        // Grouped, for pinned aircraft thousands of miles away: "2,266".
+        value < 0.5 ? "<1" : wholeNumber(Int(value.rounded()))
     }
 
     static func wholeNumber(_ value: Int) -> String {

@@ -11,6 +11,16 @@ import CoreLocation
 
 protocol FlightFeed: Sendable {
     func flights(in bounds: GeographicBounds) async throws -> [Flight]
+    /// Aircraft anywhere in the world whose tail number, flight number or callsign starts
+    /// with `query`.
+    func search(_ query: String) async throws -> [Flight]
+    /// Where these airframes (by registration) and flights (by callsign) are now, anywhere.
+    func lookup(registrations: [String], callsigns: [String]) async throws -> [Flight]
+}
+
+extension FlightFeed {
+    func search(_ query: String) async throws -> [Flight] { [] }
+    func lookup(registrations: [String], callsigns: [String]) async throws -> [Flight] { [] }
 }
 
 enum FeedError: LocalizedError, Equatable {
@@ -71,6 +81,15 @@ struct FlightRadarFeed: FlightFeed {
         return url(bounds: "90,-90,-180,180", extra: [filter], ground: true)
     }
 
+    /// The whole world filtered by `reg`, `flight` or `callsign`. Flightradar24 matches
+    /// prefixes, case-sensitively, and takes comma-separated lists; different filters AND
+    /// together, so each needs its own request.
+    static func worldURL(filter name: String, values: [String]) -> URL? {
+        let list = values.map { $0.uppercased() }.filter { !$0.isEmpty }
+        guard !list.isEmpty else { return nil }
+        return url(bounds: "90,-90,-180,180", extra: [URLQueryItem(name: name, value: list.joined(separator: ","))], ground: true)
+    }
+
     private static func url(bounds: String, extra: [URLQueryItem], ground: Bool = false) -> URL? {
         var components = URLComponents(string: "https://data-cloud.flightradar24.com/zones/fcgi/feed.js")
         components?.queryItems = [
@@ -101,6 +120,55 @@ struct FlightRadarFeed: FlightFeed {
     func locate(registration: String?, callsign: String?) async throws -> Flight? {
         guard let url = Self.locateURL(registration: registration, callsign: callsign) else { return nil }
         return try await fetch(url).max { $0.positionTime < $1.positionTime }
+    }
+
+    func search(_ query: String) async throws -> [Flight] {
+        let q = query.uppercased().filter { !$0.isWhitespace }
+        guard q.count >= 2 else { return [] }
+        let urls = [
+            Self.worldURL(filter: "reg", values: [q] + RegistrationCountry.hyphenatedForms(of: q)),
+            Self.worldURL(filter: "flight", values: [q]),
+            Self.worldURL(filter: "callsign", values: [q]),
+        ].compactMap { $0 }
+        return try await fetchAll(urls)
+    }
+
+    func lookup(registrations: [String], callsigns: [String]) async throws -> [Flight] {
+        let urls = [
+            Self.worldURL(filter: "reg", values: registrations),
+            Self.worldURL(filter: "callsign", values: callsigns),
+        ].compactMap { $0 }
+        return try await fetchAll(urls)
+    }
+
+    /// Runs the requests side by side and merges them by flight id. One failing is fine;
+    /// all failing throws the first error.
+    private func fetchAll(_ urls: [URL]) async throws -> [Flight] {
+        guard !urls.isEmpty else { return [] }
+        let results = await withTaskGroup(of: Result<[Flight], Error>.self) { group in
+            for url in urls {
+                group.addTask {
+                    do { return .success(try await fetch(url)) } catch { return .failure(error) }
+                }
+            }
+            var all: [Result<[Flight], Error>] = []
+            for await result in group { all.append(result) }
+            return all
+        }
+        var merged: [String: Flight] = [:]
+        var firstError: Error?
+        for result in results {
+            switch result {
+            case .success(let flights):
+                for f in flights where (merged[f.id]?.positionTime ?? .distantPast) <= f.positionTime { merged[f.id] = f }
+            case .failure(let error):
+                firstError = firstError ?? error
+            }
+        }
+        if merged.isEmpty, let firstError, results.allSatisfy({ if case .failure = $0 { return true } else { return false } }) {
+            throw firstError
+        }
+        return Array(merged.values)
     }
 
     private func fetch(_ url: URL) async throws -> [Flight] {

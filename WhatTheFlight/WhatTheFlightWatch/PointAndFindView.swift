@@ -64,13 +64,14 @@ struct PointAndFindView: View {
                         }
                         .frame(maxWidth: .infinity)
                         ElevationGauge(target: targetDirection.elevation, arm: armDirection?.elevation,
-                                       isLevel: guidance?.isLevel == true, isOnTarget: guidance?.isOnTarget == true)
+                                       isLevel: guidance?.isLevel == true, isOnTarget: guidance?.isOnTarget == true,
+                                       silhouette: target?.flight.silhouette ?? .airliner)
                             .frame(width: 30)
                         .padding(.bottom, metrics.gaugeBottomInset)
                     }
                     .frame(maxHeight: .infinity)
                     AzimuthStrip(arm: armDirection?.azimuth,
-                                 marks: [AzimuthStrip.Mark(azimuth: targetDirection.azimuth, isHighlighted: true)],
+                                 marks: target.map { [AzimuthStrip.Mark($0, isHighlighted: true)] } ?? [],
                                  isFacing: guidance?.isFacing == true, isOnTarget: guidance?.isOnTarget == true)
                         .frame(height: 26)
                         .clearOfClock(metrics)

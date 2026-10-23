@@ -32,6 +32,8 @@ struct TVMapStack<Card: View>: View {
                     fringe: model.outsideContacts,
                     focused: model.focusedContact,
                     isPinned: model.focus.isPinned,
+                    announcedID: AlertSpeaker.shared.speakingFlightID,
+                    pinnedIDs: model.pinnedIDs,
                     trail: model.trail(for:),
                     trailVersion: model.trailVersion,
                     headingUp: settings.mapNorthUp ? nil : settings.tvFacingDegrees,

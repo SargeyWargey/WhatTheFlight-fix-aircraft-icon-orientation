@@ -181,12 +181,17 @@ struct PointingReadout: View {
 // MARK: - Direction
 
 /// A compass strip centred on where your arm points. It slides as you swing round; aircraft
-/// ride on it at their real bearing. The highlighted one waits at the edge with chevrons
-/// when it's further round than the strip shows.
+/// ride on it at their real bearing, drawn as their own silhouette facing their track. The
+/// highlighted one waits at the edge with chevrons when it's further round than the strip shows.
 struct AzimuthStrip: View {
     struct Mark: Equatable {
         var azimuth: Double
         var isHighlighted: Bool
+        var silhouette: AircraftSilhouette = .airliner
+        /// Ground track, degrees true. Seen from above with your arm's direction up, as on
+        /// the radar; nil draws the nose up.
+        var track: Double? = nil
+        var color: Color = Palette.blip
     }
 
     let arm: Double?
@@ -230,17 +235,26 @@ struct AzimuthStrip: View {
             line.addLine(to: CGPoint(x: mid, y: size.height))
             context.stroke(line, with: .color(isFacing || isOnTarget ? Palette.live : Palette.ink), lineWidth: 2)
 
+            func glyph(_ mark: Mark, side: CGFloat, color: Color, opacity: Double) {
+                var g = context
+                g.opacity = opacity
+                g.translateBy(x: x(mark.azimuth), y: size.height - side / 2 - 1)
+                g.rotate(by: .degrees(mark.track.map { $0 - center } ?? 0))
+                let rect = CGRect(x: -side / 2, y: -side / 2, width: side, height: side)
+                g.fill(AircraftSilhouetteShape(silhouette: mark.silhouette, layer: .translucent).path(in: rect),
+                       with: .color(color.opacity(mark.silhouette == .helicopter ? 0.55 : 0.34)))
+                g.fill(AircraftSilhouetteShape(silhouette: mark.silhouette).path(in: rect), with: .color(color))
+            }
+
             // Everyone else first, faint, so the highlighted aircraft draws on top.
             for mark in marks where !mark.isHighlighted && abs(GeoMath.shortestDelta(from: center, to: mark.azimuth)) <= Self.span {
-                context.draw(context.resolve(Image(systemName: "airplane")).tinted(Palette.blip.opacity(0.55)),
-                             in: CGRect(x: x(mark.azimuth) - 5, y: size.height - 12, width: 10, height: 10))
+                glyph(mark, side: 14, color: mark.color, opacity: 0.65)
             }
             for mark in marks where mark.isHighlighted {
                 let delta = GeoMath.shortestDelta(from: center, to: mark.azimuth)
                 let tint = isOnTarget || isFacing ? Palette.live : Palette.signal
                 if abs(delta) <= Self.span {
-                    context.draw(context.resolve(Image(systemName: "airplane")).tinted(tint),
-                                 in: CGRect(x: x(mark.azimuth) - 7, y: size.height - 15, width: 14, height: 14))
+                    glyph(mark, side: 18, color: tint, opacity: 1)
                 } else {
                     let right = delta > 0
                     context.draw(Text(Image(systemName: right ? "chevron.right.2" : "chevron.left.2"))
@@ -254,11 +268,10 @@ struct AzimuthStrip: View {
     }
 }
 
-private extension GraphicsContext.ResolvedImage {
-    func tinted(_ color: Color) -> GraphicsContext.ResolvedImage {
-        var copy = self
-        copy.shading = .color(color)
-        return copy
+extension AzimuthStrip.Mark {
+    init(_ contact: RadarContact, isHighlighted: Bool) {
+        self.init(azimuth: contact.bearing, isHighlighted: isHighlighted, silhouette: contact.flight.silhouette,
+                  track: contact.flight.track, color: Palette.blip(for: contact.flight))
     }
 }
 
@@ -272,6 +285,10 @@ struct ElevationGauge: View {
     let arm: Double?
     let isLevel: Bool
     let isOnTarget: Bool
+    var silhouette: AircraftSilhouette = .airliner
+    /// Only a guide: the aircraft nearest your arm on the compass, not yet in your sights.
+    /// Drawn as an outline so you can set the height while still swinging round.
+    var isPreview = false
 
     private static let lowest = -10.0
     private static let highest = 90.0
@@ -297,14 +314,19 @@ struct ElevationGauge: View {
                     .frame(width: 14, height: 1)
                     .position(x: trackX, y: y(0))
                 if let target {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(tint.opacity(0.45))
-                        .frame(width: 12, height: max(6, band * 2))
-                        .position(x: trackX, y: y(target))
-                    Image(systemName: "airplane")
-                        .font(.system(size: 9, weight: .bold))
-                        .rotationEffect(.degrees(-90))
+                    Group {
+                        if isPreview {
+                            RoundedRectangle(cornerRadius: 3)
+                                .strokeBorder(tint.opacity(0.85), style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+                        } else {
+                            RoundedRectangle(cornerRadius: 3).fill(tint.opacity(0.45))
+                        }
+                    }
+                    .frame(width: 14, height: max(6, band * 2))
+                    .position(x: trackX, y: y(target))
+                    AircraftGlyph(silhouette: silhouette, size: 14, spinsRotor: false)
                         .foregroundStyle(tint)
+                        .opacity(isPreview ? 0.8 : 1)
                         .position(x: trackX, y: y(target))
                 }
                 if let arm {
@@ -317,6 +339,7 @@ struct ElevationGauge: View {
                 Text("90°").font(.mono(7)).foregroundStyle(Palette.faint).position(x: trackX - 12, y: 4)
                 Text("0°").font(.mono(7)).foregroundStyle(Palette.faint).position(x: trackX - 12, y: y(0))
             }
+            .animation(.snappy(duration: 0.25), value: target)
         }
         .accessibilityHidden(true)
     }

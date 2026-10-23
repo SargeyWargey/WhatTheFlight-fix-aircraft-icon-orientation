@@ -42,7 +42,7 @@ struct RadarScreen: View {
         GeometryReader { geo in
             let layout = RadarLayout(size: geo.size)
             let obstacles = layout.obstacles
-            let placements = PerimeterPlanner.plan(contacts: model.contacts, heading: heading, track: layout.iconTrack, obstacles: obstacles)
+            let placements = PerimeterPlanner.plan(contacts: model.perimeterContacts, heading: heading, track: layout.iconTrack, obstacles: obstacles)
 
             ZStack {
                 if settings.showCompassBezel {
@@ -58,6 +58,7 @@ struct RadarScreen: View {
                 PerimeterLayer(
                     placements: placements,
                     focusedID: model.focus.focusedID,
+                    pinnedIDs: model.pinnedIDs,
                     radiusMiles: settings.radiusMiles,
                     onTap: { contact in
                         withAnimation(.snappy) { model.focus(on: contact.id) }
@@ -100,7 +101,7 @@ struct RadarScreen: View {
         .contentShape(Rectangle())
         .gesture(swipe)
         .sensoryFeedback(.selection, trigger: model.focus.focusedID) { _, _ in settings.hapticsEnabled }
-        .sensoryFeedback(.impact(weight: .medium), trigger: model.focus.isPinned) { _, _ in settings.hapticsEnabled }
+        .sensoryFeedback(.impact(weight: .medium), trigger: model.pins.count) { _, _ in settings.hapticsEnabled }
     }
 
     // MARK: Centre

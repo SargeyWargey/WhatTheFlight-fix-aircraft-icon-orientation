@@ -7,6 +7,9 @@
 //  closest to your arm (inside a 10° cone) gets a light tick, and after a half-second hold a
 //  firm tap, its details on screen and — if switched on — a spoken call-out. The crown flips
 //  between aircraft that are close together in the sky; tap the card for full details.
+//  Before anything's in the cone, the aircraft nearest your arm on the compass (the "lead")
+//  is highlighted on the strip and outlined on the height gauge, so you can raise or lower
+//  your arm while you're still swinging round.
 //
 
 import SwiftUI
@@ -23,16 +26,14 @@ struct IdentifyView: View {
     @State private var tracker = IdentifyTracker()
     @State private var speaker = IdentifySpeaker()
     @State private var candidates: [WristPointing.Candidate] = []
+    @State private var leadID: String?
     @State private var lastSpoken: (id: String, at: Date)?
     @State private var crown = 0
     @FocusState private var crownFocused: Bool
 
     /// Everything you could plausibly be pointing at.
     private var visible: [RadarContact] {
-        model.allContacts.filter {
-            $0.distanceMiles <= WristPointing.identifyRangeMiles
-                && GeoMath.elevationDegrees(groundDistanceMiles: $0.distanceMiles, altitudeFeet: Double($0.flight.altitudeFeet)) >= WristPointing.minimumElevation
-        }
+        model.allContacts.filter { WristPointing.isIdentifiable($0) }
     }
 
     /// Aim is always upright; Point follows the sensors (and "Turn screen around").
@@ -47,8 +48,19 @@ struct IdentifyView: View {
         pointer.pointing.map(WristPointing.direction(of:))
     }
 
-    private var currentDirection: WristPointing.Direction? {
-        current.map { WristPointing.direction(of: WristPointing.target(for: $0)) }
+    /// What the strip highlights and the gauge shows: the aircraft in your sights, or failing
+    /// that the one nearest your arm on the compass.
+    private var lead: RadarContact? {
+        current ?? leadID.flatMap(model.contact(id:)).flatMap { WristPointing.isIdentifiable($0) ? $0 : nil }
+    }
+
+    private var leadDirection: WristPointing.Direction? {
+        lead.map { WristPointing.direction(of: WristPointing.target(for: $0)) }
+    }
+
+    private var leadGuidance: WristPointing.Guidance? {
+        guard let lead, let pointing = pointer.pointing else { return nil }
+        return WristPointing.guidance(pointing: pointing, target: WristPointing.target(for: lead))
     }
 
     var body: some View {
@@ -73,20 +85,22 @@ struct IdentifyView: View {
                         } else {
                             prompt(symbol: watchSettings.aimStyle == .point ? "hand.point.up.left.fill" : "scope",
                                    title: watchSettings.aimStyle == .point ? "Point at a plane" : "Aim at a plane",
-                                   text: "\(visible.count) aircraft within \(Int(WristPointing.identifyRangeMiles)) mi")
+                                   text: searchingText)
                         }
                     }
                     .frame(maxWidth: .infinity)
-                    ElevationGauge(target: currentDirection?.elevation, arm: armDirection?.elevation,
-                                   isLevel: tracker.isLocked, isOnTarget: tracker.isLocked)
+                    ElevationGauge(target: leadDirection?.elevation, arm: armDirection?.elevation,
+                                   isLevel: leadGuidance?.isLevel == true, isOnTarget: tracker.isLocked,
+                                   silhouette: lead?.flight.silhouette ?? .airliner, isPreview: current == nil)
                         .frame(width: 30)
                         .padding(.bottom, metrics.gaugeBottomInset)
                 }
                 .frame(maxHeight: .infinity)
-                AzimuthStrip(arm: armDirection?.azimuth, marks: marks, isFacing: tracker.isLocked, isOnTarget: tracker.isLocked)
+                AzimuthStrip(arm: armDirection?.azimuth, marks: marks,
+                             isFacing: leadGuidance?.isFacing == true, isOnTarget: tracker.isLocked)
                     .frame(height: 26)
                     .clearOfClock(metrics)
-                PointingReadout(arm: armDirection, target: currentDirection, mode: pointer.mode)
+                PointingReadout(arm: armDirection, target: leadDirection, mode: pointer.mode)
                     .clearOfClock(metrics)
             }
             .padding(.horizontal, 18)
@@ -120,9 +134,17 @@ struct IdentifyView: View {
     }
 
     private var marks: [AzimuthStrip.Mark] {
-        visible.map { contact in
-            AzimuthStrip.Mark(azimuth: contact.bearing, isHighlighted: contact.id == tracker.currentID)
+        let highlighted = lead?.id
+        return visible.map { AzimuthStrip.Mark($0, isHighlighted: $0.id == highlighted) }
+    }
+
+    /// "3 aircraft within 15 mi", or how far to raise / lower your arm for the lead.
+    private var searchingText: String {
+        let count = "\(visible.count) aircraft"
+        guard let g = leadGuidance, !g.isLevel else {
+            return "\(count) within \(Int(WristPointing.identifyRangeMiles)) mi"
         }
+        return "\(count) · \(g.raise > 0 ? "up" : "down") \(Int(abs(g.raise).rounded()))°"
     }
 
     private func card(_ contact: RadarContact) -> some View {
@@ -194,6 +216,9 @@ struct IdentifyView: View {
             if let pointing = pointer.pointing {
                 candidates = WristPointing.candidates(pointing: pointing, contacts: visible, cone: IdentifyTracker.keepCone)
                 if let event = tracker.update(candidates, now: Date()) { handle(event) }
+                let nextLead = tracker.currentID
+                    ?? WristPointing.lead(armAzimuth: WristPointing.direction(of: pointing).azimuth, contacts: visible, current: leadID)
+                if nextLead != leadID { leadID = nextLead }
             }
             try? await Task.sleep(for: .milliseconds(100))
         }

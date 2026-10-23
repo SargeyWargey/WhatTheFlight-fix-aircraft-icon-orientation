@@ -212,18 +212,21 @@ struct FlightDetailSheet: View {
 
     private func actions(_ contact: RadarContact) -> some View {
         let isFocused = model.focus.focusedID == contact.id
+        let isPinned = model.isPinned(contact.id)
         return VStack(spacing: 10) {
             HStack(spacing: 10) {
                 Button {
-                    if isFocused {
-                        model.togglePin()
+                    if isPinned {
+                        withAnimation(.snappy) { model.unpin(contact.id) }
+                    } else if isFocused {
+                        withAnimation(.snappy) { model.pin(contact.flight) }
                     } else {
                         model.focus(on: contact.id)
                         dismiss()
                     }
                 } label: {
-                    Label(isFocused ? (model.focus.isPinned ? "Unpin" : "Pin") : "Track on Radar",
-                          systemImage: isFocused ? (model.focus.isPinned ? "lock.open" : "lock") : "scope")
+                    Label(isFocused || isPinned ? (isPinned ? "Unpin" : "Pin") : "Track on Radar",
+                          systemImage: isFocused || isPinned ? (isPinned ? "pin.slash" : "pin") : "scope")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(RadarButtonStyle(prominent: true))

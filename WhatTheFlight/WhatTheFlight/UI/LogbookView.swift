@@ -215,6 +215,28 @@ struct LogbookView: View {
                     .listRowBackground(Color.clear)
                 }
 
+                let photos = logbook.allPhotos
+                if !photos.isEmpty {
+                    Section {
+                        NavigationLink {
+                            SpotPhotoGallery(logbook: logbook)
+                        } label: {
+                            HStack(spacing: 10) {
+                                ForEach(photos.prefix(3)) { photo in
+                                    SpotPhotoThumbnail(photo: photo, store: logbook.photoStore, size: 44)
+                                }
+                                Text("Your photos")
+                                    .font(.mono(14, .bold))
+                                    .foregroundStyle(Palette.ink)
+                                Spacer()
+                                Text(RadarFormat.wholeNumber(photos.count))
+                                    .font(.mono(14, .heavy))
+                                    .foregroundStyle(Palette.route)
+                            }
+                        }
+                    }
+                }
+
                 let recap = DailyRecap(logbook.sightings)
                 if !recap.notable.isEmpty || !recap.newTypes.isEmpty || !recap.newAirlines.isEmpty {
                     TodayHighlights(recap: recap, logbook: logbook, onTrack: onTrack, isLive: isLive)
@@ -441,6 +463,12 @@ struct SightingRowLabel: View {
                         Image(systemName: tag.symbol)
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(Palette.color(for: tag))
+                    }
+                    if !s.spotPhotos.isEmpty {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Palette.signal)
+                            .accessibilityLabel("Photographed")
                     }
                 }
                 Text(s.summaryLine)
@@ -722,7 +750,8 @@ struct SightingDetailView: View {
     @Environment(\.radarObserver) private var observer
 
     var body: some View {
-        let s = sighting
+        // The live copy, so photos added or deleted show straight away.
+        let s = logbook.sighting(id: sighting.id) ?? sighting
         List {
             Section {
                 VStack(spacing: 6) {
@@ -751,6 +780,26 @@ struct SightingDetailView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .listRowBackground(Color.clear)
+            }
+
+            if !s.spotPhotos.isEmpty {
+                Section("Your photos · \(s.spotPhotos.count)") {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(s.spotPhotos) { photo in
+                                NavigationLink {
+                                    SpotPhotoView(photo: photo, store: logbook.photoStore,
+                                                  onDelete: { logbook.removePhoto(id: photo.id) })
+                                } label: {
+                                    SpotPhotoThumbnail(photo: photo, store: logbook.photoStore, size: 96)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                }
             }
 
             Section("Sighting") {
@@ -809,6 +858,46 @@ struct SightingDetailView: View {
         .scrollContentBackground(.hidden)
         .background(Palette.paper.ignoresSafeArea())
         .navigationTitle(s.displayIdentifier)
+        .navigationBarTitleDisplayMode(.inline)
+        .fontDesign(.monospaced)
+    }
+}
+/// Every Sky View photo in the logbook, newest first.
+struct SpotPhotoGallery: View {
+    let logbook: Logbook
+
+    var body: some View {
+        let photos = logbook.allPhotos
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 8)], spacing: 8) {
+                ForEach(photos) { photo in
+                    NavigationLink {
+                        SpotPhotoView(photo: photo, store: logbook.photoStore, onDelete: { logbook.removePhoto(id: photo.id) })
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            SpotPhotoThumbnail(photo: photo, store: logbook.photoStore, size: 104)
+                            Text(photo.displayIdentifier)
+                                .font(.mono(11, .bold))
+                                .foregroundStyle(Palette.ink)
+                                .lineLimit(1)
+                            Text(photo.takenAt.formatted(.dateTime.month(.abbreviated).day()))
+                                .font(.mono(10))
+                                .foregroundStyle(Palette.caption)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(16)
+        }
+        .overlay {
+            if photos.isEmpty {
+                ContentUnavailableView("No photos yet", systemImage: "camera",
+                                       description: Text("Take one in Sky View and it lands here, with a boarding pass to share."))
+            }
+        }
+        .background(Palette.paper.ignoresSafeArea())
+        .navigationTitle("Your Photos")
         .navigationBarTitleDisplayMode(.inline)
         .fontDesign(.monospaced)
     }

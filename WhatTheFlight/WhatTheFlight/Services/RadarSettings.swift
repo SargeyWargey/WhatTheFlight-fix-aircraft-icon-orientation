@@ -71,6 +71,8 @@ final class RadarSettings {
     var overheadAlerts: Bool { didSet { save(overheadAlerts, .overheadAlerts) } }
     /// How close counts as "overhead", in miles.
     var overheadAlertMiles: Double { didSet { save(overheadAlertMiles, .overheadAlertMiles) } }
+    /// How long before the aircraft passes closest the overhead alert goes off, in seconds.
+    var overheadAlertLeadSeconds: Double { didSet { save(overheadAlertLeadSeconds, .overheadAlertLead) } }
     /// Heads-up for emergencies, military, air ambulances and rare types.
     var notableAlerts: Bool { didSet { save(notableAlerts, .notableAlerts) } }
     /// Apple TV: read alerts aloud as well as showing the banner.
@@ -81,6 +83,8 @@ final class RadarSettings {
     var syncLogbook: Bool { didSet { save(syncLogbook, .syncLogbook) } }
     /// iPhone: lifting the phone to the sky opens Sky View.
     var raiseToSkyView: Bool { didSet { save(raiseToSkyView, .raiseToSkyView) } }
+    /// iPhone: Sky View photos also go to the camera roll at full resolution.
+    var skySaveToPhotos: Bool { didSet { save(skySaveToPhotos, .skySaveToPhotos) } }
     /// The ambient map: a Map item in the TV dock and a map pane beside the radar on iPad
     /// in landscape. Off, nothing else changes.
     var mapView: Bool { didSet { save(mapView, .mapView) } }
@@ -88,6 +92,15 @@ final class RadarSettings {
     var tvView: TVView { didSet { save(tvView.rawValue, .tvView) } }
     /// The map turns so "up" is the TV's facing direction, like the radar. On = north up.
     var mapNorthUp: Bool { didSet { save(mapNorthUp, .mapNorthUp) } }
+    /// Aircraft followed wherever they are, oldest first. Edit through `RadarModel.pin` / `unpin`.
+    var pinnedAircraft: [PinnedAircraft] {
+        didSet {
+            save(try? JSONEncoder().encode(pinnedAircraft), .pinnedAircraft)
+            onPinnedAircraftChange?(oldValue)
+        }
+    }
+    /// `PinSync` listens here to send local pin changes to iCloud; gets the old list.
+    @ObservationIgnored var onPinnedAircraftChange: ((_ old: [PinnedAircraft]) -> Void)?
 
     @ObservationIgnored private let defaults: UserDefaults
 
@@ -125,23 +138,29 @@ final class RadarSettings {
         tvFacingDegrees = GeoMath.normalize(value(.tvFacing, 0.0))
         overheadAlerts = value(.overheadAlerts, true)
         overheadAlertMiles = value(.overheadAlertMiles, 1.5).clamped(to: Self.overheadAlertRange)
+        overheadAlertLeadSeconds = value(.overheadAlertLead, 150.0).clamped(to: Self.overheadAlertLeadRange)
         notableAlerts = value(.notableAlerts, true)
         spokenAlerts = value(.spokenAlerts, false)
         keepLogbook = value(.keepLogbook, true)
         syncLogbook = value(.syncLogbook, true)
         raiseToSkyView = value(.raiseToSkyView, true)
+        skySaveToPhotos = value(.skySaveToPhotos, true)
         mapView = value(.mapView, true)
         tvView = TVView(rawValue: value(.tvView, "radar")) ?? .radar
         mapNorthUp = value(.mapNorthUp, false)
+        pinnedAircraft = defaults.data(forKey: Key.pinnedAircraft.name)
+            .flatMap { try? JSONDecoder().decode([PinnedAircraft].self, from: $0) } ?? []
     }
 
     /// The TV's view, treated as the radar whenever the map is switched off.
     var effectiveTVView: TVView { mapView ? tvView : .radar }
 
     static let overheadAlertRange: ClosedRange<Double> = 0.5...5
+    static let overheadAlertLeadRange: ClosedRange<Double> = 30...600
 
     var alertRules: TrafficAlertRules {
-        TrafficAlertRules(overhead: overheadAlerts, notable: notableAlerts, overheadMiles: overheadAlertMiles)
+        TrafficAlertRules(overhead: overheadAlerts, notable: notableAlerts, overheadMiles: overheadAlertMiles,
+                          leadSeconds: overheadAlertLeadSeconds)
     }
 
     var customCoordinate: CLLocationCoordinate2D? {
@@ -170,11 +189,13 @@ final class RadarSettings {
         demoTraffic = false
         overheadAlerts = true
         overheadAlertMiles = 1.5
+        overheadAlertLeadSeconds = 150
         notableAlerts = true
         spokenAlerts = false
         keepLogbook = true
         syncLogbook = true
         raiseToSkyView = true
+        skySaveToPhotos = true
         mapView = true
         tvView = .radar
         mapNorthUp = false
@@ -186,8 +207,8 @@ final class RadarSettings {
         case radius, refresh, locationMode, customLatitude, customLongitude, appearance
         case showHelicopters, showTopography, showCompassBezel, radarSweep, showPhotos
         case haptics, keepAwake, demoTraffic, hasSeenWelcome, customPlaceName, tvFacing
-        case overheadAlerts, overheadAlertMiles, notableAlerts, spokenAlerts, keepLogbook, raiseToSkyView
-        case mapView, tvView, mapNorthUp
+        case overheadAlerts, overheadAlertMiles, overheadAlertLead, notableAlerts, spokenAlerts, keepLogbook, raiseToSkyView
+        case mapView, tvView, mapNorthUp, skySaveToPhotos, pinnedAircraft
         case syncLogbook = "iCloudLogbook"
 
         var name: String { "wtf.\(rawValue)" }

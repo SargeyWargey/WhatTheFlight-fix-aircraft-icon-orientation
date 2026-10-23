@@ -3,18 +3,26 @@
 //  WhatTheFlight
 //
 //  Reads traffic alerts aloud ("Delta Air Lines flight 1199 is approaching overhead…") with
-//  the best English voice installed, ducking any other audio while it speaks.
+//  the best English voice installed, ducking any other audio while it speaks. While it reads
+//  an alert out, `speakingFlightID` names the aircraft so the screen can highlight it.
 //
 
 #if os(tvOS) || os(iOS)
 import AVFoundation
+import Observation
 
 @MainActor
+@Observable
 final class AlertSpeaker: NSObject, AVSpeechSynthesizerDelegate {
     static let shared = AlertSpeaker()
 
-    private let synthesizer = AVSpeechSynthesizer()
-    private var pending = 0
+    /// The aircraft being talked about right now, if any.
+    private(set) var speakingFlightID: String?
+
+    @ObservationIgnored private let synthesizer = AVSpeechSynthesizer()
+    @ObservationIgnored private var pending = 0
+    /// Which aircraft each queued utterance is about.
+    @ObservationIgnored private var flights: [ObjectIdentifier: String] = [:]
     /// Activating or deactivating the audio session can block for a while, so it never runs on
     /// the main thread. A serial queue keeps activate/deactivate in order.
     private static let sessionQueue = DispatchQueue(label: "wtf.alert-speaker.session", qos: .userInitiated)
@@ -25,7 +33,7 @@ final class AlertSpeaker: NSObject, AVSpeechSynthesizerDelegate {
     }
 
     /// Premium, then enhanced, then the default voice for the user's English variant.
-    private lazy var voice: AVSpeechSynthesisVoice? = {
+    @ObservationIgnored private lazy var voice: AVSpeechSynthesisVoice? = {
         let language = AVSpeechSynthesisVoice.currentLanguageCode().hasPrefix("en") ? AVSpeechSynthesisVoice.currentLanguageCode() : "en-US"
         let english = AVSpeechSynthesisVoice.speechVoices().filter { $0.language == language }
         return english.first { $0.quality == .premium }
@@ -33,7 +41,7 @@ final class AlertSpeaker: NSObject, AVSpeechSynthesizerDelegate {
             ?? AVSpeechSynthesisVoice(language: language)
     }()
 
-    func speak(_ text: String) {
+    func speak(_ text: String, about flightID: String? = nil) {
         // A burst of alerts (say, on first load) shouldn't turn into a minute of talking.
         guard pending < 2 else { return }
         pending += 1
@@ -48,18 +56,27 @@ final class AlertSpeaker: NSObject, AVSpeechSynthesizerDelegate {
         utterance.voice = voice
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 0.95
         utterance.postUtteranceDelay = 0.3
+        if let flightID { flights[ObjectIdentifier(utterance)] = flightID }
         synthesizer.speak(utterance)
     }
 
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
+        let key = ObjectIdentifier(utterance)
+        Task { @MainActor in self.speakingFlightID = self.flights[key] }
+    }
+
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        Task { @MainActor in self.finished() }
+        let key = ObjectIdentifier(utterance)
+        Task { @MainActor in self.finished(key) }
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
-        Task { @MainActor in self.finished() }
+        let key = ObjectIdentifier(utterance)
+        Task { @MainActor in self.finished(key) }
     }
 
-    private func finished() {
+    private func finished(_ key: ObjectIdentifier) {
+        if let id = flights.removeValue(forKey: key), id == speakingFlightID { speakingFlightID = nil }
         pending = max(0, pending - 1)
         if pending == 0 {
             Self.sessionQueue.async {

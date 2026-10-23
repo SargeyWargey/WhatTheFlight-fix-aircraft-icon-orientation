@@ -42,6 +42,17 @@ enum RegistrationCountry {
         return chars.dropFirst().allSatisfy { ($0.isASCII && $0.isLetter) || $0.isNumber }
     }
 
+    /// "GXLEI" → ["G-XLEI"], "A6EUI" → ["A6-EUI"]: what a tail number typed without its hyphen
+    /// could be. Flightradar24 only matches registrations as written, hyphen included.
+    static func hyphenatedForms(of value: String) -> [String] {
+        let reg = value.uppercased()
+        guard !reg.contains("-"), !isUSRegistration(reg) else { return [] }
+        return marks.keys
+            .filter { !$0.contains("-") && reg.hasPrefix($0) && reg.count > $0.count + 1 }
+            .map { "\($0)-\(reg.dropFirst($0.count))" }
+            .sorted()
+    }
+
     /// English country name for an ISO code ("US" → "United States").
     static func countryName(forCode code: String) -> String {
         Locale(identifier: "en_US").localizedString(forRegionCode: code) ?? code

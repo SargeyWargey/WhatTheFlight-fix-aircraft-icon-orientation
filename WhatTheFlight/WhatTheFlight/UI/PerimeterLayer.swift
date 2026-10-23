@@ -13,6 +13,10 @@ import SwiftUI
 struct PerimeterLayer: View {
     let placements: [PerimeterPlacement]
     let focusedID: String?
+    /// The aircraft a spoken alert is reading out (Apple TV), pulsed in purple.
+    var announcedID: String? = nil
+    /// Pinned aircraft: a pin on the icon, and never faded however far away they are.
+    var pinnedIDs: Set<String> = []
     let radiusMiles: Double
     var scale: CGFloat = 1
     let onTap: (RadarContact) -> Void
@@ -22,7 +26,9 @@ struct PerimeterLayer: View {
         ZStack {
             ForEach(placements) { placement in
                 let isFocused = placement.id == focusedID
-                let fade = 1 - 0.4 * min(1, placement.contact.distanceMiles / max(radiusMiles, 1))
+                let isAnnounced = placement.id == announcedID
+                let isPinned = pinnedIDs.contains(placement.id)
+                let fade = isPinned ? 1 : 1 - 0.4 * min(1, placement.contact.distanceMiles / max(radiusMiles, 1))
 
                 DistanceLabel(miles: placement.contact.distanceMiles, isFocused: isFocused, flight: placement.contact.flight, scale: scale)
                     .opacity(isFocused ? 1 : fade)
@@ -35,9 +41,11 @@ struct PerimeterLayer: View {
                     flight: placement.contact.flight,
                     screenTrack: placement.screenTrack,
                     isFocused: isFocused,
+                    isAnnounced: isAnnounced,
+                    isPinned: isPinned,
                     scale: scale
                 )
-                .opacity(isFocused ? 1 : fade)
+                .opacity(isFocused || isAnnounced ? 1 : fade)
                 .position(placement.point)
                 .animation(.interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.point)
                 .onTapGesture { onTap(placement.contact) }
@@ -47,7 +55,7 @@ struct PerimeterLayer: View {
                 .accessibilityAddTraits(.isButton)
                 .accessibilityHint("Shows this aircraft in the center")
                 .transition(edgeTransition(for: placement))
-                .zIndex(isFocused ? 2 : 1)
+                .zIndex(isAnnounced ? 2.5 : isFocused ? 2 : 1)
             }
         }
         .animation(.smooth(duration: 0.9), value: placements.map(\.id))
@@ -66,7 +74,8 @@ struct PerimeterLayer: View {
         let dir = GeoMath.cardinal(contact.bearing)
         let motion = contact.isApproaching ? "approaching" : "moving away"
         let badge = contact.flight.notable.first.map { ", \($0.badge.capitalized)" } ?? ""
-        return "\(contact.flight.displayIdentifier)\(badge), \(RadarFormat.miles(contact.distanceMiles)) miles \(dir), \(motion)"
+        let pinned = pinnedIDs.contains(contact.id) ? ", pinned" : ""
+        return "\(contact.flight.displayIdentifier)\(badge)\(pinned), \(RadarFormat.miles(contact.distanceMiles)) miles \(dir), \(motion)"
     }
 }
 
@@ -74,6 +83,10 @@ struct AircraftBlip: View {
     let flight: Flight
     let screenTrack: Double
     let isFocused: Bool
+    /// Being read out by a spoken alert: a purple pulse in place of the red focus one.
+    var isAnnounced = false
+    /// A small pin on the icon's lower left.
+    var isPinned = false
     var scale: CGFloat = 1
 
     @State private var pulse = false
@@ -83,19 +96,22 @@ struct AircraftBlip: View {
         let tags = flight.notable.map(\.tag)
         // Emergencies turn the whole blip red. Military already shows in the icon's colour,
         // so the corner marker shows the next most urgent tag.
-        let tint = isFocused || tags.first?.isEmergency == true
+        let tint = isAnnounced
+            ? Palette.announce
+            : isFocused || tags.first?.isEmergency == true
             ? Palette.signal
             : Palette.blip(kind: flight.kind, isMilitary: tags.contains(.military))
+        let halo = isAnnounced ? Palette.announce : Palette.signal
         let markerTag = tags.first { $0 != .military }
         ZStack {
-            if isFocused {
+            if isFocused || isAnnounced {
                 Circle()
-                    .stroke(Palette.signal.opacity(0.55), lineWidth: 1.5 * scale)
+                    .stroke(halo.opacity(isAnnounced ? 0.8 : 0.55), lineWidth: (isAnnounced ? 2.5 : 1.5) * scale)
                     .frame(width: 40 * scale, height: 40 * scale)
-                    .scaleEffect(pulse ? 1.35 : 0.85)
+                    .scaleEffect(pulse ? (isAnnounced ? 1.6 : 1.35) : 0.85)
                     .opacity(pulse ? 0 : 1)
                 Circle()
-                    .fill(Palette.signal.opacity(0.16))
+                    .fill(halo.opacity(isAnnounced ? 0.24 : 0.16))
                     .frame(width: 40 * scale, height: 40 * scale)
             }
             AircraftGlyph(silhouette: flight.silhouette, size: (isFocused ? 34 : 30) * scale)
@@ -109,19 +125,42 @@ struct AircraftBlip: View {
                     .overlay(Circle().stroke(Palette.paper, lineWidth: 1.5 * scale))
                     .offset(x: 13 * scale, y: -13 * scale)
             }
+            if isPinned {
+                PinMarker(scale: scale)
+                    .offset(x: -13 * scale, y: 13 * scale)
+                    .transition(.scale.combined(with: .opacity))
+            }
         }
+        .animation(.snappy, value: isPinned)
         .frame(width: 44 * scale, height: 44 * scale)
         .contentShape(Circle())
         .onAppear { startPulse() }
         .onChange(of: isFocused) { _, _ in startPulse() }
+        .onChange(of: isAnnounced) { _, _ in startPulse() }
     }
 
     private func startPulse() {
         pulse = false
-        guard isFocused, !reduceMotion else { return }
-        withAnimation(.easeOut(duration: 1.6).repeatForever(autoreverses: false)) {
+        guard isFocused || isAnnounced, !reduceMotion else { return }
+        withAnimation(.easeOut(duration: isAnnounced ? 1.1 : 1.6).repeatForever(autoreverses: false)) {
             pulse = true
         }
+    }
+}
+
+/// The pin badge on a pinned aircraft's icon (radar edge, map, lists).
+struct PinMarker: View {
+    var scale: CGFloat = 1
+
+    var body: some View {
+        Image(systemName: "pin.fill")
+            .font(.system(size: 7.5 * scale, weight: .bold))
+            .foregroundStyle(Palette.paper)
+            .rotationEffect(.degrees(30))
+            .frame(width: 14 * scale, height: 14 * scale)
+            .background(Palette.ink, in: Circle())
+            .overlay(Circle().stroke(Palette.paper, lineWidth: 1.5 * scale))
+            .accessibilityHidden(true)
     }
 }
 

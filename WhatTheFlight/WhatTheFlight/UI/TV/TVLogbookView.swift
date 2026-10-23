@@ -775,7 +775,8 @@ private struct TVVisitRow: View {
     }
 }
 
-/// The aircraft's Planespotters photo (with credit), or a quiet placeholder.
+/// Your own Sky View photo of it (taken on an iPhone, synced through iCloud), else the
+/// aircraft's Planespotters photo (with credit), else a quiet placeholder.
 struct TVSightingPhoto: View {
     let sighting: Sighting
     var enabled = true
@@ -783,12 +784,18 @@ struct TVSightingPhoto: View {
     var credit = false
 
     @State private var photo: AircraftPhoto?
+    @State private var own: UIImage?
 
     var body: some View {
+        let latest = sighting.spotPhotos.last
         VStack(alignment: .leading, spacing: 10) {
             ZStack {
                 Palette.paperShade.opacity(0.35)
-                if let photo {
+                if let own {
+                    Image(uiImage: own)
+                        .resizable()
+                        .scaledToFill()
+                } else if let photo {
                     AsyncImage(url: photo.imageURL, transaction: Transaction(animation: .smooth)) { phase in
                         if case .success(let image) = phase {
                             image.resizable().scaledToFill()
@@ -805,14 +812,25 @@ struct TVSightingPhoto: View {
             .frame(height: height)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             if credit {
-                Text(photo.map { "Photo © \($0.photographer ?? "Unknown") · Planespotters.net" } ?? " ")
-                    .font(.mono(18))
-                    .foregroundStyle(Palette.caption)
-                    .lineLimit(1)
+                Group {
+                    if own != nil, let latest {
+                        Text("Your photo · \(latest.takenAt.formatted(date: .abbreviated, time: .shortened))")
+                    } else {
+                        Text(photo.map { "Photo © \($0.photographer ?? "Unknown") · Planespotters.net" } ?? " ")
+                    }
+                }
+                .font(.mono(18))
+                .foregroundStyle(Palette.caption)
+                .lineLimit(1)
             }
         }
-        .task(id: sighting.airframe) {
+        .task(id: "\(sighting.id) \(latest?.id ?? "")") {
             photo = nil
+            own = nil
+            if let latest {
+                own = await SpotPhotoImages.load(latest.id, store: .standard, maxPixels: 1600)
+                if own != nil { return }
+            }
             guard enabled else { return }
             photo = await AircraftPhotoProvider.shared.photo(registration: sighting.registration, hex: sighting.hex)
         }

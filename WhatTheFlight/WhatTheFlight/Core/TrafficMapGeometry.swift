@@ -62,6 +62,12 @@ enum TrafficMapGeometry {
 
     /// A frame around arbitrary points. Longitudes are unwrapped so a trans-Pacific route frames
     /// the short way across the date line.
+    /// A pinned aircraft this far from home can't share a sensible frame with the radius
+    /// (and MapKit won't zoom out that far), so the map follows the aircraft on its own.
+    static func followsPinnedAlone(observer: CLLocationCoordinate2D, aircraft: CLLocationCoordinate2D, radiusMiles: Double) -> Bool {
+        GeoMath.distanceMiles(from: observer, to: aircraft) > max(250, radiusMiles * 6)
+    }
+
     static func frame(fitting points: [CLLocationCoordinate2D], padding: Double, minimumSpan: Double) -> Frame {
         guard let first = points.first else {
             return Frame(center: CLLocationCoordinate2D(latitude: 0, longitude: 0), latitudeDelta: 0, longitudeDelta: 0)

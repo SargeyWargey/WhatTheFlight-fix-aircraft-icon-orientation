@@ -23,6 +23,8 @@ enum Palette {
     static let route = dynamic(light: 0x7C83E8, dark: 0x8C9BFF)
     /// The red arrow, focus halo, north marker.
     static let signal = dynamic(light: 0xE5483B, dark: 0xFF6B5E)
+    /// Apple TV: the pulse on the aircraft a spoken alert is about.
+    static let announce = dynamic(light: 0x8E3FD9, dark: 0xC48CFF)
     /// Stat captions.
     static let caption = dynamic(light: 0x75726C, dark: 0x8790A0)
     /// Stat values.

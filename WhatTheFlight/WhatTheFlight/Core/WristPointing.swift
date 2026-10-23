@@ -160,8 +160,19 @@ extension WristPointing {
     static let identifyRangeMiles = 15.0
     /// …skips anything this low (trees and buildings, and the angles get unreliable)…
     static let minimumElevation = 3.0
+    /// …except helicopters, which fly low enough that 3° would drop any more than about
+    /// 3 mi away (800 ft up); 1° keeps them out to about 9 mi…
+    static let helicopterMinimumElevation = 1.0
     /// …and calls out whatever lies within this cone around the arm.
     static let identifyCone = 10.0
+
+    /// Close enough and high enough to point at.
+    static func isIdentifiable(_ contact: RadarContact, rangeMiles: Double = identifyRangeMiles) -> Bool {
+        guard contact.distanceMiles <= rangeMiles else { return false }
+        let floor = contact.flight.kind == .helicopter ? helicopterMinimumElevation : minimumElevation
+        return GeoMath.elevationDegrees(groundDistanceMiles: contact.distanceMiles,
+                                        altitudeFeet: Double(contact.flight.altitudeFeet)) >= floor
+    }
 
     struct Candidate: Equatable {
         let id: String
@@ -171,18 +182,33 @@ extension WristPointing {
 
     /// Aircraft within `cone` of the arm, best match first.
     static func candidates(pointing: SIMD3<Double>, contacts: [RadarContact], cone: Double = identifyCone,
-                           rangeMiles: Double = identifyRangeMiles, minimumElevation: Double = minimumElevation) -> [Candidate] {
+                           rangeMiles: Double = identifyRangeMiles) -> [Candidate] {
         let arm = simd_normalize(pointing)
         return contacts.compactMap { contact -> Candidate? in
-            guard contact.distanceMiles <= rangeMiles else { return nil }
-            let elevation = GeoMath.elevationDegrees(groundDistanceMiles: contact.distanceMiles,
-                                                     altitudeFeet: Double(contact.flight.altitudeFeet))
-            guard elevation >= minimumElevation else { return nil }
-            let target = SkyProjector.direction(azimuth: contact.bearing, elevation: elevation)
-            let error = acos(max(-1, min(1, simd_dot(arm, target)))).degrees
+            guard isIdentifiable(contact, rangeMiles: rangeMiles) else { return nil }
+            let error = acos(max(-1, min(1, simd_dot(arm, target(for: contact))))).degrees
             return error <= cone ? Candidate(id: contact.id, error: error) : nil
         }
         .sorted { $0.error < $1.error }
+    }
+
+    /// While you swing round, the height gauge shows the aircraft nearest your arm on the
+    /// compass, so you know whether to raise or lower before it's in the cone.
+    static let leadSpan = 30.0
+    /// A new aircraft takes the lead only when it's this much nearer, so two neighbours
+    /// don't flicker on a shaky arm.
+    static let leadMargin = 4.0
+
+    /// The aircraft nearest `armAzimuth` (within `leadSpan`), keeping `current` unless
+    /// another is clearly nearer.
+    static func lead(armAzimuth: Double, contacts: [RadarContact], current: String? = nil) -> String? {
+        let offsets = contacts.map { (id: $0.id, offset: abs(GeoMath.shortestDelta(from: armAzimuth, to: $0.bearing))) }
+            .filter { $0.offset <= leadSpan }
+        guard let best = offsets.min(by: { $0.offset < $1.offset }) else { return nil }
+        if let current, let kept = offsets.first(where: { $0.id == current }), kept.offset - best.offset < leadMargin {
+            return current
+        }
+        return best.id
     }
 }
 

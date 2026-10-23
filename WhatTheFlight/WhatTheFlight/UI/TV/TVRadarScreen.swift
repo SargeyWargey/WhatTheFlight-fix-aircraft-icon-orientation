@@ -62,7 +62,7 @@ struct TVRadarScreen: View {
         GeometryReader { geo in
             let layout = RadarLayout(size: geo.size, scale: Self.scale)
             let placements = PerimeterPlanner.plan(
-                contacts: model.contacts,
+                contacts: model.perimeterContacts,
                 heading: heading,
                 track: layout.iconTrack,
                 obstacles: [
@@ -87,6 +87,8 @@ struct TVRadarScreen: View {
                         PerimeterLayer(
                             placements: placements,
                             focusedID: model.focus.focusedID,
+                            announcedID: AlertSpeaker.shared.speakingFlightID,
+                            pinnedIDs: model.pinnedIDs,
                             radiusMiles: settings.radiusMiles,
                             scale: Self.scale,
                             onTap: { _ in },
@@ -305,7 +307,7 @@ struct TVRadarScreen: View {
                 withAnimation(.snappy) { model.focusNearest() }
                 focus = .radar
             }
-            dockButton(.pin, title: model.focus.isPinned ? "Unpin" : "Pin", symbol: model.focus.isPinned ? "lock.open.fill" : "lock.fill") {
+            dockButton(.pin, title: model.focus.isPinned ? "Unpin" : "Pin", symbol: model.focus.isPinned ? "pin.slash.fill" : "pin.fill") {
                 withAnimation(.snappy) { model.togglePin() }
             }
             dockButton(.aircraft, title: "Aircraft", symbol: "list.bullet") {

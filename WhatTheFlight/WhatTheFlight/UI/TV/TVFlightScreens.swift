@@ -102,8 +102,8 @@ struct TVFlightDetailView: View {
             }
             NotableBadgeRow(flight: f, scale: 1.8)
             HStack(spacing: 18) {
-                if model.focus.focusedID == f.id && model.focus.isPinned {
-                    Image(systemName: "lock.fill")
+                if model.isPinned(f.id) {
+                    Image(systemName: "pin.fill")
                         .font(.system(size: 34, weight: .bold))
                         .foregroundStyle(Palette.signal)
                 }
@@ -242,60 +242,211 @@ struct TVFlightDetailView: View {
     }
 }
 
+/// Every aircraft the radar can see, a search field for any aircraft in the world (tail
+/// number, flight number or callsign), and the pinned ones. Click a row to show it on the
+/// radar; the pin button beside it follows it wherever it goes.
 struct TVAircraftListView: View {
     let model: RadarModel
     let heading: Double
     let onPick: (String) -> Void
 
+    #if DEBUG
+    @State private var query = UserDefaults.standard.string(forKey: "wtf.debugAircraftSearch") ?? ""
+    #else
+    @State private var query = ""
+    #endif
+    @State private var worldwide: [RadarContact] = []
+    @State private var worldwideState = FlightSearchState.idle
+
+    private var trimmedQuery: String { query.trimmingCharacters(in: .whitespaces) }
+    private var searchesWorldwide: Bool { trimmedQuery.filter { !$0.isWhitespace }.count >= 3 }
+
     var body: some View {
-        ZStack {
-            RadarBackdrop(showTopography: true, showSweep: false, isActive: true)
-                .ignoresSafeArea()
+        // Pinned aircraft are listed once, in their own section.
+        let pinnedIDs = model.pinnedIDs
+        let inRange = model.contacts.filter { !pinnedIDs.contains($0.id) && $0.flight.matches(search: query) }
+        let outside = model.outsideContacts.filter { !pinnedIDs.contains($0.id) && $0.flight.matches(search: query) }
+        let pins = model.pins.filter(matches)
+        let known = Set((inRange + outside).map(\.id)).union(pinnedIDs)
+        let remote = worldwide.filter { !known.contains($0.id) }
+        NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 18) {
-                    Text("Aircraft")
-                        .font(.mono(56, .heavy))
-                        .foregroundStyle(Palette.ink)
-                        .padding(.bottom, 10)
-                    if model.allContacts.isEmpty {
-                        Text("Nothing in the sky right now.")
-                            .font(.mono(28))
-                            .foregroundStyle(Palette.caption)
+                    if trimmedQuery.isEmpty {
+                        Text("Aircraft")
+                            .font(.mono(56, .heavy))
+                            .foregroundStyle(Palette.ink)
+                            .padding(.bottom, 10)
                     }
-                    if !model.contacts.isEmpty {
-                        TVSectionHeader(title: "In range · \(model.contacts.count)")
-                        ForEach(model.contacts) { row($0) }
+                    if !pins.isEmpty {
+                        TVSectionHeader(title: "Pinned · \(pins.count)")
+                        ForEach(pins) { pinRow($0) }
                     }
-                    if !model.outsideContacts.isEmpty {
-                        TVSectionHeader(title: "Just outside · \(model.outsideContacts.count)")
-                        ForEach(model.outsideContacts) { row($0) }
+                    if !inRange.isEmpty {
+                        TVSectionHeader(title: "In range · \(inRange.count)")
+                        ForEach(inRange) { row($0) }
                     }
+                    if !outside.isEmpty {
+                        TVSectionHeader(title: "Just outside · \(outside.count)")
+                        ForEach(outside) { row($0) }
+                    }
+                    if searchesWorldwide {
+                        TVSectionHeader(title: remote.isEmpty ? "Worldwide" : "Worldwide · \(remote.count)")
+                        ForEach(remote) { row($0, isRemote: true) }
+                    }
+                    status(hasResults: !(inRange.isEmpty && outside.isEmpty && pins.isEmpty && remote.isEmpty))
                 }
                 .padding(.horizontal, 160)
-                .padding(.vertical, 60)
+                .padding(.vertical, 40)
+            }
+            .scrollClipDisabled()
+            .searchable(text: $query, prompt: "Tail number, flight, airline…")
+            .task(id: trimmedQuery) { await searchWorldwide() }
+        }
+        .background(RadarBackdrop(showTopography: true, showSweep: false, isActive: true).ignoresSafeArea())
+    }
+
+    @ViewBuilder
+    private func status(hasResults: Bool) -> some View {
+        Group {
+            if trimmedQuery.isEmpty {
+                if model.allContacts.isEmpty && model.pins.isEmpty {
+                    Text("Nothing in the sky right now.")
+                }
+                Label("Search above for any aircraft in the world by tail number (N509DN), flight (DL121) or callsign (DAL121), then pin it to follow it on the radar.",
+                      systemImage: "magnifyingglass")
+                    .padding(.top, 20)
+            } else if !searchesWorldwide {
+                if !hasResults { Label("Keep typing to search worldwide", systemImage: "keyboard") }
+            } else {
+                switch worldwideState {
+                case .searching: Label("Searching Flightradar24…", systemImage: "magnifyingglass")
+                case .done where !hasResults: Label("No aircraft found for “\(trimmedQuery)”", systemImage: "airplane.circle")
+                case .failed(let message): Label(message, systemImage: "exclamationmark.triangle")
+                default: EmptyView()
+                }
+            }
+        }
+        .font(.mono(24))
+        .labelStyle(TVLabelStyle())
+        .foregroundStyle(Palette.caption)
+    }
+
+    private func searchWorldwide() async {
+        worldwide = []
+        worldwideState = .idle
+        guard searchesWorldwide else { return }
+        // Wait for a pause in typing: every search is three Flightradar24 requests.
+        try? await Task.sleep(for: .milliseconds(700))
+        guard !Task.isCancelled else { return }
+        worldwideState = .searching
+        do {
+            let found = try await model.searchAnywhere(trimmedQuery)
+            guard !Task.isCancelled else { return }
+            worldwide = found
+            worldwideState = .done
+        } catch {
+            guard !Task.isCancelled else { return }
+            worldwideState = .failed((error as? LocalizedError)?.errorDescription ?? "Search failed")
+        }
+    }
+
+    private func matches(_ pin: PinnedAircraft) -> Bool {
+        if trimmedQuery.isEmpty { return true }
+        if case .visible(let contact) = model.state(of: pin), contact.flight.matches(search: query) { return true }
+        return [pin.label, pin.registration, pin.callsign].contains { $0?.lowercased().contains(trimmedQuery.lowercased()) == true }
+    }
+
+    // MARK: Rows
+
+    @ViewBuilder
+    private func pinRow(_ pin: PinnedAircraft) -> some View {
+        switch model.state(of: pin) {
+        case .visible(let contact):
+            row(contact)
+        case .onGround(let flight):
+            unseenRow(pin, status: flight.destinationIATA.map { "On the ground · \($0)" } ?? "On the ground")
+        case .unseen:
+            unseenRow(pin, status: "Not transmitting right now")
+        }
+    }
+
+    /// A pin that isn't flying: it comes back on the radar once it is.
+    private func unseenRow(_ pin: PinnedAircraft, status: String) -> some View {
+        HStack(spacing: 20) {
+            HStack(spacing: 28) {
+                Image(systemName: "airplane")
+                    .font(.system(size: 36))
+                    .foregroundStyle(Palette.faint)
+                    .frame(width: 57)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(pin.label).font(.mono(32, .bold))
+                    Text([pin.registration == pin.label ? nil : pin.registration, status].compactMap { $0 }.joined(separator: " · "))
+                        .font(.mono(20))
+                        .foregroundStyle(Palette.caption)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 30)
+            .padding(.vertical, 22)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Palette.paperShade.opacity(0.25), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            pinButton(isPinned: true) { withAnimation(.snappy) { model.unpin(pin) } }
+        }
+    }
+
+    private func row(_ contact: RadarContact, isRemote: Bool = false) -> some View {
+        let isPinned = model.isPinned(contact.id)
+        return HStack(spacing: 20) {
+            Button {
+                open(contact, isRemote: isRemote)
+            } label: {
+                AircraftRow(contact: contact, heading: heading, isFocusedAircraft: model.focus.focusedID == contact.id,
+                            isPinned: isPinned, showsRegistration: isRemote)
+            }
+            .buttonStyle(TVRowButtonStyle())
+            pinButton(isPinned: isPinned) {
+                withAnimation(.snappy) {
+                    if isPinned { model.unpin(contact.id) } else { model.pin(contact.flight) }
+                }
             }
         }
     }
 
-    private func row(_ contact: RadarContact) -> some View {
-        Button {
-            onPick(contact.id)
-        } label: {
-            AircraftRow(contact: contact, heading: heading, isFocusedAircraft: model.focus.focusedID == contact.id)
+    private func pinButton(isPinned: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: isPinned ? "pin.slash.fill" : "pin.fill")
+                .font(.system(size: 30, weight: .semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
         }
         .buttonStyle(TVRowButtonStyle())
+        .frame(width: 130)
+        .accessibilityLabel(isPinned ? "Unpin" : "Pin")
+    }
+
+    /// Anything from the worldwide search is pinned as it's opened, so the radar keeps
+    /// following it however far away it is.
+    private func open(_ contact: RadarContact, isRemote: Bool) {
+        if isRemote, !model.track(contact.flight) {
+            model.post(notice: "\(contact.flight.displayIdentifier) is pinned — it shows up once it's in the air", symbol: "pin.fill")
+        }
+        onPick(contact.id)
     }
 
     private struct AircraftRow: View {
         let contact: RadarContact
         let heading: Double
         let isFocusedAircraft: Bool
+        var isPinned = false
+        var showsRegistration = false
         @Environment(\.tvRowFocused) private var focused
 
         var body: some View {
             let f = contact.flight
             HStack(spacing: 28) {
-                AircraftBlip(flight: f, screenTrack: f.track - heading, isFocused: isFocusedAircraft, scale: 1.3)
+                AircraftBlip(flight: f, screenTrack: f.track - heading, isFocused: isFocusedAircraft, isPinned: isPinned, scale: 1.3)
+                    .opacity(f.isOnGround ? 0.5 : 1)
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 16) {
                         Text(f.displayIdentifier).font(.mono(32, .bold))
@@ -308,20 +459,26 @@ struct TVAircraftListView: View {
                             NotableBadge(info: top, scale: 1.5)
                         }
                     }
-                    Text([f.operatorInfo.compact, f.typeName ?? f.typeCode].compactMap { $0 }.joined(separator: " · "))
+                    Text(subtitle(f))
                         .font(.mono(20))
                         .foregroundStyle(focused ? .white.opacity(0.8) : Palette.caption)
                         .lineLimit(1)
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
-                    Text("\(RadarFormat.miles(contact.distanceMiles)) mi")
+                    Text("\(RadarFormat.wholeNumber(Int(contact.distanceMiles.rounded()))) mi")
                         .font(.mono(30, .bold))
-                    Text("\(RadarFormat.wholeNumber(f.altitudeFeet)) ft")
+                    Text(f.isOnGround ? "Ground" : "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft")
                         .font(.mono(20))
                         .foregroundStyle(focused ? .white.opacity(0.8) : Palette.caption)
                 }
             }
+        }
+
+        private func subtitle(_ f: Flight) -> String {
+            var parts = [f.operatorInfo.compact, f.typeName ?? f.typeCode]
+            if showsRegistration, let reg = f.registration, reg != f.displayIdentifier { parts.insert(reg, at: 0) }
+            return parts.compactMap { $0 }.joined(separator: " · ")
         }
     }
 }

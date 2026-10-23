@@ -5,7 +5,10 @@
 //  One logbook across your iPhone, iPad and Apple TV, through iCloud (CloudKit, private
 //  database). Each sighting is one record named after the feed's flight id, so the same
 //  flight logged on two devices lands on one record and the copies merge
-//  (`Sighting.merged(with:)`). `CKSyncEngine` does the scheduling, batching and retries.
+//  (`Sighting.merged(with:)`). Sky View photos ride on their sighting's record; each
+//  photo's image is a record of its own ("photo-<id>", the logbook's 1600 px copy as a
+//  CKAsset) so sighting saves stay small. `CKSyncEngine` does the scheduling, batching and
+//  retries.
 //
 
 #if os(iOS) || os(tvOS)
@@ -19,6 +22,8 @@ final class LogbookSync: CKSyncEngineDelegate {
 
     private static let zoneID = CKRecordZone.ID(zoneName: "Logbook", ownerName: CKCurrentUserDefaultName)
     private static let recordType = "Sighting"
+    private static let photoRecordType = "SpotPhoto"
+    private static let photoPrefix = "photo-"
     private static let log = Logger(subsystem: "SargeyWargey.WhatTheFlight", category: "LogbookSync")
 
     private let logbook: Logbook
@@ -48,10 +53,11 @@ final class LogbookSync: CKSyncEngineDelegate {
         let engine = CKSyncEngine(configuration)
         self.engine = engine
         logbook.onLocalChange = { [weak self] saved, deleted in self?.queue(saved: saved, deleted: deleted) }
+        logbook.onLocalPhotoChange = { [weak self] saved, deleted in self?.queuePhotos(saved: saved, deleted: deleted) }
         if saved == nil {
             // First run on this device: make the zone and send up everything logged so far.
             engine.state.add(pendingDatabaseChanges: [.saveZone(CKRecordZone(zoneID: Self.zoneID))])
-            queue(saved: logbook.allIDs, deleted: [])
+            queueEverything()
         }
         Task { try? await engine.fetchChanges() }
     }
@@ -59,6 +65,7 @@ final class LogbookSync: CKSyncEngineDelegate {
     /// Stops syncing; the logbook stays on this device.
     func stop() {
         logbook.onLocalChange = nil
+        logbook.onLocalPhotoChange = nil
         engine = nil
     }
 
@@ -76,8 +83,33 @@ final class LogbookSync: CKSyncEngineDelegate {
         engine.state.add(pendingRecordZoneChanges: changes)
     }
 
+    private func queuePhotos(saved: Set<String>, deleted: Set<String>) {
+        queue(saved: Set(saved.map { Self.photoPrefix + $0 }), deleted: Set(deleted.map { Self.photoPrefix + $0 }))
+    }
+
+    private func queueEverything() {
+        queue(saved: logbook.allIDs, deleted: [])
+        queuePhotos(saved: logbook.allPhotoIDs.filter { logbook.photoStore.hasImage($0) }, deleted: [])
+    }
+
     private func recordID(for id: String) -> CKRecord.ID {
         CKRecord.ID(recordName: id, zoneID: Self.zoneID)
+    }
+
+    private static func photoID(_ recordName: String) -> String? {
+        recordName.hasPrefix(photoPrefix) ? String(recordName.dropFirst(photoPrefix.count)) : nil
+    }
+
+    /// Fetches one photo's image straight from iCloud, for a photo whose record arrived
+    /// without it or whose local copy was purged. False when sync is off or it isn't there.
+    static func downloadPhoto(id: String, into store: SpotPhotoStore) async -> Bool {
+        let syncOn = UserDefaults.standard.object(forKey: "wtf.iCloudLogbook") as? Bool ?? true
+        guard syncOn, FileManager.default.ubiquityIdentityToken != nil else { return false }
+        let database = CKContainer(identifier: containerID).privateCloudDatabase
+        let recordID = CKRecord.ID(recordName: photoPrefix + id, zoneID: zoneID)
+        guard let record = try? await database.record(for: recordID),
+              let asset = record["image"] as? CKAsset, let url = asset.fileURL else { return false }
+        return (try? store.importFile(at: url, id: id)) != nil
     }
 
     // MARK: CKSyncEngineDelegate
@@ -91,7 +123,7 @@ final class LogbookSync: CKSyncEngineDelegate {
             switch change.changeType {
             case .signIn:
                 syncEngine.state.add(pendingDatabaseChanges: [.saveZone(CKRecordZone(zoneID: Self.zoneID))])
-                queue(saved: logbook.allIDs, deleted: [])
+                queueEverything()
             case .switchAccounts, .signOut:
                 // Someone else's iCloud: keep this device's logbook, forget the old account's state.
                 serverRecords = [:]
@@ -105,14 +137,21 @@ final class LogbookSync: CKSyncEngineDelegate {
             for modification in changes.modifications {
                 let record = modification.record
                 serverRecords[record.recordID.recordName] = record
-                if let sighting = Self.sighting(from: record) { incoming.append(sighting) }
+                if record.recordType == Self.photoRecordType {
+                    importPhoto(from: record)
+                } else if let sighting = Self.sighting(from: record) {
+                    incoming.append(sighting)
+                }
             }
             let differs = logbook.merge(remote: incoming)
             // Our copy knew something the server didn't (another device, a closer pass).
             queue(saved: differs, deleted: [])
             let deleted = Set(changes.deletions.map(\.recordID.recordName))
             deleted.forEach { serverRecords[$0] = nil }
-            logbook.applyRemoteDeletions(deleted)
+            // A deleted photo record only means its image is gone; the sighting's own
+            // record says which photos it still has.
+            logbook.photoStore.delete(deleted.compactMap(Self.photoID))
+            logbook.applyRemoteDeletions(deleted.filter { Self.photoID($0) == nil })
 
         case .sentRecordZoneChanges(let sent):
             for record in sent.savedRecords {
@@ -127,7 +166,7 @@ final class LogbookSync: CKSyncEngineDelegate {
                     // Another device saved it first: merge theirs into ours and send the result.
                     if let server = failure.error.serverRecord {
                         serverRecords[name] = server
-                        if let theirs = Self.sighting(from: server) { logbook.merge(remote: [theirs]) }
+                        if Self.photoID(name) == nil, let theirs = Self.sighting(from: server) { logbook.merge(remote: [theirs]) }
                     }
                     retry.insert(name)
                 case .zoneNotFound:
@@ -153,7 +192,7 @@ final class LogbookSync: CKSyncEngineDelegate {
             if changes.deletions.contains(where: { $0.zoneID == Self.zoneID }) {
                 serverRecords = [:]
                 syncEngine.state.add(pendingDatabaseChanges: [.saveZone(CKRecordZone(zoneID: Self.zoneID))])
-                queue(saved: logbook.allIDs, deleted: [])
+                queueEverything()
             }
 
         default:
@@ -168,10 +207,16 @@ final class LogbookSync: CKSyncEngineDelegate {
         var saves: [CKRecord] = []
         var deletes: [CKRecord.ID] = []
         var gone: [CKSyncEngine.PendingRecordZoneChange] = []
-        // CloudKit takes up to 400 records a request; stay well under.
+        // CloudKit takes up to 400 records a request; stay well under, and send only a few
+        // photos at a time (each carries a few hundred KB).
+        var photos = 0
         for change in pending.prefix(Self.batchLimit) {
             switch change {
             case .saveRecord(let id):
+                if Self.photoID(id.recordName) != nil {
+                    guard photos < Self.photoBatchLimit else { continue }
+                    photos += 1
+                }
                 if let record = record(for: id) { saves.append(record) } else { gone.append(change) }
             case .deleteRecord(let id):
                 deletes.append(id)
@@ -186,17 +231,37 @@ final class LogbookSync: CKSyncEngineDelegate {
     }
 
     private static let batchLimit = 200
+    private static let photoBatchLimit = 20
 
     // MARK: Records
 
     /// nil drops the change (the sighting was deleted or trimmed since it was queued).
     private func record(for recordID: CKRecord.ID) -> CKRecord? {
+        if let photoID = Self.photoID(recordID.recordName) { return photoRecord(for: recordID, photoID: photoID) }
         guard let sighting = logbook.sighting(id: recordID.recordName),
               let payload = try? JSONEncoder().encode(sighting) else { return nil }
         let record = serverRecords[recordID.recordName] ?? CKRecord(recordType: Self.recordType, recordID: recordID)
         record["payload"] = payload as NSData
         record["lastSeen"] = sighting.lastSeen as NSDate
         return record
+    }
+
+    /// nil drops the change (the photo was deleted, or its image isn't on this device).
+    private func photoRecord(for recordID: CKRecord.ID, photoID: String) -> CKRecord? {
+        guard let photo = logbook.photo(id: photoID), logbook.photoStore.hasImage(photoID),
+              let url = logbook.photoStore.url(for: photoID) else { return nil }
+        let record = serverRecords[recordID.recordName] ?? CKRecord(recordType: Self.photoRecordType, recordID: recordID)
+        record["image"] = CKAsset(fileURL: url)
+        record["sighting"] = photo.flightID as NSString
+        record["takenAt"] = photo.takenAt as NSDate
+        return record
+    }
+
+    private func importPhoto(from record: CKRecord) {
+        guard let id = Self.photoID(record.recordID.recordName),
+              let asset = record["image"] as? CKAsset, let url = asset.fileURL else { return }
+        // CloudKit deletes the downloaded file after this event, so copy it now.
+        try? logbook.photoStore.importFile(at: url, id: id)
     }
 
     private static func sighting(from record: CKRecord) -> Sighting? {
