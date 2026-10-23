@@ -342,8 +342,8 @@ your logbook" should mean across devices.
 - Done when: facts appear within a second on Wi-Fi, never block the hero, and the
   toggle off removes every network call.
 
-### C6 · P2 · Smart Stack relevance and a countdown widget
-- Watch: in `WhatTheFlightWatchWidgets/WatchComplications.swift`, implement widget
+### C6 · P2 · Smart Stack relevance and a countdown widget <span style="color:#FFB300; font-weight:900; font-size:1.2em">◐ PARTLY IMPLEMENTED</span>
+- <span style="color:#00E676; font-weight:900; font-size:1.5em">✅ IMPLEMENTED</span> Watch: in `WhatTheFlightWatchWidgets/WatchComplications.swift`, implement widget
   relevance so the complication surfaces when a closest pass is within five minutes
   (`WidgetRelevance` with date-interval contexts from `NearbyTraffic.projectedSnapshots`).
 - iPhone: a "Next overhead" entry in `WhatTheFlightWidgets` for small and rectangular
@@ -354,8 +354,8 @@ your logbook" should mean across devices.
 - Done when: the complication appears in the Smart Stack during a demo overhead pass;
   the widget counts down without refreshing.
 
-### C7 · P3 · Sky View extras
-- Snapshot: an `AVCapturePhotoOutput` on the existing session; compose the labels over the
+### C7 · P3 · Sky View extras <span style="color:#FFB300; font-weight:900; font-size:1.2em">◐ PARTLY IMPLEMENTED</span>
+- <span style="color:#00E676; font-weight:900; font-size:1.5em">✅ IMPLEMENTED</span> Snapshot: an `AVCapturePhotoOutput` on the existing session; compose the labels over the
   photo with `ImageRenderer` and save with the Photos add-only permission.
 - Predicted path: project the ten-minute `projectedPath` through `SkyProjector` and draw a
   dashed `Path` for the locked aircraft.

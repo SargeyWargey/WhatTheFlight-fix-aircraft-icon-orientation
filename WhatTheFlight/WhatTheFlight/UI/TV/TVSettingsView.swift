@@ -396,8 +396,6 @@ struct TVRadarSettingsView: View {
             label: { "\(Int($0))s" },
             onSelect: { settings.refreshSeconds = $0 }
         )
-        TVSectionHeader(title: "Traffic")
-        TVToggleRow(title: "Demo traffic", subtitle: "Simulated aircraft — great for trying it out", symbol: "sparkles", isOn: $settings.demoTraffic)
 
         TVSectionHeader(title: "Alerts")
         TVToggleRow(title: "Overhead alerts", subtitle: "A banner when an aircraft is about to pass over you", symbol: "scope", isOn: $settings.overheadAlerts)
@@ -431,6 +429,9 @@ struct TVRadarSettingsView: View {
         TVSectionHeader(title: "Logbook")
         TVToggleRow(title: "Keep a logbook", subtitle: "Record every aircraft that comes inside your radius. Kept on this Apple TV only; demo traffic is never logged",
                     symbol: "book.closed.fill", isOn: $settings.keepLogbook)
+
+        TVSectionHeader(title: "Traffic")
+        TVToggleRow(title: "Demo traffic", subtitle: "Simulated aircraft — great for trying it out", symbol: "sparkles", isOn: $settings.demoTraffic)
     }
 
     /// The nearest real aircraft if there is one, so the sample sounds like the real thing.

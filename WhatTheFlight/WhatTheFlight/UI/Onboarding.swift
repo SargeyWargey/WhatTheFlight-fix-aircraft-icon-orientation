@@ -32,7 +32,7 @@ struct TourPage: Identifiable {
         TourPage(art: .distance, eyebrow: "The icons", title: "The number is miles away",
                  body: "Beside each icon is how far that aircraft is from you, in whole miles. The nose points the way it's flying. Military aircraft are olive, and a colored dot means something notable."),
         TourPage(art: .remote, eyebrow: "The Siri Remote", title: "The nearest takes the center",
-                 body: "The closest aircraft fills the middle and stays there until it leaves your radius. Press ◀ ▶ to step through the others, play/pause to pin one, and ▼ for the dock: Nearest, Aircraft, Logbook and Settings."),
+                 body: "The closest aircraft fills the middle and stays there until it leaves your radius. Press ◀ ▶ to step through the others, ▲ to switch between the radar, split and map views, play/pause to pin one, and ▼ for the dock: Nearest, Aircraft, Logbook and Settings."),
         TourPage(art: .details, eyebrow: "Details", title: "Click for the full story",
                  body: "Click the center for a photo, the airline and aircraft type, where it's from and where it's going, how far along the route it is, and a map. If you've seen that exact plane before, it says so."),
         TourPage(art: .logbook, eyebrow: "Logbook", title: "Every plane gets logged",
@@ -649,7 +649,7 @@ private struct TourRemote: View {
     let unit: CGFloat
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private enum Key: Int, CaseIterable { case sides, click, playPause, down }
+    private enum Key: Int, CaseIterable { case sides, up, click, playPause, down }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1.6)) { context in
@@ -658,6 +658,7 @@ private struct TourRemote: View {
                 remote(lit: lit)
                 VStack(alignment: .leading, spacing: 16 * unit) {
                     row(["arrowtriangle.left.fill", "arrowtriangle.right.fill"], "Other aircraft", lit: lit == .sides)
+                    row(["arrowtriangle.up.fill"], "Radar, split, map", lit: lit == .up)
                     row(["circle.circle"], "Details", lit: lit == .click)
                     row(["playpause.fill"], "Pin", lit: lit == .playPause)
                     row(["arrowtriangle.down.fill"], "Dock", lit: lit == .down)
@@ -674,7 +675,7 @@ private struct TourRemote: View {
                 Circle().fill(lit == .click ? Palette.signal.opacity(0.35) : Palette.paper).frame(width: 34 * unit, height: 34 * unit)
                 arrow("arrowtriangle.left.fill", lit: lit == .sides).offset(x: -26 * unit)
                 arrow("arrowtriangle.right.fill", lit: lit == .sides).offset(x: 26 * unit)
-                arrow("arrowtriangle.up.fill", lit: false).offset(y: -26 * unit)
+                arrow("arrowtriangle.up.fill", lit: lit == .up).offset(y: -26 * unit)
                 arrow("arrowtriangle.down.fill", lit: lit == .down).offset(y: 26 * unit)
             }
             HStack(spacing: 12 * unit) {

@@ -49,6 +49,8 @@ struct TrafficMap: View {
         var trailBands = TrafficMapGeometry.trailBands
         var trailWidth: CGFloat = 3      // before `scale`
         var ringOpacity: Double = 1      // TV: fainter, so more of the map shows
+        /// The paper wash over the standard map; imagery gets 0.2 less.
+        var washOpacity: Double = 0.45
         var mapType: RadarSettings.MapType = .standard
         var placeName: String? = nil     // "You · Atlanta"
         var cardInset: CGSize = .zero    // TV: keep the ring clear of the hero card
@@ -145,7 +147,7 @@ struct TrafficMap: View {
             // a lighter, dark wash (see `isImagery`). Everything drawn after it sits at the same
             // level, so stays on top.
             MapPolygon(coordinates: washCorners)
-                .foregroundStyle(Palette.paper.opacity(isImagery ? 0.25 : 0.45))
+                .foregroundStyle(Palette.paper.opacity(max(0, options.washOpacity - (isImagery ? 0.2 : 0))))
                 .mapOverlayLevel(level: .aboveLabels)
 
             RadiusRings(observer: observer, radiusMiles: radiusMiles, scale: options.scale, echoes: true,

@@ -66,7 +66,9 @@ struct TVTrafficMap: View {
                                trailWidth: TVMapLayout.trailWidth,
                                // Imagery is busy enough that a faded ring disappears.
                                ringOpacity: settings.mapType == .standard ? TVMapLayout.ringOpacity : 1,
-                               mapType: settings.mapType, placeName: placeName, cardInset: cardInset)
+                               washOpacity: TVMapLayout.washOpacity,
+                               // Just the dot at home: no "You · Atlanta".
+                               mapType: settings.mapType, cardInset: cardInset)
             )
             .ignoresSafeArea()
             // Decorative, like the radar face: the hero and the dock's Aircraft list are the
@@ -75,12 +77,6 @@ struct TVTrafficMap: View {
         } else {
             Palette.paper.ignoresSafeArea()
         }
-    }
-
-    /// "Atlanta" for "You · Atlanta" by the observer dot.
-    private var placeName: String? {
-        let name = settings.locationMode == .custom ? settings.customPlaceName : model.logPlaceName
-        return name?.split(separator: ",").first.map { String($0).trimmingCharacters(in: .whitespaces) }
     }
 }
 
@@ -93,10 +89,13 @@ enum TVMapLayout {
     static let trailWidth: CGFloat = 1.3
     /// The radius ring and its echoes on the standard map, faded so more of the map shows.
     static let ringOpacity: Double = 0.45
+    /// The paper wash: 10 points lighter than the iPad's, so the map reads more clearly.
+    static let washOpacity: Double = 0.35
 }
 
 /// Lays content out at `width / scale` and blows it up to `width`, reporting its real height
-/// (a plain `scaleEffect` leaves the layout at the unscaled size).
+/// (a plain `scaleEffect` leaves the layout at the unscaled size). The first height lands as
+/// is; later changes ease, so a card grows or shrinks smoothly when its content changes.
 struct TVScaledContent<Content: View>: View {
     let width: CGFloat
     let scale: CGFloat
@@ -107,7 +106,13 @@ struct TVScaledContent<Content: View>: View {
         content
             .frame(width: width / scale)
             .fixedSize(horizontal: false, vertical: true)
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { newHeight in
+                if height == 0 {
+                    height = newHeight
+                } else if abs(newHeight - height) > 0.5 {
+                    withAnimation(.smooth(duration: 0.3)) { height = newHeight }
+                }
+            }
             .scaleEffect(scale)
             .frame(width: width, height: height * scale)
     }

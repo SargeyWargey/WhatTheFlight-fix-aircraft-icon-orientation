@@ -7,10 +7,11 @@
 //
 //  Siri Remote
 //    ◀ ▶      closer / farther aircraft      click      details
+//    ▲        next view (Map view on)        hold ●     map panel (map on screen)
 //    ⏯        pin / unpin                    ▼          dock: Nearest · Pin · Aircraft · Logbook · View · Settings
 //
 //  The remote hints sit in a footer below the bezel; the dock only appears after ▼.
-//  With Map view on, the dock's view item steps Radar → Split → Map: Split narrows the radar
+//  With Map view on, ▲ (or the dock's view item) steps Radar → Split → Map: Split narrows the radar
 //  to the left 60 % of the screen and puts the live map beside it (`TVTrafficMap`); Map
 //  swaps the radar face for the map full screen (`TVMapStack`). The remote works the same on
 //  all three. Left alone for 30 s, the full-screen map settles: the status badge and hints
@@ -197,7 +198,8 @@ struct TVRadarScreen: View {
                             .position(x: geo.size.width / 2, y: geo.size.height - 130)
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
-                    RemoteHints(dockIsOpen: showDock || showMapPanel, isPinned: model.focus.isPinned, holdsForMap: mapIsShowing)
+                    RemoteHints(dockIsOpen: showDock || showMapPanel, isPinned: model.focus.isPinned,
+                                changesView: settings.mapView, holdsForMap: mapIsShowing)
                         .opacity(chromeOpacity)
                         .position(x: geo.size.width / 2, y: Self.footerY(in: geo))
                 }
@@ -276,11 +278,14 @@ struct TVRadarScreen: View {
                 .transition(.opacity)
             } else if let contact = model.focusedContact {
                 heroButton(contact) {
+                    // The card stays put and eases to the next aircraft's height; only its
+                    // contents cross-fade. (A new card per aircraft started at zero height, so
+                    // it collapsed and sprang back on every step.)
                     TVScaledContent(width: TVMapLayout.cardWidth, scale: 1.35) {
                         FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading, wideStats: true, detailScale: 0.9)
+                            .id(contact.id)
+                            .transition(.opacity)
                     }
-                    .id(contact.id)
-                    .transition(.opacity)
                 }
             }
         }
@@ -288,8 +293,16 @@ struct TVRadarScreen: View {
         .animation(.smooth(duration: 0.35), value: centerState)
     }
 
-    /// The focus anchor, on the radar and on the map alike: ◀ ▶ change aircraft, click opens
-    /// the details, ⏯ pins, ▼ opens the dock.
+    /// Radar → Split → Map → Radar, from ▲ on the hero or the dock's view item.
+    private func showNextView() {
+        guard settings.mapView else { return }
+        withAnimation(.smooth(duration: 0.6)) { settings.tvView = settings.effectiveTVView.next }
+        // The hero is rebuilt for the other view: focus it once it's there.
+        Task { @MainActor in focus = .radar }
+    }
+
+    /// The focus anchor, on the radar and on the map alike: ◀ ▶ change aircraft, ▲ changes
+    /// the view (with Map view on), click opens the details, ⏯ pins, ▼ opens the dock.
     private func heroButton<Label: View>(_ contact: RadarContact, @ViewBuilder label: () -> Label) -> some View {
         Button {
             noteInput()
@@ -307,6 +320,7 @@ struct TVRadarScreen: View {
             switch direction {
             case .left: withAnimation(.snappy) { model.focusPrevious() }
             case .right: withAnimation(.snappy) { model.focusNext() }
+            case .up: showNextView()
             case .down: openDock()
             default: break
             }
@@ -315,9 +329,15 @@ struct TVRadarScreen: View {
             noteInput()
             withAnimation(.snappy) { model.togglePin() }
         }
-        .accessibilityHint(mapIsShowing ? "Left and right change aircraft. Click for details. Hold for the map's range and style."
-                                        : "Left and right change aircraft. Click for details.")
+        .accessibilityHint(heroHint)
         .accessibilityAction(named: "Map range and style") { openMapPanel() }
+    }
+
+    private var heroHint: String {
+        var hint = "Left and right change aircraft. Click for details."
+        if settings.mapView { hint += " Up changes the view." }
+        if mapIsShowing { hint += " Hold for the map's range and style." }
+        return hint
     }
 
     // MARK: Map chrome
@@ -464,11 +484,7 @@ struct TVRadarScreen: View {
             if settings.mapView {
                 // Named for the view it switches to: Radar → Split → Map → Radar.
                 let next = settings.effectiveTVView.next
-                dockButton(.view, title: next.title, symbol: next.symbol) {
-                    withAnimation(.smooth(duration: 0.6)) { settings.tvView = next }
-                    // The hero is rebuilt for the other view: focus it once it's there.
-                    Task { @MainActor in focus = .radar }
-                }
+                dockButton(.view, title: next.title, symbol: next.symbol) { showNextView() }
             }
             dockButton(.settings, title: "Settings", symbol: "gearshape.fill") {
                 actions.openSettings(.radar)
@@ -505,6 +521,7 @@ private struct RemoteHints: View {
     /// The dock or the map panel: MENU goes back.
     let dockIsOpen: Bool
     let isPinned: Bool
+    var changesView = false
     var holdsForMap = false
 
     var body: some View {
@@ -513,6 +530,7 @@ private struct RemoteHints: View {
                 hint(["chevron.backward"], "Back")
             } else {
                 hint(["arrowtriangle.left.fill", "arrowtriangle.right.fill"], "Aircraft")
+                if changesView { hint(["arrowtriangle.up.fill"], "View") }
                 hint(["circle.circle"], "Details")
                 if holdsForMap { hint(["circle.circle"], "Hold: Map") }
                 hint(["playpause.fill"], isPinned ? "Unpin" : "Pin")

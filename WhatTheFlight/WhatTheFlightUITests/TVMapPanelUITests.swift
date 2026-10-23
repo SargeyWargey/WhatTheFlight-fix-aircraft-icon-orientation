@@ -48,7 +48,8 @@ final class TVMapPanelUITests: XCTestCase {
 
     func testAPlainClickStillOpensTheDetails() throws {
         remote.press(.select)
-        XCTAssertTrue(app.buttons["Full Route"].waitForExistence(timeout: 4), "A click should open the details")
+        // Every details screen has Close; Full Route only shows for flights with a route.
+        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 4), "A click should open the details")
         XCTAssertFalse(app.buttons["Satellite"].exists)
     }
 }
