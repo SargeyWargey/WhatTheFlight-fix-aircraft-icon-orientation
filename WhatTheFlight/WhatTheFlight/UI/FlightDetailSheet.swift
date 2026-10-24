@@ -53,7 +53,7 @@ struct FlightDetailSheet: View {
                         routeCard(contact)
                         actions(contact)
                         Text("Live data: Flightradar24 (unofficial feed). Positions between updates are estimated.")
-                            .font(.mono(10))
+                            .monoScaled(10)
                             .foregroundStyle(Palette.faint)
                             .multilineTextAlignment(.center)
                             .padding(.top, 4)
@@ -69,7 +69,7 @@ struct FlightDetailSheet: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
-                        .font(.mono(15, .semibold))
+                        .monoScaled(15, .semibold)
                 }
             }
         }
@@ -87,14 +87,14 @@ struct FlightDetailSheet: View {
             NotableBadgeRow(flight: flight)
                 .padding(.bottom, 4)
             Text(info.title)
-                .radarCaption()
+                .radarCaption(scales: true)
             if let subtitle = info.subtitle {
                 Text(subtitle)
-                    .font(.mono(11))
+                    .monoScaled(11)
                     .foregroundStyle(Palette.faint)
             }
             Text(flight.displayIdentifier)
-                .font(.mono(44, .heavy))
+                .monoScaled(44, .heavy)
                 .foregroundStyle(Palette.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
@@ -103,7 +103,7 @@ struct FlightDetailSheet: View {
             }
             if let name = flight.typeName ?? flight.typeCode {
                 Text(name)
-                    .font(.mono(13, .medium))
+                    .monoScaled(13, .medium)
                     .foregroundStyle(Palette.caption)
                     .padding(.top, 4)
             }
@@ -141,7 +141,7 @@ struct FlightDetailSheet: View {
             ? "\(RadarFormat.miles(contact.closestApproach.distanceMiles)) mi in \(RadarFormat.countdown(contact.closestApproach.secondsFromNow))"
             : "Moving away"
         let rows: [(String, String)] = [
-            ("Altitude", "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft"),
+            ("Altitude", "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft"),
             ("Vertical", vs),
             ("Speed", "\(RadarFormat.wholeNumber(f.groundSpeedKnots)) kts"),
             ("Track", "\(Int(f.track.rounded()))° \(GeoMath.cardinal(f.track))"),
@@ -157,9 +157,9 @@ struct FlightDetailSheet: View {
         return LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
             ForEach(rows, id: \.0) { row in
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(row.0).radarCaption()
+                    Text(row.0).radarCaption(scales: true)
                     Text(row.1)
-                        .font(.mono(15, .semibold))
+                        .monoScaled(15, .semibold)
                         .foregroundStyle(Palette.value)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
@@ -171,6 +171,8 @@ struct FlightDetailSheet: View {
                 .accessibilityElement(children: .combine)
             }
         }
+        // Two tiles a row: past this the values no longer fit.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         .animation(.smooth, value: contact.distanceMiles.rounded())
     }
 
@@ -179,7 +181,7 @@ struct FlightDetailSheet: View {
         let f = contact.flight
         if f.hasRoute {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Route").radarCaption()
+                Text("Route").radarCaption(scales: true)
                 airportRow(label: "From", code: f.originIATA, airport: f.origin)
                 airportRow(label: "To", code: f.destinationIATA, airport: f.destination)
                 if let progress = RouteProgress(flight: f, position: contact.coordinate) {
@@ -196,15 +198,15 @@ struct FlightDetailSheet: View {
     private func airportRow(label: String, code: String?, airport: Airport?) -> some View {
         HStack(spacing: 12) {
             Text(code ?? "—")
-                .font(.mono(20, .bold))
+                .monoScaled(20, .bold)
                 .foregroundStyle(Palette.route)
                 .frame(width: 58, alignment: .leading)
             VStack(alignment: .leading, spacing: 2) {
                 Text(airport?.name ?? "Unknown airport")
-                    .font(.mono(13, .semibold))
+                    .monoScaled(13, .semibold)
                     .foregroundStyle(Palette.value)
                 Text(airport?.city ?? label)
-                    .font(.mono(11))
+                    .monoScaled(11)
                     .foregroundStyle(Palette.caption)
             }
         }
@@ -272,7 +274,7 @@ struct FlightDetailSheet: View {
         var text = "✈️ \(f.displayIdentifier)"
         if f.hasRoute { text += " \(f.originIATA ?? "") → \(f.destinationIATA ?? "")" }
         if let type = f.typeName ?? f.typeCode { text += " · \(type)" }
-        text += " — \(RadarFormat.wholeNumber(f.altitudeFeet)) ft, \(RadarFormat.miles(contact.distanceMiles)) mi away. Spotted with What The Flight?"
+        text += " — \(RadarFormat.wholeNumber(contact.altitudeFeet)) ft, \(RadarFormat.miles(contact.distanceMiles)) mi away. Spotted with What The Flight?"
         return text
     }
 
@@ -290,7 +292,7 @@ struct RadarButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.mono(14, .bold))
+            .monoScaled(14, .bold)
             .padding(.vertical, 13)
             .padding(.horizontal, 12)
             .foregroundStyle(prominent ? Color.white : Palette.ink)
@@ -325,7 +327,7 @@ struct PhotoCard: View {
                     if let pageURL = photo.pageURL {
                         Link(destination: pageURL) {
                             Text("Photo © \(photo.photographer ?? "Unknown") · Planespotters.net")
-                                .font(.mono(10))
+                                .monoScaled(10)
                                 .foregroundStyle(Palette.caption)
                         }
                     }
@@ -460,7 +462,7 @@ struct RouteProgressView: View {
                 Spacer()
                 Text(remainingText)
             }
-            .font(.mono(11 * scale, .semibold))
+            .monoScaled(11 * scale, .semibold)
             .foregroundStyle(Palette.caption)
         }
         .accessibilityElement(children: .ignore)

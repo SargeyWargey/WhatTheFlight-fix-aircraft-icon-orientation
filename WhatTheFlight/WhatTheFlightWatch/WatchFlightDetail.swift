@@ -138,7 +138,7 @@ struct WatchFlightDetail: View {
                         .continuousRotation(contact.bearing - heading)
                 }
                 Spacer()
-                stat("Altitude", "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft") {
+                stat("Altitude", "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft") {
                     switch f.verticalTrend {
                     case .climbing: Image(systemName: "arrow.up.right").font(.system(size: 8, weight: .heavy)).foregroundStyle(Palette.live)
                     case .descending: Image(systemName: "arrow.down.right").font(.system(size: 8, weight: .heavy)).foregroundStyle(Palette.warning)

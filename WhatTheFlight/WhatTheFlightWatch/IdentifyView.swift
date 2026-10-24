@@ -77,6 +77,8 @@ struct IdentifyView: View {
                     Group {
                         if pointer.mode == .unavailable {
                             prompt(symbol: "gyroscope", title: "No motion sensors", text: "Identify needs the Watch's motion sensors.")
+                        } else if pointer.status == .waitingForCompass {
+                            prompt(symbol: "location.north.circle", title: "Waiting for the compass", text: "Move your arm in a figure eight.")
                         } else if let current {
                             card(current)
                         } else if visible.isEmpty {
@@ -172,7 +174,7 @@ struct IdentifyView: View {
                     .foregroundStyle(Palette.route)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
-                Text("\(RadarFormat.wholeNumber(f.altitudeFeet)) ft · \(RadarFormat.miles(contact.distanceMiles)) mi \(GeoMath.cardinal(contact.bearing))")
+                Text("\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft · \(RadarFormat.miles(contact.distanceMiles)) mi \(GeoMath.cardinal(contact.bearing))")
                     .font(.mono(10, .semibold))
                     .foregroundStyle(Palette.value)
                     .lineLimit(1)

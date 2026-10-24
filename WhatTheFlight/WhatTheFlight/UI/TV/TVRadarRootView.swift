@@ -74,11 +74,13 @@ struct TVRadarRootView: View {
         .onAppear {
             link.onPayload = { apply($0) }
             model.logbook = logbook
+            logbook.onBadgeUnlocked = { [model] badge in model.post(notice: badge.unlockNotice, symbol: badge.symbol) }
             // The TV has no GPS, so its set place is where it really is: log from there.
             model.logsCustomSpot = true
             startPinSync()
             model.onAlert = announce
             model.queryRadiusFloor = mapQueryFloor
+            model.trailRadiusFloor = mapTrailFloor
             link.start()
             model.start()
             if settings.locationMode == .device { tvLocation.locate() }
@@ -126,6 +128,7 @@ struct TVRadarRootView: View {
         }
         .onChange(of: mapQueryFloor) { _, floor in
             model.queryRadiusFloor = floor
+            model.trailRadiusFloor = mapTrailFloor
             // Only a map wider than the radar's own query needs fetching again now.
             if floor > settings.radiusMiles * 1.5 + 3 { model.settingsDidChange(refetch: true) }
         }
@@ -204,6 +207,11 @@ struct TVRadarRootView: View {
     /// (the same margin the radar's own query gets).
     private var mapQueryFloor: Double {
         settings.mapView ? settings.effectiveMapRadius * 1.5 + 3 : 0
+    }
+
+    /// The map's ring, so the model keeps trails as far out as the map draws them.
+    private var mapTrailFloor: Double {
+        settings.mapView ? settings.effectiveMapRadius : 0
     }
 
     private var keepsScreenAwake: Bool { settings.keepScreenAwake && scenePhase == .active }

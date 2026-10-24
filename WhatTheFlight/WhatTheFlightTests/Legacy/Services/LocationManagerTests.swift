@@ -1,3 +1,6 @@
+// Legacy: only the macOS (and visionOS) app runs this. iOS, tvOS and watchOS run radar v2;
+// see Enhancements Spec B4. Delete with the rest of Legacy/ once the Mac runs the iPad app (C11).
+#if os(macOS) || os(visionOS)
 //
 //  LocationManagerTests.swift
 //  WhatTheFlightTests
@@ -407,3 +410,4 @@ final class MockLocationManagerTests: XCTestCase {
         XCTAssertEqual(bounds.center.longitude, -122.4194, accuracy: 0.001)
     }
 }
+#endif

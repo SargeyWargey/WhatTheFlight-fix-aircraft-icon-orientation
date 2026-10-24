@@ -199,11 +199,13 @@ struct TVValueRow: View {
     var subtitle: String? = nil
     let value: String
     var symbol: String? = nil
+    /// The symbol and value at rest.
+    var tint: Color = Palette.ink
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            RowContent(title: title, subtitle: subtitle, value: value, symbol: symbol)
+            RowContent(title: title, subtitle: subtitle, value: value, symbol: symbol, tint: tint)
         }
         .buttonStyle(TVRowButtonStyle())
     }
@@ -213,6 +215,7 @@ struct TVValueRow: View {
         let subtitle: String?
         let value: String
         let symbol: String?
+        let tint: Color
         @Environment(\.tvRowFocused) private var focused
 
         var body: some View {
@@ -221,7 +224,7 @@ struct TVValueRow: View {
                     Image(systemName: symbol)
                         .font(.system(size: 28, weight: .semibold))
                         .frame(width: 40)
-                        .foregroundStyle(focused ? .white : Palette.ink)
+                        .foregroundStyle(focused ? .white : tint)
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
@@ -234,7 +237,7 @@ struct TVValueRow: View {
                 Spacer(minLength: 20)
                 Text(value)
                     .font(.mono(24, .bold))
-                    .foregroundStyle(focused ? .white : Palette.ink)
+                    .foregroundStyle(focused ? .white : tint)
             }
         }
     }

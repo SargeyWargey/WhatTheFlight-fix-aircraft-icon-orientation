@@ -115,10 +115,10 @@ Launch arguments (for screenshots and UI tests; no code needed beyond the settin
 - **Aircraft**: one `Annotation` per in-range contact. `AircraftGlyph(silhouette:size:)`
   rotated by `flight.track`, filled with `Palette.blip(for: flight)`. The focused aircraft is
   `Palette.signal` with the same pulse ring `AircraftBlip` uses in `UI/PerimeterLayer.swift`.
-  Label beneath each glyph: `displayIdentifier` on one line, altitude on the next
-  (`RadarFormat.wholeNumber(altitudeFeet) ft`), in `.mono(13, .bold)` / `.mono(11)` × scale.
-  Contacts in `outsideContacts` within `radiusMiles * 1.5` are drawn at 40 % opacity with no
-  label, so you see traffic about to enter.
+  No label on the map: the radar (Split, iPad, Duo) or the hero card (TV Map) already shows
+  the focused aircraft's callsign and altitude, so the map carries only glyphs and paths.
+  Contacts in `outsideContacts` within `radiusMiles * 1.5` are drawn at 40 % opacity, so you
+  see traffic about to enter.
 - **Trails**: for every drawn aircraft, `model.trail(for:)` + the current coordinate as a
   `MapPolyline`, split into three segments by age: newer than 5 min at opacity 0.9, 5–10 min
   at 0.5, 10–15 min at 0.25, stroked `Palette.route`, width 3 × scale, round caps. The focused

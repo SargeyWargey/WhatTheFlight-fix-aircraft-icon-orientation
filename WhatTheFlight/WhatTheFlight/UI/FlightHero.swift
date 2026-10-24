@@ -125,8 +125,8 @@ struct FlightHero: View {
     private var altitudeStat: some View {
         StatBlock(
             title: "Altitude",
-            value: RadarFormat.wholeNumber(flight.altitudeFeet),
-            numeric: Double(flight.altitudeFeet),
+            value: RadarFormat.wholeNumber(contact.altitudeFeet),
+            numeric: Double(contact.altitudeFeet),
             unit: "ft",
             scale: detailScale,
             accessory: altitudeTrend

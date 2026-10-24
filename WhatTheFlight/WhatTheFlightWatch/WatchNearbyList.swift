@@ -83,13 +83,13 @@ struct WatchNearbyList: View {
                         .rotationEffect(.degrees(contact.bearing - heading))
                     Text("\(RadarFormat.miles(contact.distanceMiles))").font(.mono(13, .bold)).foregroundStyle(Palette.value)
                 }
-                Text("\(RadarFormat.wholeNumber(f.altitudeFeet / 100 * 100))′")
+                Text("\(RadarFormat.wholeNumber(contact.altitudeFeet / 100 * 100))′")
                     .font(.mono(9))
                     .foregroundStyle(Palette.caption)
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(f.displayIdentifier), \(RadarFormat.miles(contact.distanceMiles)) miles \(GeoMath.cardinal(contact.bearing)), \(RadarFormat.wholeNumber(f.altitudeFeet)) feet")
+        .accessibilityLabel("\(f.displayIdentifier), \(RadarFormat.miles(contact.distanceMiles)) miles \(GeoMath.cardinal(contact.bearing)), \(RadarFormat.wholeNumber(contact.altitudeFeet)) feet")
     }
 
     private func subtitle(_ f: Flight) -> String {

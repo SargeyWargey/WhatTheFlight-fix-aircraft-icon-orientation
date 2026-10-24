@@ -307,7 +307,7 @@ struct WatchFlightHero: View {
                     .minimumScaleFactor(0.7)
             }
             // One Text, so the whole line shrinks together on small screens.
-            (Text("\(RadarFormat.wholeNumber(flight.altitudeFeet)) ft") + trend
+            (Text("\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft") + trend
                 + Text(" · \(RadarFormat.miles(contact.distanceMiles)) mi"))
                 .font(.mono(isCompact ? 10 : 11, .semibold))
                 .foregroundStyle(Palette.value)
@@ -353,7 +353,7 @@ struct WatchFlightHero: View {
             parts.append("\(from) to \(to)")
         }
         parts.append("\(RadarFormat.miles(contact.distanceMiles)) miles \(GeoMath.cardinal(contact.bearing))")
-        parts.append("\(RadarFormat.wholeNumber(flight.altitudeFeet)) feet")
+        parts.append("\(RadarFormat.wholeNumber(contact.altitudeFeet)) feet")
         if contact.isApproaching, contact.closestApproach.secondsFromNow < 3600 {
             parts.append("closest pass in \(RadarFormat.countdown(contact.closestApproach.secondsFromNow))")
         }
@@ -414,6 +414,8 @@ struct WatchPerimeterLayer: View {
     /// VoiceOver's way into the list: the icons themselves aren't separate elements.
     let onShowList: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         ZStack {
             ForEach(Array(placements.enumerated()), id: \.element.id) { index, placement in
@@ -425,14 +427,14 @@ struct WatchPerimeterLayer: View {
                                   profile: placement.contact.profile, scale: 0.78)
                         .opacity(isFocused ? 1 : fade)
                         .position(placement.labelPoint)
-                        .animation(.interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.labelPoint)
+                        .animation(reduceMotion ? nil : .interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.labelPoint)
                 }
 
                 AircraftBlip(profile: placement.contact.profile, screenTrack: placement.screenTrack, isFocused: isFocused,
                              scale: blipScale)
                     .opacity(isFocused ? 1 : fade)
                     .position(placement.point)
-                    .animation(.interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.point)
+                    .animation(reduceMotion ? nil : .interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.point)
                     .onTapGesture { onTap(placement.contact) }
                     .zIndex(isFocused ? 2 : 1)
             }

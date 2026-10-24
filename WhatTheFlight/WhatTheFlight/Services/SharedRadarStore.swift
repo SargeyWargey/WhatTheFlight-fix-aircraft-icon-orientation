@@ -41,7 +41,7 @@ struct SnapshotFlight: Codable, Hashable, Identifiable, Sendable {
         typeName = profile.typeName ?? f.typeCode
         distanceMiles = contact.distanceMiles
         bearing = contact.bearing
-        altitudeFeet = f.altitudeFeet
+        altitudeFeet = contact.altitudeFeet
         speedKnots = f.groundSpeedKnots
         isHelicopter = profile.kind == .helicopter
         let notable = profile.notable.first

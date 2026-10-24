@@ -42,7 +42,6 @@ struct TrafficMap: View {
     struct Options {
         var scale: CGFloat = 1
         var interactive = false          // iPad: true
-        var showsLabels = true
         var showsProjectedPath = true    // focused aircraft only
         var showsFringe = true
         /// Age bands, newest first; anything older isn't drawn.
@@ -252,23 +251,9 @@ struct TrafficMap: View {
         let flight = blip.contact.flight
         let isFocused = blip.role == .focused
         let isAnnounced = blip.id == announcedID
+        // Glyph only: the radar or the hero card beside the map already names the focus.
         AircraftBlip(profile: blip.contact.profile, screenTrack: flight.track - heading, isFocused: isFocused,
                      isAnnounced: isAnnounced, isPinned: pinnedIDs.contains(blip.id), scale: options.scale)
-            .overlay(alignment: .bottom) {
-                if options.showsLabels && blip.role != .fringe {
-                    VStack(spacing: 0) {
-                        Text(flight.displayIdentifier)
-                            .font(.mono(13 * options.scale, .bold))
-                            .foregroundStyle(isAnnounced ? Palette.announce : isFocused ? Palette.signal : Palette.value)
-                        Text("\(RadarFormat.wholeNumber(flight.altitudeFeet)) ft")
-                            .font(.mono(11 * options.scale))
-                            .foregroundStyle(Palette.caption)
-                    }
-                    .paperHalo()
-                    .fixedSize()
-                    .alignmentGuide(.bottom) { $0[.top] }
-                }
-            }
             .opacity(blip.role == .fringe ? 0.4 : 1)
             .onTapGesture { onTap?(blip.id) }
             .accessibilityElement()

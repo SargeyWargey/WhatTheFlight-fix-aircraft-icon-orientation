@@ -209,7 +209,7 @@ struct TVFlightDetailView: View {
             ? "\(RadarFormat.miles(contact.closestApproach.distanceMiles)) mi in \(RadarFormat.countdown(contact.closestApproach.secondsFromNow))"
             : "Moving away"
         let rows: [(String, String)] = [
-            ("Altitude", "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft"),
+            ("Altitude", "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft"),
             ("Speed", "\(RadarFormat.wholeNumber(f.groundSpeedKnots)) kts"),
             ("Distance", "\(RadarFormat.miles(contact.distanceMiles)) mi \(GeoMath.cardinal(contact.bearing))"),
             ("Vertical", f.verticalRateFPM == 0 ? "Level" : "\(f.verticalRateFPM > 0 ? "+" : "")\(RadarFormat.wholeNumber(f.verticalRateFPM)) fpm"),
@@ -464,7 +464,7 @@ struct TVAircraftListView: View {
                 VStack(alignment: .trailing, spacing: 6) {
                     Text("\(RadarFormat.wholeNumber(Int(contact.distanceMiles.rounded()))) mi")
                         .font(.mono(30, .bold))
-                    Text(f.isOnGround ? "Ground" : "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft")
+                    Text(f.isOnGround ? "Ground" : "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft")
                         .font(.mono(20))
                         .foregroundStyle(focused ? .white.opacity(0.8) : Palette.caption)
                 }

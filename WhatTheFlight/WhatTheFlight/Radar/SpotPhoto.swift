@@ -94,7 +94,7 @@ struct SpotPhoto: Codable, Identifiable, Hashable, Sendable {
         destinationIATA = f.destinationIATA
         tags = f.notable.map(\.tag)
         distanceMiles = contact.distanceMiles
-        altitudeFeet = f.altitudeFeet
+        altitudeFeet = contact.altitudeFeet
         speedKnots = f.groundSpeedKnots
         track = f.track
         self.elevationDegrees = elevationDegrees

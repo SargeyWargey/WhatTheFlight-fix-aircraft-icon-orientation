@@ -36,7 +36,7 @@ struct AppIconPickerView: View {
             VStack(alignment: .leading, spacing: 26) {
                 ForEach(AppIconChoice.Group.allCases) { group in
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(group.rawValue).radarCaption()
+                        Text(group.rawValue).radarCaption(scales: true)
                         LazyVGrid(columns: columns, alignment: .leading, spacing: 18) {
                             ForEach(AppIconChoice.allCases.filter { $0.group == group }) { choice in
                                 Button { select(choice) } label: { cell(choice) }

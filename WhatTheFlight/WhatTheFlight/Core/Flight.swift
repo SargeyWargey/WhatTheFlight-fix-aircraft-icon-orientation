@@ -106,6 +106,19 @@ struct Flight: Identifiable, Hashable, Sendable {
         let elapsed = min(max(0, date.timeIntervalSince(positionTime)), maxExtrapolation)
         return GeoMath.extrapolate(coordinate, trackDegrees: track, speedKnots: Double(groundSpeedKnots), seconds: elapsed)
     }
+
+    /// Climbs and descents end, so altitude is never carried further than this, even where
+    /// positions are (complication timelines).
+    static let altitudeExtrapolation: TimeInterval = 90
+
+    /// Altitude carried along by the vertical rate to `date`, to the nearest 10 ft, never
+    /// below the ground. The reported altitude at the fix itself.
+    func predictedAltitudeFeet(at date: Date) -> Int {
+        let elapsed = min(max(0, date.timeIntervalSince(positionTime)), Self.altitudeExtrapolation)
+        guard !isOnGround, verticalRateFPM != 0, elapsed > 0 else { return altitudeFeet }
+        let feet = Double(altitudeFeet) + Double(verticalRateFPM) * elapsed / 60
+        return max(0, Int((feet / 10).rounded()) * 10)
+    }
 }
 
 /// What a flight's identity says about it: operator, notable tags, type. These are catalog
@@ -154,6 +167,8 @@ struct RadarContact: Identifiable, Equatable, Sendable {
     let flight: Flight
     let profile: FlightProfile
     let coordinate: CLLocationCoordinate2D
+    /// Dead-reckoned like the position: what to show and say, rather than `flight.altitudeFeet`.
+    let altitudeFeet: Int
     let distanceMiles: Double
     /// True bearing from the observer to the aircraft.
     let bearing: Double
@@ -173,6 +188,7 @@ struct RadarContact: Identifiable, Equatable, Sendable {
         self.profile = profile.flatMap { $0.isCurrent(for: flight) ? $0 : nil } ?? FlightProfile(flight)
         let position = flight.predictedCoordinate(at: date, maxExtrapolation: maxExtrapolation)
         self.coordinate = position
+        self.altitudeFeet = flight.predictedAltitudeFeet(at: date)
         self.distanceMiles = GeoMath.distanceMiles(from: observer, to: position)
         self.bearing = GeoMath.bearing(from: observer, to: position)
         self.closestApproach = GeoMath.closestApproach(

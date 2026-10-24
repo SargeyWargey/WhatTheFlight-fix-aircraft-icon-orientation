@@ -190,6 +190,8 @@
 				Data/RegistrationCountry.swift,
 				Models/GeographicBounds.swift,
 				Radar/Logbook.swift,
+				Radar/LogbookAchievements.swift,
+				Radar/LogbookDigest.swift,
 				Radar/RadarModel.swift,
 				Radar/SpotPhoto.swift,
 				Radar/TrafficAlerts.swift,

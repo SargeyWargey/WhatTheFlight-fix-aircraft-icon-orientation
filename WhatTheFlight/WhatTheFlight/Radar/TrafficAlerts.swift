@@ -81,7 +81,7 @@ struct TrafficAlertEngine {
                 result.append(TrafficAlert(
                     flightID: f.id, reason: .overhead,
                     title: "\(name) overhead \(when)",
-                    body: "\(what) at \(RadarFormat.wholeNumber(f.altitudeFeet)) ft — look \(GeoMath.cardinal(contact.bearing))\(f.hasRoute ? ", \(f.originIATA ?? "") → \(f.destinationIATA ?? "")" : "").",
+                    body: "\(what) at \(RadarFormat.wholeNumber(contact.altitudeFeet)) ft — look \(GeoMath.cardinal(contact.bearing))\(f.hasRoute ? ", \(f.originIATA ?? "") → \(f.destinationIATA ?? "")" : "").",
                     symbol: "scope",
                     flight: SnapshotFlight(contact)
                 ))
@@ -92,7 +92,7 @@ struct TrafficAlertEngine {
             result.append(TrafficAlert(
                 flightID: f.id, reason: .notable,
                 title: "\(name) \(top.reason)",
-                body: "\(what), \(RadarFormat.miles(contact.distanceMiles)) mi \(GeoMath.cardinal(contact.bearing)) at \(RadarFormat.wholeNumber(f.altitudeFeet)) ft.",
+                body: "\(what), \(RadarFormat.miles(contact.distanceMiles)) mi \(GeoMath.cardinal(contact.bearing)) at \(RadarFormat.wholeNumber(contact.altitudeFeet)) ft.",
                 symbol: top.tag.symbol,
                 flight: SnapshotFlight(contact)
             ))
@@ -114,7 +114,7 @@ enum SpokenTraffic {
             return ", from \(from) to \(to),"
         }()
         let what = f.typeName.map { ", a \($0)" } ?? ""
-        let altitude = "\(RadarFormat.wholeNumber(Int((Double(f.altitudeFeet) / 100).rounded()) * 100)) feet"
+        let altitude = "\(RadarFormat.wholeNumber(Int((Double(contact.altitudeFeet) / 100).rounded()) * 100)) feet"
         let look = "Look \(direction(contact.bearing))."
 
         switch reason {
@@ -167,7 +167,7 @@ enum SpokenTraffic {
     static func mapLabel(for contact: RadarContact) -> String {
         let f = contact.flight
         let where_ = contact.distanceMiles < 0.5 ? "overhead" : "\(RadarFormat.miles(contact.distanceMiles)) miles \(direction(contact.bearing))"
-        return "\(f.displayIdentifier), \(f.operatorInfo.title), \(where_), \(RadarFormat.wholeNumber(f.altitudeFeet)) feet"
+        return "\(f.displayIdentifier), \(f.operatorInfo.title), \(where_), \(RadarFormat.wholeNumber(contact.altitudeFeet)) feet"
     }
 
     static func direction(_ bearing: Double) -> String {
@@ -192,7 +192,7 @@ extension SpokenTraffic {
         let f = contact.flight
         var first = spokenName(f)
         if let from = f.origin?.city, let to = f.destination?.city { first += ", \(from) to \(to)" }
-        let altitude = "\(RadarFormat.wholeNumber(Int((Double(f.altitudeFeet) / 100).rounded()) * 100)) feet"
+        let altitude = "\(RadarFormat.wholeNumber(Int((Double(contact.altitudeFeet) / 100).rounded()) * 100)) feet"
         let where_ = contact.distanceMiles < 0.5 ? "right overhead" : "\(RadarFormat.miles(contact.distanceMiles)) miles \(direction(contact.bearing))"
         let what = f.typeName.map { "A \($0)" } ?? (f.kind == .helicopter ? "A helicopter" : "An aircraft")
         var sentence = "\(first). \(what) at \(altitude), \(where_)."
@@ -213,7 +213,7 @@ extension SpokenTraffic {
         let direction = ["N": "north", "NE": "northeast", "E": "east", "SE": "southeast",
                          "S": "south", "SW": "southwest", "W": "west", "NW": "northwest"][GeoMath.cardinal(contact.bearing)] ?? ""
         let miles = contact.distanceMiles < 0.5 ? "right overhead" : "\(RadarFormat.miles(contact.distanceMiles)) miles \(direction)"
-        var sentence = "That's \(who). It's \(miles) at \(RadarFormat.wholeNumber(f.altitudeFeet)) feet"
+        var sentence = "That's \(who). It's \(miles) at \(RadarFormat.wholeNumber(contact.altitudeFeet)) feet"
         if contact.isApproaching, contact.closestApproach.secondsFromNow < 900 {
             let minutes = Int((contact.closestApproach.secondsFromNow / 60).rounded())
             sentence += minutes < 1 ? ", and it's about to pass closest" : ", and passes closest in about \(minutes) minute\(minutes == 1 ? "" : "s")"

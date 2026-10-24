@@ -26,7 +26,7 @@ struct WhereaboutsView: View {
                 switch lookup.state {
                 case .loading:
                     ProgressView("Looking for \(title)…")
-                        .font(.mono(13))
+                        .monoScaled(13)
                         .padding(.top, 80)
                 case .notFound:
                     ContentUnavailableView("Can't see it right now", systemImage: "antenna.radiowaves.left.and.right.slash",
@@ -57,20 +57,20 @@ struct WhereaboutsView: View {
         let f = w.flight
         return VStack(spacing: 16) {
             VStack(spacing: 4) {
-                Text(f.operatorInfo.title).radarCaption()
+                Text(f.operatorInfo.title).radarCaption(scales: true)
                 Text(w.headline)
-                    .font(.mono(30, .heavy))
+                    .monoScaled(30, .heavy)
                     .foregroundStyle(Palette.ink)
                     .multilineTextAlignment(.center)
                 if let detail = w.detail {
                     Text(detail)
-                        .font(.mono(14, .semibold))
+                        .monoScaled(14, .semibold)
                         .foregroundStyle(Palette.route)
                         .multilineTextAlignment(.center)
                 }
                 if let distance = w.distanceText {
                     Text(distance)
-                        .font(.mono(13))
+                        .monoScaled(13)
                         .foregroundStyle(Palette.caption)
                 }
             }
@@ -93,7 +93,7 @@ struct WhereaboutsView: View {
 
             if let updated = lookup.updatedAt {
                 Text("Updated \(updated.formatted(date: .omitted, time: .standard)) · refreshes every 30 s")
-                    .font(.mono(10))
+                    .monoScaled(10)
                     .foregroundStyle(Palette.faint)
             }
             refreshButton
@@ -112,9 +112,9 @@ struct WhereaboutsView: View {
 
     private func stat(_ title: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).radarCaption()
+            Text(title).radarCaption(scales: true)
             Text(value)
-                .font(.mono(15, .semibold))
+                .monoScaled(15, .semibold)
                 .foregroundStyle(Palette.value)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)

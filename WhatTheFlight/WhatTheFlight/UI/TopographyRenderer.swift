@@ -98,7 +98,19 @@ final class TopographyRenderer {
         var hasIndex: Bool
         var shade: Float
 
+        /// Every style's lines (and shading) at this share of the design preview's strength:
+        /// full strength competed with the radar and the logbook on top of it.
+        static let strength: Float = 0.87
+
         static func of(_ style: RadarSettings.TopographyStyle, dark: Bool) -> Look {
+            var look = base(style, dark: dark)
+            look.minorAlpha *= strength
+            look.indexAlpha *= strength
+            look.shade *= strength
+            return look
+        }
+
+        private static func base(_ style: RadarSettings.TopographyStyle, dark: Bool) -> Look {
             func pick(_ light: Float, _ night: Float) -> Float { dark ? night : light }
             switch style {
             case .remaster:

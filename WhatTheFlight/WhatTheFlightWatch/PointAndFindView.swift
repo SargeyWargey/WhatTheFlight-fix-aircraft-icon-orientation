@@ -56,6 +56,8 @@ struct PointAndFindView: View {
                 }
                 if pointer.mode == .unavailable {
                     message(symbol: "gyroscope", title: "No motion sensors", text: "Point & Find needs the Watch's motion sensors.")
+                } else if pointer.status == .waitingForCompass {
+                    message(symbol: "location.north.circle", title: "Waiting for the compass", text: "Move your arm in a figure eight.")
                 } else if let targetDirection {
                     HStack(spacing: 10) {
                         VStack(spacing: 2) {
@@ -108,7 +110,7 @@ struct PointAndFindView: View {
                 .foregroundStyle(Palette.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
-            Text("\(RadarFormat.miles(target.distanceMiles)) mi \(GeoMath.cardinal(target.bearing)) · \(RadarFormat.wholeNumber(target.flight.altitudeFeet)) ft")
+            Text("\(RadarFormat.miles(target.distanceMiles)) mi \(GeoMath.cardinal(target.bearing)) · \(RadarFormat.wholeNumber(target.altitudeFeet)) ft")
                 .font(.mono(9, .semibold))
                 .foregroundStyle(Palette.caption)
                 .lineLimit(1)

@@ -3,14 +3,14 @@
 //  WhatTheFlight
 //
 //  The main screen. No cards, no chrome in the way: the focused flight in the middle,
-//  every other aircraft on the edge, a status badge bottom-left (tap: search and the
-//  logbook, full height) and settings bottom-right. Demo traffic (a solid DEMO badge) and
-//  a custom spot each get a tag along the bottom.
+//  every other aircraft on the edge, a status pill bottom-left (tap the count: Aircraft
+//  search; tap the book: the logbook) and settings bottom-right. Demo traffic (a solid DEMO
+//  pill) and a custom spot each get a tag along the bottom.
 //
 //  Gestures
 //    swipe →   back to the nearest aircraft      tap centre   flight details
 //    swipe ←   next aircraft farther out         hold centre  pin / unpin
-//    swipe ↓   search                            tap an icon  focus it
+//    swipe ↓   logbook                           tap an icon  focus it
 //    swipe ↑   settings                          hold an icon details
 //
 
@@ -29,9 +29,10 @@ struct RadarScreen: View {
 
     struct Actions {
         var openSettings: () -> Void
-        var openSearch: () -> Void
+        /// Swipe down, or the book on the status pill.
+        var openLogbook: () -> Void
         var openDetail: (String) -> Void
-        /// The status badge: search (and its Logbook button) straight to full height.
+        /// The count on the status pill: Aircraft search, full height.
         var openSearchFullHeight: () -> Void
         var openSpotPicker: () -> Void
         var centerPrimary: () -> Void
@@ -39,6 +40,7 @@ struct RadarScreen: View {
     }
 
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var statusWidth: CGFloat = 52
     @State private var confirmLiveTraffic = false
     /// The hero's height before scaling, so it can shrink to fit a short radar.
@@ -59,7 +61,7 @@ struct RadarScreen: View {
             ZStack {
                 if settings.showCompassBezel {
                     CompassBezel(track: layout.bezelTrack, heading: heading)
-                        .animation(.interactiveSpring(response: 0.45, dampingFraction: 0.86), value: heading)
+                        .animation(reduceMotion ? nil : .interactiveSpring(response: 0.45, dampingFraction: 0.86), value: heading)
                 }
 
                 // Tags inside the bezel (no home-indicator strip, e.g. the iPhone Duo's standing
@@ -84,11 +86,7 @@ struct RadarScreen: View {
                     onLongPress: { contact in actions.openDetail(contact.id) }
                 )
 
-                Button(action: actions.openSearchFullHeight) {
-                    StatusBadge(model: model, highlightsDemo: true)
-                }
-                .buttonStyle(.plain)
-                .accessibilityHint("Search aircraft, or open the logbook")
+                RadarStatusPill(model: model, onSearch: actions.openSearchFullHeight, onLogbook: actions.openLogbook)
                 .fixedSize()
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { statusWidth = $0 }
                 // Pinned by its left edge so a wider badge grows into the screen, not off it.
@@ -180,11 +178,59 @@ struct RadarScreen: View {
                         withAnimation(.snappy) { model.focusNext() }
                     }
                 } else if dy > threshold {
-                    actions.openSearch()
+                    actions.openLogbook()
                 } else if dy < -threshold {
                     actions.openSettings()
                 }
             }
+    }
+}
+#endif
+
+#if os(iOS)
+/// The bottom-left pill on iPhone and iPad: the aircraft count (tap: Aircraft search) and a
+/// book (tap: the logbook), one capsule so the radar keeps a single control in that corner.
+struct RadarStatusPill: View {
+    let model: RadarModel
+    let onSearch: () -> Void
+    let onLogbook: () -> Void
+
+    var body: some View {
+        let demo = model.isDemo
+        HStack(spacing: 0) {
+            Button(action: onSearch) {
+                StatusBadge(model: model, highlightsDemo: true, drawsCapsule: false)
+                    .padding(.leading, 11)
+                    .padding(.trailing, 9)
+                    .frame(height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Search aircraft")
+
+            Rectangle()
+                .fill((demo ? Palette.paper : Palette.value).opacity(0.25))
+                .frame(width: 1, height: 16)
+                .accessibilityHidden(true)
+
+            Button(action: onLogbook) {
+                Image(systemName: "book.closed.fill")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(demo ? Palette.paper : Palette.ink)
+                    .frame(width: 38, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Logbook")
+            .accessibilityIdentifier("logbookButton")
+        }
+        .background {
+            Capsule()
+                .fill(Palette.ink)
+                .shadow(color: Palette.ink.opacity(0.45), radius: 8)
+                .opacity(demo ? 1 : 0)
+        }
+        .glassSurface(in: Capsule())
     }
 }
 #endif
@@ -281,6 +327,8 @@ struct StatusBadge: View {
     /// iPhone / iPad: demo traffic turns the badge into a solid ink pill so nobody mistakes
     /// simulated aircraft for the real sky. The TV keeps the plain glass badge.
     var highlightsDemo = false
+    /// Off when it sits inside a bigger pill that draws the capsule (`RadarStatusPill`).
+    var drawsCapsule = true
     @State private var blink = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -295,6 +343,32 @@ struct StatusBadge: View {
     }
 
     var body: some View {
+        Group {
+            if drawsCapsule {
+                content
+                    .padding(.horizontal, 11)
+                    .frame(height: 32)
+                    .background {
+                        Capsule()
+                            .fill(Palette.ink)
+                            .shadow(color: Palette.ink.opacity(0.45), radius: 8)
+                            .opacity(isHighlightedDemo ? 1 : 0)
+                    }
+                    .glassSurface(in: Capsule())
+            } else {
+                content
+            }
+        }
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 1.1).repeatForever()) { blink = true }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
+        .accessibilityIdentifier("statusBadge")
+    }
+
+    private var content: some View {
         HStack(spacing: 6) {
             Circle()
                 .fill(color)
@@ -311,22 +385,6 @@ struct StatusBadge: View {
                 .animation(.snappy, value: model.contacts.count)
         }
         .foregroundStyle(isHighlightedDemo ? Palette.paper : Palette.value)
-        .padding(.horizontal, 11)
-        .frame(height: 32)
-        .background {
-            Capsule()
-                .fill(Palette.ink)
-                .shadow(color: Palette.ink.opacity(0.45), radius: 8)
-                .opacity(isHighlightedDemo ? 1 : 0)
-        }
-        .glassSurface(in: Capsule())
-        .onAppear {
-            guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 1.1).repeatForever()) { blink = true }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityText)
-        .accessibilityIdentifier("statusBadge")
     }
 
     private var accessibilityText: String {

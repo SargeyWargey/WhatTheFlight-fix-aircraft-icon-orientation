@@ -110,8 +110,18 @@ final class WristPointer {
         }
     }
 
+    /// Whether pointing can work right now.
+    enum Status: Equatable {
+        case ready
+        /// Compass + tilt, with no heading for a few seconds: the compass needs calibrating
+        /// (or this Watch has none), so `pointing` stays nil.
+        case waitingForCompass
+        case unavailable
+    }
+
     private(set) var pointing: SIMD3<Double>?
     private(set) var mode: Mode = .unavailable
+    private(set) var status: Status = .ready
     /// How the arm-out screen should be turned: its top toward whichever edge is highest.
     private(set) var screenTurn: WristPointing.ScreenTurn = .clockwise
 
@@ -132,6 +142,10 @@ final class WristPointer {
     @ObservationIgnored private var gravity: SIMD3<Double>?
     /// A new screen turn has to hold for a moment before the screen follows it.
     @ObservationIgnored private var pendingTurn: (turn: WristPointing.ScreenTurn, since: Date)?
+    /// When the compass-only fallback last had no heading to work with.
+    @ObservationIgnored private var headingMissingSince: Date?
+    /// How long without a heading before saying so, rather than a prompt that never changes.
+    static let compassWait: TimeInterval = 3
 
     func start() {
         #if DEBUG
@@ -145,6 +159,7 @@ final class WristPointer {
             let parts = spec.split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
             if parts.count == 2 {
                 mode = .trueNorth
+                status = .ready
                 pointing = SkyProjector.direction(azimuth: parts[0], elevation: parts[1])
                 return
             }
@@ -152,8 +167,11 @@ final class WristPointer {
         #endif
         guard motion.isDeviceMotionAvailable else {
             mode = .unavailable
+            status = .unavailable
             return
         }
+        status = .ready
+        headingMissingSince = nil
         guard !motion.isDeviceMotionActive else { return }
         let frames = CMMotionManager.availableAttitudeReferenceFrames()
         let frame: CMAttitudeReferenceFrame
@@ -218,7 +236,16 @@ final class WristPointer {
             if mode == .magneticNorth, let d = declination() { p = WristPointing.rotateAzimuth(p, by: d) }
             target = p
         case .compassOnly:
-            guard let heading = heading() else { return }
+            guard let heading = heading() else {
+                let since = headingMissingSince ?? Date()
+                headingMissingSince = since
+                if status != .waitingForCompass, Date().timeIntervalSince(since) >= Self.compassWait {
+                    status = .waitingForCompass
+                }
+                return
+            }
+            headingMissingSince = nil
+            if status != .ready { status = .ready }
             target = style == .point
                 ? WristPointing.pointing(gravity: g, headingOfTop: heading, axisSign: axisSign)
                 : WristPointing.sightLine(gravity: g, headingOfTop: heading, displaySign: displaySign)

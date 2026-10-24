@@ -2,15 +2,25 @@
 //  TVLogbookView.swift
 //  WhatTheFlight
 //
-//  The logbook on the big screen: stats, records and badges up top, then every sighting by
-//  day. Everything is clickable: a record or a sighting opens that aircraft's page (◀ ▶ then
-//  step through the records, or through the whole logbook), a badge opens its own page with
-//  the aircraft that earned it. Focus starts at the top, on the records.
+//  The logbook on the big screen: the same five tabs as iPhone and iPad (Overview,
+//  Sightings, Stats, Badges, Photos) in the TV's top tab bar. ▲ always reaches the tabs.
+//  Everything is clickable: a sighting opens that aircraft's page (◀ ▶ then step through the
+//  list it came from), a badge its own page, a regular its whole history. The tab pages
+//  live in `TVLogbookTabs.swift`; the pages they open are below.
 //
 
 #if os(tvOS)
 import SwiftUI
 import MapKit
+
+/// What a tab can open over the logbook.
+struct TVLogbookActions {
+    var open: (TVSightingBrowse) -> Void
+    var badge: (Achievement) -> Void
+    var airframe: (String) -> Void
+    var showTab: (LogbookTab) -> Void
+    var clear: () -> Void
+}
 
 struct TVLogbookView: View {
     let logbook: Logbook
@@ -19,100 +29,52 @@ struct TVLogbookView: View {
     var isLive: (String) -> Bool = { _ in false }
     let onPick: (String) -> Void
 
+    @State private var tab = LogbookTab.initial
     @State private var confirmClear = false
     @State private var shownBadge: Achievement?
     @State private var shownBrowse: TVSightingBrowse?
-    /// `-wtf.debugAirframe <reg>` (DEBUG) opens one airframe's log.
     @State private var shownAirframe: String?
-    @FocusState private var focus: FocusTarget?
-
-    enum FocusTarget: Hashable {
-        case record(String)
-        case badge(String)
-    }
 
     var body: some View {
-        let stats = LogbookStats(logbook.sightings)
-        let achievements = Achievement.all(for: logbook.sightings)
-        ZStack {
-            RadarBackdrop(showTopography: showTopography, showSweep: false, isActive: true)
-                .ignoresSafeArea()
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 18) {
-                    Text("Logbook")
-                        .font(.mono(56, .heavy))
-                        .foregroundStyle(Palette.ink)
-
-                    if logbook.isEmpty {
-                        Text("Every aircraft that comes inside your radius is logged here automatically.")
-                            .font(.mono(28))
-                            .foregroundStyle(Palette.caption)
-                    } else {
-                        HStack(spacing: 20) {
-                            LogbookStatTile(title: "Spotted", value: RadarFormat.wholeNumber(stats.total), scale: 2)
-                            LogbookStatTile(title: "Today", value: RadarFormat.wholeNumber(stats.today), scale: 2)
-                            LogbookStatTile(title: "Airframes", value: RadarFormat.wholeNumber(stats.uniqueAirframes), scale: 2)
-                            LogbookStatTile(title: "Types", value: RadarFormat.wholeNumber(stats.uniqueTypes), scale: 2)
-                            LogbookStatTile(title: "Airlines", value: RadarFormat.wholeNumber(stats.uniqueAirlines), scale: 2)
-                        }
-
-                        TVSectionHeader(title: "Records")
-                        let records = Self.records(stats)
-                        HStack(spacing: 24) {
-                            ForEach(Array(records.enumerated()), id: \.offset) { i, r in
-                                record(r.title, r.value, r.sighting) {
-                                    shownBrowse = TVSightingBrowse(records.map { .init(sighting: $0.sighting, label: "\($0.title) · \($0.value)") }, start: i)
-                                }
-                            }
-                        }
-                        .focusSection()
-
-                        TVSectionHeader(title: "Badges · \(achievements.filter(\.isUnlocked).count) of \(achievements.count) · click one for details")
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 24), count: 7), spacing: 28) {
-                            ForEach(achievements) { achievement in
-                                Button {
-                                    shownBadge = achievement
-                                } label: {
-                                    AchievementBadge(achievement: achievement, scale: 1.8)
-                                        .frame(maxWidth: .infinity, minHeight: 200)
-                                }
-                                .buttonStyle(TVCardButtonStyle())
-                                .focused($focus, equals: .badge(achievement.id))
-                            }
-                        }
-                        .focusSection()
-
-                        ForEach(LogbookGrouping.byDay(logbook.recent), id: \.day) { group in
-                            TVSectionHeader(title: "\(LogbookGrouping.title(for: group.day)) · \(group.items.count)")
-                            ForEach(group.items) { row($0) }
-                        }
-
-                        TVSectionHeader(title: "Start over")
-                        TVValueRow(title: "Clear Logbook", subtitle: "Remove every sighting and badge on this Apple TV", value: "", symbol: "trash") {
-                            confirmClear = true
-                        }
-                    }
-                }
-                .padding(.horizontal, 120)
-                .padding(.vertical, 60)
+        let actions = TVLogbookActions(
+            open: { shownBrowse = $0 },
+            badge: { shownBadge = $0 },
+            airframe: { shownAirframe = $0 },
+            showTab: { tab = $0 },
+            clear: { confirmClear = true })
+        let ctx = TVLogbookContext(logbook: logbook, showPhotos: showPhotos, isLive: isLive, actions: actions)
+        TabView(selection: $tab) {
+            Tab(LogbookTab.overview.title, systemImage: LogbookTab.overview.symbol, value: LogbookTab.overview) {
+                page { TVLogbookOverview(ctx: ctx) }
             }
-            .defaultScrollAnchor(.top)
+            Tab(LogbookTab.sightings.title, systemImage: LogbookTab.sightings.symbol, value: LogbookTab.sightings) {
+                page { TVLogbookSightings(ctx: ctx) }
+            }
+            Tab(LogbookTab.stats.title, systemImage: LogbookTab.stats.symbol, value: LogbookTab.stats) {
+                page { TVLogbookStats(ctx: ctx) }
+            }
+            Tab(LogbookTab.badges.title, systemImage: LogbookTab.badges.symbol, value: LogbookTab.badges) {
+                page { TVLogbookBadges(ctx: ctx) }
+            }
+            Tab(LogbookTab.photos.title, systemImage: LogbookTab.photos.symbol, value: LogbookTab.photos) {
+                page { TVLogbookPhotos(ctx: ctx) }
+            }
         }
-        // Start at the top (the records) rather than letting focus fall to the first sighting.
-        .defaultFocus($focus, stats.closest != nil ? .record("Closest pass") : achievements.first.map { .badge($0.id) })
         #if DEBUG
         .task {
             // `-wtf.debugBadge <id>` opens a badge's page, `-wtf.debugSighting <id>` a sighting's
-            // (paging through the records if it's one of them) — for screenshots.
+            // (paging through the records if it's one of them), `-wtf.debugAirframe <reg>` an
+            // airframe's log — for screenshots.
             let defaults = UserDefaults.standard
             try? await Task.sleep(for: .seconds(1))
+            let digest = logbook.digest
             if let airframe = defaults.string(forKey: "wtf.debugAirframe") {
                 shownAirframe = airframe
             } else if let id = defaults.string(forKey: "wtf.debugBadge") {
-                shownBadge = Achievement.all(for: logbook.sightings).first { $0.id == id }
+                shownBadge = digest.achievements.first { $0.id == id }
             } else if let id = defaults.string(forKey: "wtf.debugSighting"),
                       let sighting = logbook.sightings.first(where: { $0.id == id }) {
-                let records = Self.records(LogbookStats(logbook.sightings))
+                let records = digest.records
                 if let i = records.firstIndex(where: { $0.sighting.id == id }) {
                     shownBrowse = TVSightingBrowse(records.map { .init(sighting: $0.sighting, label: "\($0.title) · \($0.value)") }, start: i)
                 } else {
@@ -152,42 +114,13 @@ struct TVLogbookView: View {
         }
     }
 
-    private static func records(_ stats: LogbookStats) -> [(title: String, value: String, sighting: Sighting)] {
-        var records: [(title: String, value: String, sighting: Sighting)] = []
-        if let s = stats.closest { records.append(("Closest pass", s.closestText, s)) }
-        if let s = stats.highest { records.append(("Highest", "\(RadarFormat.wholeNumber(s.altitudeAtClosestFeet)) ft", s)) }
-        if let s = stats.fastest { records.append(("Fastest", "\(RadarFormat.wholeNumber(s.speedKnots)) kts", s)) }
-        return records
-    }
-
-    private func record(_ title: String, _ value: String, _ s: Sighting, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                TVSightingPhoto(sighting: s, enabled: showPhotos, height: 210)
-                    .padding(.bottom, 8)
-                Text(title).radarCaptionTV()
-                Text(value)
-                    .font(.mono(40, .bold))
-                    .foregroundStyle(Palette.ink)
-                Text([s.displayIdentifier, s.routeText, s.typeName ?? s.typeCode].compactMap { $0 }.joined(separator: " · "))
-                    .font(.mono(20))
-                    .foregroundStyle(Palette.caption)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(22)
+    /// A tab's page over the paper and contours.
+    private func page<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        ZStack {
+            LogbookBackdrop(showTopography: showTopography)
+                .ignoresSafeArea()
+            content()
         }
-        .buttonStyle(TVCardButtonStyle())
-        .focused($focus, equals: .record(title))
-    }
-
-    private func row(_ s: Sighting) -> some View {
-        Button {
-            shownBrowse = TVSightingBrowse(logbook.recent, showing: s)
-        } label: {
-            TVSightingRow(sighting: s, isLive: isLive(s.id))
-        }
-        .buttonStyle(TVRowButtonStyle())
     }
 }
 
@@ -219,7 +152,7 @@ struct TVCardButtonStyle: ButtonStyle {
     }
 }
 
-private struct TVSightingRow: View {
+struct TVSightingRow: View {
     let sighting: Sighting
     let isLive: Bool
     /// Narrow column (badge page): no "ON RADAR" label, shorter text.
@@ -295,17 +228,27 @@ struct TVAchievementDetailView: View {
     var body: some View {
         let a = achievement
         ZStack {
-            RadarBackdrop(showTopography: showTopography, showSweep: false, isActive: true)
+            LogbookBackdrop(showTopography: showTopography)
                 .ignoresSafeArea()
             HStack(alignment: .top, spacing: 80) {
                 VStack(alignment: .leading, spacing: 24) {
                     AchievementBadge(achievement: a, scale: 4.2, showsTitle: false)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 20)
-                    Text(a.isUnlocked ? "UNLOCKED" : "LOCKED")
-                        .font(.mono(20, .heavy))
-                        .tracking(4)
-                        .foregroundStyle(a.isUnlocked ? Palette.notable : Palette.caption)
+                    HStack(spacing: 20) {
+                        Text(a.isMaxed ? (a.hasLevels ? "EVERY LEVEL" : "UNLOCKED") : (a.isUnlocked ? "LEVEL \(a.level)" : "LOCKED"))
+                            .font(.mono(20, .heavy))
+                            .tracking(4)
+                            .foregroundStyle(a.isUnlocked ? Palette.notable : Palette.caption)
+                        if a.hasLevels {
+                            TierDots(earned: a.level, total: a.tiers.count, scale: 2.4)
+                        }
+                        Spacer()
+                        Text(a.group.title.uppercased())
+                            .font(.mono(18, .bold))
+                            .tracking(3)
+                            .foregroundStyle(Palette.caption)
+                    }
                     Text(a.title)
                         .font(.mono(60, .heavy))
                         .foregroundStyle(Palette.ink)
@@ -322,7 +265,7 @@ struct TVAchievementDetailView: View {
                 .frame(width: 700)
 
                 VStack(alignment: .leading, spacing: 18) {
-                    TVSectionHeader(title: a.examples.isEmpty ? "No aircraft yet" : "Aircraft that count · \(a.progress)")
+                    TVSectionHeader(title: a.examples.isEmpty ? "No aircraft yet" : "Aircraft that count")
                     if a.examples.isEmpty {
                         Text("Keep the radar running — anything that qualifies shows up here.")
                             .font(.mono(24))
@@ -336,8 +279,8 @@ struct TVAchievementDetailView: View {
                                     }
                                     .buttonStyle(TVRowButtonStyle())
                                 }
-                                if a.progress > a.examples.count {
-                                    Text("Showing the latest \(a.examples.count) of \(a.progress)")
+                                if a.examples.count >= Achievement.exampleLimit {
+                                    Text("Showing the latest \(a.examples.count)")
                                         .font(.mono(20))
                                         .foregroundStyle(Palette.caption)
                                         .padding(.leading, 6)
@@ -424,7 +367,7 @@ struct TVSightingDetailView: View {
     var body: some View {
         let s = item.sighting
         ZStack {
-            RadarBackdrop(showTopography: showTopography, showSweep: false, isActive: true)
+            LogbookBackdrop(showTopography: showTopography)
                 .ignoresSafeArea()
             VStack(spacing: 28) {
                 Button(action: toggleMap) {
@@ -653,7 +596,7 @@ struct TVAirframeHistoryView: View {
     var body: some View {
         let summary = logbook.summary(airframe: airframe)
         ZStack {
-            RadarBackdrop(showTopography: showTopography, showSweep: false, isActive: true)
+            LogbookBackdrop(showTopography: showTopography)
                 .ignoresSafeArea()
             HStack(alignment: .top, spacing: 70) {
                 VStack(alignment: .leading, spacing: 18) {
@@ -671,11 +614,20 @@ struct TVAirframeHistoryView: View {
                         TVSightingPhoto(sighting: latest, enabled: showPhotos, height: 300, credit: true)
                             .layoutPriority(-1)
                     }
-                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)], spacing: 20) {
-                        LogbookStatTile(title: "Times seen", value: RadarFormat.wholeNumber(summary.count), scale: 2)
-                        LogbookStatTile(title: "Closest ever", value: summary.closest?.closestText ?? "—", scale: 2)
-                        LogbookStatTile(title: "First seen", value: summary.first.map { TVAirframeHistoryView.when($0.firstSeen) } ?? "—", scale: 2)
-                        LogbookStatTile(title: "Last seen", value: summary.latest.map { TVAirframeHistoryView.when($0.lastSeen) } ?? "—", scale: 2)
+                    if let rank = logbook.digest.regularRank(airframe: airframe) {
+                        Label(rank == 1 ? "YOUR #1 REGULAR" : "YOUR #\(rank) REGULAR", systemImage: "arrow.triangle.2.circlepath")
+                            .font(.mono(20, .heavy))
+                            .tracking(2)
+                            .labelStyle(TVLabelStyle())
+                            .foregroundStyle(Palette.notable)
+                    }
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)], spacing: 20) {
+                        LogbookStatTile(title: "Times seen", value: RadarFormat.wholeNumber(summary.count), scale: 1.6)
+                        LogbookStatTile(title: "Closest", value: summary.closest?.closestPreciseText ?? "—", scale: 1.6)
+                        LogbookStatTile(title: "Flights", value: RadarFormat.wholeNumber(summary.flights), scale: 1.6)
+                        LogbookStatTile(title: "First seen", value: summary.first.map { TVAirframeHistoryView.when($0.firstSeen) } ?? "—", scale: 1.6)
+                        LogbookStatTile(title: "Last seen", value: summary.latest.map { TVAirframeHistoryView.when($0.lastSeen) } ?? "—", scale: 1.6)
+                        LogbookStatTile(title: "Usually", value: summary.usualHour().map(LogbookFormat.hourRange) ?? "—", scale: 1.6)
                     }
                 }
                 .frame(width: 640, alignment: .leading)

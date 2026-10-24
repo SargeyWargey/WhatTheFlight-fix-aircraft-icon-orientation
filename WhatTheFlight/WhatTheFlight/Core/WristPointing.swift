@@ -90,7 +90,7 @@ enum WristPointing {
     /// The aircraft's direction in the sky from the observer.
     static func target(for contact: RadarContact) -> SIMD3<Double> {
         let elevation = GeoMath.elevationDegrees(groundDistanceMiles: contact.distanceMiles,
-                                                 altitudeFeet: Double(contact.flight.altitudeFeet))
+                                                 altitudeFeet: Double(contact.altitudeFeet))
         return SkyProjector.direction(azimuth: contact.bearing, elevation: elevation)
     }
 
@@ -171,7 +171,7 @@ extension WristPointing {
         guard contact.distanceMiles <= rangeMiles else { return false }
         let floor = contact.flight.kind == .helicopter ? helicopterMinimumElevation : minimumElevation
         return GeoMath.elevationDegrees(groundDistanceMiles: contact.distanceMiles,
-                                        altitudeFeet: Double(contact.flight.altitudeFeet)) >= floor
+                                        altitudeFeet: Double(contact.altitudeFeet)) >= floor
     }
 
     struct Candidate: Equatable {

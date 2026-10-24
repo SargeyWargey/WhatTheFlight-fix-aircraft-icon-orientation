@@ -78,6 +78,9 @@ final class RadarModel {
 
     /// Query at least this far out whatever the radius (Apple Watch's Identify looks 15 mi).
     @ObservationIgnored var queryRadiusFloor: Double = 0
+    /// The widest map ring showing this traffic, when wider than the radar's (the Apple TV's
+    /// own map range). Trails are kept to 1.5× the wider ring, as far as maps draw them.
+    @ObservationIgnored var trailRadiusFloor: Double = 0
     /// Sightings are recorded here: live traffic only, never demo, and never a custom spot
     /// unless `logsCustomSpot` (the Apple TV, whose "custom" spot is where the TV really is).
     @ObservationIgnored var logbook: Logbook?
@@ -533,17 +536,32 @@ final class RadarModel {
         if changed { settings.pinnedAircraft = pins }
     }
 
+    /// Trails are kept only where a map draws them: out to 1.5× the ring (fringe traffic),
+    /// plus the focused and pinned aircraft wherever they are. A wide radius over a hub
+    /// otherwise keeps hundreds of trails nobody sees.
     private func updateTrails(with result: [Flight]) {
         let cutoff = Date().addingTimeInterval(-15 * 60)
-        for f in result where !f.isOnGround {
+        for f in result where !f.isOnGround && wantsTrail(f.id, at: f.coordinate) {
             let point = TrailPoint(latitude: f.latitude, longitude: f.longitude, altitudeFeet: f.altitudeFeet, time: f.positionTime)
             var trail = trails[f.id] ?? []
             if trail.last?.time != point.time { trail.append(point) }
             if trail.count > 240 { trail.removeFirst(trail.count - 240) }
             trails[f.id] = trail
         }
-        trails = trails.filter { ($0.value.last?.time ?? .distantPast) > cutoff }
+        // Judged by where the feed has the aircraft now, not where its trail last reached.
+        let now = Dictionary(result.map { ($0.id, $0.coordinate) }, uniquingKeysWith: { first, _ in first })
+        trails = trails.filter { id, points in
+            guard let last = points.last, last.time > cutoff else { return false }
+            return wantsTrail(id, at: now[id] ?? last.coordinate)
+        }
         trailVersion += 1
+    }
+
+    private func wantsTrail(_ id: String, at coordinate: CLLocationCoordinate2D) -> Bool {
+        if id == focus.focusedID || isPinned(id) { return true }
+        guard let observer else { return false }
+        let reach = max(settings.radiusMiles, trailRadiusFloor) * 1.5
+        return GeoMath.distanceMiles(from: observer, to: coordinate) <= reach
     }
 
     // MARK: Ticking

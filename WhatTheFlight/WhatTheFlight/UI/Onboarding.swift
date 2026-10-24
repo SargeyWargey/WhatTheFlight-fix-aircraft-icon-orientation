@@ -55,7 +55,7 @@ struct TourPage: Identifiable {
         TourPage(art: .sky, eyebrow: "Sky View", title: "Point your phone at the sky",
                  body: "Point your phone at the sky and the camera opens with every aircraft labeled where it really is. Line one up in the circle to lock on; lower the phone to go back. \"Find in the Sky\" on a flight's details points you right to it."),
         TourPage(art: .logbook, eyebrow: "Logbook", title: "Every plane gets logged",
-                 body: "Anything that comes inside your radius goes in your logbook: totals, records like closest and fastest, and badges to earn. Swipe down and tap Logbook, or find it in Settings."),
+                 body: "Anything that comes inside your radius goes in your logbook: totals, records like closest and fastest, and badges to earn. Swipe down on the radar, or tap the book on the badge bottom left."),
         TourPage(art: .ready, eyebrow: "One last thing", title: "Let's find some planes",
                  body: "What The Flight? uses your location to ask for the aircraft around you. Indoors, or just looking around? Try demo traffic — you can switch it off in Settings."),
     ]
@@ -812,7 +812,7 @@ struct OnboardingView: View {
             HStack {
                 Spacer()
                 Button("Skip") { withAnimation(.smooth) { page = pages.count - 1 } }
-                    .font(.mono(14, .semibold))
+                    .monoScaled(14, .semibold)
                     .foregroundStyle(Palette.caption)
                     .opacity(isLast ? 0 : 1)
                     .disabled(isLast)
@@ -838,7 +838,7 @@ struct OnboardingView: View {
                     }
                     .buttonStyle(RadarButtonStyle(prominent: true))
                     Button("Try Demo Traffic", action: onDemo)
-                        .font(.mono(13, .semibold))
+                        .monoScaled(13, .semibold)
                         .foregroundStyle(Palette.ink)
                         .padding(.vertical, 4)
                 } else {
@@ -849,7 +849,7 @@ struct OnboardingView: View {
                     }
                     .buttonStyle(RadarButtonStyle(prominent: true))
                     // Keeps the button where it is on the last page, which has two.
-                    Text(" ").font(.mono(13, .semibold)).padding(.vertical, 4).hidden()
+                    Text(" ").monoScaled(13, .semibold).padding(.vertical, 4).hidden()
                 }
             }
             .padding(.horizontal, 28)
@@ -875,28 +875,38 @@ private struct OnboardingPageView: View {
             }
             .frame(minHeight: 200, maxHeight: 340)
 
-            VStack(spacing: 10) {
-                Text(page.eyebrow)
-                    .radarCaption()
-                Text(page.title)
-                    .font(.mono(25, .heavy))
-                    .foregroundStyle(Palette.ink)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.75)
-                Text(page.body)
-                    .font(.mono(13))
-                    .foregroundStyle(Palette.value)
-                    .lineSpacing(3)
-                    .minimumScaleFactor(0.8)
-                    .fixedSize(horizontal: false, vertical: true)
+            // At large text sizes the words outgrow the space under the drawing: scroll them.
+            ViewThatFits(in: .vertical) {
+                pageText
+                ScrollView { pageText }
             }
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 28)
-            .padding(.top, 8)
+            // Measured after the drawing has its minimum, so the choice sees the real room.
+            .layoutPriority(1)
 
             Spacer(minLength: 0)
         }
         .accessibilityElement(children: .combine)
+    }
+
+    private var pageText: some View {
+        VStack(spacing: 10) {
+            Text(page.eyebrow)
+                .radarCaption(scales: true)
+            Text(page.title)
+                .monoScaled(25, .heavy)
+                .foregroundStyle(Palette.ink)
+                .lineLimit(2)
+                .minimumScaleFactor(0.75)
+            Text(page.body)
+                .monoScaled(13)
+                .foregroundStyle(Palette.value)
+                .lineSpacing(3)
+                .minimumScaleFactor(0.8)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, 28)
+        .padding(.top, 8)
     }
 }
 #endif

@@ -22,6 +22,8 @@ struct PerimeterLayer: View {
     let onTap: (RadarContact) -> Void
     let onLongPress: (RadarContact) -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         ZStack {
             ForEach(placements) { placement in
@@ -33,7 +35,7 @@ struct PerimeterLayer: View {
                 DistanceLabel(miles: placement.contact.distanceMiles, isFocused: isFocused, profile: placement.contact.profile, scale: scale)
                     .opacity(isFocused ? 1 : fade)
                     .position(placement.labelPoint)
-                    .animation(.interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.labelPoint)
+                    .animation(reduceMotion ? nil : .interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.labelPoint)
                     .transition(edgeTransition(for: placement))
                     .zIndex(3)
 
@@ -47,7 +49,7 @@ struct PerimeterLayer: View {
                 )
                 .opacity(isFocused || isAnnounced ? 1 : fade)
                 .position(placement.point)
-                .animation(.interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.point)
+                .animation(reduceMotion ? nil : .interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.point)
                 .onTapGesture { onTap(placement.contact) }
                 .onLongPressGesture(minimumDuration: 0.4) { onLongPress(placement.contact) }
                 .accessibilityElement()
@@ -65,6 +67,8 @@ struct PerimeterLayer: View {
     /// (and drift back out the same way when they leave), rather than growing out of the
     /// centre: a scale transition on a positioned view is anchored to the whole layer.
     private func edgeTransition(for placement: PerimeterPlacement) -> AnyTransition {
+        // Reduce Motion: fade in place instead.
+        guard !reduceMotion else { return .opacity }
         let distance = 110 * scale
         return .offset(x: -placement.inward.dx * distance, y: -placement.inward.dy * distance)
             .combined(with: .opacity)

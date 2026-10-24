@@ -478,7 +478,7 @@ struct SpotPhotoView: View {
                     ShareLink(item: SpotCardShare(image: card, name: "\(photo.displayIdentifier) boarding pass"),
                               preview: SharePreview("\(photo.displayIdentifier) · What The Flight?", image: Image(uiImage: card))) {
                         Label("Share Boarding Pass", systemImage: "square.and.arrow.up")
-                            .font(.mono(15, .bold))
+                            .monoScaled(15, .bold)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
@@ -488,7 +488,7 @@ struct SpotPhotoView: View {
                         Task { await saveCard(card) }
                     } label: {
                         Label(saveLabel, systemImage: saveState == .saved ? "checkmark" : "square.and.arrow.down")
-                            .font(.mono(14, .semibold))
+                            .monoScaled(14, .semibold)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
@@ -503,7 +503,7 @@ struct SpotPhotoView: View {
                         }
                     } label: {
                         Label("Wrong aircraft?", systemImage: "arrow.triangle.swap")
-                            .font(.mono(14, .semibold))
+                            .monoScaled(14, .semibold)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
@@ -512,14 +512,14 @@ struct SpotPhotoView: View {
 
                 if let notLoggedReason {
                     Label(notLoggedReason, systemImage: "info.circle")
-                        .font(.mono(12))
+                        .monoScaled(12)
                         .foregroundStyle(Palette.caption)
                 }
 
                 if onDelete != nil {
                     Button(role: .destructive) { confirmingDelete = true } label: {
                         Label("Delete Photo", systemImage: "trash")
-                            .font(.mono(14, .semibold))
+                            .monoScaled(14, .semibold)
                     }
                     .padding(.top, 4)
                 }

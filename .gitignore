@@ -99,3 +99,5 @@ iOSInjectionProject/
 # Local development files
 secrets.py
 *.local
+# The website lives in its own repository (SargeyWargey/whattheflight)
+Website/

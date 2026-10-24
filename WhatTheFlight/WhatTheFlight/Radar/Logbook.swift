@@ -157,7 +157,7 @@ struct Sighting: Codable, Identifiable, Hashable, Sendable {
 
     fileprivate mutating func noteClosest(_ contact: RadarContact, observer: CLLocationCoordinate2D?) {
         closestMiles = contact.distanceMiles
-        altitudeAtClosestFeet = contact.flight.altitudeFeet
+        altitudeAtClosestFeet = contact.altitudeFeet
         speedKnots = contact.flight.groundSpeedKnots
         closestLatitude = contact.coordinate.latitude
         closestLongitude = contact.coordinate.longitude
@@ -173,7 +173,23 @@ struct Sighting: Codable, Identifiable, Hashable, Sendable {
 @Observable
 final class Logbook {
     /// Oldest first; use `recent` for display.
-    private(set) var sightings: [Sighting] = []
+    private(set) var sightings: [Sighting] = [] {
+        didSet { revision &+= 1 }
+    }
+    /// Bumped on every change, so `digest` knows when to rebuild.
+    @ObservationIgnored private var revision = 0
+    @ObservationIgnored private var digestCache: (revision: Int, day: Date, digest: LogbookDigest)?
+    /// Bumped when a background rebuild lands, so screens showing the old digest refresh.
+    private var digestVersion = 0
+    @ObservationIgnored private var rebuildingDigest = false
+    /// Past this many sightings a changed logbook rebuilds its digest off the main thread
+    /// (around 85 ms for 10,000 in a release build) while screens keep the previous one.
+    nonisolated static let backgroundDigestThreshold = 2_000
+    /// Badge levels already announced ("spotter#3"), so a new one is only called out once.
+    @ObservationIgnored private var announcedLevels: Set<String>?
+    @ObservationIgnored private var lastBadgeCheck = Date.distantPast
+    /// A badge (or a new level of one) was just earned by something on the radar.
+    @ObservationIgnored var onBadgeUnlocked: ((Achievement) -> Void)?
 
     @ObservationIgnored private let fileURL: URL?
     @ObservationIgnored private var index: [String: Int] = [:]
@@ -217,12 +233,48 @@ final class Logbook {
     var recent: [Sighting] { sightings.reversed() }
     var isEmpty: Bool { sightings.isEmpty }
 
+    /// Stats, records, days, rankings, chart data and badges for the logbook screens. Built
+    /// once per change (and once a day, for "today"), however often a view asks.
+    var digest: LogbookDigest {
+        // Reading these registers the caller for changes and for background rebuilds.
+        let current = sightings
+        _ = digestVersion
+        let now = Date()
+        let day = Calendar.current.startOfDay(for: now)
+        if let cache = digestCache, cache.revision == revision, cache.day == day { return cache.digest }
+        if let cache = digestCache, current.count > Self.backgroundDigestThreshold {
+            rebuildDigest(current, revision: revision, day: day)
+            return cache.digest
+        }
+        let digest = LogbookDigest(current, now: now)
+        digestCache = (revision, day, digest)
+        return digest
+    }
+
+    /// Builds the digest of a big logbook off the main thread; screens keep the previous one
+    /// until it lands. If the logbook changed meanwhile, the next read starts another.
+    private func rebuildDigest(_ snapshot: [Sighting], revision: Int, day: Date) {
+        guard !rebuildingDigest else { return }
+        rebuildingDigest = true
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let digest = LogbookDigest(snapshot, now: Date())
+            await self?.finishRebuild(digest, revision: revision, day: day)
+        }
+    }
+
+    private func finishRebuild(_ digest: LogbookDigest, revision: Int, day: Date) {
+        rebuildingDigest = false
+        if (digestCache?.revision ?? -1) <= revision { digestCache = (revision, day, digest) }
+        digestVersion &+= 1
+    }
+
     // MARK: Recording
 
     /// Call with the in-range contacts; cheap enough to run every tick.
     func record(_ contacts: [RadarContact], at date: Date = Date(), observer: CLLocationCoordinate2D? = nil, placeName: String? = nil) {
         guard !contacts.isEmpty else { return }
         var changed = Set<String>()
+        var added = false
         for contact in contacts {
             let f = contact.flight
             if let i = index[f.id] {
@@ -249,12 +301,13 @@ final class Logbook {
                     callsign: f.callsign, registration: f.registration, hex: f.hex, typeCode: f.typeCode,
                     kind: contact.profile.kind, operatorName: info.title, isAirline: info.kind == .airline,
                     originIATA: f.originIATA, destinationIATA: f.destinationIATA,
-                    closestMiles: contact.distanceMiles, altitudeAtClosestFeet: f.altitudeFeet,
+                    closestMiles: contact.distanceMiles, altitudeAtClosestFeet: contact.altitudeFeet,
                     speedKnots: f.groundSpeedKnots, tags: contact.profile.notable.map(\.tag), placeName: placeName
                 )
                 s.noteClosest(contact, observer: observer)
                 s.devices = device.map { [$0] }
                 sightings.append(s)
+                added = true
                 index[f.id] = sightings.count - 1
                 if let airframe = s.airframe { byAirframe[airframe, default: []].append(sightings.count - 1) }
                 isDirty = true
@@ -264,6 +317,32 @@ final class Logbook {
         trimIfNeeded()
         if isDirty, date.timeIntervalSince(lastSave) > 30 { save() }
         if !changed.isEmpty { onLocalChange?(changed, []) }
+        if added { checkBadges(at: date) }
+    }
+
+    // MARK: Badges
+
+    private static let announcedKey = "wtf.announcedBadgeLevels"
+
+    /// Calls `onBadgeUnlocked` for badges and levels earned since the last check, at most every
+    /// 20 seconds. The first check on a device with an existing logbook only notes what's
+    /// already earned, so updating the app doesn't announce a pile of old badges.
+    private func checkBadges(at date: Date) {
+        guard onBadgeUnlocked != nil, date.timeIntervalSince(lastBadgeCheck) > 20 else { return }
+        lastBadgeCheck = date
+        // Reuse the screens' digest when it's current; otherwise just the badges.
+        let achievements = digestCache.flatMap { $0.revision == revision ? $0.digest.achievements : nil } ?? Achievement.all(for: sightings)
+        let earned = Set(achievements.flatMap { a in (0..<a.level).map { "\(a.id)#\($0 + 1)" } })
+        let stored = UserDefaults.standard.stringArray(forKey: Self.announcedKey)
+        let isBaseline = announcedLevels == nil && stored == nil && sightings.count > 1
+        let known = announcedLevels ?? Set(stored ?? [])
+        let fresh = earned.subtracting(known)
+        announcedLevels = known.union(fresh)
+        guard !fresh.isEmpty else { return }
+        UserDefaults.standard.set(known.union(fresh).sorted(), forKey: Self.announcedKey)
+        guard !isBaseline else { return }
+        let newIDs = Set(fresh.map { String($0.split(separator: "#")[0]) })
+        for a in achievements where newIDs.contains(a.id) { onBadgeUnlocked?(a) }
     }
 
     // MARK: Photos
@@ -607,7 +686,9 @@ struct LogbookStats: Equatable, Sendable {
 
     init(_ sightings: [Sighting], now: Date = Date(), calendar: Calendar = .current) {
         total = sightings.count
-        today = sightings.filter { calendar.isDate($0.firstSeen, inSameDayAs: now) }.count
+        let dayStart = calendar.startOfDay(for: now)
+        let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart.addingTimeInterval(86_400)
+        today = sightings.filter { $0.firstSeen >= dayStart && $0.firstSeen < dayEnd }.count
         uniqueAirframes = Set(sightings.compactMap(\.airframe)).count
         uniqueTypes = Set(sightings.compactMap(\.typeCode)).count
         uniqueAirlines = Set(sightings.filter(\.isAirline).map(\.operatorName)).count
@@ -625,91 +706,5 @@ struct LogbookStats: Equatable, Sendable {
             .sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
             .prefix(limit)
             .map { (name: $0.key, count: $0.value) }
-    }
-}
-
-// MARK: - Badges
-
-struct Achievement: Identifiable, Equatable, Sendable {
-    let id: String
-    let title: String
-    /// What it takes: "Spot a Boeing 747".
-    let detail: String
-    /// A little more about it, for the badge's own screen.
-    let about: String
-    let symbol: String
-    let progress: Int
-    let target: Int
-    /// The sighting that unlocked it (the target-th one to qualify).
-    let unlockedBy: Sighting?
-    /// The most recent qualifying sightings, newest first. For the "different airlines /
-    /// types" badges, one per airline or type.
-    let examples: [Sighting]
-
-    var isUnlocked: Bool { progress >= target }
-    var fraction: Double { min(1, Double(progress) / Double(max(target, 1))) }
-
-    static let exampleLimit = 30
-
-    /// `sightings` oldest first, as `Logbook.sightings` keeps them.
-    static func all(for sightings: [Sighting], calendar: Calendar = .current) -> [Achievement] {
-        func matching(_ predicate: (Sighting) -> Bool) -> [Sighting] { sightings.filter(predicate) }
-        func type(_ codes: Set<String>) -> [Sighting] { matching { codes.contains($0.typeCode ?? "") } }
-        /// The first sighting of each distinct key, in the order they were first seen.
-        func distinct(_ key: (Sighting) -> String?) -> [Sighting] {
-            var seen = Set<String>()
-            return sightings.filter { s in
-                guard let k = key(s), !seen.contains(k) else { return false }
-                seen.insert(k)
-                return true
-            }
-        }
-        func make(_ id: String, _ title: String, _ detail: String, _ symbol: String, target: Int,
-                  _ qualifying: [Sighting], about: String) -> Achievement {
-            Achievement(id: id, title: title, detail: detail, about: about, symbol: symbol,
-                        progress: qualifying.count, target: target,
-                        unlockedBy: qualifying.count >= target ? qualifying[target - 1] : nil,
-                        examples: Array(qualifying.suffix(exampleLimit).reversed()))
-        }
-
-        return [
-            make("first", "First Contact", "Log your first aircraft", "airplane", target: 1, sightings,
-                 about: "Every logbook starts somewhere. Any aircraft that comes inside your radius counts."),
-            make("spotter", "Plane Spotter", "Log 500 aircraft", "binoculars.fill", target: 500, sightings,
-                 about: "Five hundred sightings. Leave the radar running near a window and they add up, especially under a busy approach path."),
-            make("veteran", "Sky Veteran", "Log 5,000 aircraft", "medal.fill", target: 5_000, sightings,
-                 about: "Five thousand aircraft in the book. You know the local traffic better than most people on the ground."),
-            make("overhead", "Right Overhead", "Have an aircraft pass within half a mile", "scope", target: 1,
-                 matching { $0.closestMiles < 0.5 },
-                 about: "About as close as a flight gets: its track passed within half a mile of where you were watching."),
-            make("queen", "Queen of the Skies", "Spot a Boeing 747", "crown.fill", target: 1,
-                 type(["B741", "B742", "B743", "B744", "B748", "B74S", "BLCF", "VC25"]),
-                 about: "The Boeing 747 first flew in 1969. Most passenger 747s have now retired, so these days you're most likely to catch a freighter."),
-            make("superjumbo", "Superjumbo", "Spot an Airbus A380", "airplane.circle.fill", target: 1, type(["A388"]),
-                 about: "The Airbus A380 is the largest passenger airliner ever built, with two full-length decks."),
-            make("heavy", "Heavy Lifter", "Spot a giant freighter (An-124, C-5, C-17, Beluga, Dreamlifter)", "shippingbox.fill", target: 1,
-                 type(["A124", "A225", "C5M", "C5", "C17", "BLCF", "A3ST", "A337"]),
-                 about: "The giants of air cargo: Antonov An-124s, Lockheed C-5 Galaxies, Boeing C-17s, Airbus Belugas and the Boeing Dreamlifter that ferries 787 parts."),
-            make("military", "Top Brass", "Spot a military aircraft", "shield.lefthalf.filled", target: 1,
-                 matching { $0.tags.contains(.military) },
-                 about: "Picked out by a military callsign (REACH is US Air Force Air Mobility Command) or by an airframe only air forces fly."),
-            make("medical", "Guardian Angel", "Spot an air ambulance", "cross.case.fill", target: 1,
-                 matching { $0.tags.contains(.medical) },
-                 about: "Medical flights, usually helicopters flying low and fast to a hospital, recognized by callsigns like LIFE or LIFEGUARD."),
-            make("emergency", "Mayday", "Witness an emergency squawk", "exclamationmark.triangle.fill", target: 1,
-                 matching { $0.tags.contains { $0.isEmergency } },
-                 about: "A transponder set to 7700 (general emergency), 7600 (lost radio contact) or 7500 (unlawful interference). Most end with a safe landing."),
-            make("rotor", "Rotorhead", "Spot 10 helicopters", "fan.fill", target: 10, matching { $0.kind == .helicopter },
-                 about: "News, police, medical and tour helicopters mostly fly low and slow, so they're often the closest traffic you'll log."),
-            make("airlines", "Globetrotter", "Spot 15 different airlines", "globe.americas.fill", target: 15,
-                 distinct { $0.isAirline ? $0.operatorName : nil },
-                 about: "Each airline counts once, however many of its flights you see. Listed here: the first flight you logged from each."),
-            make("types", "Type Collector", "Spot 25 different aircraft types", "square.stack.3d.up.fill", target: 25,
-                 distinct(\.typeCode),
-                 about: "Counted by ICAO type code, so an A320 and an A321 are different types. Listed here: the first of each you logged."),
-            make("night", "Night Owl", "Spot an aircraft between midnight and 4 am", "moon.stars.fill", target: 1,
-                 matching { (0..<4).contains(calendar.component(.hour, from: $0.firstSeen)) },
-                 about: "The small hours belong to cargo flights and the occasional late-running airliner."),
-        ]
     }
 }

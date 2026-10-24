@@ -1,3 +1,6 @@
+// Legacy: only the macOS (and visionOS) app runs this. iOS, tvOS and watchOS run radar v2;
+// see Enhancements Spec B4. Delete with the rest of Legacy/ once the Mac runs the iPad app (C11).
+#if os(macOS) || os(visionOS)
 //
 //  FlightServiceTests.swift
 //  WhatTheFlightTests
@@ -421,3 +424,4 @@ extension FlightServiceTests {
         ]
     }
 }
+#endif

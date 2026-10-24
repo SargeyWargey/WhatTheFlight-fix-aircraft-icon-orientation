@@ -18,7 +18,8 @@ struct RadarSettingsSheet: View {
     let model: RadarModel
     let logbook: Logbook
     let placeName: String
-    let onTrack: (String) -> Void
+    /// Closes settings and opens the logbook.
+    let openLogbook: () -> Void
     let showWelcome: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -106,7 +107,7 @@ struct RadarSettingsSheet: View {
                 case .topography: TopographySettingsPage(settings: settings)
                 case .location: LocationSettingsPage(settings: settings, location: location)
                 case .alerts: AlertSettingsPage(settings: settings, model: model, placeName: placeName)
-                case .logbook: LogbookSettingsPage(settings: settings, model: model, logbook: logbook, onTrack: onTrack)
+                case .logbook: LogbookSettingsPage(settings: settings, logbook: logbook, openLogbook: openLogbook)
                 case .skyView: SkyViewSettingsPage(settings: settings)
                 case .behavior: BehaviorSettingsPage(settings: settings)
                 case .about: AboutSettingsPage(settings: settings)
@@ -434,16 +435,13 @@ private struct AlertSettingsPage: View {
 
 private struct LogbookSettingsPage: View {
     @Bindable var settings: RadarSettings
-    let model: RadarModel
     let logbook: Logbook
-    let onTrack: (String) -> Void
+    let openLogbook: () -> Void
 
     var body: some View {
         Form {
             Section {
-                NavigationLink {
-                    LogbookView(logbook: logbook, onTrack: onTrack, isLive: { model.contact(id: $0) != nil })
-                } label: {
+                Button(action: openLogbook) {
                     LabeledContent {
                         Text(RadarFormat.wholeNumber(logbook.sightings.count))
                     } label: {

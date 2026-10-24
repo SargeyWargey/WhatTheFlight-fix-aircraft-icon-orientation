@@ -166,7 +166,7 @@ struct TVRadarScreen: View {
                     Group {
                         if settings.showCompassBezel {
                             CompassBezel(track: layout.bezelTrack, heading: heading, scale: Self.scale)
-                                .animation(.spring(response: 0.6, dampingFraction: 0.85), value: heading)
+                                .animation(reduceMotion ? nil : .spring(response: 0.6, dampingFraction: 0.85), value: heading)
                         }
 
                         PerimeterLayer(
@@ -179,7 +179,7 @@ struct TVRadarScreen: View {
                             onTap: { _ in },
                             onLongPress: { _ in }
                         )
-                        .animation(.spring(response: 0.6, dampingFraction: 0.85), value: heading)
+                        .animation(reduceMotion ? nil : .spring(response: 0.6, dampingFraction: 0.85), value: heading)
 
                         center(width: heroWidth)
                             .position(x: geo.size.width / 2, y: geo.size.height * 0.47)

@@ -1,0 +1,76 @@
+# Four checks on every pull request and push to main: the radar core's unit tests, and the
+# iPhone (with its widgets and the embedded Watch app), Apple TV and Apple Watch builds.
+# Builds are unsigned (CODE_SIGNING_ALLOWED=NO); nothing is archived or uploaded.
+#
+# The app needs Xcode 27.1 or later (iOS 27.1 APIs for the iPhone Duo). If the runner's
+# newest Xcode is older, pin `xcode-version` below to one it has.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROJECT: WhatTheFlight/WhatTheFlight.xcodeproj
+  DERIVED_DATA: ${{ github.workspace }}/DerivedData
+
+jobs:
+  core-tests:
+    name: Core tests (swift test)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: actions/cache@v4
+        with:
+          path: WhatTheFlight/.build
+          key: spm-${{ runner.os }}-${{ hashFiles('WhatTheFlight/Package.swift', 'WhatTheFlight/WhatTheFlight/**/*.swift', 'WhatTheFlight/WhatTheFlightTests/Radar/**/*.swift') }}
+          restore-keys: spm-${{ runner.os }}-
+      - name: swift test
+        working-directory: WhatTheFlight
+        run: swift test
+
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: iOS
+            scheme: WhatTheFlight
+            destination: generic/platform=iOS Simulator
+          - name: tvOS
+            scheme: WhatTheFlight
+            destination: generic/platform=tvOS Simulator
+          - name: watchOS
+            scheme: WhatTheFlightWatch
+            destination: generic/platform=watchOS Simulator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.DERIVED_DATA }}
+          key: dd-${{ matrix.name }}-${{ hashFiles('WhatTheFlight/WhatTheFlight.xcodeproj/project.pbxproj', 'WhatTheFlight/**/*.swift') }}
+          restore-keys: dd-${{ matrix.name }}-
+      - name: xcodebuild build
+        # -quiet keeps the log to warnings and errors.
+        run: |
+          xcodebuild build -quiet \
+            -project "$PROJECT" \
+            -scheme "${{ matrix.scheme }}" \
+            -configuration Debug \
+            -destination "${{ matrix.destination }}" \
+            -derivedDataPath "$DERIVED_DATA" \
+            CODE_SIGNING_ALLOWED=NO

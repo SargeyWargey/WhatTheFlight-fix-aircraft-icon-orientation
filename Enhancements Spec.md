@@ -38,7 +38,8 @@ your logbook" should mean across devices.
   `model.isRunning == false` and `location` stopped (assert via a debug overlay or log),
   and raising the wrist restarts both.
 
-### A2 · P1 · Sky View camera can be left running after the view closes
+### A2 · P1 · Sky View camera can be left running after the view closes <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* checked after every await in `start()` (the permission prompt, configuring, starting), not only the last one: a stop during the prompt could otherwise start the camera after the view had gone.
 - Where: `Services/SkyServices.swift`, `SkyCamera.start()` / `stop()` (~126–170).
 - What happens: `stop()` sets `state = .idle` synchronously and queues `stopRunning()`. If
   it lands while `start()` is still awaiting its continuation, `start()` resumes, reads
@@ -54,7 +55,7 @@ your logbook" should mean across devices.
 - Done when: raising and lowering the phone ten times in a row ends with no camera
   indicator, `state == .idle`, and the next raise shows the feed.
 
-### A3 · P1 · Apple TV swallows a first-time location denial
+### A3 · P1 · Apple TV swallows a first-time location denial <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Where: `Services/PlaceServices.swift`, `TVLocationProvider.locationManagerDidChangeAuthorization` (~184).
 - What happens: `locate()` with `.notDetermined` requests permission and sets `wantsFix`.
   The callback only acts when authorised. Tap Don't Allow and `lastError` stays nil, so
@@ -77,7 +78,8 @@ your logbook" should mean across devices.
 - Done when: `grep -rn "AsyncImage(" WhatTheFlight/WhatTheFlight` returns nothing, and a
   proxy shows the `WhatTheFlight/2.0` User-Agent on image requests.
 
-### A5 · P1 · Top Shelf fetches photos one at a time
+### A5 · P1 · Top Shelf fetches photos one at a time <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* not a task group. A group waits for every child before it returns, and the photo provider's lookups don't stop when cancelled, so the deadline would never bite. The lookups run as separate tasks and the provider polls them until all are in or six seconds pass; late ones still land in the cache for the next load.
 - Where: `WhatTheFlightTopShelf/ContentProvider.swift` (~19–32).
 - What happens: one live traffic fetch, then up to eight photo lookups awaited serially,
   each of which can be two requests with a ten-second timeout. Top Shelf has a tight
@@ -89,7 +91,8 @@ your logbook" should mean across devices.
 - Done when: with Network Link Conditioner on "3G", the Top Shelf row still appears with
   titles, and photos fill in on the next load.
 
-### A6 · P2 · Dynamic Type is unsupported
+### A6 · P2 · Dynamic Type is unsupported <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* `.monoScaled(size, weight)` picks the text style nearest `size` unless `relativeTo:` is given; `radarCaption(scales: true)` for sheets. Scaled: logbook (all pages), flight details, search, whereabouts, the Apple TV link screen, the app-icon picker, the tour pages, Sky View's locked-aircraft card and the photo page's controls. Kept fixed: the shareable boarding-pass card (rendered to a fixed-size image) and every radar surface. The 3- and 4-column logbook grids, the detail telemetry grid and the search and logbook rows are capped; at accessibility sizes, rows put the route under the flight number, and identifiers shrink rather than break. The tour's text scrolls when it outgrows the page (`ViewThatFits`). Checked on the simulator at accessibility Large.
 - Where: `UI/Theme.swift:78`, `Font.mono(_:_:)` is `.system(size:weight:design:)`, a fixed
   point size used by every label on every platform.
 - Decision: the radar face, the Watch radar and the whole TV stay fixed; they are
@@ -102,7 +105,8 @@ your logbook" should mean across devices.
 - Done when: at Accessibility 3 size the settings, logbook and detail text is visibly
   larger with no clipped labels; the radar hero is unchanged.
 
-### A7 · P2 · Reduce Motion misses the largest motion on screen
+### A7 · P2 · Reduce Motion misses the largest motion on screen <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* positions and rotations snap; aircraft entering or leaving the radius fade in place instead of sliding in from the edge. Also the Watch's own perimeter layer.
 - Where: `UI/Theme.swift` `ContinuousRotation` (~111–128) animates every glyph and bezel
   rotation unconditionally; `UI/PerimeterLayer.swift` springs (~30, ~42, ~53);
   `UI/RadarScreen.swift` bezel spring (~45–48); `UI/TV/TVRadarScreen.swift` (~68–80).
@@ -113,7 +117,8 @@ your logbook" should mean across devices.
   because `PerimeterLayer` and `Theme` are shared.
 - Done when: Reduce Motion on → icons, labels and the bezel snap; off → unchanged.
 
-### A8 · P2 · Watch accessibility text sizes hide the perimeter and show nothing in its place
+### A8 · P2 · Watch accessibility text sizes hide the perimeter and show nothing in its place <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* a `showNearby` closure from `WatchRootView` (it owns the `TabView` page) rather than a binding.
 - Where: `WhatTheFlightWatch/WatchRadarView.swift` (~73), `if !perimeterHidden { … }` has no else.
 - Change: an else branch with a small capsule button, "N more nearby", that selects the
   Nearby page. That needs the `TabView` selection in `WatchRootView` passed down as a
@@ -121,14 +126,15 @@ your logbook" should mean across devices.
 - Done when: at an accessibility text size the radar shows the hero plus the button, and
   the button lands on the Nearby list.
 
-### A9 · P2 · Watch perimeter is a VoiceOver label with no action
+### A9 · P2 · Watch perimeter is a VoiceOver label with no action <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Where: `WatchRadarView.swift` (~416), `.accessibilityElement(children: .ignore)` plus a
   label "N more aircraft. Use the list for details."
 - Change: add `.accessibilityAction(named: "Show nearby list")` using the same selection
   binding as A8. Keep the screen-level Nearest / Next / Previous actions.
 - Done when: VoiceOver double-tap on the perimeter element opens the Nearby page.
 
-### A10 · P3 · Watch pointing sits silent when the compass has no heading
+### A10 · P3 · Watch pointing sits silent when the compass has no heading <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* the three seconds are measured on the 30 Hz motion updates, so no timer.
 - Where: `WhatTheFlightWatch/WatchSensors.swift`, `.compassOnly` case (~218) returns early
   while `heading()` is nil, so `pointing` stays nil and Identify / Find show their normal
   prompt forever. The "No motion sensors" message only covers `.unavailable`.
@@ -138,7 +144,8 @@ your logbook" should mean across devices.
 - Done when: in the simulator with `-wtf.debugPointing` unset and no heading, the message
   appears; on hardware it clears as soon as a heading arrives.
 
-### A11 · P3 · Apple TV link cannot retry after advertising fails
+### A11 · P3 · Apple TV link cannot retry after advertising fails <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* `TVLinkReceiver.retry()`; the button sits under the error on the hand-off card.
 - Where: `Services/TVLink.swift`, `TVLinkReceiver.start()` (~79) guards on `advertiser == nil`;
   `didNotStartAdvertisingPeer` (~130) calls `fail(_:)` and leaves the advertiser set.
 - What happens: refuse Local Network on first use and "Waiting for iPhone" never changes;
@@ -206,7 +213,8 @@ your logbook" should mean across devices.
   plist from `Scripts/generate_catalogs.py` instead of source text.
 - Done when: an `os_signpost` around the first recompute shows no catalog cost on the Watch.
 
-### B4 · P2 · Stop compiling the legacy stack into the iPhone and TV apps
+### B4 · P2 · Stop compiling the legacy stack into the iPhone and TV apps <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built (phase 1):* 21 app files (12,951 lines; `MotionManager.swift` too) moved to `Legacy/`, 16 unit-test and 5 UI-test files to `Legacy/` in their targets, each wrapped in `#if os(macOS) || os(visionOS)`: visionOS is kept because the app's `#else` branch sends it to `ContentView` (it was already failing to build, in the legacy `LocationManager`). `nm` finds no legacy symbols in the iOS or tvOS debug dylibs; the Xcode test action runs 258 tests green on an iOS simulator; the macOS app builds and launches. Phase 2 (delete `Legacy/`) waits for C11.
 - Where: `ContentView.swift`, `Views/FlightDisplayView.swift`, `Views/SettingsView.swift`,
   `Views/iOSComponents.swift`, `Views/tvOSComponents.swift`, `ViewModels/*`,
   `Services/FlightService.swift`, `NetworkManager.swift`, `LocationManager.swift`,
@@ -234,14 +242,16 @@ your logbook" should mean across devices.
 - Done when: unit tests cover the three branches; the status badge's "updated Ns ago"
   still reads correctly at the long interval.
 
-### B6 · P3 · Keep trails only where they are used
+### B6 · P3 · Keep trails only where they are used <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* reach is 1.5× the wider of the radar's radius and `trailRadiusFloor`, which the TV sets to its own map range (its map draws fringe traffic to 1.5× its ring). Trails out of reach are dropped by the aircraft's current position, not its last trail point.
 - Where: `RadarModel.updateTrails(with:)` keeps up to 240 points for every flight in the
   query box, which at a 100 mi radius over a hub is hundreds of aircraft.
 - Change: keep trails for flights within `radiusMiles * 1.5` plus the focused / pinned
   aircraft. Coordinate with the Ambient Map, which reads trails for in-range aircraft only.
 - Done when: memory in the Xcode gauge no longer climbs with radius at 100 mi.
 
-### B7 · P3 · Dead-reckon altitude as well as position
+### B7 · P3 · Dead-reckon altitude as well as position <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* `Flight.predictedAltitudeFeet(at:)`, to the nearest 10 ft, capped at 90 s even where positions run further (complication timelines). Also the logbook's altitude at the closest pass, widget snapshots, alerts, the maps and the Watch's Identify / Find elevation.
 - Where: `Core/Flight.swift` `predictedCoordinate(at:)` moves the position; altitude is
   shown as reported until the next poll.
 - Change: `predictedAltitudeFeet(at:)` = altitude + vertical rate × elapsed minutes, capped
@@ -249,7 +259,8 @@ your logbook" should mean across devices.
   the detail telemetry, Sky View's elevation, and `SpokenTraffic`.
 - Done when: a climbing demo aircraft's altitude ticks between polls.
 
-### B8 · P2 · Continuous integration
+### B8 · P2 · Continuous integration <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
+- *As built:* four checks (core tests, then iOS, tvOS and watchOS builds) using the runner's latest stable Xcode, which must be 27.1+. Not run yet: nothing has been pushed.
 - Where: there is no `.github/`.
 - Change: `.github/workflows/ci.yml` on `macos-latest`: `cd WhatTheFlight && swift test`,
   then `xcodebuild build` for the `WhatTheFlight` scheme on an iOS simulator and a tvOS

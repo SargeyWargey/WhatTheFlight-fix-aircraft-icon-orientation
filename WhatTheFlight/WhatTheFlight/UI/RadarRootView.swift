@@ -78,9 +78,9 @@ struct RadarRootView: View {
                     centerState: { centerState },
                     actions: .init(
                         openSettings: { sheet = .settings },
-                        // Even with an empty sky: search reaches the whole world.
-                        openSearch: { openSearch(detent: .medium) },
+                        openLogbook: { sheet = .logbook },
                         openDetail: { sheet = .detail($0) },
+                        // Even with an empty sky: search reaches the whole world.
                         openSearchFullHeight: { openSearch(detent: .large) },
                         openSpotPicker: { sheet = .pickSpot },
                         centerPrimary: centerPrimary,
@@ -109,11 +109,17 @@ struct RadarRootView: View {
             ChangeObserver(value: { [model] in model.now }) { [model, skyWatch] _ in skyWatch.update(contacts: model.contacts) }
         }
         .preferredColorScheme(settings.appearance.colorScheme)
-        .sheet(item: $sheet) { sheet in
+        .sheet(item: sheetBinding) { sheet in
             sheetContent(sheet)
                 .environment(\.radarObserver, model.observer)
                 .environment(\.topographyStyle, settings.topography)
                 .environment(\.isFoldable, fold.isFoldable)
+        }
+        // With room for its sidebar (iPad, the Duo's inner screen) the logbook fills the screen.
+        .fullScreenCover(isPresented: logbookCover) {
+            LogbookView(logbook: logbook, onTrack: track, isLive: { model.contact(id: $0) != nil }) { self.sheet = nil }
+                .environment(\.radarObserver, model.observer)
+                .environment(\.topographyStyle, settings.topography)
         }
         .fullScreenCover(item: $sky) { request in
             SkyView(model: model, settings: settings, location: location, request: request,
@@ -125,6 +131,7 @@ struct RadarRootView: View {
         }
         .onAppear {
             model.logbook = logbook
+            logbook.onBadgeUnlocked = { [model] badge in model.post(notice: badge.unlockNotice, symbol: badge.symbol) }
             startPinSync()
             model.onAlert = deliver
             skyWatch.location = location
@@ -206,8 +213,19 @@ struct RadarRootView: View {
 
     // MARK: Sheets
 
-    /// Search and the logbook live in one sheet: aircraft nearby, a worldwide search and the
-    /// Logbook button.
+    /// The logbook gets the whole screen when there's room for its sidebar.
+    private var logbookFillsScreen: Bool { horizontalSizeClass == .regular }
+
+    private var sheetBinding: Binding<Sheet?> {
+        Binding(get: { sheet == .logbook && logbookFillsScreen ? nil : sheet }, set: { sheet = $0 })
+    }
+
+    private var logbookCover: Binding<Bool> {
+        Binding(get: { sheet == .logbook && logbookFillsScreen }, set: { if !$0 && sheet == .logbook { sheet = nil } })
+    }
+
+    /// Aircraft search: aircraft nearby, a worldwide search and a Logbook button (the
+    /// logbook itself opens from the pill's book or a swipe down).
     private func openSearch(detent: PresentationDetent) {
         searchDetent = detent
         sheet = .search
@@ -218,7 +236,10 @@ struct RadarRootView: View {
         switch sheet {
         case .settings:
             RadarSettingsSheet(settings: settings, location: location, model: model, logbook: logbook,
-                               placeName: placeName, onTrack: track) {
+                               placeName: placeName, openLogbook: {
+                                   self.sheet = nil
+                                   DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { self.sheet = .logbook }
+                               }) {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { self.sheet = .welcome }
             }
             .presentationDragIndicator(.visible)
@@ -237,14 +258,7 @@ struct RadarRootView: View {
             .presentationDetents([.medium, .large], selection: $detailDetent)
             .presentationDragIndicator(.visible)
         case .logbook:
-            NavigationStack {
-                LogbookView(logbook: logbook, onTrack: track, isLive: { model.contact(id: $0) != nil })
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button("Done") { self.sheet = nil }.font(.mono(15, .semibold))
-                        }
-                    }
-            }
+            LogbookView(logbook: logbook, onTrack: track, isLive: { model.contact(id: $0) != nil }) { self.sheet = nil }
         case .welcome:
             OnboardingView(
                 onStart: {

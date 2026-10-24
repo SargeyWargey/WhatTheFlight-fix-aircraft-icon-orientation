@@ -95,23 +95,23 @@ struct TVLinkSetupView: View {
             if let facing = liveFacing {
                 VStack(spacing: 2) {
                     Text("\(Int(facing.rounded()) % 360)°")
-                        .font(.mono(54, .heavy))
+                        .monoScaled(54, .heavy)
                         .contentTransition(.numericText(value: facing.rounded()))
                         .animation(.snappy, value: Int(facing.rounded()))
                     Text(GeoMath.cardinal(facing))
-                        .font(.mono(18, .bold))
+                        .monoScaled(18, .bold)
                         .tracking(3)
                 }
                 .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.5), radius: 4)
             } else {
                 Text("Hold steady…")
-                    .font(.mono(16, .semibold))
+                    .monoScaled(16, .semibold)
                     .foregroundStyle(.white)
             }
 
             Text(instruction)
-                .font(.mono(13, .semibold))
+                .monoScaled(13, .semibold)
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 14)
@@ -134,13 +134,13 @@ struct TVLinkSetupView: View {
             Divider().overlay(Palette.faint.opacity(0.4))
             HStack {
                 Label(sourceCoordinate?.shortDescription ?? "Waiting for your location…", systemImage: "location.fill")
-                    .font(.mono(12, .semibold))
+                    .monoScaled(12, .semibold)
                     .foregroundStyle(Palette.value)
                     .lineLimit(1)
                 Spacer()
             }
             Toggle(isOn: $includeDirection) {
-                Text("Send TV direction").font(.mono(13, .semibold))
+                Text("Send TV direction").monoScaled(13, .semibold)
             }
             .tint(Palette.ink)
 
@@ -175,20 +175,20 @@ struct TVLinkSetupView: View {
                 .foregroundStyle(Palette.ink)
             if link.tvs.isEmpty {
                 Text("Looking for Apple TV…")
-                    .font(.mono(13, .semibold))
+                    .monoScaled(13, .semibold)
                     .foregroundStyle(Palette.value)
                 Spacer()
                 ProgressView()
             } else if link.tvs.count == 1, let tv = link.tvs.first {
-                Text(tv.title).font(.mono(13, .bold)).foregroundStyle(Palette.value)
+                Text(tv.title).monoScaled(13, .bold).foregroundStyle(Palette.value)
                 Spacer()
-                Text("Match the code on your TV").font(.mono(10)).foregroundStyle(Palette.caption)
+                Text("Match the code on your TV").monoScaled(10).foregroundStyle(Palette.caption)
             } else {
                 Picker("Apple TV", selection: $selectedTV) {
                     ForEach(link.tvs) { Text($0.title).tag(Optional($0)) }
                 }
                 .pickerStyle(.menu)
-                .font(.mono(13, .bold))
+                .monoScaled(13, .bold)
                 Spacer()
             }
         }
@@ -199,7 +199,7 @@ struct TVLinkSetupView: View {
             HStack(spacing: 8) {
                 ForEach(Array(stride(from: 0.0, to: 360, by: 45)), id: \.self) { degrees in
                     Button(GeoMath.cardinal(degrees)) { manualFacing = degrees }
-                        .font(.mono(13, .bold))
+                        .monoScaled(13, .bold)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
                         .foregroundStyle(manualFacing == degrees ? .white : Palette.ink)
@@ -214,15 +214,15 @@ struct TVLinkSetupView: View {
         switch link.phase {
         case .sent:
             Label(sentSummary, systemImage: "checkmark.circle.fill")
-                .font(.mono(12, .semibold))
+                .monoScaled(12, .semibold)
                 .foregroundStyle(Palette.live)
         case .failed(let message):
             Label(message, systemImage: "exclamationmark.triangle.fill")
-                .font(.mono(12, .semibold))
+                .monoScaled(12, .semibold)
                 .foregroundStyle(Palette.signal)
         default:
             Text("Open What The Flight? on your Apple TV. Both devices must be on the same Wi-Fi.")
-                .font(.mono(11))
+                .monoScaled(11)
                 .foregroundStyle(Palette.caption)
         }
     }

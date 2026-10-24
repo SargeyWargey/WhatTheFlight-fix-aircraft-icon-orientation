@@ -17,6 +17,7 @@ struct FlightSearchSheet: View {
     var openLogbook: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     #if DEBUG
     /// `-wtf.debugAircraftSearch DL121` opens with a search typed in.
     @State private var query = UserDefaults.standard.string(forKey: "wtf.debugAircraftSearch") ?? ""
@@ -75,7 +76,7 @@ struct FlightSearchSheet: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }.font(.mono(15, .semibold))
+                    Button("Done") { dismiss() }.monoScaled(15, .semibold)
                 }
             }
             .task(id: trimmedQuery) { await searchWorldwide() }
@@ -109,7 +110,7 @@ struct FlightSearchSheet: View {
             }
         } else if !hasLocal, !trimmedQuery.isEmpty {
             Text("Keep typing to search worldwide by tail or flight number.")
-                .font(.mono(13))
+                .monoScaled(13)
                 .foregroundStyle(Palette.caption)
                 .listRowBackground(Color.clear)
         }
@@ -163,10 +164,10 @@ struct FlightSearchSheet: View {
                 .frame(width: 30)
             VStack(alignment: .leading, spacing: 3) {
                 Text(pin.label)
-                    .font(.mono(17, .bold))
+                    .monoScaled(17, .bold)
                     .foregroundStyle(Palette.ink)
                 Text([pin.registration == pin.label ? nil : pin.registration, status].compactMap { $0 }.joined(separator: " · "))
-                    .font(.mono(11))
+                    .monoScaled(11)
                     .foregroundStyle(Palette.caption)
                     .lineLimit(1)
             }
@@ -195,14 +196,19 @@ struct FlightSearchSheet: View {
                         }
 
                     VStack(alignment: .leading, spacing: 3) {
-                        HStack(spacing: 6) {
+                        // At accessibility sizes the route goes under the flight number.
+                        (dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout(spacing: 6))) {
                             Text(f.displayIdentifier)
-                                .font(.mono(17, .bold))
+                                .monoScaled(17, .bold)
                                 .foregroundStyle(Palette.ink)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
                             if f.hasRoute {
                                 Text("\(f.originIATA ?? "") → \(f.destinationIATA ?? "")")
-                                    .font(.mono(12, .semibold))
+                                    .monoScaled(12, .semibold)
                                     .foregroundStyle(Palette.route)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.7)
                             }
                             if let top = f.notable.first {
                                 Image(systemName: top.tag.symbol)
@@ -212,20 +218,25 @@ struct FlightSearchSheet: View {
                             }
                         }
                         Text(subtitle(for: f, isRemote: isRemote))
-                            .font(.mono(11))
+                            .monoScaled(11)
                             .foregroundStyle(Palette.caption)
                             .lineLimit(1)
                     }
                     Spacer(minLength: 8)
                     VStack(alignment: .trailing, spacing: 3) {
                         Text("\(RadarFormat.wholeNumber(Int(contact.distanceMiles.rounded()))) mi")
-                            .font(.mono(15, .bold))
+                            .monoScaled(15, .bold)
                             .foregroundStyle(Palette.value)
-                        Text(f.isOnGround ? "Ground" : "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft")
-                            .font(.mono(11))
+                            .lineLimit(1)
+                        Text(f.isOnGround ? "Ground" : "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft")
+                            .monoScaled(11)
                             .foregroundStyle(Palette.caption)
+                            .lineLimit(1)
                     }
+                    .fixedSize()
                 }
+                // One row of columns: past this they no longer fit side by side.
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)

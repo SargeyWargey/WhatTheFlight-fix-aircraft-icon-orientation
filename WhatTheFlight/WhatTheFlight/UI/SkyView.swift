@@ -147,7 +147,7 @@ struct SkyView: View {
                     if motion.basis == nil, let nearest = model.contacts.first {
                         dragAzimuth = nearest.bearing
                         dragPitch = GeoMath.elevationDegrees(groundDistanceMiles: nearest.distanceMiles,
-                                                             altitudeFeet: Double(nearest.flight.altitudeFeet),
+                                                             altitudeFeet: Double(nearest.altitudeFeet),
                                                              observerAltitudeFeet: 0)
                     }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { takePhoto() }
@@ -222,7 +222,7 @@ struct SkyView: View {
         return pool.map { pooled in
             let contact = model.observer.map { RadarContact(flight: pooled.flight, observer: $0, at: date, profile: pooled.profile) } ?? pooled
             let elevation = GeoMath.elevationDegrees(groundDistanceMiles: contact.distanceMiles,
-                                                     altitudeFeet: Double(contact.flight.altitudeFeet),
+                                                     altitudeFeet: Double(contact.altitudeFeet),
                                                      observerAltitudeFeet: observerFeet)
             let direction = SkyProjector.direction(azimuth: correction.azimuth(contact.bearing), elevation: elevation)
             let seen = fix?.flightID == contact.id ? fix : nil
@@ -326,7 +326,7 @@ struct SkyView: View {
               let pooled = (model.contacts + model.outsideContacts).first(where: { $0.id == fix.flightID }) else { return }
         let contact = RadarContact(flight: pooled.flight, observer: observer, at: fix.time, profile: pooled.profile)
         let elevation = GeoMath.elevationDegrees(groundDistanceMiles: contact.distanceMiles,
-                                                 altitudeFeet: Double(contact.flight.altitudeFeet),
+                                                 altitudeFeet: Double(contact.altitudeFeet),
                                                  observerAltitudeFeet: (location.location?.altitude ?? 0) * 3.28084)
         let predicted = SkyProjector.direction(azimuth: correction.azimuth(contact.bearing), elevation: elevation)
         correction.observe(predicted: predicted, observed: fix.direction)
@@ -870,32 +870,32 @@ private struct LockedCard: View {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text(f.operatorInfo.compact)
-                            .font(.mono(10, .semibold))
+                            .monoScaled(10, .semibold)
                             .textCase(.uppercase)
                             .foregroundStyle(.white.opacity(0.75))
                             .lineLimit(1)
                         if isVisual {
                             Label("Locked", systemImage: "scope")
-                                .font(.mono(9, .heavy))
+                                .monoScaled(9, .heavy)
                                 .textCase(.uppercase)
                                 .foregroundStyle(Palette.warning)
                                 .labelStyle(.titleAndIcon)
                         }
                     }
                     HStack(spacing: 8) {
-                        Text(f.displayIdentifier).font(.mono(24, .heavy))
+                        Text(f.displayIdentifier).monoScaled(24, .heavy)
                         if f.hasRoute {
                             Text("\(f.originIATA ?? "") → \(f.destinationIATA ?? "")")
-                                .font(.mono(14, .bold))
+                                .monoScaled(14, .bold)
                                 .foregroundStyle(Palette.route)
                         }
                     }
-                    Text([f.typeName ?? f.typeCode, "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft"].compactMap { $0 }.joined(separator: " · "))
-                        .font(.mono(11))
+                    Text([f.typeName ?? f.typeCode, "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft"].compactMap { $0 }.joined(separator: " · "))
+                        .monoScaled(11)
                         .foregroundStyle(.white.opacity(0.85))
                         .lineLimit(1)
                     Text("\(RadarFormat.miles(contact.distanceMiles)) mi away · \(Int(elevation.rounded()))° up · \(RadarFormat.wholeNumber(f.groundSpeedKnots)) kts")
-                        .font(.mono(11))
+                        .monoScaled(11)
                         .foregroundStyle(.white.opacity(0.85))
                         .lineLimit(1)
                 }
