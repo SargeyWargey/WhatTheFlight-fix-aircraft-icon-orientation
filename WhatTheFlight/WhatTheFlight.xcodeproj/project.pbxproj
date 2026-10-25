@@ -218,6 +218,13 @@
 			);
 			target = 7C61000B2E3D806500AAC798 /* WhatTheFlightWatchWidgets */;
 		};
+		7C61A0012E3D806500AAC798 /* Exceptions for "WhatTheFlightWatchWidgets" folder in "WhatTheFlightWatch" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ComplicationViews.swift,
+			);
+			target = 7C60000B2E3D806500AAC798 /* WhatTheFlightWatch */;
+		};
 		7C6100072E3D806500AAC798 /* Exceptions for "WhatTheFlight" folder in "WhatTheFlightWatchWidgets" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -236,6 +243,8 @@
 				Models/GeographicBounds.swift,
 				Services/FlightFeed.swift,
 				Services/SharedRadarStore.swift,
+				UI/AircraftGlyph.swift,
+				UI/Theme.swift,
 			);
 			target = 7C61000B2E3D806500AAC798 /* WhatTheFlightWatchWidgets */;
 		};
@@ -288,6 +297,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				7C6100062E3D806500AAC798 /* Exceptions for "WhatTheFlightWatchWidgets" folder in "WhatTheFlightWatchWidgets" target */,
+				7C61A0012E3D806500AAC798 /* Exceptions for "WhatTheFlightWatchWidgets" folder in "WhatTheFlightWatch" target */,
 			);
 			path = WhatTheFlightWatchWidgets;
 			sourceTree = "<group>";

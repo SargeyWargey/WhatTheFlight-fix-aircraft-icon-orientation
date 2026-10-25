@@ -756,7 +756,8 @@ struct RadarMapPane: View {
                 options: .init(interactive: true,
                                cardInset: CGSize(width: cardInset.width + geo.safeAreaInsets.trailing, height: cardInset.height),
                                topInset: geo.safeAreaInsets.top),
-                onTap: { id in withAnimation(.snappy) { model.focus(on: id) } }
+                // Browsing the map never pins: an aircraft outside the radius is only held.
+                onTap: { id in withAnimation(.snappy) { model.focus(on: id, pinning: false) } }
             )
             .ignoresSafeArea()
         }

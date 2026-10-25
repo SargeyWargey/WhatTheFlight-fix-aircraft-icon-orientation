@@ -68,13 +68,11 @@ struct TrafficMap: View {
     @State private var awaitingFit = false
     @State private var mapSize: CGSize = .zero
     @State private var visibleBounds: GeographicBounds?
-    /// Where each aircraft is drawn. Updated inside an animation so glyphs glide between the
-    /// model's once-a-second positions instead of hopping.
-    @State private var positions: [String: CLLocationCoordinate2D] = [:]
     @State private var trails: [TrailSegment] = []
     @State private var airports: [Airport] = []
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverOn
     @Environment(\.colorScheme) private var colorScheme
 
     // MARK: What's drawn
@@ -142,6 +140,9 @@ struct TrafficMap: View {
 
     var body: some View {
         let blips = blips
+        let positionKey = PositionKey(blips)
+        // Imagery is dark whatever the appearance (see `.environment` below).
+        let ink = MapInk(isImagery ? .dark : colorScheme)
         // Zoomed out past 2,000 km there's nothing to see, and the wash would show its edge.
         Map(position: $camera, bounds: MapCameraBounds(maximumDistance: 2_000_000),
             interactionModes: options.interactive ? [.pan, .zoom] : []) {
@@ -150,16 +151,16 @@ struct TrafficMap: View {
             // a lighter, dark wash (see `isImagery`). Everything drawn after it sits at the same
             // level, so stays on top.
             MapPolygon(coordinates: washCorners)
-                .foregroundStyle(Palette.paper.opacity(max(0, options.washOpacity - (isImagery ? 0.2 : 0))))
+                .foregroundStyle(ink.paper(max(0, options.washOpacity - (isImagery ? 0.2 : 0))))
                 .mapOverlayLevel(level: .aboveLabels)
 
             RadiusRings(observer: observer, radiusMiles: radiusMiles, scale: options.scale, echoes: true,
-                        opacity: options.ringOpacity)
+                        opacity: options.ringOpacity, ink: ink)
                 .mapOverlayLevel(level: .aboveLabels)
 
             ForEach(trails) { segment in
                 MapPolyline(coordinates: segment.coordinates)
-                    .stroke(Palette.route.opacity(segment.opacity),
+                    .stroke(ink.route(segment.opacity),
                             style: StrokeStyle(lineWidth: options.trailWidth * options.scale, lineCap: .round, lineJoin: .round))
                     .mapOverlayLevel(level: .aboveLabels)
             }
@@ -168,15 +169,15 @@ struct TrafficMap: View {
             ForEach(blips) { blip in
                 if let last = trail(blip.id).last {
                     let newest = options.trailBands.first?.opacity ?? 0.9
-                    MapPolyline(coordinates: [last.coordinate, coordinate(of: blip)])
-                        .stroke(Palette.route.opacity(blip.role == .fringe ? newest * 0.4 : newest),
+                    MapPolyline(coordinates: [last.coordinate, blip.contact.coordinate])
+                        .stroke(ink.route(blip.role == .fringe ? newest * 0.4 : newest),
                                 style: StrokeStyle(lineWidth: options.trailWidth * options.scale, lineCap: .round))
                         .mapOverlayLevel(level: .aboveLabels)
                 }
             }
 
             if options.showsProjectedPath, let focused {
-                ProjectedPath(contact: focused, scale: options.scale)
+                ProjectedPath(contact: focused, scale: options.scale, ink: ink)
                     .mapOverlayLevel(level: .aboveLabels)
             }
 
@@ -195,13 +196,18 @@ struct TrafficMap: View {
             .annotationTitles(.hidden)
 
             ForEach(blips) { blip in
-                Annotation(blip.contact.flight.displayIdentifier, coordinate: coordinate(of: blip), anchor: .center) {
+                Annotation(blip.contact.flight.displayIdentifier, coordinate: blip.contact.coordinate, anchor: .center) {
                     blipView(blip)
                 }
                 .annotationTitles(.hidden)
             }
         }
         .mapStyle(mapStyle)
+        // Glyphs move to each once-a-second position instead of hopping (MapKit plays the move
+        // in about a quarter of a second, whatever the length asked for). Animated as part of
+        // the tick's own update: setting positions from `onChange` cost the map a second full
+        // update every second.
+        .animation(reduceMotion ? nil : .linear(duration: 1), value: positionKey)
         // Imagery is dark whatever the appearance: draw labels and the wash for night.
         .environment(\.colorScheme, isImagery ? .dark : colorScheme)
         .safeAreaPadding(.top, options.topInset)
@@ -226,13 +232,12 @@ struct TrafficMap: View {
             guard !(options.interactive && camera.positionedByUser) else { return }
             reframe(animated: true)
         }
-        .onChange(of: PositionKey(blips), initial: true) { _, _ in
-            let next = Dictionary(blips.map { ($0.id, $0.contact.coordinate) }, uniquingKeysWith: { a, _ in a })
-            withAnimation(reduceMotion ? nil : .linear(duration: 1)) { positions = next }
-            keepPinnedAircraftInView()
+        .onChange(of: positionKey) { _, _ in keepPinnedAircraftInView() }
+        // A set: the order changes whenever two aircraft swap places by distance, and a
+        // rebuild replaces every trail on the map.
+        .onChange(of: TrailKey(version: trailVersion, ids: Set(blips.map(\.id))), initial: true) { _, _ in
+            rebuildTrails()
         }
-        .onChange(of: trailVersion, initial: true) { _, _ in rebuildTrails() }
-        .onChange(of: blips.map(\.id)) { _, _ in rebuildTrails() }
         .overlay(alignment: .bottomTrailing) {
             if options.interactive {
                 RecenterButton { reframe(animated: true) }
@@ -250,10 +255,6 @@ struct TrafficMap: View {
         .accessibilityHidden(!options.interactive)
     }
 
-    private func coordinate(of blip: Blip) -> CLLocationCoordinate2D {
-        positions[blip.id] ?? blip.contact.coordinate
-    }
-
     @ViewBuilder
     private func blipView(_ blip: Blip) -> some View {
         let flight = blip.contact.flight
@@ -261,11 +262,14 @@ struct TrafficMap: View {
         let isAnnounced = blip.id == announcedID
         // Glyph only: the radar or the hero card beside the map already names the focus.
         AircraftBlip(profile: blip.contact.profile, screenTrack: flight.track - heading, isFocused: isFocused,
-                     isAnnounced: isAnnounced, isPinned: pinnedIDs.contains(blip.id), scale: options.scale)
+                     isAnnounced: isAnnounced, scale: options.scale)
             .opacity(blip.role == .fringe ? 0.4 : 1)
             .onTapGesture { onTap?(blip.id) }
             .accessibilityElement()
-            .accessibilityLabel(SpokenTraffic.mapLabel(for: blip.contact))
+            // Distance and altitude change every tick, and a changed label re-renders every
+            // glyph on the map: spell them out only for VoiceOver. The flight is name enough
+            // for Voice Control.
+            .accessibilityLabel(voiceOverOn ? SpokenTraffic.mapLabel(for: blip.contact) : flight.displayIdentifier)
             .accessibilityAddTraits(.isButton)
             .accessibilityHint("Shows this aircraft in the center of the radar")
     }
@@ -358,6 +362,34 @@ struct TrafficMap: View {
             values = blips.flatMap { [$0.contact.coordinate.latitude, $0.contact.coordinate.longitude] }
         }
     }
+
+    private struct TrailKey: Equatable {
+        let version: Int
+        let ids: Set<String>
+    }
+}
+
+/// Fixed colours for what `TrafficMap` draws into the map: the wash, rings, trails and the
+/// projected path. MapKit turns an overlay's SwiftUI colour into a UIColor every time it
+/// touches the overlay's renderer, and an adaptive colour (all of `Palette`) is then resolved
+/// through SwiftUI on every touch, a large share of each update on a busy map. Resolved once
+/// for the appearance, they're plain RGB.
+struct MapInk {
+    private let routeColor, inkColor, paperColor, signalColor: UIColor
+
+    init(_ scheme: ColorScheme) {
+        let traits = UITraitCollection(userInterfaceStyle: scheme == .dark ? .dark : .light)
+        func fixed(_ color: Color) -> UIColor { UIColor(color).resolvedColor(with: traits) }
+        routeColor = fixed(Palette.route)
+        inkColor = fixed(Palette.ink)
+        paperColor = fixed(Palette.paper)
+        signalColor = fixed(Palette.signal)
+    }
+
+    func route(_ opacity: Double) -> Color { Color(uiColor: routeColor.withAlphaComponent(opacity)) }
+    func ink(_ opacity: Double) -> Color { Color(uiColor: inkColor.withAlphaComponent(opacity)) }
+    func paper(_ opacity: Double) -> Color { Color(uiColor: paperColor.withAlphaComponent(opacity)) }
+    func signal(_ opacity: Double) -> Color { Color(uiColor: signalColor.withAlphaComponent(opacity)) }
 }
 
 // MARK: - Shared map pieces
@@ -371,18 +403,24 @@ struct RadiusRings: MapContent {
     var echoes = false
     /// Scales the fill and strokes: below 1, more of the map shows through.
     var opacity: Double = 1
+    /// Fixed colours from a map that redraws every second; nil uses `Palette`'s.
+    var ink: MapInk? = nil
 
     var body: some MapContent {
         if echoes {
             ForEach([0.25, 0.5], id: \.self) { fraction in
                 MapCircle(center: observer, radius: radiusMiles * fraction * GeoMath.kilometersPerMile * 1000)
                     .foregroundStyle(.clear)
-                    .stroke(Palette.ink.opacity(0.16 * opacity), style: StrokeStyle(lineWidth: scale, dash: [3 * scale, 5 * scale]))
+                    .stroke(color(0.16 * opacity), style: StrokeStyle(lineWidth: scale, dash: [3 * scale, 5 * scale]))
             }
         }
         MapCircle(center: observer, radius: radiusMiles * GeoMath.kilometersPerMile * 1000)
-            .foregroundStyle(Palette.ink.opacity(0.06 * opacity))
-            .stroke(Palette.ink.opacity(0.35 * opacity), style: StrokeStyle(lineWidth: scale, dash: [4 * scale, 4 * scale]))
+            .foregroundStyle(color(0.06 * opacity))
+            .stroke(color(0.35 * opacity), style: StrokeStyle(lineWidth: scale, dash: [4 * scale, 4 * scale]))
+    }
+
+    private func color(_ opacity: Double) -> Color {
+        ink?.ink(opacity) ?? Palette.ink.opacity(opacity)
     }
 }
 
@@ -390,10 +428,13 @@ struct RadiusRings: MapContent {
 struct ProjectedPath: MapContent {
     let contact: RadarContact
     var scale: CGFloat = 1
+    /// Fixed colours from a map that redraws every second; nil uses `Palette`'s.
+    var ink: MapInk? = nil
 
     var body: some MapContent {
         MapPolyline(coordinates: contact.projectedPath)
-            .stroke(Palette.signal.opacity(0.8), style: StrokeStyle(lineWidth: 2 * scale, lineCap: .round, dash: [6 * scale, 5 * scale]))
+            .stroke(ink?.signal(0.8) ?? Palette.signal.opacity(0.8),
+                    style: StrokeStyle(lineWidth: 2 * scale, lineCap: .round, dash: [6 * scale, 5 * scale]))
     }
 }
 
@@ -501,7 +542,7 @@ extension GeographicBounds {
                    fringe: model.outsideContacts, focused: model.focusedContact, isPinned: model.focus.isPinned,
                    trail: model.trail(for:), trailVersion: model.trailVersion,
                    options: .init(interactive: true, placeName: "Atlanta"),
-                   onTap: { model.focus(on: $0) })
+                   onTap: { model.focus(on: $0, pinning: false) })
             .task { model.start() }
     }
 }

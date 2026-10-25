@@ -399,14 +399,6 @@ struct TVRadarSettingsView: View {
             label: { "\(Int($0))" },
             onSelect: { settings.radiusMiles = $0 }
         )
-        TVChoiceRow(
-            title: "Refresh every",
-            subtitle: "\(Int(settings.refreshSeconds)) s · positions stay smooth in between",
-            options: [5.0, 10, 15, 30, 60],
-            selection: settings.refreshSeconds,
-            label: { "\(Int($0))s" },
-            onSelect: { settings.refreshSeconds = $0 }
-        )
 
         TVSectionHeader(title: "Alerts")
         TVToggleRow(title: "Overhead alerts", subtitle: "A banner when an aircraft is about to pass over you", symbol: "scope", isOn: $settings.overheadAlerts)

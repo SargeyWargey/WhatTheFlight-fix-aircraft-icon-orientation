@@ -305,7 +305,7 @@ Payloads are `Codable` structs in `WatchSync.Payload`, encoded with JSON, versio
 
 ### 7.1 Foreground
 
-- `scenePhase == .active`: `RadarModel.start()`, GPS + heading on, polling every `refreshSeconds` (default 10 s; the Watch clamps it to a minimum of 10 s).
+- `scenePhase == .active`: `RadarModel.start()`, GPS + heading on, polling at `PollingPolicy`'s distance-based interval (10–25 s on the Watch, which never goes under 10 s; held at 10 s while Identify or Find is open).
 - `.inactive` (wrist down, Always-On): `RadarModel.stop()`; the Always-On view keeps dead-reckoning from the last fetch.
 - `.background`: everything stopped, `logbook.flush()`, snapshot written to `SharedRadarStore`, `WidgetCenter.shared.reloadAllTimelines()` (rate-limited to once per 5 min).
 

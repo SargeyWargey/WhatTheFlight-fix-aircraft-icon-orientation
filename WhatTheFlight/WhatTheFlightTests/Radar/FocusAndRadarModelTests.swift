@@ -70,6 +70,30 @@ final class FocusPolicyTests: XCTestCase {
         XCTAssertEqual(state, RadarFocus(focusedID: "a", isPinned: false))
     }
 
+    func testHeldAircraftKeepsTheCentreWhileTheMapStillDrawsIt() {
+        let inRange = TestTraffic.contacts([TestTraffic.flight("a", miles: 3)])
+        let held = RadarFocus(focusedID: "outside", isHeld: true)
+        let (state, change) = FocusPolicy.resolve(held, inRange: inRange, nearby: ["outside"], available: ["a", "outside"])
+        XCTAssertEqual(state, held)
+        XCTAssertEqual(change, .none)
+    }
+
+    func testHeldAircraftIsReleasedPastTheFringe() {
+        let inRange = TestTraffic.contacts([TestTraffic.flight("a", miles: 3)])
+        let held = RadarFocus(focusedID: "outside", isHeld: true)
+        let (state, change) = FocusPolicy.resolve(held, inRange: inRange, nearby: [], available: ["a", "outside"])
+        XCTAssertEqual(state, RadarFocus(focusedID: "a"))
+        XCTAssertEqual(change, .leftRange(previous: "outside"))
+    }
+
+    func testHeldAircraftFlyingIntoTheRadiusBecomesAnOrdinaryFocus() {
+        let inRange = TestTraffic.contacts([TestTraffic.flight("a", miles: 3), TestTraffic.flight("held", miles: 9)])
+        let (state, change) = FocusPolicy.resolve(RadarFocus(focusedID: "held", isHeld: true), inRange: inRange,
+                                                  nearby: [], available: ["a", "held"])
+        XCTAssertEqual(state, RadarFocus(focusedID: "held"))
+        XCTAssertEqual(change, .none)
+    }
+
     func testNextWrapsAround() {
         let inRange = TestTraffic.contacts([TestTraffic.flight("a", miles: 1), TestTraffic.flight("b", miles: 2), TestTraffic.flight("c", miles: 3)])
         XCTAssertEqual(FocusPolicy.next(after: RadarFocus(focusedID: "a"), inRange: inRange).focusedID, "b")
@@ -104,6 +128,7 @@ final class RadarModelTests: XCTestCase {
         settings.radiusMiles = 20
         feed = StubFeed()
         model = RadarModel(settings: settings, liveFeed: feed, demoFeed: feed)
+        model.isLowPowerMode = { false }
         model.setObserver(TestTraffic.observer)
     }
 
@@ -114,7 +139,7 @@ final class RadarModelTests: XCTestCase {
             TestTraffic.flight("out", miles: 26, bearing: 10),
         ]
         let delay = await model.pollOnce()
-        XCTAssertEqual(delay, settings.refreshSeconds)
+        XCTAssertEqual(delay, 7, accuracy: 0.01, "the nearest is 2 mi away")
         XCTAssertEqual(model.status, .live)
         XCTAssertEqual(model.contacts.map(\.id), ["near", "mid"])
         XCTAssertEqual(model.outsideContacts.map(\.id), ["out"])
@@ -257,6 +282,45 @@ final class RadarModelTests: XCTestCase {
         model.recompute()
         XCTAssertEqual(model.focus.focusedID, "out")
         XCTAssertEqual(model.focusedContact?.id, "out")
+    }
+
+    func testPickingAnOutOfRangeAircraftOnTheMapHoldsItWithoutPinning() async {
+        feed.flights = [TestTraffic.flight("in", miles: 2), TestTraffic.flight("out", miles: 25, bearing: 90)]
+        await model.pollOnce()
+        model.focus(on: "out", pinning: false)
+        XCTAssertFalse(model.focus.isPinned)
+        XCTAssertTrue(model.focus.isHeld)
+        XCTAssertTrue(settings.pinnedAircraft.isEmpty)
+        XCTAssertEqual(model.perimeterContacts.map(\.id), ["out", "in"], "held aircraft ride the radar edge")
+
+        // Still inside the map's fringe (1.5 × 20 mi): it keeps the centre.
+        await model.pollOnce()
+        XCTAssertEqual(model.focus.focusedID, "out")
+        XCTAssertNil(model.notice)
+
+        // Past the fringe the nearest takes over.
+        feed.flights[1] = TestTraffic.flight("out", miles: 32, bearing: 90)
+        await model.pollOnce()
+        XCTAssertEqual(model.focus.focusedID, "in")
+        XCTAssertFalse(model.focus.isHeld)
+        XCTAssertEqual(model.notice?.text, "OUT flew out of range")
+    }
+
+    func testPinningAHeldAircraftDropsTheHold() async {
+        feed.flights = [TestTraffic.flight("in", miles: 2), TestTraffic.flight("out", miles: 25, bearing: 90)]
+        await model.pollOnce()
+        model.focus(on: "out", pinning: false)
+        model.togglePin()
+        XCTAssertTrue(model.focus.isPinned)
+        XCTAssertFalse(model.focus.isHeld)
+        XCTAssertEqual(model.perimeterContacts.map(\.id), ["out", "in"], "on the edge once, as a pin")
+    }
+
+    func testTappingAnInRangeAircraftOnTheMapIsAnOrdinaryFocus() async {
+        feed.flights = [TestTraffic.flight("a", miles: 2), TestTraffic.flight("b", miles: 5, bearing: 90)]
+        await model.pollOnce()
+        model.focus(on: "b", pinning: false)
+        XCTAssertEqual(model.focus, RadarFocus(focusedID: "b"))
     }
 
     func testErrorsReportStatusAndBackOff() async {

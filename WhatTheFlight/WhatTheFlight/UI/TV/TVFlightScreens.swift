@@ -105,7 +105,7 @@ struct TVFlightDetailView: View {
                 if model.isPinned(f.id) {
                     Image(systemName: "pin.fill")
                         .font(.system(size: 34, weight: .bold))
-                        .foregroundStyle(Palette.signal)
+                        .foregroundStyle(Palette.pinned)
                 }
                 Text(f.displayIdentifier)
                     .font(.mono(96, .heavy))
@@ -441,7 +441,7 @@ struct TVAircraftListView: View {
         var body: some View {
             let f = contact.flight
             HStack(spacing: 28) {
-                AircraftBlip(profile: contact.profile, screenTrack: f.track - heading, isFocused: isFocusedAircraft, isPinned: isPinned, scale: 1.3)
+                AircraftBlip(profile: contact.profile, screenTrack: f.track - heading, isFocused: isFocusedAircraft, scale: 1.3)
                     .opacity(f.isOnGround ? 0.5 : 1)
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 16) {
@@ -462,8 +462,10 @@ struct TVAircraftListView: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
+                    // Yellow when pinned, like the radar edge's mile labels.
                     Text("\(RadarFormat.wholeNumber(Int(contact.distanceMiles.rounded()))) mi")
                         .font(.mono(30, .bold))
+                        .foregroundStyle(focused ? Color.white : isPinned ? Palette.pinned : Palette.value)
                     Text(f.isOnGround ? "Ground" : "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft")
                         .font(.mono(20))
                         .foregroundStyle(focused ? .white.opacity(0.8) : Palette.caption)

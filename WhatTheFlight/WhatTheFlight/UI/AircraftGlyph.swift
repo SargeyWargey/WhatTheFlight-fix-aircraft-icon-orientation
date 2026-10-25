@@ -75,7 +75,9 @@ struct AircraftSilhouetteShape: Shape {
         for silhouette in AircraftSilhouette.allCases {
             var drawing = SilhouetteDrawing()
             drawing.draw(silhouette)
-            table[silhouette] = (drawing.solid, drawing.translucent)
+            // A unioned path is lazy: the boolean operations run again every time it's drawn
+            // (every blip, every frame a rotor spins). Flatten each one here, once.
+            table[silhouette] = (Path(drawing.solid.cgPath), Path(drawing.translucent.cgPath))
         }
         return table
     }()

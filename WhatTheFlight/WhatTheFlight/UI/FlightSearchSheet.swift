@@ -185,9 +185,6 @@ struct FlightSearchSheet: View {
                         .rotationEffect(.degrees(f.track - heading))
                         .foregroundStyle(isFocused ? Palette.signal : f.isOnGround ? Palette.faint : Palette.blip(for: contact.profile))
                         .frame(width: 30)
-                        .overlay(alignment: .bottomLeading) {
-                            if isPinned { PinMarker(scale: 0.9).offset(x: -4, y: 4) }
-                        }
 
                     VStack(alignment: .leading, spacing: 3) {
                         // At accessibility sizes the route goes under the flight number.
@@ -257,7 +254,7 @@ struct FlightSearchSheet: View {
         Button(action: action) {
             Image(systemName: isPinned ? "pin.fill" : "pin")
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(isPinned ? Palette.ink : Palette.caption)
+                .foregroundStyle(isPinned ? Palette.pinned : Palette.caption)
                 .frame(width: 36, height: 36)
                 .contentShape(Rectangle())
         }

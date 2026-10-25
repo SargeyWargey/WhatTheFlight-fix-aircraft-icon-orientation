@@ -167,7 +167,7 @@ enum SpokenTraffic {
     static func mapLabel(for contact: RadarContact) -> String {
         let f = contact.flight
         let where_ = contact.distanceMiles < 0.5 ? "overhead" : "\(RadarFormat.miles(contact.distanceMiles)) miles \(direction(contact.bearing))"
-        return "\(f.displayIdentifier), \(f.operatorInfo.title), \(where_), \(RadarFormat.wholeNumber(contact.altitudeFeet)) feet"
+        return "\(f.displayIdentifier), \(contact.profile.operatorInfo.title), \(where_), \(RadarFormat.wholeNumber(contact.altitudeFeet)) feet"
     }
 
     static func direction(_ bearing: Double) -> String {

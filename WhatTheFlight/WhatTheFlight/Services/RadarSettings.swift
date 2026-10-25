@@ -137,10 +137,8 @@ final class RadarSettings {
     #else
     static let defaultRadius: Double = 20
     #endif
-    static let refreshRange: ClosedRange<Double> = 5...60
 
     var radiusMiles: Double { didSet { save(radiusMiles, .radius) } }
-    var refreshSeconds: Double { didSet { save(refreshSeconds, .refresh) } }
     var locationMode: LocationMode { didSet { save(locationMode.rawValue, .locationMode) } }
     var customLatitude: Double? { didSet { save(customLatitude, .customLatitude) } }
     var customLongitude: Double? { didSet { save(customLongitude, .customLongitude) } }
@@ -227,7 +225,6 @@ final class RadarSettings {
             defaults.string(forKey: key.name) ?? fallback
         }
         radiusMiles = value(.radius, Self.defaultRadius).clamped(to: Self.radiusRange)
-        refreshSeconds = value(.refresh, 10.0).clamped(to: Self.refreshRange)
         locationMode = LocationMode(rawValue: value(.locationMode, "device")) ?? .device
         func optionalDouble(_ key: Key) -> Double? {
             defaults.object(forKey: key.name) == nil ? nil : defaults.double(forKey: key.name)
@@ -302,7 +299,6 @@ final class RadarSettings {
 
     func resetToDefaults() {
         radiusMiles = Self.defaultRadius
-        refreshSeconds = 10
         appearance = .system
         showHelicopters = true
         topography = .survey
@@ -334,7 +330,7 @@ final class RadarSettings {
     // MARK: - Persistence
 
     private enum Key: String {
-        case radius, refresh, locationMode, customLatitude, customLongitude, appearance
+        case radius, locationMode, customLatitude, customLongitude, appearance
         // `showTopography` is only read, to carry an old "off" over to `topography`.
         case showHelicopters, showTopography, topography, topographyMotion, showCompassBezel, radarSweep, showPhotos, cardPhotos
         case haptics, keepAwake, demoTraffic, hasSeenWelcome, customPlaceName, tvFacing

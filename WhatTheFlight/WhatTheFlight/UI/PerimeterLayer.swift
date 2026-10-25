@@ -15,7 +15,7 @@ struct PerimeterLayer: View {
     let focusedID: String?
     /// The aircraft a spoken alert is reading out (Apple TV), pulsed in purple.
     var announcedID: String? = nil
-    /// Pinned aircraft: a pin on the icon, and never faded however far away they are.
+    /// Pinned aircraft: a yellow mile label (`Palette.pinned`), never faded however far away.
     var pinnedIDs: Set<String> = []
     let radiusMiles: Double
     var scale: CGFloat = 1
@@ -32,7 +32,8 @@ struct PerimeterLayer: View {
                 let isPinned = pinnedIDs.contains(placement.id)
                 let fade = isPinned ? 1 : 1 - 0.4 * min(1, placement.contact.distanceMiles / max(radiusMiles, 1))
 
-                DistanceLabel(miles: placement.contact.distanceMiles, isFocused: isFocused, profile: placement.contact.profile, scale: scale)
+                DistanceLabel(miles: placement.contact.distanceMiles, isFocused: isFocused, isPinned: isPinned,
+                              profile: placement.contact.profile, scale: scale)
                     .opacity(isFocused ? 1 : fade)
                     .position(placement.labelPoint)
                     .animation(reduceMotion ? nil : .interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.labelPoint)
@@ -44,7 +45,6 @@ struct PerimeterLayer: View {
                     screenTrack: placement.screenTrack,
                     isFocused: isFocused,
                     isAnnounced: isAnnounced,
-                    isPinned: isPinned,
                     scale: scale
                 )
                 .opacity(isFocused || isAnnounced ? 1 : fade)
@@ -89,8 +89,6 @@ struct AircraftBlip: View {
     let isFocused: Bool
     /// Being read out by a spoken alert: a purple pulse in place of the red focus one.
     var isAnnounced = false
-    /// A small pin on the icon's lower left.
-    var isPinned = false
     var scale: CGFloat = 1
 
     @State private var pulse = false
@@ -131,13 +129,7 @@ struct AircraftBlip: View {
                     .overlay(Circle().stroke(Palette.paper, lineWidth: 1.5 * scale))
                     .offset(x: 13 * scale, y: -13 * scale)
             }
-            if isPinned {
-                PinMarker(scale: scale)
-                    .offset(x: -13 * scale, y: 13 * scale)
-                    .transition(.scale.combined(with: .opacity))
-            }
         }
-        .animation(.snappy, value: isPinned)
         .frame(width: 44 * scale, height: 44 * scale)
         .contentShape(Circle())
         .onChange(of: [isFocused, isAnnounced, isLuminanceReduced], initial: true) { _, _ in startPulse() }
@@ -152,25 +144,11 @@ struct AircraftBlip: View {
     }
 }
 
-/// The pin badge on a pinned aircraft's icon (radar edge, map, lists).
-struct PinMarker: View {
-    var scale: CGFloat = 1
-
-    var body: some View {
-        Image(systemName: "pin.fill")
-            .font(.system(size: 7.5 * scale, weight: .bold))
-            .foregroundStyle(Palette.paper)
-            .rotationEffect(.degrees(30))
-            .frame(width: 14 * scale, height: 14 * scale)
-            .background(Palette.ink, in: Circle())
-            .overlay(Circle().stroke(Palette.paper, lineWidth: 1.5 * scale))
-            .accessibilityHidden(true)
-    }
-}
-
 struct DistanceLabel: View {
     let miles: Double
     let isFocused: Bool
+    /// Yellow, like the pin by the flight number on the hero.
+    var isPinned = false
     let profile: FlightProfile
     var scale: CGFloat = 1
 
@@ -178,7 +156,7 @@ struct DistanceLabel: View {
         Text(RadarFormat.miles(miles))
             .font(.mono((isFocused ? 15 : 13) * scale, .bold))
             .monospacedDigit()
-            .foregroundStyle(isFocused ? Palette.signal : Palette.blip(for: profile))
+            .foregroundStyle(isPinned ? Palette.pinned : isFocused ? Palette.signal : Palette.blip(for: profile))
             .contentTransition(.numericText(value: miles))
             .paperHalo()
             .fixedSize()

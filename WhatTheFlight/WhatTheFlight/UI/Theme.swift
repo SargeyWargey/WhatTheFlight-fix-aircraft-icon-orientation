@@ -32,6 +32,8 @@ enum Palette {
     static let faint = dynamic(light: 0xA29E95, dark: 0x465061)
     /// Aircraft blips.
     static let blip = dynamic(light: 0x2D56B9, dark: 0x72AAFF)
+    /// Pinned aircraft: the pin by the flight number and the mile label on the radar edge.
+    static let pinned = dynamic(light: 0xD9A200, dark: 0xFFD60A)
     /// Type-code chip.
     static let chip = dynamic(light: 0x8F8B84, dark: 0x273042)
     static let sweep = dynamic(light: 0x3A33D6, dark: 0x4CF0C0)

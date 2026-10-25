@@ -79,11 +79,20 @@ final class RadarModel {
     /// Worldwide lookups for far-away pins are a separate request, so they run less often.
     static let pinLookupInterval: TimeInterval = 20
     /// The feed counts as quiet after this long without an answer: longer than any normal
-    /// poll gap (60 s in an empty sky), shorter than the 90 s dead-reckoning cap.
+    /// poll gap (45 s in an empty sky in Low Power Mode), shorter than the 90 s dead-reckoning cap.
     static let staleAfter: TimeInterval = 75
+    /// The first retry after a failed poll waits this long, doubling up to 90 s.
+    static let retrySeconds: TimeInterval = 10
 
     /// Query at least this far out whatever the radius (Apple Watch's Identify looks 15 mi).
     @ObservationIgnored var queryRadiusFloor: Double = 0
+    /// Sky View (iPhone) and Identify / Find (Watch) put labels on real aircraft, so they poll
+    /// at the floor whatever the distance. Turning it on polls straight away.
+    @ObservationIgnored var pollsFastest = false {
+        didSet { if pollsFastest && !oldValue { refreshNow() } }
+    }
+    /// Low Power Mode stretches the poll interval; read at every poll. Tests pin it off.
+    @ObservationIgnored var isLowPowerMode: () -> Bool = { ProcessInfo.processInfo.isLowPowerModeEnabled }
     /// The widest map ring showing this traffic, when wider than the radar's (the Apple TV's
     /// own map range). Trails are kept to 1.5× the wider ring, as far as maps draw them.
     @ObservationIgnored var trailRadiusFloor: Double = 0
@@ -157,9 +166,19 @@ final class RadarModel {
     /// Pinned aircraft outside the radius, however far: still on the radar edge and the map.
     var pinnedOutside: [RadarContact] { outsideContacts.filter { isPinned($0.id) } }
 
-    /// What rides the radar edge: far-away pins first (so the icon cap never drops them),
-    /// then everything in range.
-    var perimeterContacts: [RadarContact] { pinnedOutside + contacts }
+    /// What rides the radar edge: far-away pins first (so the icon cap never drops them), an
+    /// aircraft held from the map, then everything in range.
+    var perimeterContacts: [RadarContact] { pinnedOutside + heldOutside + contacts }
+
+    /// The focused aircraft when it was picked on the map outside the radius without a pin.
+    private var heldOutside: [RadarContact] {
+        guard focus.isHeld, let id = focus.focusedID else { return [] }
+        return outsideContacts.filter { $0.id == id }
+    }
+
+    /// How far out a map draws fringe traffic (`TrafficMap`), and so how far an aircraft
+    /// picked there keeps the centre without a pin.
+    var fringeMiles: Double { settings.radiusMiles * 1.5 }
 
     enum PinState {
         case visible(RadarContact)
@@ -288,6 +307,8 @@ final class RadarModel {
     private func setFocus(_ new: RadarFocus) {
         var new = new
         new.isPinned = isPinned(new.focusedID)
+        // A pin outlasts a hold.
+        if new.isPinned { new.isHeld = false }
         if new != focus { focus = new }
     }
 
@@ -307,13 +328,16 @@ final class RadarModel {
         trails[id] ?? []
     }
 
-    /// Tap on a perimeter icon or a search result. Aircraft outside the radius are pinned
-    /// automatically, otherwise they'd be replaced on the very next tick.
-    func focus(on id: String) {
-        if !contacts.contains(where: { $0.id == id }), !isPinned(id), let flight = contact(id: id)?.flight {
+    /// Tap on a perimeter icon, a search result or a logbook entry. Aircraft outside the radius
+    /// are pinned automatically, otherwise they'd be replaced on the very next tick. A map tap
+    /// passes `pinning: false`: the aircraft is held instead, keeping the centre while the map
+    /// still draws it (`fringeMiles`).
+    func focus(on id: String, pinning: Bool = true) {
+        let isOutside = !contacts.contains(where: { $0.id == id }) && !isPinned(id)
+        if isOutside, pinning, let flight = contact(id: id)?.flight {
             pin(flight)
         }
-        setFocus(RadarFocus(focusedID: id))
+        setFocus(RadarFocus(focusedID: id, isHeld: isOutside && !pinning))
     }
 
     /// Pins or unpins the focused aircraft.
@@ -469,8 +493,8 @@ final class RadarModel {
             apply(result)
             status = .live
             if !useDemo { await refreshPins() }
-            let next = PollingPolicy.interval(base: settings.refreshSeconds, contacts: contacts, outside: outsideContacts,
-                                              floor: Self.pollFloor)
+            let next = PollingPolicy.interval(contacts: contacts, outside: outsideContacts, floor: Self.pollFloor,
+                                              fastest: pollsFastest, lowPower: isLowPowerMode())
             Log.feed.debug("\(self.contacts.count) in range, \(self.outsideContacts.count) outside; next poll in \(next, format: .fixed(precision: 0)) s")
             return next
         } catch is CancellationError {
@@ -479,7 +503,7 @@ final class RadarModel {
             consecutiveFailures += 1
             let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
             status = .error(message)
-            let backoff = settings.refreshSeconds * pow(2, Double(min(consecutiveFailures, 3)))
+            let backoff = Self.retrySeconds * pow(2, Double(min(consecutiveFailures, 3)))
             let floor = (error as? FeedError) == .rateLimited ? 30.0 : 0
             let delay = min(90, max(floor, backoff))
             Log.feed.error("Poll failed (\(self.consecutiveFailures) in a row): \(message, privacy: .public); retrying in \(delay, format: .fixed(precision: 0)) s")
@@ -524,7 +548,7 @@ final class RadarModel {
     private func refreshPins() async {
         let missing = settings.pinnedAircraft.filter { pin in !flights.contains(where: pin.matches) }
         guard !missing.isEmpty else { return }
-        guard Date().timeIntervalSince(lastPinLookup) >= max(Self.pinLookupInterval, settings.refreshSeconds) else { return }
+        guard Date().timeIntervalSince(lastPinLookup) >= Self.pinLookupInterval else { return }
         lastPinLookup = Date()
         let registrations = missing.compactMap(\.registration)
         let callsigns = missing.filter { $0.registration == nil }.compactMap(\.callsign)
@@ -643,11 +667,15 @@ final class RadarModel {
 
         var current = focus
         current.isPinned = isPinned(current.focusedID)
-        let (resolved, change) = FocusPolicy.resolve(current, inRange: contacts, available: Set(all.map(\.id)))
+        let fringe = fringeMiles
+        let nearby = Set(outsideContacts.prefix { $0.distanceMiles <= fringe }.map(\.id))
+        let (resolved, change) = FocusPolicy.resolve(current, inRange: contacts, nearby: nearby, available: Set(all.map(\.id)))
         setFocus(resolved)
 
         let name = previousFocus?.flight.displayIdentifier ?? "That aircraft"
         switch change {
+        case .leftRange where current.isHeld:
+            notice = RadarNotice(symbol: "scope", text: "\(name) flew out of range")
         case .leftRange:
             notice = RadarNotice(symbol: "scope", text: "\(name) left your \(Int(radius)) mi radius")
         case .lost:

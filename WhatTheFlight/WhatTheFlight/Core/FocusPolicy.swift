@@ -9,6 +9,8 @@
 //    another one becomes closer.
 //  • When it leaves the radius (or vanishes from the feed) the current nearest takes over.
 //  • A pinned aircraft is kept while the feed still reports it, even outside the radius.
+//  • One picked on a map just outside the radius is held (not pinned) while the map still
+//    draws it; it becomes an ordinary focus if it flies into the radius.
 //  • Swipe right always jumps back to the current nearest.
 //
 
@@ -17,6 +19,8 @@ import Foundation
 struct RadarFocus: Equatable, Sendable {
     var focusedID: String?
     var isPinned: Bool = false
+    /// Picked on a map outside the radius without pinning it.
+    var isHeld: Bool = false
 }
 
 enum FocusChange: Equatable, Sendable {
@@ -31,16 +35,23 @@ enum FocusChange: Equatable, Sendable {
 enum FocusPolicy {
     /// - Parameters:
     ///   - inRange: contacts inside the radius, sorted nearest first.
+    ///   - nearby: IDs of aircraft outside the radius that a map still draws (its fringe).
     ///   - available: IDs of every aircraft currently in the feed (in or out of range).
-    static func resolve(_ state: RadarFocus, inRange: [RadarContact], available: Set<String>) -> (RadarFocus, FocusChange) {
+    static func resolve(_ state: RadarFocus, inRange: [RadarContact], nearby: Set<String> = [],
+                        available: Set<String>) -> (RadarFocus, FocusChange) {
         guard let current = state.focusedID else {
             guard let nearest = inRange.first else { return (state, .none) }
             return (RadarFocus(focusedID: nearest.id, isPinned: false), .initial)
         }
         if inRange.contains(where: { $0.id == current }) {
+            var state = state
+            state.isHeld = false
             return (state, .none)
         }
         if state.isPinned, available.contains(current) {
+            return (state, .none)
+        }
+        if state.isHeld, nearby.contains(current) {
             return (state, .none)
         }
         let replacement = RadarFocus(focusedID: inRange.first?.id, isPinned: false)

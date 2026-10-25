@@ -30,6 +30,10 @@ struct SnapshotFlight: Codable, Hashable, Identifiable, Sendable {
     /// For photo lookups (Top Shelf).
     var registration: String?
     var hex: String?
+    /// For the Watch complications' little radar: the silhouette, nose along its track.
+    /// Snapshots saved before these existed decode without them.
+    var track: Double?
+    var silhouette: AircraftSilhouette?
 
     init(_ contact: RadarContact) {
         let f = contact.flight
@@ -51,6 +55,8 @@ struct SnapshotFlight: Codable, Hashable, Identifiable, Sendable {
         closestPassMiles = contact.isApproaching ? contact.closestApproach.distanceMiles : nil
         registration = f.registration
         hex = f.hex
+        track = f.track
+        silhouette = profile.silhouette
     }
 }
 
@@ -107,6 +113,13 @@ struct SharedRadarStore {
         nonmutating set { defaults.set(newValue, forKey: Key.radius) }
     }
 
+    /// What counts as overhead: the overhead alert's distance, so the Watch's Next Overhead
+    /// complication counts down to the passes an alert would announce.
+    var overheadMiles: Double {
+        get { defaults.object(forKey: Key.overheadMiles) == nil ? 1.5 : defaults.double(forKey: Key.overheadMiles) }
+        nonmutating set { defaults.set(newValue, forKey: Key.overheadMiles) }
+    }
+
     var snapshot: RadarSnapshot? {
         get { defaults.data(forKey: Key.snapshot).flatMap { try? JSONDecoder().decode(RadarSnapshot.self, from: $0) } }
         nonmutating set { defaults.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: Key.snapshot) }
@@ -117,7 +130,56 @@ struct SharedRadarStore {
         static let longitude = "wtf.shared.longitude"
         static let placeName = "wtf.shared.placeName"
         static let radius = "wtf.shared.radius"
+        static let overheadMiles = "wtf.shared.overheadMiles"
         static let snapshot = "wtf.shared.snapshot"
+    }
+}
+
+/// An aircraft that will pass within the overhead distance: what the Next Overhead
+/// complication counts down to.
+struct SkyPass: Equatable, Sendable {
+    /// The aircraft where it is at the moment shown (where to look now).
+    let flight: SnapshotFlight
+    /// When it passes closest.
+    let date: Date
+    /// How close it comes.
+    let miles: Double
+
+    /// Further ahead than this, a straight-line guess isn't worth a countdown.
+    static let maxLead: TimeInterval = 10 * 60
+    /// How long a pass stays "overhead now" after its closest point.
+    static let linger: TimeInterval = 60
+    /// The countdown ring drains over the last five minutes.
+    static let ringWindow: TimeInterval = 5 * 60
+}
+
+/// What the complications show at one moment: the traffic dead-reckoned to `date`, the next
+/// close pass, and one going over right now.
+struct SkyMoment: Equatable, Sendable {
+    let snapshot: RadarSnapshot
+    var nextPass: SkyPass?
+    /// At or just past its closest point, for `SkyPass.linger`.
+    var passing: SkyPass?
+
+    var date: Date { snapshot.date }
+
+    init(snapshot: RadarSnapshot, nextPass: SkyPass? = nil, passing: SkyPass? = nil) {
+        self.snapshot = snapshot
+        self.nextPass = nextPass
+        self.passing = passing
+    }
+
+    /// From a snapshot the app saved: only its handful of flights to go on, so the pass is
+    /// the soonest close one among them.
+    init(snapshot: RadarSnapshot, overheadMiles: Double) {
+        let pass = snapshot.flights
+            .compactMap { f -> SkyPass? in
+                guard let seconds = f.closestPassSeconds, let miles = f.closestPassMiles,
+                      miles <= overheadMiles, seconds <= SkyPass.maxLead else { return nil }
+                return SkyPass(flight: f, date: snapshot.date.addingTimeInterval(seconds), miles: miles)
+            }
+            .min { $0.date < $1.date }
+        self.init(snapshot: snapshot, nextPass: pass)
     }
 }
 
@@ -161,6 +223,54 @@ enum NearbyTraffic {
             let inRange = contacts(flights, observer: observer, radiusMiles: radiusMiles, at: date, maxExtrapolation: horizon,
                                    profiles: profiles)
             return RadarSnapshot(date: date, placeName: placeName, radiusMiles: radiusMiles, contacts: inRange)
+        }
+    }
+
+    /// The Watch complications' timeline: a moment every `step` for `count` steps from
+    /// `start`, plus one at each close pass and one as it clears, so "overhead now" shows up
+    /// on time rather than at the next whole step. Passes come from every flight fetched,
+    /// not only those in range, and snapshots keep `limit` aircraft for the little radar.
+    static func timeline(_ flights: [Flight], observer: CLLocationCoordinate2D, radiusMiles: Double,
+                         overheadMiles: Double, placeName: String?, start: Date, count: Int, step: TimeInterval,
+                         limit: Int = 12) -> [SkyMoment] {
+        guard count > 0 else { return [] }
+        let profiles = Dictionary(flights.map { ($0.id, FlightProfile($0)) }, uniquingKeysWith: { first, _ in first })
+        func contact(_ flight: Flight, at date: Date) -> RadarContact {
+            RadarContact(flight: flight, observer: observer, at: date,
+                         maxExtrapolation: date.timeIntervalSince(start) + 90, profile: profiles[flight.id])
+        }
+        // Dead reckoning flies a straight line, so each pass happens at one fixed time.
+        let passes: [(flight: Flight, date: Date, miles: Double)] = flights.compactMap { flight in
+            let approach = contact(flight, at: start).closestApproach
+            guard approach.isAhead, approach.distanceMiles <= overheadMiles else { return nil }
+            return (flight, start.addingTimeInterval(approach.secondsFromNow), approach.distanceMiles)
+        }
+        let end = start.addingTimeInterval(Double(count - 1) * step)
+        var dates = (0..<count).map { start.addingTimeInterval(Double($0) * step) }
+        for pass in passes {
+            dates += [pass.date, pass.date.addingTimeInterval(SkyPass.linger)].filter { $0 <= end }
+        }
+        dates.sort()
+        // A pass a moment after a step would only add an entry nobody sees.
+        dates = dates.reduce(into: []) { kept, date in
+            if let last = kept.last, date.timeIntervalSince(last) < 1 { return }
+            kept.append(date)
+        }
+        return dates.map { date in
+            let all = flights.map { contact($0, at: date) }
+            let inRange = all.filter { $0.distanceMiles <= radiusMiles }.sorted { $0.distanceMiles < $1.distanceMiles }
+            let snapshot = RadarSnapshot(date: date, placeName: placeName, radiusMiles: radiusMiles,
+                                         contacts: inRange, limit: limit)
+            func skyPass(_ pass: (flight: Flight, date: Date, miles: Double)) -> SkyPass {
+                SkyPass(flight: SnapshotFlight(contact(pass.flight, at: date)), date: pass.date, miles: pass.miles)
+            }
+            let next = passes
+                .filter { $0.date > date && $0.date.timeIntervalSince(date) <= SkyPass.maxLead }
+                .min { $0.date < $1.date }
+            let passing = passes
+                .filter { $0.date <= date && date.timeIntervalSince($0.date) < SkyPass.linger }
+                .min { $0.miles < $1.miles }
+            return SkyMoment(snapshot: snapshot, nextPass: next.map(skyPass), passing: passing.map(skyPass))
         }
     }
 

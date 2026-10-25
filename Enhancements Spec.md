@@ -234,6 +234,7 @@ your logbook" should mean across devices.
 
 ### B5 · P2 · Adaptive polling <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - *As built:* "passing close" = within a mile now, or a closest pass under a mile within 90 s (`PollingPolicy.isPassingClose`), so a hub's distant traffic doesn't keep it at 5 s.
+- *Since replaced (Oct 2026):* the refresh setting is gone on every device. The interval follows the nearest aircraft, now or at its closest within 90 s (`PollingPolicy.closestSoon`): 5 s within a mile, then 5 s + 1 s per mile up to 25 s, 30 s when the feed reports nothing. Low Power Mode stretches it × 1.5 (never under 10 s); Sky View and the Watch's Identify / Find set `RadarModel.pollsFastest`, which holds it at the floor. Retries back off from a fixed 10 s.
 - Where: `Radar/RadarModel.pollOnce()` returns `settings.refreshSeconds` on success.
 - Change: a pure `PollingPolicy.interval(base:contacts:outside:)` in `Core/`:
   any in-range contact with a closest pass ahead within 90 s or under a mile → `min(base, 5)`;
@@ -363,6 +364,8 @@ your logbook" should mean across devices.
 - <span style="color:#00E676; font-weight:900; font-size:1.5em">✅ IMPLEMENTED</span> Watch: in `WhatTheFlightWatchWidgets/WatchComplications.swift`, implement widget
   relevance so the complication surfaces when a closest pass is within five minutes
   (`WidgetRelevance` with date-interval contexts from `NearbyTraffic.projectedSnapshots`).
+  *As built:* until Apple Watch Enhancements C6 this was `TimelineEntryRelevance` alone;
+  `SkyProvider.relevance()` now returns the date windows, from `NearbyTraffic.timeline`.
 - iPhone: a "Next overhead" entry in `WhatTheFlightWidgets` for small and rectangular
   families using `Text(timerInterval:)` counting down to the snapshot's closest pass, so
   it reads right in StandBy. An interactive Start Sky Watch button needs

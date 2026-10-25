@@ -72,7 +72,7 @@ can go any time. A6 last: it needs both apps open and a proxy to prove it.
 - Done when: a one-minute walk logs about half the heading updates it did, and the radar
   still turns smoothly.
 
-### A4 · P2 · The widget extension parses the airport catalog it never uses
+### A4 · P2 · The widget extension parses the airport catalog it never uses <span style="color:#FFB300; font-weight:900; font-size:1.2em">◐ PARTLY IMPLEMENTED</span>
 - Where: `WhatTheFlightWatchWidgets/WatchComplications.swift` ~56, `Catalogs.warmUp()` in
   `getTimeline`; `Data/AircraftTypeCatalog.swift` ~352–364, `warmUp()` touches
   `AirportCatalog.airport(iata: "ATL")` (~358), which builds the 8,800-row `table` and
@@ -90,6 +90,11 @@ can go any time. A6 last: it needs both apps open and a proxy to prove it.
   `WatchBackgroundRefresh` and the app's `ComplicationPublisher` for the rest.
 - Done when: Allocations on the widget extension shows no `AirportCatalog` tables, and a
   day of wearing rarely shows "Open to refresh".
+- *As built:* `Catalogs.warmUp(airports:)`; `SkyProvider` passes `false`, and nothing on the
+  complication path looks up an airport, so the table is never built. The three traffic
+  complications share one fetch (`ComplicationTraffic`, reused for 45 s), so the reload
+  budget pays for one request, not three. The `.atEnd` policy is unchanged: that waits on
+  a day of reload-budget logs, as above.
 
 ### A5 · P3 · Skip the snapshot write when nothing changed
 - Where: `WatchRootView.swift`, `ComplicationPublisher.publish` (~345–360): every poll
@@ -197,14 +202,14 @@ can go any time. A6 last: it needs both apps open and a proxy to prove it.
 ## Part C — Options and features
 
 ### C1 · P2 · Battery saver
-- Where: `WatchSettingsView.swift` Radar section (~41–58); `RadarSettings.refreshSeconds`
-  (default 10, no Watch UI; Watch-local defaults, not synced); `RadarModel.pollFloor` is
+- Where: `WatchSettingsView.swift` Radar section (~41–58); `PollingPolicy.interval`
+  (distance-based, no refresh setting any more; `lowPower` stretches it); `RadarModel.pollFloor` is
   10 s on watchOS; `WatchLocationService.precision`; `settings.radarSweep`.
-- Change: one toggle, `wtf.watch.batterySaver`, in `WatchSettings`. On: poll base 30 s
-  (set `refreshSeconds`, Watch-local), sweep off, compass filter 6° (A3), blip and label
+- Change: one toggle, `wtf.watch.batterySaver`, in `WatchSettings`. On: polling stretched
+  further than Low Power Mode (a multiplier on `PollingPolicy.interval`), sweep off, compass filter 6° (A3), blip and label
   springs off (as Reduce Motion does), `precision` `.radar` stays as is (pointing still
-  gets `.pointing`: it is the point of the feature). Off restores 10 s and the sweep.
-  Footer: "Updates every 30 s; the radar still moves between updates."
+  gets `.pointing`: it is the point of the feature). Off restores the normal interval and the sweep.
+  Footer: "Updates less often; the radar still moves between updates."
 - Done when: two 30-minute sessions on the same sky, saver on and off, show a clear
   difference in Settings → Battery; the hero keeps dead-reckoning at 1 Hz either way.
 
@@ -277,7 +282,7 @@ can go any time. A6 last: it needs both apps open and a proxy to prove it.
   minute with device Apple Watch; a regular's detail page says "Seen before"; a badge
   earned on the Watch taps the wrist and shows its card.
 
-### C6 · P2 · More complications and date-window relevance
+### C6 · P2 · More complications and date-window relevance <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Where: `WatchComplications.swift` has one kind, `WatchOverhead` (~89–100); relevance is
   `TimelineEntryRelevance` (~81–86), which is what Enhancements Spec C6's Watch half was
   closed with.
@@ -292,6 +297,23 @@ can go any time. A6 last: it needs both apps open and a proxy to prove it.
     scoring entries after the fact. Keep `TimelineEntryRelevance` alongside.
 - Done when: the Identify complication opens Identify directly; during a demo pass the
   Overhead card rises in the Smart Stack before the pass.
+- *As built:* four kinds (`WatchComplicationKind`): **Nearest Aircraft** (the old
+  `WatchOverhead` kind, redrawn: the aircraft's silhouette on a north-up ring at its
+  bearing, nose along its track, miles inside; the card adds a little radar on 45 mm and
+  up), **Sky Radar** (new, `WatchRadar`: every aircraft on a north-up scope, the nearest
+  picked out; corner label and inline give the in-range count, which stands in for the
+  "In range" circular), **Next Overhead** (new, `WatchNextOverhead`: counts down to the
+  next aircraft passing within the overhead alert's distance, with a ring that drains
+  over the last five minutes and "overhead now" for a minute as it goes over; tap opens
+  Find on it) and **Identify** (`WatchIdentify`: circular, corner and inline, static,
+  `whattheflight://sky`). `NearbyTraffic.timeline` adds a moment at each pass and as it
+  clears. `SkyProvider.relevance()` returns a date window from five minutes before each
+  pass to a minute after for Nearest and Next Overhead (`date(interval:kind:)` on
+  watchOS 26, `date(from:to:)` before that); `TimelineEntryRelevance` stays. The Watch
+  app calls `invalidateRelevance` whenever it reloads timelines. A demo pass can't show
+  this: the complications fetch live traffic, never demo traffic. Not yet checked on a
+  real face or in the Smart Stack; the DEBUG gallery (`-wtf.debugScreen complications`)
+  shows the designs.
 
 ### C7 · P2 · "Find that plane" intent, for Siri and the Action button
 - Where: `WatchIntents.swift` has `WatchWhatsOverheadIntent` (~12) and

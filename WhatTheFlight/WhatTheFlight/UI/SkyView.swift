@@ -138,6 +138,7 @@ struct SkyView: View {
             let tracker = camera.tracker
             motion.onBasis = { tracker.update(basis: $0) }
             motion.start()
+            model.pollsFastest = true
             if dragAzimuth == nil { dragAzimuth = location.normalizedHeading }
             #if DEBUG
             // `-wtf.debugCapture YES` takes a photo shortly after opening; `-wtf.debugAim YES`
@@ -161,6 +162,7 @@ struct SkyView: View {
         .onDisappear {
             motion.stop()
             camera.stop()
+            model.pollsFastest = false
         }
         .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
             motion.interfaceOrientation = currentInterfaceOrientation

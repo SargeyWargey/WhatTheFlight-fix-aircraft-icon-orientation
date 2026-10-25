@@ -154,15 +154,6 @@ private struct RadarSettingsPage: View {
                     Slider(value: $settings.radiusMiles, in: RadarSettings.radiusRange, step: 1)
                         .accessibilityLabel("Radius in miles")
                 }
-                VStack(alignment: .leading, spacing: 6) {
-                    LabeledContent {
-                        Text("\(Int(settings.refreshSeconds)) s")
-                    } label: {
-                        InfoLabel("Refresh every", info: "Positions are smoothed between refreshes, so a longer interval still moves fluidly and is kinder to your battery.")
-                    }
-                    Slider(value: $settings.refreshSeconds, in: RadarSettings.refreshRange, step: 5)
-                        .accessibilityLabel("Refresh interval in seconds")
-                }
                 Toggle("Show helicopters", isOn: $settings.showHelicopters)
             } header: {
                 SettingsHeader("Radar")

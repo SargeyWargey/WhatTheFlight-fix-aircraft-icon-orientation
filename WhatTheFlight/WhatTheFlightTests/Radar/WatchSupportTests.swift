@@ -217,6 +217,83 @@ final class ComplicationTimelineTests: XCTestCase {
         XCTAssertEqual(snapshots[0].inRangeCount, 1)
         XCTAssertEqual(snapshots[2].inRangeCount, 0)
     }
+
+    // MARK: Next Overhead
+
+    private func timeline(_ flights: [Flight], radius: Double = 10, start: Date) -> [SkyMoment] {
+        NearbyTraffic.timeline(flights, observer: TestTraffic.observer, radiusMiles: radius, overheadMiles: 1.5,
+                               placeName: "Here", start: start, count: 4, step: 60)
+    }
+
+    func testAPassGetsAMomentOfItsOwnAndClearsAMinuteLater() throws {
+        let start = Date()
+        // 3 mi north, flying south at 360 kt (≈6.9 mi/min): overhead after about 26 s.
+        let moments = timeline([TestTraffic.flight("a", miles: 3, bearing: 0, track: 180, speed: 360, at: start)], start: start)
+        let pass = try XCTUnwrap(moments[0].nextPass)
+        XCTAssertEqual(pass.flight.id, "a")
+        XCTAssertEqual(pass.date.timeIntervalSince(start), 26, accuracy: 2)
+        XCTAssertLessThan(pass.miles, 0.1)
+        XCTAssertNil(moments[0].passing)
+
+        let atPass = try XCTUnwrap(moments.first { abs($0.date.timeIntervalSince(pass.date)) < 0.01 })
+        XCTAssertEqual(atPass.passing?.flight.id, "a")
+        XCTAssertNil(atPass.nextPass)
+        let cleared = try XCTUnwrap(moments.first { abs($0.date.timeIntervalSince(pass.date) - SkyPass.linger) < 0.01 })
+        XCTAssertNil(cleared.passing)
+        XCTAssertEqual(moments.map(\.date), moments.map(\.date).sorted())
+        XCTAssertEqual(moments.count, 6) // four steps, the pass and its clearing
+    }
+
+    func testOnlyCloseSoonPassesCount() {
+        let start = Date()
+        let wide = TestTraffic.flight("wide", miles: 6, bearing: 270, track: 30, speed: 300, at: start) // misses by ~5 mi
+        let slow = TestTraffic.flight("slow", miles: 9, bearing: 0, track: 180, speed: 30, at: start)  // over in ~16 min
+        let away = TestTraffic.flight("away", miles: 2, bearing: 0, track: 0, speed: 300, at: start)
+        let moments = timeline([wide, slow, away], start: start)
+        XCTAssertTrue(moments.allSatisfy { $0.nextPass == nil && $0.passing == nil })
+        XCTAssertEqual(moments.count, 4)
+    }
+
+    func testPassesComeFromTrafficStillOutsideTheRadius() {
+        let start = Date()
+        let moments = timeline([TestTraffic.flight("a", miles: 4, bearing: 0, track: 180, speed: 360, at: start)],
+                               radius: 2, start: start)
+        XCTAssertEqual(moments[0].snapshot.inRangeCount, 0)
+        XCTAssertEqual(moments[0].nextPass?.flight.id, "a")
+    }
+
+    func testTheSoonestClosePassWins() {
+        let start = Date()
+        let later = TestTraffic.flight("later", miles: 8, bearing: 90, track: 270, speed: 360, at: start)
+        let sooner = TestTraffic.flight("sooner", miles: 3, bearing: 180, track: 0, speed: 360, at: start)
+        XCTAssertEqual(timeline([later, sooner], start: start)[0].nextPass?.flight.id, "sooner")
+    }
+
+    func testASavedSnapshotStillCountsDown() throws {
+        let date = Date()
+        let contacts = TestTraffic.contacts([
+            TestTraffic.flight("near", miles: 1, bearing: 0, track: 0, speed: 300, at: date),     // moving away
+            TestTraffic.flight("close", miles: 5, bearing: 90, track: 270, speed: 300, at: date), // passes overhead
+        ])
+        let moment = SkyMoment(snapshot: RadarSnapshot(date: date, placeName: nil, radiusMiles: 10, contacts: contacts),
+                               overheadMiles: 1.5)
+        let pass = try XCTUnwrap(moment.nextPass)
+        XCTAssertEqual(pass.flight.id, "close")
+        XCTAssertGreaterThan(pass.date, date)
+    }
+
+    func testOlderSnapshotsDecodeWithoutTrackOrSilhouette() throws {
+        let contact = RadarContact(flight: TestTraffic.flight("a", miles: 2, track: 225), observer: TestTraffic.observer, at: Date())
+        let current = try JSONEncoder().encode(SnapshotFlight(contact))
+        XCTAssertEqual(try JSONDecoder().decode(SnapshotFlight.self, from: current).track, 225)
+        var fields = try XCTUnwrap(JSONSerialization.jsonObject(with: current) as? [String: Any])
+        fields["track"] = nil
+        fields["silhouette"] = nil
+        let old = try JSONDecoder().decode(SnapshotFlight.self, from: JSONSerialization.data(withJSONObject: fields))
+        XCTAssertEqual(old.id, "a")
+        XCTAssertNil(old.track)
+        XCTAssertNil(old.silhouette)
+    }
 }
 
 final class SmallScreenPerimeterTests: XCTestCase {

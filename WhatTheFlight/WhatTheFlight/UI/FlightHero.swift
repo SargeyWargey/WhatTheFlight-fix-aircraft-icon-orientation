@@ -144,7 +144,7 @@ struct FlightHero: View {
             if isPinned {
                 Image(systemName: "pin.fill")
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Palette.signal)
+                    .foregroundStyle(Palette.pinned)
                     .transition(.scale.combined(with: .opacity))
             }
             Text(contact.profile.operatorInfo.headline)

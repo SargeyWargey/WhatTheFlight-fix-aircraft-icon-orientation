@@ -45,7 +45,7 @@ final class WatchAppDelegate: NSObject, WKApplicationDelegate, UNUserNotificatio
         for task in backgroundTasks {
             if let refresh = task as? WKApplicationRefreshBackgroundTask {
                 // Complications fetch their own traffic; this just asks WidgetKit to let them.
-                WidgetCenter.shared.reloadAllTimelines()
+                ComplicationPublisher.reloadComplications()
                 WatchBackgroundRefresh.schedule()
                 refresh.setTaskCompletedWithSnapshot(false)
             } else {

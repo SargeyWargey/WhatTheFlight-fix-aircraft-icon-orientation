@@ -43,6 +43,7 @@ struct WatchRootView: View {
     @State private var radiusEdits = 0
     #if DEBUG
     @State private var debugNotification: SnapshotFlight?
+    @State private var debugComplications = false
     #endif
 
     private let router = WatchRouter.shared
@@ -101,6 +102,7 @@ struct WatchRootView: View {
                 TrafficNotificationView(title: "", message: "", flight: flight, postedAt: Date())
             }
         }
+        .fullScreenCover(isPresented: $debugComplications) { ComplicationGallery() }
         #endif
         .onAppear {
             // A tap on the wrist only: the screen is too small for a banner over the radar.
@@ -155,6 +157,7 @@ struct WatchRootView: View {
             }
         }
         .onChange(of: locationPrecision, initial: true) { _, precision in location.precision = precision }
+        .onChange(of: isPointing, initial: true) { _, pointing in model.pollsFastest = pointing }
         .task(id: isDimmedRadar) {
             // The clock keeps the icons moving, once a minute.
             guard isDimmedRadar else { return }
@@ -280,6 +283,7 @@ struct WatchRootView: View {
         store.observer = observer
         store.placeName = placeName
         store.radiusMiles = settings.radiusMiles
+        store.overheadMiles = settings.overheadAlertMiles
     }
 
     private func handle(_ route: WatchRouter.Route) {
@@ -314,7 +318,8 @@ struct WatchRootView: View {
     }
 
     #if DEBUG
-    /// `-wtf.debugScreen detail|find|identify|nearby|settings|notification` and `-wtf.debugFocus <flight>` (screenshots).
+    /// `-wtf.debugScreen detail|find|identify|nearby|settings|notification|complications` and
+    /// `-wtf.debugFocus <flight>` (screenshots).
     private func openDebugScreenIfRequested() {
         let defaults = UserDefaults.standard
         let focusName = defaults.string(forKey: "wtf.debugFocus")
@@ -333,6 +338,7 @@ struct WatchRootView: View {
             case "nearby": page = .nearby
             case "settings": page = .settings
             case "notification": debugNotification = (id.flatMap(model.contact(id:)) ?? model.contacts.first).map(SnapshotFlight.init)
+            case "complications": debugComplications = true
             default: break
             }
         }
@@ -349,13 +355,22 @@ final class ComplicationPublisher {
     func publish(model: RadarModel, settings: RadarSettings, placeName: String, force: Bool = false) {
         guard !settings.demoTraffic, model.hasLoadedOnce else { return }
         let store = SharedRadarStore()
-        store.snapshot = RadarSnapshot(placeName: placeName, radiusMiles: settings.radiusMiles, contacts: model.contacts)
+        // A dozen, for the Sky Radar complication's blips.
+        store.snapshot = RadarSnapshot(placeName: placeName, radiusMiles: settings.radiusMiles, contacts: model.contacts, limit: 12)
         let nearest = model.contacts.first?.id
         let elapsed = Date().timeIntervalSince(lastReload)
         if (force && elapsed > 60) || (nearest != lastNearest && elapsed > 120) || elapsed > 600 {
             lastReload = Date()
             lastNearest = nearest
-            WidgetCenter.shared.reloadAllTimelines()
+            Self.reloadComplications()
+        }
+    }
+
+    /// New timelines, and new Smart Stack relevance for the kinds that rise before a pass.
+    nonisolated static func reloadComplications() {
+        WidgetCenter.shared.reloadAllTimelines()
+        for kind in WatchComplicationKind.passAware {
+            WidgetCenter.shared.invalidateRelevance(ofKind: kind.rawValue)
         }
     }
 }

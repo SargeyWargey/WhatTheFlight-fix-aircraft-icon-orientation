@@ -159,7 +159,8 @@ struct RadarScreen: View {
                 pinnedIDs: model.pinnedIDs,
                 radiusMiles: settings.radiusMiles,
                 onTap: { contact in
-                    withAnimation(.snappy) { model.focus(on: contact.id) }
+                    // Edge icons are in range, pinned or held from the map: none needs a new pin.
+                    withAnimation(.snappy) { model.focus(on: contact.id, pinning: false) }
                 },
                 onLongPress: { contact in actions.openDetail(contact.id) }
             )
