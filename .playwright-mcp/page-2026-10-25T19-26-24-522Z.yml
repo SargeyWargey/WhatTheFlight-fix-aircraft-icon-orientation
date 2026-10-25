@@ -1,0 +1,597 @@
+- generic [active] [ref=f6e1]:
+  - main [ref=f6e2]:
+    - generic [ref=f6e4]:
+      - generic [ref=f6e5]:
+        - strong [ref=f6e8]:
+          - heading "TERMS AND CONDITIONS" [level=1] [ref=f6e9]
+        - generic [ref=f6e10]:
+          - strong [ref=f6e11]: Last updated
+          - strong [ref=f6e13]: August 10, 2025
+        - strong [ref=f6e17]:
+          - heading "AGREEMENT TO OUR LEGAL TERMS" [level=2] [ref=f6e19]
+      - generic [ref=f6e21]:
+        - generic [ref=f6e22]:
+          - text: We are AirDG LLC, doing business as Airplanes.live ("
+          - strong [ref=f6e23]: Company
+          - text: ",\" \""
+          - strong [ref=f6e24]: we
+          - text: ",\" \""
+          - strong [ref=f6e25]: us
+          - text: ",\" \""
+          - strong [ref=f6e26]: our
+          - text: "\")"
+          - generic [ref=f6e29]:
+            - text: ", a company registered in"
+            - generic [ref=f6e30]: Wyoming, United States
+        - text: at 30 N Gould Street Ste R, Sheridan
+        - generic [ref=f6e32]: ", WY 82801"
+        - text: .
+      - generic [ref=f6e38]:
+        - generic [ref=f6e40]:
+          - text: We operate the website
+          - link "https://airplanes.live" [ref=f6e43] [cursor=pointer]:
+            - /url: https://airplanes.live
+          - text: (the "
+          - strong [ref=f6e44]: Site
+          - text: "\"), as well as any other related products and services that refer or link to these legal terms (the \""
+          - strong [ref=f6e45]: Legal Terms
+          - text: "\") (collectively, the \""
+          - strong [ref=f6e46]: Services
+          - text: "\")."
+        - generic [ref=f6e49]:
+          - text: You can contact us by
+          - generic [ref=f6e50]:
+            - text: email at
+            - link "contact@airplanes.live" [ref=f6e52] [cursor=pointer]:
+              - /url: mailto:contact@airplanes.live
+            - text: or by mail to 30 N Gould Street Ste R, Sheridan, WY 82801, United States.
+        - generic [ref=f6e55]:
+          - text: These Legal Terms constitute a legally binding agreement made between you, whether personally or on behalf of an entity ("
+          - strong [ref=f6e56]: you
+          - text: "\"), and AirDG LLC, concerning your access to and use of the Services. You agree that by accessing the Services, you have read, understood, and agreed to be bound by all of these Legal Terms. IF YOU DO NOT AGREE WITH ALL OF THESE LEGAL TERMS, THEN YOU ARE EXPRESSLY PROHIBITED FROM USING THE SERVICES AND YOU MUST DISCONTINUE USE IMMEDIATELY."
+        - generic [ref=f6e58]: Supplemental terms and conditions or documents that may be posted on the Services from time to time are hereby expressly incorporated herein by reference. We reserve the right, in our sole discretion, to make changes or modifications to these Legal Terms from time to time. We will alert you about any changes by updating the "Last updated" date of these Legal Terms, and you waive any right to receive specific notice of each such change. It is your responsibility to periodically review these Legal Terms to stay informed of updates. You will be subject to, and will be deemed to have been made aware of and to have accepted, the changes in any revised Legal Terms by your continued use of the Services after the date such revised Legal Terms are posted.
+      - generic [ref=f6e61]:
+        - generic [ref=f6e62]: The Services are intended for users who are at least 18 years old. Persons under the age of 18 are not permitted to use or register for the Services.
+        - generic [ref=f6e68]: We recommend that you print a copy of these Legal Terms for your records.
+        - strong [ref=f6e71]:
+          - heading "TABLE OF CONTENTS" [level=2] [ref=f6e72]
+        - link "1. OUR SERVICES" [ref=f6e74] [cursor=pointer]:
+          - /url: "#services"
+        - link "2. INTELLECTUAL PROPERTY RIGHTS" [ref=f6e78] [cursor=pointer]:
+          - /url: "#ip"
+        - generic [ref=f6e80]:
+          - link:
+            - /url: "#userreps"
+          - link "3. USER REPRESENTATIONS" [ref=f6e81] [cursor=pointer]:
+            - /url: "#userreps"
+        - generic:
+          - link:
+            - /url: "#products"
+        - generic:
+          - link:
+            - /url: "#products"
+          - link:
+            - /url: "#purchases"
+        - generic:
+          - link:
+            - /url: "#purchases"
+        - generic:
+          - link:
+            - /url: "#software"
+          - link:
+            - /url: "#software"
+        - generic:
+          - link:
+            - /url: "#software"
+          - link:
+            - /url: "#prohibited"
+        - generic [ref=f6e83]:
+          - link "4. PROHIBITED ACTIVITIES" [ref=f6e84] [cursor=pointer]:
+            - /url: "#prohibited"
+          - link:
+            - /url: "#ugc"
+        - generic [ref=f6e86]:
+          - link "5. USER GENERATED CONTRIBUTIONS" [ref=f6e87] [cursor=pointer]:
+            - /url: "#ugc"
+          - link:
+            - /url: "#license"
+        - generic [ref=f6e89]:
+          - link "6. CONTRIBUTIONLICENSE" [ref=f6e90] [cursor=pointer]:
+            - /url: "#license"
+          - link:
+            - /url: "#reviews"
+        - generic:
+          - link:
+            - /url: "#reviews"
+          - link:
+            - /url: "#mobile"
+        - generic:
+          - link:
+            - /url: "#mobile"
+          - link:
+            - /url: "#socialmedia"
+        - generic:
+          - link:
+            - /url: "#socialmedia"
+          - link:
+            - /url: "#thirdparty"
+        - generic [ref=f6e93]:
+          - link "7. THIRD-PARTY WEBSITES AND CONTENT" [ref=f6e94] [cursor=pointer]:
+            - /url: "#thirdparty"
+          - link:
+            - /url: "#advertisers"
+        - generic [ref=f6e97]:
+          - link "8. ADVERTISERS" [ref=f6e98] [cursor=pointer]:
+            - /url: "#advertisers"
+          - link:
+            - /url: "#sitemanage"
+        - generic [ref=f6e101]:
+          - link "9. SERVICES MANAGEMENT" [ref=f6e102] [cursor=pointer]:
+            - /url: "#sitemanage"
+          - link:
+            - /url: "#ppyes"
+        - generic [ref=f6e104]:
+          - link "10. PRIVACY POLICY" [ref=f6e105] [cursor=pointer]:
+            - /url: "#ppyes"
+          - link:
+            - /url: "#ppno"
+        - generic:
+          - link:
+            - /url: "#ppno"
+          - link:
+            - /url: "#dmca"
+        - generic:
+          - link:
+            - /url: "#dmca"
+        - generic [ref=f6e108]:
+          - link "11. COPYRIGHT INFRINGEMENTS" [ref=f6e109] [cursor=pointer]:
+            - /url: "#copyrightyes"
+          - link:
+            - /url: "#terms"
+        - generic [ref=f6e111]:
+          - link "12. TERM AND TERMINATION" [ref=f6e112] [cursor=pointer]:
+            - /url: "#terms"
+          - link:
+            - /url: "#modifications"
+        - generic [ref=f6e114]:
+          - link "13. MODIFICATIONS AND INTERRUPTIONS" [ref=f6e115] [cursor=pointer]:
+            - /url: "#modifications"
+          - link:
+            - /url: "#law"
+        - generic [ref=f6e117]:
+          - link "14. GOVERNING LAW" [ref=f6e118] [cursor=pointer]:
+            - /url: "#law"
+          - link:
+            - /url: "#disputes"
+        - generic [ref=f6e120]:
+          - link "15. DISPUTE RESOLUTION" [ref=f6e121] [cursor=pointer]:
+            - /url: "#disputes"
+          - link:
+            - /url: "#corrections"
+        - generic [ref=f6e123]:
+          - link "16. CORRECTIONS" [ref=f6e124] [cursor=pointer]:
+            - /url: "#corrections"
+          - link:
+            - /url: "#disclaimer"
+        - generic [ref=f6e126]:
+          - link "17. DISCLAIMER" [ref=f6e127] [cursor=pointer]:
+            - /url: "#disclaimer"
+          - link:
+            - /url: "#liability"
+        - generic [ref=f6e129]:
+          - link "18. LIMITATIONS OF LIABILITY" [ref=f6e130] [cursor=pointer]:
+            - /url: "#liability"
+          - link:
+            - /url: "#indemnification"
+        - generic [ref=f6e132]:
+          - link "19. INDEMNIFICATION" [ref=f6e133] [cursor=pointer]:
+            - /url: "#indemnification"
+          - link:
+            - /url: "#userdata"
+        - generic [ref=f6e135]:
+          - link "20. USER DATA" [ref=f6e136] [cursor=pointer]:
+            - /url: "#userdata"
+          - link:
+            - /url: "#electronic"
+        - generic [ref=f6e138]:
+          - link "21. ELECTRONIC COMMUNICATIONS, TRANSACTIONS, AND SIGNATURES" [ref=f6e139] [cursor=pointer]:
+            - /url: "#electronic"
+          - link:
+            - /url: "#california"
+        - generic [ref=f6e141]:
+          - link "22. CALIFORNIA USERS AND RESIDENTS" [ref=f6e142] [cursor=pointer]:
+            - /url: "#california"
+          - link:
+            - /url: "#misc"
+        - generic [ref=f6e145]:
+          - link "23. MISCELLANEOUS" [ref=f6e146] [cursor=pointer]:
+            - /url: "#misc"
+          - link:
+            - /url: "#contact"
+        - link "24. CONTACT US" [ref=f6e149] [cursor=pointer]:
+          - /url: "#contact"
+      - generic [ref=f6e151]:
+        - strong [ref=f6e154]:
+          - heading "1. OUR SERVICES" [level=2] [ref=f6e156]
+        - generic [ref=f6e157]: The information provided when using the Services is not intended for distribution to or use by any person or entity in any jurisdiction or country where such distribution or use would be contrary to law or regulation or which would subject us to any registration requirement within such jurisdiction or country. Accordingly, those persons who choose to access the Services from other locations do so on their own initiative and are solely responsible for compliance with local laws, if and to the extent local laws are applicable.
+        - generic [ref=f6e160]: The Services are not tailored to comply with industry-specific regulations (Health Insurance Portability and Accountability Act (HIPAA), Federal Information Security Management Act (FISMA), etc.), so if your interactions would be subjected to such laws, you may not use the Services. You may not use the Services in a way that would violate the Gramm-Leach-Bliley Act (GLBA).
+      - strong [ref=f6e164]:
+        - heading "2. INTELLECTUAL PROPERTY RIGHTS" [level=2] [ref=f6e166]
+      - generic [ref=f6e167]:
+        - strong [ref=f6e169]:
+          - heading "Our intellectual property" [level=3] [ref=f6e170]
+        - generic [ref=f6e171]: We are the owner or the licensee of all intellectual property rights in our Services, including all source code, databases, functionality, software, website designs, audio, video, text, photographs, and graphics in the Services (collectively, the "Content"), as well as the trademarks, service marks, and logos contained therein (the "Marks").
+        - generic [ref=f6e174]: Our Content and Marks are protected by copyright and trademark laws (and various other intellectual property rights and unfair competition laws) and treaties in the United States and around the world.
+        - generic [ref=f6e177]: The Content and Marks are provided in or through the Services "AS IS" for your personal, non-commercial use or internal business purpose only.
+        - strong [ref=f6e180]:
+          - heading "Your use of our Services" [level=3] [ref=f6e181]
+        - generic [ref=f6e182]:
+          - generic [ref=f6e183]: Subject to your compliance with these Legal Terms, including the "
+          - link "PROHIBITED ACTIVITIES" [ref=f6e184] [cursor=pointer]:
+            - /url: "#prohibited"
+          - generic [ref=f6e185]: "\" section below, we grant you a non-exclusive, non-transferable, revocable license to:"
+        - list [ref=f6e186]:
+          - listitem [ref=f6e187]: access the Services; and
+          - listitem [ref=f6e188]: download or print a copy of any portion of the Content to which you have properly gained access,
+        - generic [ref=f6e189]: solely for your personal, non-commercial use or internal business purpose.
+        - generic [ref=f6e192]: Except as set out in this section or elsewhere in our Legal Terms, no part of the Services and no Content or Marks may be copied, reproduced, aggregated, republished, uploaded, posted, publicly displayed, encoded, translated, transmitted, distributed, sold, licensed, or otherwise exploited for any commercial purpose whatsoever, without our express prior written permission.
+        - generic [ref=f6e195]:
+          - text: "If you wish to make any use of the Services, Content, or Marks other than as set out in this section or elsewhere in our Legal Terms, please address your request to:"
+          - link "contact@airplanes.live" [ref=f6e197] [cursor=pointer]:
+            - /url: mailto:contact@airplanes.live
+          - text: . If we ever grant you the permission to post, reproduce, or publicly display any part of our Services or Content, you must identify us as the owners or licensors of the Services, Content, or Marks and ensure that any copyright or proprietary notice appears or is visible on posting, reproducing, or displaying our Content.
+      - generic [ref=f6e199]:
+        - generic [ref=f6e200]: We reserve all rights not expressly granted to you in and to the Services, Content, and Marks.
+        - generic [ref=f6e202]: Any breach of these Intellectual Property Rights will constitute a material breach of our Legal Terms and your right to use our Services will terminate immediately.
+        - generic [ref=f6e204]:
+          - strong [ref=f6e205]:
+            - heading "Your submissions and contributions" [level=3] [ref=f6e206]
+          - generic:
+            - strong
+        - generic [ref=f6e208]:
+          - text: Please review this section and the "
+          - link "PROHIBITED ACTIVITIES" [ref=f6e209] [cursor=pointer]:
+            - /url: "#prohibited"
+          - text: "\" section carefully prior to using our Services to understand the (a) rights you give us and (b) obligations you have when you post or upload any content through the Services."
+        - generic [ref=f6e212]:
+          - strong [ref=f6e213]: "Submissions:"
+          - text: By directly sending us any question, comment, suggestion, idea, feedback, or other information about the Services ("Submissions"), you agree to assign to us all intellectual property rights in such Submission. You agree that we shall own this Submission and be entitled to its unrestricted use and dissemination for any lawful purpose, commercial or otherwise, without acknowledgment or compensation to you.
+        - generic [ref=f6e216]:
+          - strong [ref=f6e217]: "Contributions:"
+          - text: The Services may invite you to chat, contribute to, or participate in blogs, message boards, online forums, and other functionality during which you may create, submit, post, display, transmit, publish, distribute, or broadcast content and materials to us or through the Services, including but not limited to text, writings, video, audio, photographs, music, graphics, comments, reviews, rating suggestions, personal information, or other material ("Contributions"). Any Submission that is publicly posted shall also be treated as a Contribution.
+        - generic [ref=f6e219]: You understand that Contributions may be viewable by other users of the Services and possibly through third-party websites.
+        - generic [ref=f6e223]:
+          - strong [ref=f6e224]: "When you post Contributions, you grant us a license (including use of your name, trademarks, and logos):"
+          - text: "By posting any Contributions, you grant us an unrestricted, unlimited, irrevocable, perpetual, non-exclusive, transferable, royalty-free, fully-paid, worldwide right, and license to: use, copy, reproduce, distribute, sell, resell, publish, broadcast, retitle, store, publicly perform, publicly display, reformat, translate, excerpt (in whole or in part), and exploit your Contributions (including, without limitation, your image, name, and voice) for any purpose, commercial, advertising, or otherwise, to prepare derivative works of, or incorporate into other works, your Contributions, and to sublicense the licenses granted in this section. Our use and distribution may occur in any media formats and through any media channels."
+        - generic [ref=f6e226]: This license includes our use of your name, company name, and franchise name, as applicable, and any of the trademarks, service marks, trade names, logos, and personal and commercial images you provide.
+        - generic [ref=f6e230]:
+          - strong [ref=f6e231]: "You are responsible for what you post or upload:"
+          - text: "By sending us Submissions and/or posting Contributions through any part of the Services or making Contributions accessible through the Services by linking your account through the Services to any of your social networking accounts, you:"
+        - list [ref=f6e232]:
+          - listitem [ref=f6e233]:
+            - generic [ref=f6e234]: confirm that you have read and agree with our "
+            - link "PROHIBITED ACTIVITIES" [ref=f6e235] [cursor=pointer]:
+              - /url: "#prohibited"
+            - generic [ref=f6e236]: "\" and will not post, send, publish, upload, or transmit through the Services any Submission nor post any Contribution that is illegal, harassing, hateful, harmful, defamatory, obscene, bullying, abusive, discriminatory, threatening to any person or group, sexually explicit, false, inaccurate, deceitful, or misleading;"
+          - listitem [ref=f6e237]:
+            - generic [ref=f6e238]: to the extent permissible by applicable law, waive any and all moral rights to any such Submission and/or Contribution;
+          - listitem [ref=f6e239]:
+            - generic [ref=f6e240]: warrant that any such Submission and/or Contributions are original to you or that you have the necessary rights and licenses to submit such Submissions and/or Contributions and that you have full authority to grant us the above-mentioned rights in relation to your Submissions and/or Contributions; and
+          - listitem [ref=f6e241]:
+            - generic [ref=f6e242]: warrant and represent that your Submissions and/or Contributions do not constitute confidential information.
+        - generic [ref=f6e243]: You are solely responsible for your Submissions and/or Contributions and you expressly agree to reimburse us for any and all losses that we may suffer because of your breach of (a) this section, (b) any third party’s intellectual property rights, or (c) applicable law.
+        - generic [ref=f6e245]:
+          - strong [ref=f6e246]: "We may remove or edit your Content:"
+          - text: Although we have no obligation to monitor any Contributions, we shall have the right to remove or edit any Contributions at any time without notice if in our reasonable opinion we consider such Contributions harmful or in breach of these Legal Terms. If we remove or edit any such Contributions, we may also suspend or disable your account and report you to the authorities.
+        - strong [ref=f6e248]:
+          - heading "Copyright infringement" [level=3] [ref=f6e249]
+        - generic [ref=f6e250]:
+          - text: We respect the intellectual property rights of others. If you believe that any material available on or through the Services infringes upon any copyright you own or control, please immediately refer to the "
+          - link:
+            - /url: "#dmca"
+          - link "COPYRIGHT INFRINGEMENTS" [ref=f6e251] [cursor=pointer]:
+            - /url: "#copyrightyes"
+          - text: "\" section below."
+      - strong [ref=f6e256]:
+        - heading "3. USER REPRESENTATIONS" [level=2] [ref=f6e258]
+      - generic [ref=f6e260]:
+        - text: "By using the Services, you represent and warrant that:"
+        - generic [ref=f6e261]:
+          - text: (1) you have the legal capacity and you agree to comply with these Legal Terms;
+          - generic [ref=f6e263]:
+            - text: (2
+            - generic [ref=f6e265]:
+              - text: ) you are not a minor in the jurisdiction in which you reside
+              - generic [ref=f6e266]: ; (
+            - text: 3) you will not access the Services through automated or non-human means, whether through a bot, script or otherwise; (4
+            - generic [ref=f6e267]: ) you will not use the Services for any illegal or unauthorized purpose; and (
+            - text: 5) your use of the Services will not violate any applicable law or regulation.
+      - generic [ref=f6e269]:
+        - generic [ref=f6e270]:
+          - generic [ref=f6e271]: If you provide any information that is untrue, inaccurate, not current, or incomplete, we have the right to suspend or terminate your account and refuse any and all current or future use of the Services (or any portion thereof).
+          - strong [ref=f6e279]:
+            - heading "4. PROHIBITED ACTIVITIES" [level=2] [ref=f6e281]
+          - generic [ref=f6e282]: You may not access or use the Services for any purpose other than that for which we make the Services available. The Services may not be used in connection with any commercial endeavors except those that are specifically endorsed or approved by us.
+          - generic [ref=f6e286]:
+            - generic [ref=f6e288]:
+              - generic [ref=f6e289]: "As a user of the Services, you agree not to:"
+              - list [ref=f6e291]:
+                - listitem [ref=f6e292]:
+                  - generic [ref=f6e293]: Systematically retrieve data or other content from the Services to create or compile, directly or indirectly, a collection, compilation, database, or directory without written permission from us.
+                - listitem [ref=f6e294]:
+                  - generic [ref=f6e295]: Trick, defraud, or mislead us and other users, especially in any attempt to learn sensitive account information such as user passwords.
+                - listitem [ref=f6e299]:
+                  - generic [ref=f6e300]: Circumvent, disable, or otherwise interfere with security-related features of the Services, including features that prevent or restrict the use or copying of any Content or enforce limitations on the use of the Services and/or the Content contained therein.
+                - listitem [ref=f6e304]:
+                  - generic [ref=f6e305]: Disparage, tarnish, or otherwise harm, in our opinion, us and/or the Services.
+                - listitem [ref=f6e309]:
+                  - generic [ref=f6e310]: Use any information obtained from the Services in order to harass, abuse, or harm another person.
+                - listitem [ref=f6e314]:
+                  - generic [ref=f6e315]: Make improper use of our support services or submit false reports of abuse or misconduct.
+                - listitem [ref=f6e319]:
+                  - generic [ref=f6e320]: Use the Services in a manner inconsistent with any applicable laws or regulations.
+                - listitem [ref=f6e324]:
+                  - generic [ref=f6e325]: Engage in unauthorized framing of or linking to the Services.
+                - listitem [ref=f6e330]:
+                  - generic [ref=f6e331]: Upload or transmit (or attempt to upload or to transmit) viruses, Trojan horses, or other material, including excessive use of capital letters and spamming (continuous posting of repetitive text), that interferes with any party’s uninterrupted use and enjoyment of the Services or modifies, impairs, disrupts, alters, or interferes with the use, features, functions, operation, or maintenance of the Services.
+                - listitem [ref=f6e335]:
+                  - generic [ref=f6e336]: Engage in any automated use of the system, such as using scripts to send comments or messages, or using any data mining, robots, or similar data gathering and extraction tools.
+                - listitem [ref=f6e340]:
+                  - generic [ref=f6e341]: Delete the copyright or other proprietary rights notice from any Content.
+                - listitem [ref=f6e345]:
+                  - generic [ref=f6e346]: Attempt to impersonate another user or person or use the username of another user.
+                - listitem [ref=f6e350]:
+                  - generic [ref=f6e351]: Upload or transmit (or attempt to upload or to transmit) any material that acts as a passive or active information collection or transmission mechanism, including without limitation, clear graphics interchange formats ("gifs"), 1×1 pixels, web bugs, cookies, or other similar devices (sometimes referred to as "spyware" or "passive collection mechanisms" or "pcms").
+                - listitem [ref=f6e356]:
+                  - generic [ref=f6e357]: Interfere with, disrupt, or create an undue burden on the Services or the networks or services connected to the Services.
+                - listitem [ref=f6e361]:
+                  - generic [ref=f6e362]: Harass, annoy, intimidate, or threaten any of our employees or agents engaged in providing any portion of the Services to you.
+                - listitem [ref=f6e366]:
+                  - generic [ref=f6e367]: Attempt to bypass any measures of the Services designed to prevent or restrict access to the Services, or any portion of the Services.
+                - listitem [ref=f6e371]:
+                  - generic [ref=f6e372]: Copy or adapt the Services' software, including but not limited to Flash, PHP, HTML, JavaScript, or other code.
+                - listitem [ref=f6e376]:
+                  - generic [ref=f6e377]: Except as permitted by applicable law, decipher, decompile, disassemble, or reverse engineer any of the software comprising or in any way making up a part of the Services.
+                - listitem [ref=f6e381]:
+                  - generic [ref=f6e382]: Except as may be the result of standard search engine or Internet browser usage, use, launch, develop, or distribute any automated system, including without limitation, any spider, robot, cheat utility, scraper, or offline reader that accesses the Services, or use or launch any unauthorized script or other software.
+                - listitem [ref=f6e387]:
+                  - generic [ref=f6e388]: Use a buying agent or purchasing agent to make purchases on the Services.
+                - listitem [ref=f6e392]:
+                  - generic [ref=f6e393]: Make any unauthorized use of the Services, including collecting usernames and/or email addresses of users by electronic or other means for the purpose of sending unsolicited email, or creating user accounts by automated means or under false pretenses.
+                - listitem [ref=f6e398]:
+                  - generic [ref=f6e399]: Use the Services as part of any effort to compete with us or otherwise use the Services and/or the Content for any revenue-generating endeavor or commercial enterprise.
+                - listitem [ref=f6e404]:
+                  - generic [ref=f6e405]: Use the Services to advertise or offer to sell goods and services.
+                - listitem [ref=f6e406]:
+                  - generic [ref=f6e407]: Sell or otherwise transfer your profile.
+              - strong [ref=f6e413]:
+                - heading "5. USER GENERATED CONTRIBUTIONS" [level=2] [ref=f6e415]
+              - generic [ref=f6e416]: "The Services may invite you to chat, contribute to, or participate in blogs, message boards, online forums, and other functionality, and may provide you with the opportunity to create, submit, post, display, transmit, perform, publish, distribute, or broadcast content and materials to us or on the Services, including but not limited to text, writings, video, audio, photographs, graphics, comments, suggestions, or personal information or other material (collectively, \"Contributions\"). Contributions may be viewable by other users of the Services and through third-party websites. As such, any Contributions you transmit may be treated as non-confidential and non-proprietary. When you create or make available any Contributions, you thereby represent and warrant that:"
+            - generic [ref=f6e421]:
+              - list [ref=f6e422]:
+                - listitem [ref=f6e423]:
+                  - generic [ref=f6e424]: The creation, distribution, transmission, public display, or performance, and the accessing, downloading, or copying of your Contributions do not and will not infringe the proprietary rights, including but not limited to the copyright, patent, trademark, trade secret, or moral rights of any third party.
+                - listitem [ref=f6e426]:
+                  - generic [ref=f6e427]: You are the creator and owner of or have the necessary licenses, rights, consents, releases, and permissions to use and to authorize us, the Services, and other users of the Services to use your Contributions in any manner contemplated by the Services and these Legal Terms.
+                - listitem [ref=f6e430]:
+                  - generic [ref=f6e431]: You have the written consent, release, and/or permission of each and every identifiable individual person in your Contributions to use the name or likeness of each and every such identifiable individual person to enable inclusion and use of your Contributions in any manner contemplated by the Services and these Legal Terms.
+                - listitem [ref=f6e433]:
+                  - generic [ref=f6e434]: Your Contributions are not false, inaccurate, or misleading.
+                - listitem [ref=f6e436]:
+                  - generic [ref=f6e437]: Your Contributions are not unsolicited or unauthorized advertising, promotional materials, pyramid schemes, chain letters, spam, mass mailings, or other forms of solicitation.
+                - listitem [ref=f6e440]:
+                  - generic [ref=f6e441]: Your Contributions are not obscene, lewd, lascivious, filthy, violent, harassing, libelous, slanderous, or otherwise objectionable (as determined by us).
+                - listitem [ref=f6e444]:
+                  - generic [ref=f6e445]: Your Contributions do not ridicule, mock, disparage, intimidate, or abuse anyone.
+                - listitem [ref=f6e447]:
+                  - generic [ref=f6e448]: Your Contributions are not used to harass or threaten (in the legal sense of those terms) any other person and to promote violence against a specific person or class of people.
+                - listitem [ref=f6e450]:
+                  - generic [ref=f6e451]: Your Contributions do not violate any applicable law, regulation, or rule.
+                - listitem [ref=f6e453]:
+                  - generic [ref=f6e454]: Your Contributions do not violate the privacy or publicity rights of any third party.
+                - listitem [ref=f6e456]:
+                  - generic [ref=f6e457]: Your Contributions do not violate any applicable law concerning child pornography, or otherwise intended to protect the health or well-being of minors.
+                - listitem [ref=f6e459]:
+                  - generic [ref=f6e460]: Your Contributions do not include any offensive comments that are connected to race, national origin, gender, sexual preference, or physical handicap.
+                - listitem [ref=f6e462]:
+                  - generic [ref=f6e463]: Your Contributions do not otherwise violate, or link to material that violates, any provision of these Legal Terms, or any applicable law or regulation.
+              - generic [ref=f6e465]: Any use of the Services in violation of the foregoing violates these Legal Terms and may result in, among other things, termination or suspension of your rights to use the Services.
+          - strong [ref=f6e475]:
+            - heading "6. CONTRIBUTION LICENSE" [level=2] [ref=f6e477]
+          - generic [ref=f6e483]:
+            - text: By posting your Contributions to any part of the Services
+            - generic [ref=f6e484]: ", you automatically grant, and you represent and warrant that you have the right to grant, to us an unrestricted, unlimited, irrevocable, perpetual, non-exclusive, transferable, royalty-free, fully-paid, worldwide right, and license to host, use, copy, reproduce, disclose, sell, resell, publish, broadcast, retitle, archive, store, cache, publicly perform, publicly display, reformat, translate, transmit, excerpt (in whole or in part), and distribute such Contributions (including, without limitation, your image and voice) for any purpose, commercial, advertising, or otherwise, and to prepare derivative works of, or incorporate into other works, such Contributions, and grant and authorize sublicenses of the foregoing. The use and distribution may occur in any media formats and through any media channels."
+          - generic [ref=f6e486]: This license will apply to any form, media, or technology now known or hereafter developed, and includes our use of your name, company name, and franchise name, as applicable, and any of the trademarks, service marks, trade names, logos, and personal and commercial images you provide. You waive all moral rights in your Contributions, and you warrant that moral rights have not otherwise been asserted in your Contributions.
+          - generic [ref=f6e493]: We do not assert any ownership over your Contributions. You retain full ownership of all of your Contributions and any intellectual property rights or other proprietary rights associated with your Contributions. We are not liable for any statements or representations in your Contributions provided by you in any area on the Services. You are solely responsible for your Contributions to the Services and you expressly agree to exonerate us from any and all responsibility and to refrain from any legal action against us regarding your Contributions.
+          - generic [ref=f6e499]: We have the right, in our sole and absolute discretion, (1) to edit, redact, or otherwise change any Contributions; (2) to re-categorize any Contributions to place them in more appropriate locations on the Services; and (3) to pre-screen or delete any Contributions at any time and for any reason, without notice. We have no obligation to monitor your Contributions.
+        - strong [ref=f6e508]:
+          - heading "7. THIRD-PARTY WEBSITES AND CONTENT" [level=2] [ref=f6e509]
+        - generic [ref=f6e510]: The Services may contain (or you may be sent via the Site) links to other websites ("Third-Party Websites") as well as articles, photographs, text, graphics, pictures, designs, music, sound, video, information, applications, software, and other content or items belonging to or originating from third parties ("Third-Party Content"). Such Third-Party Websites and Third-Party Content are not investigated, monitored, or checked for accuracy, appropriateness, or completeness by us, and we are not responsible for any Third-Party Websites accessed through the Services or any Third-Party Content posted on, available through, or installed from the Services, including the content, accuracy, offensiveness, opinions, reliability, privacy practices, or other policies of or contained in the Third-Party Websites or the Third-Party Content. Inclusion of, linking to, or permitting the use or installation of any Third-Party Websites or any Third-Party Content does not imply approval or endorsement thereof by us. If you decide to leave the Services and access the Third-Party Websites or to use or install any Third-Party Content, you do so at your own risk, and you should be aware these Legal Terms no longer govern. You should review the applicable terms and policies, including privacy and data gathering practices, of any website to which you navigate from the Services or relating to any applications you use or install from the Services. Any purchases you make through Third-Party Websites will be through other websites and from other companies, and we take no responsibility whatsoever in relation to such purchases which are exclusively between you and the applicable third party. You agree and acknowledge that we do not endorse the products or services offered on Third-Party Websites and you shall hold us blameless from any harm caused by your purchase of such products or services. Additionally, you shall hold us blameless from any losses sustained by you or harm caused to you relating to or resulting in any way from any Third-Party Content or any contact with Third-Party Websites.
+        - strong [ref=f6e514]:
+          - heading "8. ADVERTISERS" [level=2] [ref=f6e515]
+        - generic [ref=f6e516]: We allow advertisers to display their advertisements and other information in certain areas of the Services, such as sidebar advertisements or banner advertisements. We simply provide the space to place such advertisements, and we have no other relationship with advertisers.
+        - strong [ref=f6e519]:
+          - heading "9. SERVICES MANAGEMENT" [level=2] [ref=f6e521]
+        - generic [ref=f6e522]: "We reserve the right, but not the obligation, to: (1) monitor the Services for violations of these Legal Terms; (2) take appropriate legal action against anyone who, in our sole discretion, violates the law or these Legal Terms, including without limitation, reporting such user to law enforcement authorities; (3) in our sole discretion and without limitation, refuse, restrict access to, limit the availability of, or disable (to the extent technologically feasible) any of your Contributions or any portion thereof; (4) in our sole discretion and without limitation, notice, or liability, to remove from the Services or otherwise disable all files and content that are excessive in size or are in any way burdensome to our systems; and (5) otherwise manage the Services in a manner designed to protect our rights and property and to facilitate the proper functioning of the Services."
+        - strong [ref=f6e525]:
+          - heading "10. PRIVACY POLICY" [level=2] [ref=f6e526]
+        - generic [ref=f6e528]:
+          - text: "We care about data privacy and security. Please review our Privacy Policy:"
+          - strong [ref=f6e529]:
+            - link "https://airplanes.live/privacy-policy" [ref=f6e532] [cursor=pointer]:
+              - /url: https://airplanes.live/privacy-policy
+          - text: . By using the Services, you agree to be bound by our Privacy Policy, which is incorporated into these Legal Terms. Please be advised the Services are hosted in the United States. If you access the Services from any other region of the world with laws or other requirements governing personal data collection, use, or disclosure that differ from applicable laws in
+          - generic [ref=f6e533]: the United States
+          - text: ", then through your continued use of the Services, you are transferring your data to"
+          - generic [ref=f6e534]: the United States
+          - text: ", and you expressly consent to have your data transferred to and processed in"
+          - generic [ref=f6e535]: the United States
+          - text: .
+        - strong [ref=f6e538]:
+          - heading "11. COPYRIGHT INFRINGEMENTS" [level=2] [ref=f6e540]
+        - generic [ref=f6e541]: We respect the intellectual property rights of others. If you believe that any material available on or through the Services infringes upon any copyright you own or control, please immediately notify us using the contact information provided below (a "Notification"). A copy of your Notification will be sent to the person who posted or stored the material addressed in the Notification. Please be advised that pursuant to applicable law you may be held liable for damages if you make material misrepresentations in a Notification. Thus, if you are not sure that material located on or linked to by the Services infringes your copyright, you should consider first contacting an attorney.
+        - strong [ref=f6e545]:
+          - heading "12. TERM AND TERMINATION" [level=2] [ref=f6e547]
+        - generic [ref=f6e549]:
+          - text: These Legal Terms shall remain in full force and effect while you use the Services. WITHOUT LIMITING ANY OTHER PROVISION OF THESE LEGAL TERMS, WE RESERVE THE RIGHT TO, IN OUR SOLE DISCRETION AND WITHOUT NOTICE OR LIABILITY, DENY ACCESS TO AND USE OF THE SERVICES (INCLUDING BLOCKING CERTAIN IP ADDRESSES), TO ANY PERSON FOR ANY REASON OR FOR NO REASON, INCLUDING WITHOUT LIMITATION FOR BREACH OF ANY REPRESENTATION, WARRANTY, OR COVENANT CONTAINED IN THESE LEGAL TERMS OR OF ANY APPLICABLE LAW OR REGULATION. WE MAY TERMINATE YOUR USE OR PARTICIPATION IN THE SERVICES OR DELETE
+          - generic [ref=f6e550]: ANY CONTENT OR INFORMATION THAT YOU POSTED AT ANY TIME, WITHOUT WARNING, IN OUR SOLE DISCRETION.
+        - generic [ref=f6e552]: If we terminate or suspend your account for any reason, you are prohibited from registering and creating a new account under your name, a fake or borrowed name, or the name of any third party, even if you may be acting on behalf of the third party. In addition to terminating or suspending your account, we reserve the right to take appropriate legal action, including without limitation pursuing civil, criminal, and injunctive redress.
+        - strong [ref=f6e555]:
+          - heading "13. MODIFICATIONS AND INTERRUPTIONS" [level=2] [ref=f6e557]
+        - generic [ref=f6e558]: We reserve the right to change, modify, or remove the contents of the Services at any time or for any reason at our sole discretion without notice. However, we have no obligation to update any information on our Services. We will not be liable to you or any third party for any modification, price change, suspension, or discontinuance of the Services.
+        - generic [ref=f6e561]: We cannot guarantee the Services will be available at all times. We may experience hardware, software, or other problems or need to perform maintenance related to the Services, resulting in interruptions, delays, or errors. We reserve the right to change, revise, update, suspend, discontinue, or otherwise modify the Services at any time or for any reason without notice to you. You agree that we have no liability whatsoever for any loss, damage, or inconvenience caused by your inability to access or use the Services during any downtime or discontinuance of the Services. Nothing in these Legal Terms will be construed to obligate us to maintain and support the Services or to supply any corrections, updates, or releases in connection therewith.
+        - strong [ref=f6e564]:
+          - heading "14. GOVERNING LAW" [level=2] [ref=f6e566]
+        - generic [ref=f6e568]:
+          - text: These Legal Terms and your use of the Services are governed by and construed in accordance with the laws of
+          - generic [ref=f6e569]: the State of Wyoming
+          - text: applicable to agreements made and to be entirely performed within
+          - generic [ref=f6e574]:
+            - generic [ref=f6e575]: the State of Wyoming
+            - text: ", without regard to its conflict of law principles."
+        - strong [ref=f6e580]:
+          - heading "15. DISPUTE RESOLUTION" [level=2] [ref=f6e582]
+        - strong [ref=f6e584]:
+          - heading "Binding Arbitration" [level=3] [ref=f6e585]
+        - generic [ref=f6e587]:
+          - text: If the Parties are unable to resolve a Dispute through informal negotiations, the Dispute (except those Disputes expressly excluded below) will be finally and exclusively resolved by binding arbitration. YOU UNDERSTAND THAT WITHOUT THIS PROVISION, YOU WOULD HAVE THE RIGHT TO SUE IN COURT AND HAVE A JURY TRIAL. The arbitration shall be commenced and conducted under the Commercial Arbitration Rules of the American Arbitration Association ("AAA") and, where appropriate, the AAA’s Supplementary Procedures for Consumer Related Disputes ("AAA Consumer Rules"), both of which are available at the
+          - link "American Arbitration Association (AAA) website" [ref=f6e589] [cursor=pointer]:
+            - /url: http://www.adr.org
+          - text: . Your arbitration fees and your share of arbitrator compensation shall be governed by the AAA Consumer Rules and, where appropriate, limited by the AAA Consumer Rules. If such costs are determined by the arbitrator to be excessive, we will pay all arbitration fees and expenses. The arbitration may be conducted in person, through the submission of documents, by phone, or online. The arbitrator will make a decision in writing, but need not provide a statement of reasons unless requested by either Party. The arbitrator must follow applicable law, and any award may be challenged if the arbitrator fails to do so. Except where otherwise required by the applicable AAA rules or applicable law, the arbitration will take place in Wyoming. Except as otherwise provided herein, the Parties may litigate in court to compel arbitration, stay proceedings pending arbitration, or to confirm, modify, vacate, or enter judgment on the award entered by the arbitrator.
+        - generic [ref=f6e591]:
+          - text: If for any reason, a Dispute proceeds in court rather than arbitration, the Dispute shall be commenced or prosecuted in the state and federal courts located in Sheridan, Wyoming
+          - generic [ref=f6e592]: ", and the Parties hereby consent to, and waive all defenses of lack of personal jurisdiction, and forum non conveniens with respect to venue and jurisdiction in such state and federal courts. Application of the United Nations Convention on Contracts for the International Sale of Goods and the Uniform Computer Information Transaction Act (UCITA) are excluded from these Legal Terms."
+        - generic [ref=f6e594]: In no event shall any Dispute brought by either Party related in any way to the Services be commenced more than one (1) years after the cause of action arose. If this provision is found to be illegal or unenforceable, then neither Party will elect to arbitrate any Dispute falling within that portion of this provision found to be illegal or unenforceable and such Dispute shall be decided by a court of competent jurisdiction within the courts listed for jurisdiction above, and the Parties agree to submit to the personal jurisdiction of that court.
+        - strong [ref=f6e597]:
+          - heading "Restrictions" [level=3] [ref=f6e598]
+        - generic [ref=f6e599]: The Parties agree that any arbitration shall be limited to the Dispute between the Parties individually. To the full extent permitted by law, (a) no arbitration shall be joined with any other proceeding; (b) there is no right or authority for any Dispute to be arbitrated on a class-action basis or to utilize class action procedures; and (c) there is no right or authority for any Dispute to be brought in a purported representative capacity on behalf of the general public or any other persons.
+        - strong [ref=f6e601]:
+          - heading "Exceptions to Arbitration" [level=3] [ref=f6e602]
+        - generic [ref=f6e603]: "The Parties agree that the following Disputes are not subject to the above provisions concerning binding arbitration: (a) any Disputes seeking to enforce or protect, or concerning the validity of, any of the intellectual property rights of a Party; (b) any Dispute related to, or arising from, allegations of theft, piracy, invasion of privacy, or unauthorized use; and (c) any claim for injunctive relief. If this provision is found to be illegal or unenforceable, then neither Party will elect to arbitrate any Dispute falling within that portion of this provision found to be illegal or unenforceable and such Dispute shall be decided by a court of competent jurisdiction within the courts listed for jurisdiction above, and the Parties agree to submit to the personal jurisdiction of that court."
+        - strong [ref=f6e606]:
+          - heading "16. CORRECTIONS" [level=2] [ref=f6e608]
+        - generic [ref=f6e609]: There may be information on the Services that contains typographical errors, inaccuracies, or omissions, including descriptions, pricing, availability, and various other information. We reserve the right to correct any errors, inaccuracies, or omissions and to change or update the information on the Services at any time, without prior notice.
+        - strong [ref=f6e613]:
+          - heading "17. DISCLAIMER" [level=2] [ref=f6e614]
+        - generic [ref=f6e615]: THE SERVICES ARE PROVIDED ON AN AS-IS AND AS-AVAILABLE BASIS. YOU AGREE THAT YOUR USE OF THE SERVICES WILL BE AT YOUR SOLE RISK. TO THE FULLEST EXTENT PERMITTED BY LAW, WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, IN CONNECTION WITH THE SERVICES AND YOUR USE THEREOF, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. WE MAKE NO WARRANTIES OR REPRESENTATIONS ABOUT THE ACCURACY OR COMPLETENESS OF THE SERVICES' CONTENT OR THE CONTENT OF ANY WEBSITES OR MOBILE APPLICATIONS LINKED TO THE SERVICES AND WE WILL ASSUME NO LIABILITY OR RESPONSIBILITY FOR ANY (1) ERRORS, MISTAKES, OR INACCURACIES OF CONTENT AND MATERIALS, (2) PERSONAL INJURY OR PROPERTY DAMAGE, OF ANY NATURE WHATSOEVER, RESULTING FROM YOUR ACCESS TO AND USE OF THE SERVICES, (3) ANY UNAUTHORIZED ACCESS TO OR USE OF OUR SECURE SERVERS AND/OR ANY AND ALL PERSONAL INFORMATION AND/OR FINANCIAL INFORMATION STORED THEREIN, (4) ANY INTERRUPTION OR CESSATION OF TRANSMISSION TO OR FROM THE SERVICES, (5) ANY BUGS, VIRUSES, TROJAN HORSES, OR THE LIKE WHICH MAY BE TRANSMITTED TO OR THROUGH THE SERVICES BY ANY THIRD PARTY, AND/OR (6) ANY ERRORS OR OMISSIONS IN ANY CONTENT AND MATERIALS OR FOR ANY LOSS OR DAMAGE OF ANY KIND INCURRED AS A RESULT OF THE USE OF ANY CONTENT POSTED, TRANSMITTED, OR OTHERWISE MADE AVAILABLE VIA THE SERVICES. WE DO NOT WARRANT, ENDORSE, GUARANTEE, OR ASSUME RESPONSIBILITY FOR ANY PRODUCT OR SERVICE ADVERTISED OR OFFERED BY A THIRD PARTY THROUGH THE SERVICES, ANY HYPERLINKED WEBSITE, OR ANY WEBSITE OR MOBILE APPLICATION FEATURED IN ANY BANNER OR OTHER ADVERTISING, AND WE WILL NOT BE A PARTY TO OR IN ANY WAY BE RESPONSIBLE FOR MONITORING ANY TRANSACTION BETWEEN YOU AND ANY THIRD-PARTY PROVIDERS OF PRODUCTS OR SERVICES. AS WITH THE PURCHASE OF A PRODUCT OR SERVICE THROUGH ANY MEDIUM OR IN ANY ENVIRONMENT, YOU SHOULD USE YOUR BEST JUDGMENT AND EXERCISE CAUTION WHERE APPROPRIATE.
+        - strong [ref=f6e619]:
+          - heading "18. LIMITATIONS OF LIABILITY" [level=2] [ref=f6e621]
+        - generic [ref=f6e622]:
+          - generic [ref=f6e623]:
+            - text: IN NO EVENT WILL WE OR OUR DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE TO YOU OR ANY THIRD PARTY FOR ANY DIRECT, INDIRECT, CONSEQUENTIAL, EXEMPLARY, INCIDENTAL, SPECIAL, OR PUNITIVE DAMAGES, INCLUDING LOST PROFIT, LOST REVENUE, LOSS OF DATA, OR OTHER DAMAGES ARISING FROM YOUR USE OF THE SERVICES, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+            - generic [ref=f6e627]:
+              - text: NOTWITHSTANDING ANYTHING TO THE CONTRARY CONTAINED HEREIN, OUR LIABILITY TO YOU FOR ANY CAUSE WHATSOEVER AND REGARDLESS OF THE FORM OF THE ACTION, WILL AT ALL TIMES BE LIMITED TO
+              - generic [ref=f6e628]:
+                - generic [ref=f6e629]: $1.00 USD
+                - generic [ref=f6e631]: .
+          - text: CERTAIN US STATE LAWS AND INTERNATIONAL LAWS DO NOT ALLOW LIMITATIONS ON IMPLIED WARRANTIES OR THE EXCLUSION OR LIMITATION OF CERTAIN DAMAGES. IF THESE LAWS APPLY TO YOU, SOME OR ALL OF THE ABOVE DISCLAIMERS OR LIMITATIONS MAY NOT APPLY TO YOU, AND YOU MAY HAVE ADDITIONAL RIGHTS.
+        - strong [ref=f6e634]:
+          - heading "19. INDEMNIFICATION" [level=2] [ref=f6e636]
+        - generic [ref=f6e638]:
+          - text: "You agree to defend, indemnify, and hold us harmless, including our subsidiaries, affiliates, and all of our respective officers, agents, partners, and employees, from and against any loss, damage, liability, claim, or demand, including reasonable attorneys’ fees and expenses, made by any third party due to or arising out of:"
+          - generic [ref=f6e639]: (1) your Contributions;
+          - text: (2) use of the Services; (3) breach of these Legal Terms; (4) any breach of your representations and warranties set forth in these Legal Terms; (5) your violation of the rights of a third party, including but not limited to intellectual property rights; or (6) any overt harmful act toward any other user of the Services with whom you connected via the Services. Notwithstanding the foregoing, we reserve the right, at your expense, to assume the exclusive defense and control of any matter for which you are required to indemnify us, and you agree to cooperate, at your expense, with our defense of such claims. We will use reasonable efforts to notify you of any such claim, action, or proceeding which is subject to this indemnification upon becoming aware of it.
+        - strong [ref=f6e643]:
+          - heading "20. USER DATA" [level=2] [ref=f6e645]
+        - generic [ref=f6e646]: We will maintain certain data that you transmit to the Services for the purpose of managing the performance of the Services, as well as data relating to your use of the Services. Although we perform regular routine backups of data, you are solely responsible for all data that you transmit or that relates to any activity you have undertaken using the Services. You agree that we shall have no liability to you for any loss or corruption of any such data, and you hereby waive any right of action against us arising from any such loss or corruption of such data.
+        - strong [ref=f6e649]:
+          - heading "21. ELECTRONIC COMMUNICATIONS, TRANSACTIONS, AND SIGNATURES" [level=2] [ref=f6e651]
+        - generic [ref=f6e652]: Visiting the Services, sending us emails, and completing online forms constitute electronic communications. You consent to receive electronic communications, and you agree that all agreements, notices, disclosures, and other communications we provide to you electronically, via email and on the Services, satisfy any legal requirement that such communication be in writing. YOU HEREBY AGREE TO THE USE OF ELECTRONIC SIGNATURES, CONTRACTS, ORDERS, AND OTHER RECORDS, AND TO ELECTRONIC DELIVERY OF NOTICES, POLICIES, AND RECORDS OF TRANSACTIONS INITIATED OR COMPLETED BY US OR VIA THE SERVICES. You hereby waive any rights or requirements under any statutes, regulations, rules, ordinances, or other laws in any jurisdiction which require an original signature or delivery or retention of non-electronic records, or to payments or the granting of credits by any means other than electronic means.
+        - strong [ref=f6e655]:
+          - heading "22. CALIFORNIA USERS AND RESIDENTS" [level=2] [ref=f6e657]
+        - generic [ref=f6e658]: If any complaint with us is not satisfactorily resolved, you can contact the Complaint Assistance Unit of the Division of Consumer Services of the California Department of Consumer Affairs in writing at 1625 North Market Blvd., Suite N 112, Sacramento, California 95834 or by telephone at (800) 952-5210 or (916) 445-1254.
+        - strong [ref=f6e661]:
+          - heading "23. MISCELLANEOUS" [level=2] [ref=f6e663]
+        - generic [ref=f6e664]: These Legal Terms and any policies or operating rules posted by us on the Services or in respect to the Services constitute the entire agreement and understanding between you and us. Our failure to exercise or enforce any right or provision of these Legal Terms shall not operate as a waiver of such right or provision. These Legal Terms operate to the fullest extent permissible by law. We may assign any or all of our rights and obligations to others at any time. We shall not be responsible or liable for any loss, damage, delay, or failure to act caused by any cause beyond our reasonable control. If any provision or part of a provision of these Legal Terms is determined to be unlawful, void, or unenforceable, that provision or part of the provision is deemed severable from these Legal Terms and does not affect the validity and enforceability of any remaining provisions. There is no joint venture, partnership, employment or agency relationship created between you and us as a result of these Legal Terms or use of the Services. You agree that these Legal Terms will not be construed against us by virtue of having drafted them. You hereby waive any and all defenses you may have based on the electronic form of these Legal Terms and the lack of signing by the parties hereto to execute these Legal Terms.
+        - strong [ref=f6e668]:
+          - heading "24. CONTACT US" [level=2] [ref=f6e671]
+        - generic [ref=f6e672]: "In order to resolve a complaint regarding the Services or to receive further information regarding use of the Services, please contact us at:"
+        - generic [ref=f6e676]:
+          - strong [ref=f6e678]: AirDG LLC
+          - strong
+        - strong [ref=f6e683]: 30 N Gould Street Ste R
+        - generic [ref=f6e685]:
+          - strong [ref=f6e686]:
+            - generic [ref=f6e687]:
+              - generic [ref=f6e688]: Sheridan
+              - text: ", WY 82801"
+          - strong
+        - generic [ref=f6e690]:
+          - strong [ref=f6e692]: United States
+          - strong:
+            - generic:
+              - generic:
+                - strong:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - strong
+                        - generic:
+                          - strong
+        - generic:
+          - strong:
+            - strong:
+              - strong:
+                - generic:
+                  - strong
+        - generic:
+          - strong:
+            - strong:
+              - generic:
+                - strong
+        - strong [ref=f6e694]:
+          - strong [ref=f6e696]:
+            - link "contact@airplanes.live" [ref=f6e699] [cursor=pointer]:
+              - /url: mailto:contact@airplanes.live
+  - 'combobox "Language Switcher: English" [ref=f6e701]':
+    - 'generic "Language selected: English" [ref=f6e702] [cursor=pointer]':
+      - generic "EN" [ref=f6e703]
+    - listbox "Language list":
+      - option "SV":
+        - link "SV":
+          - /url: "#"
+      - option "TR":
+        - link "TR":
+          - /url: "#"
+      - option "PT-BR":
+        - link "PT-BR":
+          - /url: "#"
+      - option "NB":
+        - link "NB":
+          - /url: "#"
+      - option "PL":
+        - link "PL":
+          - /url: "#"
+      - option "HU":
+        - link "HU":
+          - /url: "#"
+      - option "PT":
+        - link "PT":
+          - /url: "#"
+      - option "DE":
+        - link "DE":
+          - /url: "#"
+      - option "NO":
+        - link "NO":
+          - /url: "#"
+      - option "FI":
+        - link "FI":
+          - /url: "#"
+      - option "DA":
+        - link "DA":
+          - /url: "#"
+      - option "NL":
+        - link "NL":
+          - /url: "#"
+      - option "EL":
+        - link "EL":
+          - /url: "#"
+      - option "IT":
+        - link "IT":
+          - /url: "#"
+      - option "FR":
+        - link "FR":
+          - /url: "#"
+      - option "ES":
+        - link "ES":
+          - /url: "#"

@@ -1,0 +1,11 @@
+[     952ms] [LOG] %craven%c Raven v1.25.2-sydwjj background-color:#000;margin-left:1px;padding:1px 3px;font-size:0.75em;color:#ffffff; font-size:0.9em; @ https://raven-static.aditude.io/prod/1.25.2-sydwjj/raven.js:1
+[    4415ms] [INFO] [PPID PATCH] setPublisherProvidedId patched @ https://static.anonymised.io/light/loader.js?ref=aps&d=www.flightradar24.com:0
+[    4415ms] [INFO] [REFRESH PATCH] pubads.refresh patched @ https://static.anonymised.io/light/loader.js?ref=aps&d=www.flightradar24.com:0
+[    4416ms] [WARNING] [GPT] PubAdsService.setTargeting is deprecated, use googletag.setConfig({targeting: ...}) instead.
+https://goo.gle/gpt-message#170 @ https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202610200101/pubads_impl.js?cb=122881774:22
+[    4655ms] [INFO] [PPID PATCH] Blocking PPID because no identifier is available {original: 799d7e63f7b14afda574e901a28af8e2} @ https://static.anonymised.io/light/loader.js?ref=aps&d=www.flightradar24.com:0
+[    4656ms] [INFO] [PPID PATCH] Blocking PPID because no identifier is available {original: 799d7e63f7b14afda574e901a28af8e2} @ https://static.anonymised.io/light/loader.js?ref=aps&d=www.flightradar24.com:0
+[    5248ms] [LOG] Starting 3pc test @ https://static.anonm.io/light/check3pc.html:10
+[    5248ms] [LOG] 3PC enabled: true @ https://static.anonm.io/light/check3pc.html:33
+[    5248ms] [LOG] Storage API: cookie access granted @ https://static.anonm.io/light/check3pc.html:16
+[    6608ms] [INFO] [PPID PATCH] Injecting CUID as PPID (Tier 2) {original: 01fbc05b-bf60-463d-9d52-0dd0f610f2fd, injected: 01fbc05b-bf60-463d-9d52-0dd0f610f2fd} @ https://static.anonymised.io/light/loader.js?ref=aps&d=www.flightradar24.com:0

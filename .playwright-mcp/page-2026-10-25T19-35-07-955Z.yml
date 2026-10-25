@@ -1,0 +1,491 @@
+- generic [active] [ref=f78e1]:
+  - link "Skip to content" [ref=f78e2] [cursor=pointer]:
+    - /url: "#main"
+  - navigation "Main" [ref=f78e3]:
+    - generic [ref=f78e4]:
+      - link "FlyItalyADSB" [ref=f78e5] [cursor=pointer]:
+        - /url: /en/
+      - generic [ref=f78e7]:
+        - link "Map ↗" [ref=f78e8] [cursor=pointer]:
+          - /url: https://mappa.flyitalyadsb.com
+        - link "Airports" [ref=f78e9] [cursor=pointer]:
+          - /url: /en/airports/
+        - link "Aircraft" [ref=f78e10] [cursor=pointer]:
+          - /url: /en/aircraft/
+        - link "Data" [ref=f78e12] [cursor=pointer]:
+          - /url: /en/data/
+        - link "Network" [ref=f78e16] [cursor=pointer]:
+          - /url: /en/network/
+        - link "Research" [ref=f78e20] [cursor=pointer]:
+          - /url: /en/research/
+        - link "About" [ref=f78e24] [cursor=pointer]:
+          - /url: /en/about/
+        - 'link "Status : All systems operational" [ref=f78e27] [cursor=pointer]':
+          - /url: /en/status/
+          - text: Status
+          - generic [ref=f78e29]: ": All systems operational"
+        - link "API & MCP" [ref=f78e30] [cursor=pointer]:
+          - /url: /en/data/api/
+        - link "Italiano" [ref=f78e31] [cursor=pointer]:
+          - /url: /dati/api/
+          - text: IT
+  - main [ref=f78e32]:
+    - generic [ref=f78e33]:
+      - generic [ref=f78e34]:
+        - generic [ref=f78e35]:
+          - paragraph [ref=f78e36]:
+            - link "Data" [ref=f78e37] [cursor=pointer]:
+              - /url: /en/data/
+            - text: / REST API
+          - heading "The map’s aircraft, as JSON" [level=1] [ref=f78e38]
+          - paragraph [ref=f78e39]: "The REST API gives you the same data as the live map: every aircraft the network sees right now, anywhere in the world, with track history, overflights of a place and notable traffic. The key is free and arrives in seconds, commercial use included."
+          - generic [ref=f78e40]:
+            - link "Free key" [ref=f78e41] [cursor=pointer]:
+              - /url: "#api-key"
+            - link "Documentation" [ref=f78e42] [cursor=pointer]:
+              - /url: /en/data/api/docs/
+        - figure "The live map over Rome, 22 October 2026. The request at the bottom returns the aircraft within 50 km of Fiumicino as JSON. Map © OpenStreetMap contributors." [ref=f78e43]:
+          - generic [ref=f78e44]:
+            - img "The FlyItalyADSB live map over Rome and Lazio, with aircraft coloured by altitude." [ref=f78e46]
+            - code [ref=f78e47]: GET /v2/lat/41.80/lon/12.25/dist/50
+      - generic [ref=f78e50]:
+        - generic [ref=f78e51]:
+          - generic [ref=f78e52]: base url
+          - generic [ref=f78e53]: api.flyitalyadsb.com/v2
+        - generic [ref=f78e54]:
+          - generic [ref=f78e55]: auth
+          - generic [ref=f78e56]: X-Api-Key
+        - generic [ref=f78e57]:
+          - generic [ref=f78e58]: format
+          - generic [ref=f78e59]: readsb JSON
+        - generic [ref=f78e60]:
+          - generic [ref=f78e61]: plans
+          - generic [ref=f78e62]: free · from €9
+      - navigation "Page index" [ref=f78e63]:
+        - link "Quickstart" [ref=f78e64] [cursor=pointer]:
+          - /url: "#quickstart"
+        - link "Endpoints" [ref=f78e65] [cursor=pointer]:
+          - /url: "#rest-api"
+        - link "Plans" [ref=f78e66] [cursor=pointer]:
+          - /url: "#piani"
+        - link "Free key" [ref=f78e67] [cursor=pointer]:
+          - /url: "#api-key"
+        - link "AI agents" [ref=f78e68] [cursor=pointer]:
+          - /url: "#ai-agents"
+        - link "FAQ" [ref=f78e69] [cursor=pointer]:
+          - /url: "#faq"
+        - link "Documentation" [ref=f78e70] [cursor=pointer]:
+          - /url: "#documentation"
+      - generic [ref=f78e71]:
+        - heading "Quickstart" [level=2] [ref=f78e72]
+        - generic [ref=f78e73]:
+          - list [ref=f78e74]:
+            - listitem [ref=f78e75]:
+              - heading "Get a key" [level=3] [ref=f78e76]
+              - paragraph [ref=f78e77]:
+                - text: Enter your email in the
+                - link "form below" [ref=f78e78] [cursor=pointer]:
+                  - /url: "#api-key"
+                - text: ": you get a link that shows the key once. No approval."
+            - listitem [ref=f78e79]:
+              - heading "Make your first request" [level=3] [ref=f78e80]
+              - paragraph [ref=f78e81]:
+                - text: Every aircraft within 50 km of Rome Fiumicino, with the key in the
+                - code [ref=f78e82]: X-Api-Key
+                - text: header.
+            - listitem [ref=f78e83]:
+              - heading "Read the answer" [level=3] [ref=f78e84]
+              - paragraph [ref=f78e85]:
+                - code [ref=f78e86]: now
+                - text: in Unix seconds,
+                - code [ref=f78e87]: count
+                - text: and
+                - code [ref=f78e88]: ac
+                - text: ": one record per aircraft in readsb’s format, the same as tar1090 and adsb.lol. Altitudes in feet, speeds in knots, radius in km:"
+                - link "fields and units" [ref=f78e89] [cursor=pointer]:
+                  - /url: /en/data/api/docs/fields/
+                - text: .
+            - listitem [ref=f78e90]:
+              - link "The same in Python and JavaScript" [ref=f78e91] [cursor=pointer]:
+                - /url: /en/data/api/docs/quickstart/
+          - generic [ref=f78e92]:
+            - generic [ref=f78e93]:
+              - generic [ref=f78e94]: Request
+              - button "Copy" [ref=f78e95] [cursor=pointer]
+            - code [ref=f78e97]: "curl -H \"X-Api-Key: YOUR_KEY\" \\ https://api.flyitalyadsb.com/v2/lat/41.80/lon/12.25/dist/50"
+            - generic [ref=f78e98]: Response, shortened, with sample values
+            - code [ref=f78e101]: "{ \"now\": 1792670400.1, \"count\": 37, \"ac\": [ { \"hex\": \"4ca7b5\", \"flight\": \"RYR42KD \", \"r\": \"EI-ABC\", \"t\": \"B738\", \"lat\": 41.83, \"lon\": 12.31, \"alt_baro\": 7225, \"gs\": 251.4, \"track\": 293.1, \"squawk\": \"4361\", \"seen_pos\": 0.6 }, … ] }"
+      - generic [ref=f78e102]:
+        - heading "Endpoints" [level=2] [ref=f78e103]
+        - paragraph [ref=f78e104]:
+          - text: Base URL
+          - code [ref=f78e105]: https://api.flyitalyadsb.com/v2
+          - text: ": JSON responses and the key in the"
+          - code [ref=f78e106]: X-Api-Key
+          - text: header. The full spec is
+          - link "openapi.json" [ref=f78e107] [cursor=pointer]:
+            - /url: /openapi.json
+          - text: .
+        - generic [ref=f78e108]:
+          - generic [ref=f78e109]:
+            - generic [ref=f78e110]:
+              - heading "Aircraft right now" [level=3] [ref=f78e111]
+              - link "Documentation" [ref=f78e112] [cursor=pointer]:
+                - /url: /en/data/api/docs/endpoints/
+            - table [ref=f78e113]:
+              - rowgroup [ref=f78e114]:
+                - row [ref=f78e115]:
+                  - 'cell "GET /icao/{hex}" [ref=f78e116]':
+                    - generic [ref=f78e117]: GET
+                    - text: "/icao/{hex}"
+                  - cell "One aircraft by 24-bit ICAO address." [ref=f78e118]
+                - row [ref=f78e119]:
+                  - 'cell "GET /callsign/{callsign}" [ref=f78e120]':
+                    - generic [ref=f78e121]: GET
+                    - text: "/callsign/{callsign}"
+                  - cell "One aircraft by callsign (flight number)." [ref=f78e122]
+                - row [ref=f78e123]:
+                  - 'cell "GET /reg/{reg}" [ref=f78e124]':
+                    - generic [ref=f78e125]: GET
+                    - text: "/reg/{reg}"
+                  - cell "One aircraft by registration." [ref=f78e126]
+                - row [ref=f78e127]:
+                  - 'cell "GET /lat/{lat}/lon/{lon}/dist/{km}" [ref=f78e128]':
+                    - generic [ref=f78e129]: GET
+                    - text: "/lat/{lat}/lon/{lon}/dist/{km}"
+                  - cell "Every aircraft within km kilometres of a point, anywhere in the world, with full records." [ref=f78e130]
+                - row [ref=f78e131]:
+                  - cell "GET /mil" [ref=f78e132]:
+                    - generic [ref=f78e133]: GET
+                    - text: /mil
+                  - cell "Military traffic seen now." [ref=f78e134]
+                - row [ref=f78e135]:
+                  - cell "GET /pia" [ref=f78e136]:
+                    - generic [ref=f78e137]: GET
+                    - text: /pia
+                  - cell "Aircraft with a Privacy ICAO Address (PIA)." [ref=f78e138]
+                - row [ref=f78e139]:
+                  - cell "GET /ladd" [ref=f78e140]:
+                    - generic [ref=f78e141]: GET
+                    - text: /ladd
+                  - cell "Aircraft in the FAA LADD program." [ref=f78e142]
+          - generic [ref=f78e143]:
+            - generic [ref=f78e144]:
+              - heading "One aircraft" [level=3] [ref=f78e145]
+              - link "Documentation" [ref=f78e146] [cursor=pointer]:
+                - /url: /en/data/api/docs/endpoints/#aircraft-profile
+            - table [ref=f78e147]:
+              - rowgroup [ref=f78e148]:
+                - row [ref=f78e149]:
+                  - 'cell "GET /profile/{icao}" [ref=f78e150]':
+                    - generic [ref=f78e151]: GET
+                    - text: "/profile/{icao}"
+                  - 'cell "In one request: identity, whether and where we see it now, first and last day in the history, map and photo links. Never owner names." [ref=f78e152]'
+          - generic [ref=f78e153]:
+            - generic [ref=f78e154]:
+              - heading "History" [level=3] [ref=f78e155]
+              - link "Documentation" [ref=f78e156] [cursor=pointer]:
+                - /url: /en/data/api/docs/history/
+            - table [ref=f78e157]:
+              - rowgroup [ref=f78e158]:
+                - row [ref=f78e159]:
+                  - 'cell "GET /history/{icao}" [ref=f78e160]':
+                    - generic [ref=f78e161]: GET
+                    - text: "/history/{icao}"
+                  - cell "The dates with a track for one aircraft, since 2022." [ref=f78e162]
+                - row [ref=f78e163]:
+                  - 'cell "GET /history/{icao}/{date}" [ref=f78e164]':
+                    - generic [ref=f78e165]: GET
+                    - text: "/history/{icao}/{date}"
+                  - 'cell "One day’s track: position, altitude, speed and heading." [ref=f78e166]'
+                - row [ref=f78e167]:
+                  - cell "GET /overflights?lat=&lon=&dist=&from=&to=" [ref=f78e168]:
+                    - generic [ref=f78e169]: GET
+                    - text: /overflights?lat=&lon=&dist=&from=&to=
+                  - cell "The aircraft that passed within dist km of a point between two times, with the time of the closest point. Since 17 August 2026." [ref=f78e170]
+          - generic [ref=f78e171]:
+            - generic [ref=f78e172]:
+              - heading "Notable traffic and alerts" [level=3] [ref=f78e173]
+              - link "Documentation" [ref=f78e174] [cursor=pointer]:
+                - /url: /en/data/api/docs/alerts/
+            - table [ref=f78e175]:
+              - rowgroup [ref=f78e176]:
+                - row [ref=f78e177]:
+                  - cell "GET /events?lat=&lon=&dist=" [ref=f78e178]:
+                    - generic [ref=f78e179]: GET
+                    - text: /events?lat=&lon=&dist=
+                  - cell "Emergencies (7500, 7600, 7700), military and other notable aircraft recorded in an area, up to 7 days back." [ref=f78e180]
+                - row [ref=f78e181]:
+                  - cell "POST /webhooks" [ref=f78e182]:
+                    - generic [ref=f78e183]: POST
+                    - text: /webhooks
+                  - cell "The same events pushed to your URL, signed with Standard Webhooks (HMAC-SHA256). paid plans" [ref=f78e184]:
+                    - text: The same events pushed to your URL, signed with Standard Webhooks (HMAC-SHA256).
+                    - generic [ref=f78e185]: paid plans
+        - paragraph [ref=f78e186]:
+          - text: "Free plan: 30 requests/minute per key, 300,000 a month and a radius up to 500 km from 27 October 2026 (until then 100 requests/minute per IP); paid plans have their own per-key limits, see the"
+          - link "plans" [ref=f78e187] [cursor=pointer]:
+            - /url: "#piani"
+          - text: . Requests without
+          - code [ref=f78e188]: X-Api-Key
+          - text: are rejected at the edge.
+        - paragraph [ref=f78e189]:
+          - text: "Commercial use is allowed on every plan within its limits, inside apps and devices you sell too. Reselling the data as an API or feed for others, an SLA or volume beyond Business need an enterprise agreement:"
+          - link "contact us" [ref=f78e190] [cursor=pointer]:
+            - /url: /en/contact/
+          - text: .
+      - generic [ref=f78e191]:
+        - heading "Plans" [level=2] [ref=f78e192]
+        - paragraph [ref=f78e193]: "FlyItalyADSB is a community: the map and the Free plan stay free, commercial use included, within their limits. Paid plans are for heavy API users and help cover the cost of servers and bandwidth, so they include no SLA and no guaranteed response times. Your key never changes: a paid plan raises the limits of the key you already have."
+        - generic [ref=f78e194]:
+          - generic [ref=f78e195]:
+            - generic [ref=f78e196]: Free
+            - generic [ref=f78e198]: €0/month
+            - paragraph [ref=f78e201]: "Projects, displays, prototypes: commercial too"
+            - list [ref=f78e202]:
+              - listitem [ref=f78e203]: 30 requests/min per key
+              - listitem [ref=f78e204]: 300,000 requests/month
+              - listitem [ref=f78e205]: radius up to 500 km
+            - link "Free key ↓" [ref=f78e207] [cursor=pointer]:
+              - /url: "#api-key"
+          - generic [ref=f78e208]:
+            - generic [ref=f78e209]: Starter
+            - generic [ref=f78e211]: €9/month
+            - generic [ref=f78e213]: + tax
+            - paragraph [ref=f78e214]: Small apps and products
+            - list [ref=f78e215]:
+              - listitem [ref=f78e216]: 60 requests/min per key
+              - listitem [ref=f78e217]: 1,000,000 requests/month
+              - listitem [ref=f78e218]: radius up to 1,000 km
+            - button "Choose Starter" [ref=f78e220]
+          - generic [ref=f78e221]:
+            - generic [ref=f78e222]: Pro
+            - generic [ref=f78e224]: €49/month
+            - generic [ref=f78e226]: + tax
+            - paragraph [ref=f78e227]: Production services
+            - list [ref=f78e228]:
+              - listitem [ref=f78e229]: 300 requests/min per key
+              - listitem [ref=f78e230]: 10,000,000 requests/month
+              - listitem [ref=f78e231]: worldwide radius
+            - button "Choose Pro" [ref=f78e233]
+          - generic [ref=f78e234]:
+            - generic [ref=f78e235]: Business
+            - generic [ref=f78e237]: €249/month
+            - generic [ref=f78e239]: + tax
+            - paragraph [ref=f78e240]: High volume
+            - list [ref=f78e241]:
+              - listitem [ref=f78e242]: 1,000 requests/min per key
+              - listitem [ref=f78e243]: 50,000,000 requests/month
+              - listitem [ref=f78e244]: worldwide radius
+            - button "Choose Business" [ref=f78e246]
+        - generic [ref=f78e247]:
+          - generic [ref=f78e248]:
+            - paragraph [ref=f78e249]: Do you run a receiver that feeds the network?
+            - paragraph [ref=f78e250]: Pro limits for free on your Free keys, for non-commercial use.
+          - link "Turn them on in My API →" [ref=f78e251] [cursor=pointer]:
+            - /url: /en/data/api/account/
+        - paragraph [ref=f78e252]: Free-plan limits apply from 27 October 2026; until then a Free key stays at 100 requests/minute per IP.
+        - paragraph [ref=f78e253]:
+          - text: Reselling the data as an API or feed for other people's products, an SLA or volume beyond Business need an enterprise agreement —
+          - link "get in touch" [ref=f78e254] [cursor=pointer]:
+            - /url: /en/contact/
+          - text: .
+      - generic [ref=f78e255]:
+        - heading "Get an API key" [level=2] [ref=f78e256]
+        - paragraph [ref=f78e257]:
+          - text: The REST API and the MCP server share the same key, in the
+          - code [ref=f78e258]: X-Api-Key
+          - text: "header. Instant and free: enter an email and you get a link that shows the key once (the key itself never travels by email). Requesting again with the same email keeps the old key working until you open the new link, then the new key replaces it: that’s also how to recover a lost key. Already have a key? See its plan and usage, or rotate it, from"
+          - link "My API" [ref=f78e259] [cursor=pointer]:
+            - /url: /en/data/api/account/
+          - text: .
+        - generic [ref=f78e260]:
+          - generic [ref=f78e261]:
+            - generic [ref=f78e262]:
+              - generic [ref=f78e263]: Email
+              - textbox "Email" [ref=f78e264]:
+                - /placeholder: you@example.com
+            - generic [ref=f78e265]:
+              - generic [ref=f78e266]: Name or project (optional)
+              - textbox "Name or project (optional)" [ref=f78e267]
+          - generic [ref=f78e268]:
+            - generic [ref=f78e269]: What will you use it for? (optional)
+            - textbox "What will you use it for? (optional)" [ref=f78e270]
+          - generic [ref=f78e271]:
+            - button "Email me the link" [ref=f78e272] [cursor=pointer]
+            - status
+          - paragraph [ref=f78e273]: "If this email already has a free key, it keeps working until you open the link: from then on the new one replaces it."
+      - generic [ref=f78e274]:
+        - link [aria-hidden] [ref=f78e276] [cursor=pointer]:
+          - /url: /en/data/mcp/
+        - generic [ref=f78e278]:
+          - heading "Using Claude or ChatGPT?" [level=2] [ref=f78e279]
+          - paragraph [ref=f78e280]: "The MCP server gives the same data in the chat: ask which aircraft are over a place and the answer comes with an interactive map in the conversation. Same key and same limits as the REST API."
+          - link "MCP server and AI agents" [ref=f78e281] [cursor=pointer]:
+            - /url: /en/data/mcp/
+      - generic [ref=f78e282]:
+        - heading "Frequently asked questions" [level=2] [ref=f78e283]
+        - generic [ref=f78e284]:
+          - group [ref=f78e285]:
+            - generic "Do I need an API key?" [ref=f78e286] [cursor=pointer]
+          - group [ref=f78e289]:
+            - generic "How do payment and cancellation work?" [ref=f78e290] [cursor=pointer]
+          - group [ref=f78e293]:
+            - generic "Is there an SLA? How fast do you reply?" [ref=f78e294] [cursor=pointer]
+          - group [ref=f78e297]:
+            - generic "Can I use the API commercially?" [ref=f78e298] [cursor=pointer]
+          - group [ref=f78e301]:
+            - generic "Can I put the key in an app or a device I sell? And use it from my server?" [ref=f78e302] [cursor=pointer]
+          - group [ref=f78e305]:
+            - generic "Where does the data come from?" [ref=f78e306] [cursor=pointer]
+          - group [ref=f78e309]:
+            - generic "How fresh are the positions?" [ref=f78e310] [cursor=pointer]
+          - group [ref=f78e313]:
+            - generic "Which fields does a response have? Is the flight route included?" [ref=f78e314] [cursor=pointer]
+          - group [ref=f78e317]:
+            - generic "Can I get every aircraft in an area in a single request?" [ref=f78e318] [cursor=pointer]
+          - group [ref=f78e321]:
+            - generic "Is the network limited to Italy?" [ref=f78e322] [cursor=pointer]
+          - group [ref=f78e325]:
+            - generic "How does this compare to other open ADS-B APIs (adsb.fi, airplanes.live, adsb.lol...)?" [ref=f78e326] [cursor=pointer]
+          - group [ref=f78e329]:
+            - generic "Which aircraft flew over a place at a given time?" [ref=f78e330] [cursor=pointer]
+          - group [ref=f78e333]:
+            - generic "Can I get a profile of one aircraft, with a photo?" [ref=f78e334] [cursor=pointer]
+          - group [ref=f78e337]:
+            - 'generic "I run a receiver that feeds the network: do I get anything?" [ref=f78e338] [cursor=pointer]'
+        - paragraph [ref=f78e341]:
+          - link "All frequently asked questions" [ref=f78e342] [cursor=pointer]:
+            - /url: /en/faq/
+      - generic [ref=f78e343]:
+        - heading "Documentation" [level=2] [ref=f78e344]
+        - paragraph [ref=f78e345]: Everything you need to use the API, page by page.
+        - list [ref=f78e346]:
+          - listitem [ref=f78e347]:
+            - link "Quickstart From a free key to your first FlyItalyADSB API response in two minutes, with curl, Python and JavaScript." [ref=f78e348] [cursor=pointer]:
+              - /url: /en/data/api/docs/quickstart/
+              - generic [ref=f78e349]: Quickstart
+              - generic [ref=f78e350]: From a free key to your first FlyItalyADSB API response in two minutes, with curl, Python and JavaScript.
+          - listitem [ref=f78e351]:
+            - 'link "Authentication An API key in X-Api-Key, OAuth for AI assistants, and agent registration with auth.md: how to get and manage access to the FlyItalyADSB API." [ref=f78e352] [cursor=pointer]':
+              - /url: /en/data/api/docs/authentication/
+              - generic [ref=f78e353]: Authentication
+              - generic [ref=f78e354]: "An API key in X-Api-Key, OAuth for AI assistants, and agent registration with auth.md: how to get and manage access to the FlyItalyADSB API."
+          - listitem [ref=f78e355]:
+            - 'link "Endpoints Every FlyItalyADSB REST API v2 endpoint: aircraft by hex, callsign or registration, within a radius, military, PIA, LADD, history, profile, overflights." [ref=f78e356] [cursor=pointer]':
+              - /url: /en/data/api/docs/endpoints/
+              - generic [ref=f78e357]: Endpoints
+              - generic [ref=f78e358]: "Every FlyItalyADSB REST API v2 endpoint: aircraft by hex, callsign or registration, within a radius, military, PIA, LADD, history, profile, overflights."
+          - listitem [ref=f78e359]:
+            - 'link "Fields and units An aircraft''s fields in the API (readsb aircraft.json) and their units: altitude in feet or \"ground\", speed in knots, dbFlags, seen_pos, position source." [ref=f78e360] [cursor=pointer]':
+              - /url: /en/data/api/docs/fields/
+              - generic [ref=f78e361]: Fields and units
+              - generic [ref=f78e362]: "An aircraft's fields in the API (readsb aircraft.json) and their units: altitude in feet or \"ground\", speed in knots, dbFlags, seen_pos, position source."
+          - listitem [ref=f78e363]:
+            - link "Limits and errors API limits per plan (per minute, per month, radius), how they're counted, the X-FIA-* headers, and what to do about 400-429 errors and Cloudflare blocks." [ref=f78e364] [cursor=pointer]:
+              - /url: /en/data/api/docs/limits-and-errors/
+              - generic [ref=f78e365]: Limits and errors
+              - generic [ref=f78e366]: API limits per plan (per minute, per month, radius), how they're counted, the X-FIA-* headers, and what to do about 400-429 errors and Cloudflare blocks.
+          - listitem [ref=f78e367]:
+            - 'link "History ADS-B history via the API: an aircraft''s dates with a track, one day''s track, aircraft that flew over a place, coverage since 2022, and what''s missing." [ref=f78e368] [cursor=pointer]':
+              - /url: /en/data/api/docs/history/
+              - generic [ref=f78e369]: History
+              - generic [ref=f78e370]: "ADS-B history via the API: an aircraft's dates with a track, one day's track, aircraft that flew over a place, coverage since 2022, and what's missing."
+          - listitem [ref=f78e371]:
+            - link "Alerts and notable traffic Notable traffic with /v2/events (emergencies, military and notable aircraft by area) and signed webhooks for push alerts, checked in Python and JavaScript." [ref=f78e372] [cursor=pointer]:
+              - /url: /en/data/api/docs/alerts/
+              - generic [ref=f78e373]: Alerts and notable traffic
+              - generic [ref=f78e374]: Notable traffic with /v2/events (emergencies, military and notable aircraft by area) and signed webhooks for push alerts, checked in Python and JavaScript.
+          - listitem [ref=f78e375]:
+            - 'link "MCP server The MCP server at flyitalyadsb.com/mcp: its tools, “near me”, how to connect Claude, Claude Code and other clients, and how requests are counted." [ref=f78e376] [cursor=pointer]':
+              - /url: /en/data/api/docs/mcp/
+              - generic [ref=f78e377]: MCP server
+              - generic [ref=f78e378]: "The MCP server at flyitalyadsb.com/mcp: its tools, “near me”, how to connect Claude, Claude Code and other clients, and how requests are counted."
+          - listitem [ref=f78e379]:
+            - 'link "Commercial use The FlyItalyADSB API in apps and devices you sell: one key per product, caching on your server, the right plan, CC BY-SA 4.0 attribution, enterprise terms." [ref=f78e380] [cursor=pointer]':
+              - /url: /en/data/api/docs/commercial-use/
+              - generic [ref=f78e381]: Commercial use
+              - generic [ref=f78e382]: "The FlyItalyADSB API in apps and devices you sell: one key per product, caching on your server, the right plan, CC BY-SA 4.0 attribution, enterprise terms."
+          - listitem [ref=f78e383]:
+            - 'link "Changelog What''s new in the FlyItalyADSB REST API and MCP server, newest first: endpoints, tools, limits and fixes, each with its date." [ref=f78e384] [cursor=pointer]':
+              - /url: /en/data/api/docs/changelog/
+              - generic [ref=f78e385]: Changelog
+              - generic [ref=f78e386]: "What's new in the FlyItalyADSB REST API and MCP server, newest first: endpoints, tools, limits and fixes, each with its date."
+  - contentinfo [ref=f78e387]:
+    - generic [ref=f78e388]:
+      - generic [ref=f78e389]:
+        - generic [ref=f78e390]:
+          - generic [ref=f78e391]: FlyItalyADSB
+          - paragraph [ref=f78e393]: Open ADS-B data, global network born in Italy, our own MLAT. A community network.
+        - generic [ref=f78e394]:
+          - generic [ref=f78e395]: Data
+          - list [ref=f78e396]:
+            - listitem [ref=f78e397]:
+              - link "About our data" [ref=f78e398] [cursor=pointer]:
+                - /url: /en/data/
+            - listitem [ref=f78e399]:
+              - link "Airports" [ref=f78e400] [cursor=pointer]:
+                - /url: /en/airports/
+            - listitem [ref=f78e401]:
+              - link "Aircraft types" [ref=f78e402] [cursor=pointer]:
+                - /url: /en/aircraft/
+            - listitem [ref=f78e403]:
+              - link "Archive" [ref=f78e404] [cursor=pointer]:
+                - /url: /en/data/archive/
+            - listitem [ref=f78e405]:
+              - link "REST API" [ref=f78e406] [cursor=pointer]:
+                - /url: /en/data/api/
+            - listitem [ref=f78e407]:
+              - link "MCP and AI agents" [ref=f78e408] [cursor=pointer]:
+                - /url: /en/data/mcp/
+            - listitem [ref=f78e409]:
+              - link "API documentation" [ref=f78e410] [cursor=pointer]:
+                - /url: /en/data/api/docs/
+            - listitem [ref=f78e411]:
+              - link "FAQ" [ref=f78e412] [cursor=pointer]:
+                - /url: /en/faq/
+        - generic [ref=f78e413]:
+          - generic [ref=f78e414]: Community
+          - list [ref=f78e415]:
+            - listitem [ref=f78e416]:
+              - link "The network" [ref=f78e417] [cursor=pointer]:
+                - /url: /en/network/
+            - listitem [ref=f78e418]:
+              - link "Become a feeder" [ref=f78e419] [cursor=pointer]:
+                - /url: /en/community/feeder/
+            - listitem [ref=f78e420]:
+              - link "Is my data arriving?" [ref=f78e421] [cursor=pointer]:
+                - /url: /en/community/feeder-status/
+            - listitem [ref=f78e422]:
+              - link "How MLAT works" [ref=f78e423] [cursor=pointer]:
+                - /url: /en/community/mlat/
+            - listitem [ref=f78e424]:
+              - link "Research" [ref=f78e425] [cursor=pointer]:
+                - /url: /en/research/
+        - generic [ref=f78e426]:
+          - generic [ref=f78e427]: Project
+          - list [ref=f78e428]:
+            - listitem [ref=f78e429]:
+              - link "About" [ref=f78e430] [cursor=pointer]:
+                - /url: /en/about/
+            - listitem [ref=f78e431]:
+              - link "Contact us" [ref=f78e432] [cursor=pointer]:
+                - /url: /en/contact/
+            - listitem [ref=f78e433]:
+              - link "Service status" [ref=f78e434] [cursor=pointer]:
+                - /url: /en/status/
+            - listitem [ref=f78e435]:
+              - link "GitHub ↗" [ref=f78e436] [cursor=pointer]:
+                - /url: https://github.com/flyitalyadsb
+      - generic [ref=f78e437]:
+        - paragraph [ref=f78e438]:
+          - text: © 2026 FlyItalyADSB · Data license
+          - link "CC BY-SA 4.0" [ref=f78e439] [cursor=pointer]:
+            - /url: https://creativecommons.org/licenses/by-sa/4.0/
+        - paragraph [ref=f78e440]:
+          - text: Service provided by Nesso Labs S.r.l. · VAT IT04754860981 ·
+          - link "Terms" [ref=f78e441] [cursor=pointer]:
+            - /url: /en/terms/
+          - text: ·
+          - link "Privacy" [ref=f78e442] [cursor=pointer]:
+            - /url: /en/privacy/

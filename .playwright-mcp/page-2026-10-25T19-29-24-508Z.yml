@@ -1,0 +1,133 @@
+- generic [active] [ref=f13e1]:
+  - banner [ref=f13e2]:
+    - link "adsb . lol" [ref=f13e3] [cursor=pointer]:
+      - /url: /
+      - text: adsb
+      - generic [ref=f13e4]: .
+      - text: lol
+    - navigation [ref=f13e5]:
+      - link "live map" [ref=f13e6] [cursor=pointer]:
+        - /url: https://adsb.lol
+      - link "docs" [ref=f13e7] [cursor=pointer]:
+        - /url: /docs
+      - link "about" [ref=f13e8] [cursor=pointer]:
+        - /url: /about
+      - link "my keys" [ref=f13e9] [cursor=pointer]:
+        - /url: /mmb
+    - navigation [ref=f13e10]:
+      - link "Zulip" [ref=f13e11] [cursor=pointer]:
+        - /url: https://adsblol.zulipchat.com
+      - link "GitHub" [ref=f13e14] [cursor=pointer]:
+        - /url: https://github.com/adsblol
+      - link "Mastodon" [ref=f13e17] [cursor=pointer]:
+        - /url: https://mastodon.social/@adsblol
+      - link "IRC" [ref=f13e20] [cursor=pointer]:
+        - /url: https://web.libera.chat/#adsblol
+      - link "email" [ref=f13e24] [cursor=pointer]:
+        - /url: mailto:info@adsb.lol
+  - main [ref=f13e28]:
+    - generic [ref=f13e29]:
+      - complementary [ref=f13e30]:
+        - paragraph [ref=f13e31]: docs
+        - heading "🧭 overview" [level=3] [ref=f13e32]
+        - list [ref=f13e33]:
+          - listitem [ref=f13e34]:
+            - link "Introduction" [ref=f13e35] [cursor=pointer]:
+              - /url: /docs/overview/introduction
+        - heading "📡 feeding" [level=3] [ref=f13e36]
+        - list [ref=f13e37]:
+          - listitem [ref=f13e38]:
+            - link "Sharing your data" [ref=f13e39] [cursor=pointer]:
+              - /url: /docs/get-started/introduction
+          - listitem [ref=f13e40]:
+            - link "ADSB.im" [ref=f13e41] [cursor=pointer]:
+              - /url: /docs/get-started/adsb-image
+          - listitem [ref=f13e42]:
+            - link "Bare Metal" [ref=f13e43] [cursor=pointer]:
+              - /url: /docs/get-started/bare-metal
+        - heading "🔑 feeders only" [level=3] [ref=f13e44]
+        - list [ref=f13e45]:
+          - listitem [ref=f13e46]:
+            - link "Introduction" [ref=f13e47] [cursor=pointer]:
+              - /url: /docs/feeders-only/introduction
+          - listitem [ref=f13e48]:
+            - link "My Map" [ref=f13e49] [cursor=pointer]:
+              - /url: /docs/feeders-only/my-map
+          - listitem [ref=f13e50]:
+            - link "MLAT Map" [ref=f13e51] [cursor=pointer]:
+              - /url: /docs/feeders-only/mlat-map
+          - listitem [ref=f13e52]:
+            - link "re-api" [ref=f13e53] [cursor=pointer]:
+              - /url: /docs/feeders-only/re-api
+        - heading "🗂️ open data" [level=3] [ref=f13e54]
+        - list [ref=f13e55]:
+          - listitem [ref=f13e56]:
+            - link "API" [ref=f13e57] [cursor=pointer]:
+              - /url: /docs/open-data/api
+          - listitem [ref=f13e58]:
+            - link "Historical data" [ref=f13e59] [cursor=pointer]:
+              - /url: /docs/open-data/historical
+          - listitem [ref=f13e60]:
+            - link "Aircraft Data Links" [ref=f13e61] [cursor=pointer]:
+              - /url: /docs/open-data/aircraft-data-links
+        - heading "📻 hardware" [level=3] [ref=f13e62]
+        - list [ref=f13e63]:
+          - listitem [ref=f13e64]:
+            - link "ADS-B + UAT Equipment" [ref=f13e65] [cursor=pointer]:
+              - /url: /docs/hardware/equipment
+        - heading "💛 acknowledgements" [level=3] [ref=f13e66]
+        - list [ref=f13e67]:
+          - listitem [ref=f13e68]:
+            - link "Open Source" [ref=f13e69] [cursor=pointer]:
+              - /url: /docs/acknowledgements/open-source
+          - listitem [ref=f13e70]:
+            - link "Partners" [ref=f13e71] [cursor=pointer]:
+              - /url: /docs/acknowledgements/partners
+        - heading "🔒 privacy & license" [level=3] [ref=f13e72]
+        - list [ref=f13e73]:
+          - listitem [ref=f13e74]:
+            - link "Privacy and License" [ref=f13e75] [cursor=pointer]:
+              - /url: /docs/privacy-license
+      - article [ref=f13e76]:
+        - heading "Privacy and License" [level=1] [ref=f13e77]
+        - paragraph [ref=f13e78]: privacy policy, hosting and data license.
+        - paragraph [ref=f13e79]:
+          - text: this service is provided by myself
+          - link "@iakat" [ref=f13e80] [cursor=pointer]:
+            - /url: https://github.com/iakat
+          - text: and it is intended to use as is.
+        - heading "disclaimer of warranties" [level=2] [ref=f13e81]
+        - paragraph [ref=f13e82]: adsb.lol will use its best efforts to provide accurate data. however, except as otherwise provided herein, the data is provided on an "as is" basis. except as otherwise provided herein, neither adsb.lol, its partners, licensors, nor data providers make any warranty, either implied or express, of merchantability or fitness for a particular purpose, including, but not limited to, the accuracy, timeliness, completeness, reliability, or availability of adsb.lol data, applications, or services accessible through or made available by adsb.lol. users acknowledge that adsb.lol receives data from multiple sources it may or may not control, and that, except as otherwise provided herein, data integrity/accuracy cannot be guaranteed.
+        - paragraph [ref=f13e83]: to the extent allowed by law, users will indemnify, defend and hold harmless adsb.lol from all liabilities, claims, demands, costs, judgements, damages, losses and expenses relating to any claim brought by a third party arising out of or in connection with users's use of the data in a manner not in conformance with the above notice.
+        - heading "personal data" [level=2] [ref=f13e84]
+        - paragraph [ref=f13e85]: we keep temporary logs for under 30 days. nothing else.
+        - heading "hosting provider" [level=2] [ref=f13e86]
+        - paragraph [ref=f13e87]: adsb.lol is hosted by Netcup, with servers in Germany.
+        - paragraph [ref=f13e88]: parts of static data are served by GitHub, proxied by CloudFlare.
+        - paragraph [ref=f13e89]:
+          - text: CloudFlare is used as a CDN/proxy except for the
+          - code [ref=f13e90]: feed.adsb.lol
+          - text: /
+          - code [ref=f13e91]: in.adsb.lol
+          - text: endpoints.
+        - heading "license" [level=2] [ref=f13e92]
+        - paragraph [ref=f13e93]:
+          - text: by sending data to
+          - code [ref=f13e94]: feed.adsb.lol
+          - text: /
+          - code [ref=f13e95]: in.adsb.lol
+          - text: ","
+        - paragraph [ref=f13e96]:
+          - text: you agree, to the extent possible under law, to waive all copyright and related or neighboring rights to the data you are sharing, under the
+          - link "CC0" [ref=f13e97] [cursor=pointer]:
+            - /url: https://creativecommons.org/share-your-work/public-domain/cc0/
+          - text: license.
+        - heading "contact" [level=2] [ref=f13e98]
+        - paragraph [ref=f13e99]: for any question or concern, reach out to
+        - code [ref=f13e101]: info [at] adsb.lol
+  - contentinfo [ref=f13e102]:
+    - paragraph [ref=f13e103]:
+      - text: made with <3 by
+      - link "katia" [ref=f13e104] [cursor=pointer]:
+        - /url: https://github.com/sponsors/iakat
+    - paragraph [ref=f13e105]: with you since 2023.

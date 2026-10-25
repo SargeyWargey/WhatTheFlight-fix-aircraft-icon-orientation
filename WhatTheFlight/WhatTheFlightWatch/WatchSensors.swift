@@ -313,18 +313,30 @@ extension WristPointer {
 // MARK: - Speech
 
 /// Reads Identify's call-outs aloud, through the Watch speaker or connected headphones.
+/// The audio session is set up when Identify opens (`prepare()`), while the app is still
+/// active: pointing arm-out, watchOS judges the wrist down by the time there's something to
+/// say, and an inactive app can't start a session. The app's `audio` background mode keeps
+/// a sentence under way playing if the app leaves the screen mid-way.
 @MainActor
 final class IdentifySpeaker {
     private let synthesizer = AVSpeechSynthesizer()
     private var sessionReady = false
 
-    func say(_ text: String) {
-        if !sessionReady {
+    /// Call while the screen is active and Read aloud is on. Other audio is ducked until `stop()`.
+    func prepare() {
+        guard !sessionReady else { return }
+        do {
             // Playback (not ambient) so a call-out isn't lost to the silent switch.
-            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .voicePrompt, options: [.duckOthers])
-            try? AVAudioSession.sharedInstance().setActive(true)
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .voicePrompt, options: [.duckOthers])
+            try AVAudioSession.sharedInstance().setActive(true)
             sessionReady = true
+        } catch {
+            Log.alerts.error("Couldn't start the speech audio session: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    func say(_ text: String) {
+        if !sessionReady { prepare() }
         if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .word) }
         synthesizer.speak(AVSpeechUtterance(string: text))
     }

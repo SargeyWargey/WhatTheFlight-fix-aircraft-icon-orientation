@@ -114,7 +114,7 @@ struct WatchSettingsView: View {
             } header: {
                 Text("Identify & Find")
             } footer: {
-                Text("Identify reads out the aircraft it locks on to.")
+                Text("Identify reads out the aircraft it locks on to. Pointing arm-out, watchOS treats your wrist as down: the screen dims, but the call-out still plays and the lock taps your wrist. To keep the app up longer, set Settings → General → Return to Clock → What The Flight? to After 1 hour.")
             }
 
             Section {

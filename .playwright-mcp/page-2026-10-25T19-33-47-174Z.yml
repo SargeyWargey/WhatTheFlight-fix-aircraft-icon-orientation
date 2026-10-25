@@ -1,0 +1,444 @@
+- generic [ref=f52e1]:
+  - dialog "Welcome to Flightradar24 Consent Management" [ref=f52e4]:
+    - document [active] [ref=f52e5]:
+      - heading "Flightradar24" [level=1] [ref=f52e7]
+      - generic [ref=f52e8]:
+        - paragraph [ref=f52e10]:
+          - text: We collect some sensitive and not sensitive personal data like your ip address or the browser's cookies and we share or sell it to third parties. This also helps us in keeping our service operative, improving our products and delivering personalized ads. You can choose to opt-out from the share and from the sale of the data by using the options below. Please visit our
+          - link "Privacy Policy" [ref=f52e11] [cursor=pointer]:
+            - /url: https://www.flightradar24.com/privacy-policy
+          - text: for more information about your rights.
+        - paragraph [ref=f52e13]:
+          - heading "We and our partners process data for the following purposes:" [level=2] [ref=f52e14]
+          - generic [ref=f52e15]: Advertising, Analytics, Functional, Marketing, Use my personal information for targeted advertising
+        - button "View our 57 partners" [ref=f52e16] [cursor=pointer]
+      - generic [ref=f52e17]:
+        - button "Do not share or sell my personal information" [ref=f52e18] [cursor=pointer]
+        - button "Agree and close" [ref=f52e19] [cursor=pointer]
+  - generic [ref=f52e22]:
+    - navigation [ref=f52e23]:
+      - generic [ref=f52e25]:
+        - generic:
+          - link [ref=f52e27] [cursor=pointer]:
+            - /url: https://fr24api.flightradar24.com/
+          - generic [ref=f52e37] [cursor=pointer]:
+            - link "Go to" [ref=f52e38]:
+              - /url: https://www.flightradar24.com
+            - button "Create account" [ref=f52e41]
+            - generic [ref=f52e42]: Log in
+        - generic [ref=f52e45]:
+          - link "Overview" [ref=f52e46] [cursor=pointer]:
+            - /url: https://fr24api.flightradar24.com/
+          - link "Subscription & credits" [ref=f52e47] [cursor=pointer]:
+            - /url: https://fr24api.flightradar24.com/subscriptions-and-credits
+          - link "Documentation" [ref=f52e48] [cursor=pointer]:
+            - /url: /docs/getting-started
+    - generic [ref=f52e49]:
+      - generic [ref=f52e50] [cursor=pointer]: Back to top
+      - generic [ref=f52e55] [cursor=pointer]: Help
+    - generic [ref=f52e61]:
+      - generic [ref=f52e62]:
+        - generic [ref=f52e63]:
+          - heading "Documentation" [level=2] [ref=f52e64]
+          - list [ref=f52e65]:
+            - listitem [ref=f52e66]:
+              - link "Getting started" [ref=f52e67] [cursor=pointer]:
+                - /url: /docs/getting-started
+            - listitem [ref=f52e69]:
+              - link "Authentication" [ref=f52e70] [cursor=pointer]:
+                - /url: /docs/authentication
+            - listitem [ref=f52e72]:
+              - link "Endpoints" [ref=f52e73] [cursor=pointer]:
+                - /url: /docs/endpoints
+              - list [ref=f52e75]:
+                - listitem [ref=f52e76]:
+                  - link "Overview" [ref=f52e77] [cursor=pointer]:
+                    - /url: /docs/endpoints/overview
+                - listitem [ref=f52e79]:
+                  - link "Flight Summary - What is it and how to use it?" [ref=f52e80] [cursor=pointer]:
+                    - /url: /docs/endpoints/flight-summary
+                - listitem [ref=f52e82]:
+                  - link "Historic Flight Positions - Batch-Query" [ref=f52e83] [cursor=pointer]:
+                    - /url: /docs/endpoints/flight-positions-batch-query
+                - listitem [ref=f52e85]:
+                  - link "Flight Positions - Historical Availability and Resolution" [ref=f52e86] [cursor=pointer]:
+                    - /url: /docs/endpoints/flight-positions-resolution
+            - listitem [ref=f52e88]:
+              - link "Sandbox Environment" [ref=f52e89] [cursor=pointer]:
+                - /url: /docs/sandbox-environment
+            - listitem [ref=f52e91]:
+              - link "FAQ" [ref=f52e92] [cursor=pointer]:
+                - /url: /docs/faq
+            - listitem [ref=f52e94]:
+              - link "MCP Server" [ref=f52e95] [cursor=pointer]:
+                - /url: /docs/mcp-server
+            - listitem [ref=f52e97]:
+              - link "SDK" [ref=f52e98] [cursor=pointer]:
+                - /url: /docs/sdk
+              - list [ref=f52e100]:
+                - listitem [ref=f52e101]:
+                  - link "Python SDK (fr24sdk) – Quick Start" [ref=f52e102] [cursor=pointer]:
+                    - /url: /docs/sdk/python
+                - listitem [ref=f52e104]:
+                  - link "JavaScript SDK (fr24sdk) – Quick Start" [ref=f52e105] [cursor=pointer]:
+                    - /url: /docs/sdk/js
+            - listitem [ref=f52e107]:
+              - link "Storage Rules" [ref=f52e108] [cursor=pointer]:
+                - /url: /docs/storage-rules
+            - listitem [ref=f52e110]:
+              - link "Credit Overview" [ref=f52e111] [cursor=pointer]:
+                - /url: /docs/credit-overview
+            - listitem [ref=f52e113]:
+              - link "Examples and use cases" [ref=f52e114] [cursor=pointer]:
+                - /url: /docs/examples-and-use-cases
+              - list [ref=f52e116]:
+                - listitem [ref=f52e117]:
+                  - 'link "Use case: Triggering alerts when a flight enters a Circular Area" [ref=f52e118] [cursor=pointer]':
+                    - /url: /docs/examples-and-use-cases/use-case-triggering-alerts-when-a-flight-enters-a-circular-area
+                - listitem [ref=f52e120]:
+                  - 'link "Use case: Calculating the farthest flight arriving at ESSA" [ref=f52e121] [cursor=pointer]':
+                    - /url: /docs/examples-and-use-cases/use-case-calculating-calculating-the-farthest-flight
+        - link "Go to" [ref=f52e124] [cursor=pointer]:
+          - /url: https://www.flightradar24.com
+      - generic [ref=f52e141]:
+        - heading "Credit Overview" [level=1] [ref=f52e142]
+        - generic [ref=f52e143]:
+          - generic [ref=f52e145]:
+            - paragraph [ref=f52e146]: Our API platform offers a variety of credit packages to suit different user needs. Credits are essential for accessing various API services, and users can choose from subscription credits and top-up credits to manage their API usage efficiently.
+            - heading "Types of credits" [level=3] [ref=f52e147]
+            - list [ref=f52e148]:
+              - listitem [ref=f52e149]:
+                - strong [ref=f52e150]: Subscription credits
+                - text: ": Granted monthly as part of a subscription plan. Each monthly bundle of subscription credits is valid for one billing month."
+              - listitem [ref=f52e151]:
+                - strong [ref=f52e152]: Top-up credits
+                - text: ": Can be purchased anytime to supplement your existing credit balance. Top-up credits are available in predefined packages. Purchasing larger packages allows you to receive a better discount and a lower price per credit."
+                - img "Credits overview in User panel"
+            - heading "Credit expiration policy" [level=3] [ref=f52e153]
+            - list [ref=f52e154]:
+              - listitem [ref=f52e155]:
+                - strong [ref=f52e156]: Subscription credits
+                - text: are valid for one month. At the end of each billing cycle (after successful payment), any unused subscription credits expire and your balance is replaced with a new bundle of subscription credits for the upcoming month. Subscription credits do not roll over between billing periods.
+              - listitem [ref=f52e157]:
+                - strong [ref=f52e158]: Top-up credits
+                - text: expire 6 months from the date of purchase.
+              - listitem [ref=f52e159]: Purchasing or receiving additional top-up credits does not extend the expiration date of previously held top-up credits; each top-up package keeps its original expiry date.
+            - heading "Order of credit consumption" [level=3] [ref=f52e160]
+            - list [ref=f52e161]:
+              - listitem [ref=f52e162]:
+                - strong [ref=f52e163]: "Subscription credits:"
+                - text: Used first to ensure users maximize their subscription benefits.
+              - listitem [ref=f52e164]:
+                - strong [ref=f52e165]: "Top-up credits:"
+                - text: Used next, following first-in-first-out principles based on their purchase and expiration dates.
+            - heading "Subscription tiers" [level=3] [ref=f52e166]
+            - paragraph [ref=f52e167]: Each subscription tier comes with a designated amount of credits, tailored to suit varying needs. Higher tiers offer increased benefits such as higher throttling limits, larger result sets per query, access to specific endpoints and history availability.
+            - list [ref=f52e168]:
+              - listitem [ref=f52e169]:
+                - strong [ref=f52e170]: "Explorer:"
+                - text: $9/month, 30,000 credits, 10 queries/minute, 30 days of historic data.
+              - listitem [ref=f52e171]:
+                - strong [ref=f52e172]: "Essential:"
+                - text: $90/month, 333,000 credits, 30 queries/minute, 2 years of historic data.
+              - listitem [ref=f52e173]:
+                - strong [ref=f52e174]: "Advanced:"
+                - text: $900/month, 4,050,000 credits, 90 queries/minute, unlimited history data (subject to system availability limits, which vary by endpoint).
+            - heading "Credit packages" [level=3] [ref=f52e175]
+            - paragraph [ref=f52e176]: "Bulk purchase discounts are available for higher credit package investments. Below are some examples of credit packages:"
+            - table [ref=f52e177]:
+              - rowgroup [ref=f52e178]:
+                - row [ref=f52e179]:
+                  - columnheader "Package $" [ref=f52e180]
+                  - columnheader "Total Credits" [ref=f52e181]
+                  - columnheader "Price per Credit" [ref=f52e182]
+                  - columnheader "Discount (%)" [ref=f52e183]
+              - rowgroup [ref=f52e184]:
+                - row [ref=f52e185]:
+                  - cell "9" [ref=f52e186]
+                  - cell "30,000" [ref=f52e187]
+                  - cell "$0.0003" [ref=f52e188]
+                  - cell "0" [ref=f52e189]
+                - row [ref=f52e190]:
+                  - cell "30" [ref=f52e191]
+                  - cell "105,000" [ref=f52e192]
+                  - cell "$0.000286" [ref=f52e193]
+                  - cell "4.76" [ref=f52e194]
+                - row [ref=f52e195]:
+                  - cell "60" [ref=f52e196]
+                  - cell "218,000" [ref=f52e197]
+                  - cell "$0.000275" [ref=f52e198]
+                  - cell "8.26" [ref=f52e199]
+                - row [ref=f52e200]:
+                  - cell "120" [ref=f52e201]
+                  - cell "452,000" [ref=f52e202]
+                  - cell "$0.000265" [ref=f52e203]
+                  - cell "11.5" [ref=f52e204]
+                - row [ref=f52e205]:
+                  - cell "300" [ref=f52e206]
+                  - cell "1,210,000" [ref=f52e207]
+                  - cell "$0.000248" [ref=f52e208]
+                  - cell "17.36" [ref=f52e209]
+            - paragraph [ref=f52e210]:
+              - text: For all credit packages go to
+              - link "Subscriptions and credits" [ref=f52e211] [cursor=pointer]:
+                - /url: https://fr24api.flightradar24.com/subscriptions-and-credits
+              - text: .
+            - heading "Endpoint pricing" [level=3] [ref=f52e212]
+            - paragraph [ref=f52e213]: "Our API offers various endpoints, each with specific credit costs per query, and dollar-cost with assumed $0.0003 cost per credit:"
+            - table [ref=f52e214]:
+              - rowgroup [ref=f52e215]:
+                - row [ref=f52e216]:
+                  - columnheader "Endpoint" [ref=f52e217]
+                  - columnheader "Cost factor" [ref=f52e218]
+                  - columnheader "Credits" [ref=f52e219]
+                  - columnheader "Maximum $ cost (with $0.0003 per credit)" [ref=f52e220]
+              - rowgroup [ref=f52e221]:
+                - row [ref=f52e222]:
+                  - cell "Flight summary - full" [ref=f52e223]
+                  - cell "Per returned live flight" [ref=f52e224]
+                  - cell "2" [ref=f52e225]
+                  - cell "$0.0006" [ref=f52e226]
+                - row [ref=f52e227]:
+                  - cell "Flight summary - full" [ref=f52e228]
+                  - cell "Per returned historical flight not older than 30 days" [ref=f52e229]
+                  - cell "3" [ref=f52e230]
+                  - cell "$0.0009" [ref=f52e231]
+                - row [ref=f52e232]:
+                  - cell "Flight summary - full" [ref=f52e233]
+                  - cell "Per returned historical flight older than 30 days" [ref=f52e234]
+                  - cell "6" [ref=f52e235]
+                  - cell "$0.0018" [ref=f52e236]
+                - row [ref=f52e237]:
+                  - cell "Flight summary - light" [ref=f52e238]
+                  - cell "Per returned live flight" [ref=f52e239]
+                  - cell "1" [ref=f52e240]
+                  - cell "$0.0003" [ref=f52e241]
+                - row [ref=f52e242]:
+                  - cell "Flight summary - light" [ref=f52e243]
+                  - cell "Per returned historical flight not older than 30 days" [ref=f52e244]
+                  - cell "2" [ref=f52e245]
+                  - cell "$0.0006" [ref=f52e246]
+                - row [ref=f52e247]:
+                  - cell "Flight summary - light" [ref=f52e248]
+                  - cell "Per returned historical flight older than 30 days" [ref=f52e249]
+                  - cell "3" [ref=f52e250]
+                  - cell "$0.0009" [ref=f52e251]
+                - row [ref=f52e252]:
+                  - cell "Live flight positions - full" [ref=f52e253]
+                  - cell "Per returned flight" [ref=f52e254]
+                  - cell "8" [ref=f52e255]
+                  - cell "$0.0024" [ref=f52e256]
+                - row [ref=f52e257]:
+                  - cell "Live flight positions - light" [ref=f52e258]
+                  - cell "Per returned flight" [ref=f52e259]
+                  - cell "6" [ref=f52e260]
+                  - cell "$0.0018" [ref=f52e261]
+                - row [ref=f52e262]:
+                  - cell "Historic flight positions - full" [ref=f52e263]
+                  - cell "Per returned flight" [ref=f52e264]
+                  - cell "8" [ref=f52e265]
+                  - cell "$0.0024" [ref=f52e266]
+                - row [ref=f52e267]:
+                  - cell "Historic flight positions - light" [ref=f52e268]
+                  - cell "Per returned flight" [ref=f52e269]
+                  - cell "6" [ref=f52e270]
+                  - cell "$0.0018" [ref=f52e271]
+                - row [ref=f52e272]:
+                  - cell "Historic flight events - full" [ref=f52e273]
+                  - cell "Per returned historical event not older than 30 days" [ref=f52e274]
+                  - cell "3" [ref=f52e275]
+                  - cell "$0.0009" [ref=f52e276]
+                - row [ref=f52e277]:
+                  - cell "Historic flight events - full" [ref=f52e278]
+                  - cell "Per returned historical event older than 30 days" [ref=f52e279]
+                  - cell "4" [ref=f52e280]
+                  - cell "$0.0012" [ref=f52e281]
+                - row [ref=f52e282]:
+                  - cell "Historic flight events - light" [ref=f52e283]
+                  - cell "Per returned historical event not older than 30 days" [ref=f52e284]
+                  - cell "2" [ref=f52e285]
+                  - cell "$0.0006" [ref=f52e286]
+                - row [ref=f52e287]:
+                  - cell "Historic flight events - light" [ref=f52e288]
+                  - cell "Per returned historical event older than 30 days" [ref=f52e289]
+                  - cell "3" [ref=f52e290]
+                  - cell "$0.0009" [ref=f52e291]
+                - row [ref=f52e292]:
+                  - cell "Flight tracks" [ref=f52e293]
+                  - cell "Per returned flight" [ref=f52e294]
+                  - cell "40" [ref=f52e295]
+                  - cell "$0.012" [ref=f52e296]
+                - row [ref=f52e297]:
+                  - cell "Airports light" [ref=f52e298]
+                  - cell "Per query" [ref=f52e299]
+                  - cell "1" [ref=f52e300]
+                  - cell "$0.0003" [ref=f52e301]
+                - row [ref=f52e302]:
+                  - cell "Airports full" [ref=f52e303]
+                  - cell "Per query" [ref=f52e304]
+                  - cell "50" [ref=f52e305]
+                  - cell "$0.015" [ref=f52e306]
+                - row [ref=f52e307]:
+                  - cell "Airlines light" [ref=f52e308]
+                  - cell "Per query" [ref=f52e309]
+                  - cell "1" [ref=f52e310]
+                  - cell "$0.0003" [ref=f52e311]
+            - paragraph [ref=f52e312]:
+              - text: The
+              - code [ref=f52e313]: /count
+              - text: endpoints cost
+              - strong [ref=f52e314]: 15%
+              - text: of the corresponding “full” endpoint, rounded up to the next whole credit.
+            - paragraph [ref=f52e315]: If your request returns no results (an empty response), the call is charged a flat 1 credit for processing.
+            - heading "Cost examples" [level=4] [ref=f52e316]
+            - heading "Querying 1,000 flights for Live flight positions - light:" [level=4] [ref=f52e317]
+            - list [ref=f52e318]:
+              - listitem [ref=f52e319]:
+                - strong [ref=f52e320]: "Credits Used:"
+                - text: 6,000 credits (1,000 flights * 6 credits per flight)
+              - listitem [ref=f52e321]:
+                - strong [ref=f52e322]: "Cost:"
+                - text: $1.80 (6,000 credits * $0.0003 per credit)
+            - heading "Querying 500 flights for Historic flight positions - full:" [level=4] [ref=f52e323]
+            - list [ref=f52e324]:
+              - listitem [ref=f52e325]:
+                - strong [ref=f52e326]: "Credits Used:"
+                - text: 4,000 credits (500 flights * 8 credits per flight)
+              - listitem [ref=f52e327]:
+                - strong [ref=f52e328]: "Cost:"
+                - text: $1.20 (4,000 credits * $0.0003 per credit)
+            - heading "Querying 100 airports for Airports full data:" [level=4] [ref=f52e329]
+            - list [ref=f52e330]:
+              - listitem [ref=f52e331]:
+                - strong [ref=f52e332]: "Credits Used:"
+                - text: 5,000 credits (100 queries * 50 credits per query)
+              - listitem [ref=f52e333]:
+                - strong [ref=f52e334]: "Cost:"
+                - text: $1.50 (5,000 credits * $0.0003 per credit)
+            - heading "Credit usage optimization" [level=3] [ref=f52e335]
+            - heading "Maximize your subscription credits:" [level=4] [ref=f52e336]
+            - list [ref=f52e337]:
+              - listitem [ref=f52e338]: Plan your API usage to fully utilize your monthly subscription credits before they expire.
+              - listitem [ref=f52e339]: Regularly monitor your credit balance and consumption rate.
+            - heading "Efficient use of top-up credits:" [level=4] [ref=f52e340]
+            - list [ref=f52e341]:
+              - listitem [ref=f52e342]: Purchase top-up credits in increments that match your anticipated needs to avoid holding excess credits that may expire.
+              - listitem [ref=f52e343]: Utilize Automated top up feature to automatically top-up your account when credit balance is low.
+            - heading "Using limit to control credit costs" [level=4] [ref=f52e344]
+            - paragraph [ref=f52e345]:
+              - text: Utilize the
+              - code [ref=f52e346]: limit
+              - text: parameter in your API calls to restrict the amount of data retrieved and therefore limit the number of credits consumed. This is particularly useful for large datasets where you only need a subset of the data, allowing you to manage your credit usage more effectively.
+            - blockquote [ref=f52e347]:
+              - paragraph [ref=f52e351]: The limit parameter is applicable only for flight-positions endpoints.
+            - heading [level=4] [ref=f52e352]:
+              - text: Example of
+              - code [ref=f52e353]: limit
+              - text: param usage
+            - paragraph [ref=f52e354]:
+              - text: The
+              - code [ref=f52e355]: limit
+              - text: parameter is used to restrict the number of results returned by an API call, thereby controlling credit usage. Below is an example Python script that demonstrates how to use the
+              - code [ref=f52e356]: limit
+              - text: parameter to restrict the number of results returned by an API call.
+            - code [ref=f52e357]:
+              - text: "import requests import json # Define the API token and endpoint URL API_TOKEN = '<your_api_token>' BASE_URL = 'https://fr24api.flightradar24.com/api' ENDPOINT = '/historic/flight-positions/full' # Define the headers, including the Authorization header with your API token headers = { 'Accept': 'application/json', 'Authorization': 'Bearer {API_TOKEN}', 'Accept-Version': 'v1' } # Define any query parameters params = { 'bounds': '50.682,46.218,14.422,22.243', 'timestamp': '1702383145', 'limit': 10 } # Construct the full URL url ="
+              - generic [ref=f52e358]:
+                - text: f"
+                - generic [ref=f52e359]: "{BASE_URL}"
+                - generic [ref=f52e360]: "{ENDPOINT}"
+                - text: "\""
+              - text: "# Make the GET request to the API response = requests.get(url, headers=headers, params=params) # Check if the request was successful if response.status_code == 200: # Parse and print the JSON response response_data = response.json() print(\"Response Data:\") print(json.dumps(response_data, indent=2)) else: print("
+              - generic [ref=f52e361]:
+                - text: "f\"Error:"
+                - generic [ref=f52e362]: "{response.status_code}"
+                - text: "\""
+              - text: ) print(response.text)
+            - generic [ref=f52e363] [cursor=pointer]: Show all
+            - heading "Calculation of the cost of the call" [level=4] [ref=f52e369]
+            - paragraph [ref=f52e370]: "Given:"
+            - list [ref=f52e371]:
+              - listitem [ref=f52e372]: "Credits per returned flight: 8 credits"
+              - listitem [ref=f52e373]: "Price per credit: $0.0003 (assuming the highest price per credit)"
+            - paragraph [ref=f52e374]:
+              - text: Assume the API returns 10 results as specified by the
+              - code [ref=f52e375]: limit
+              - text: parameter.
+            - list [ref=f52e376]:
+              - listitem [ref=f52e377]: "Number of results returned: 10"
+              - listitem [ref=f52e378]: "Total credits used: 10 results * 8 credits per result = 80 credits"
+              - listitem [ref=f52e379]: "Total cost of the call: 80 credits * $0.0003 per credit = $0.024"
+            - paragraph [ref=f52e380]: Therefore, if the API returns 10 results, the total cost of the call would be $0.024.
+            - blockquote [ref=f52e381]:
+              - paragraph [ref=f52e385]: It's important to note that the cost is determined by the number of returned entities, not by the specified limit.
+            - heading "Exploring the calculated cost" [level=3] [ref=f52e386]
+            - paragraph [ref=f52e387]:
+              - text: After making the API call, you can explore the calculated cost using the
+              - code [ref=f52e388]: /usage
+              - text: endpoint and in the Usage Metrics tab. Here is an example of calling the
+              - code [ref=f52e389]: /usage
+              - text: "endpoint to get the usage details:"
+            - code [ref=f52e390]:
+              - text: "import requests import json # Define the API token and endpoint URL API_TOKEN = '<your_api_token>' BASE_URL = 'https://fr24api.flightradar24.com/api' ENDPOINT = '/usage' # Define the headers, including the Authorization header with your API token headers = { 'Accept': 'application/json', 'Authorization': 'Bearer {API_TOKEN}', 'Accept-Version': 'v1' } # Construct the full URL url ="
+              - generic [ref=f52e391]:
+                - text: f"
+                - generic [ref=f52e392]: "{BASE_URL}"
+                - generic [ref=f52e393]: "{ENDPOINT}"
+                - text: "\""
+              - text: "# Make the GET request to the API response = requests.get(url, headers=headers) # Check if the request was successful if response.status_code == 200: # Parse and print the JSON response usage_data = response.json() print(\"Usage Data:\") print(json.dumps(usage_data, indent=2)) else: print("
+              - generic [ref=f52e394]:
+                - text: "f\"Error:"
+                - generic [ref=f52e395]: "{response.status_code}"
+                - text: "\""
+              - text: ) print(response.text)
+            - paragraph [ref=f52e396]: "Example of output:"
+            - code [ref=f52e397]: "{ \"data\": [{ \"endpoint\": \"historic/flight-positions/full?{filters}\", \"request_count\": 1, \"credits\": 80 }] }"
+            - paragraph [ref=f52e398]:
+              - text: Please note that the usage endpoint has a rate limit of 1 call per minute. Additionally, you can check the
+              - link "Usage metrics tab" [ref=f52e399] [cursor=pointer]:
+                - /url: https://fr24api.flightradar24.com/usage-metrics
+              - text: in your account dashboard to view detailed insights into your credit usage, as shown in the screenshot below.
+            - paragraph:
+              - img "Credit usage"
+            - heading "Automated credit top-up" [level=2] [ref=f52e400]
+            - heading "What is Automated credit top-up?" [level=3] [ref=f52e401]
+            - paragraph [ref=f52e402]: Automated credit top-up is a feature designed to ensure that your API usage remains uninterrupted by automatically purchasing additional top-up credits when your credit balance falls below a predefined threshold.
+            - heading "Key Features" [level=3] [ref=f52e403]
+            - list [ref=f52e404]:
+              - listitem [ref=f52e405]:
+                - strong [ref=f52e406]: Threshold Setting
+                - text: ": Define a minimum credit balance threshold. When your available credits fall below this level, the system will automatically purchase selected, additional top-up credits for you."
+              - listitem [ref=f52e407]:
+                - strong [ref=f52e408]: Customizable Amounts
+                - text: ": Set the amount of top-up credits to be purchased automatically, ensuring it aligns with your usage patterns and budget."
+              - listitem [ref=f52e409]:
+                - strong [ref=f52e410]: Notification Alerts
+                - text: ": Receive notifications whenever an automated top-up is executed, providing transparency and control over your credit balance."
+            - heading "How to enable automated credit top-up" [level=3] [ref=f52e411]
+            - list [ref=f52e412]:
+              - listitem [ref=f52e413]:
+                - strong [ref=f52e414]: Access your account settings
+                - text: ": Log in to your account and navigate to the 'Credit overview' section."
+              - listitem [ref=f52e415]:
+                - strong [ref=f52e416]: Set threshold and top-up amount
+                - text: ": Define your minimum credit balance threshold and the amount of top-up credits to be automatically purchased. You can only specify a predefined credit package."
+              - listitem [ref=f52e417]:
+                - strong [ref=f52e418]: Save your settings
+                - text: ": Confirm and save your automated top-up settings."
+            - heading "Benefits" [level=3] [ref=f52e419]
+            - list [ref=f52e420]:
+              - listitem [ref=f52e421]:
+                - strong [ref=f52e422]: Continuous API cccess
+                - text: ": Ensure uninterrupted access to API services by preventing credit depletion."
+              - listitem [ref=f52e423]:
+                - strong [ref=f52e424]: Time-saving
+                - text: ": Automate the credit top-up process, reducing the need for manual intervention."
+              - listitem [ref=f52e425]:
+                - strong [ref=f52e426]: Budget control
+                - text: ": Manage your expenses by setting predefined top-up amounts and thresholds. This ensures that you only purchase credits when needed, which further reduces the risk of credit expiry, as you buy credits only when you use them."
+            - paragraph [ref=f52e427]:
+              - strong [ref=f52e428]: "Note:"
+              - text: Please be aware that the automated purchase process can take up to a few minutes to complete. To avoid any disruption in high-performance applications, it is recommended to set a higher threshold for automated top-ups. This ensures that your credit balance remains sufficient during the purchase process, maintaining continuous API access.
+          - generic [ref=f52e430]:
+            - heading "Content" [level=5] [ref=f52e431]
+            - list

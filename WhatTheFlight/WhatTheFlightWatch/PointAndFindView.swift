@@ -6,7 +6,9 @@
 //  Watch's top edge, in Aim style) and the Watch guides you to it. Direction and height are shown and
 //  felt separately — the compass strip and clicks while you swing round, the elevation gauge
 //  and "up" / "down" taps for the height, then one firm tap when you're on it. The screen is
-//  laid out by `PointingLayout`. The crown picks another aircraft.
+//  laid out by `PointingLayout`. The crown picks another aircraft. Pointing arm-out, watchOS
+//  judges the wrist down (screen dimmed, app inactive): the lock then also goes out as a
+//  wrist-tap notification, and the dimmed screen draws the cue large.
 //
 
 import SwiftUI
@@ -24,6 +26,8 @@ struct PointAndFindView: View {
     @State private var crown = 0
     @State private var locked = false
     @FocusState private var crownFocused: Bool
+    /// Always-On, wrist judged down: bigger cue, no readout.
+    @Environment(\.isLuminanceReduced) private var isDimmed
 
     private var target: RadarContact? {
         targetID.flatMap(model.contact(id:)) ?? model.focusedContact ?? model.contacts.first
@@ -77,8 +81,10 @@ struct PointAndFindView: View {
                                  isFacing: guidance?.isFacing == true, isOnTarget: guidance?.isOnTarget == true)
                         .frame(height: 26)
                         .clearOfClock(metrics)
-                    PointingReadout(arm: armDirection, target: targetDirection, mode: pointer.mode)
-                        .clearOfClock(metrics)
+                    if !isDimmed {
+                        PointingReadout(arm: armDirection, target: targetDirection, mode: pointer.mode)
+                            .clearOfClock(metrics)
+                    }
                 } else {
                     message(symbol: "sun.haze", title: "It's gone", text: "That aircraft has left the area.")
                 }
@@ -96,8 +102,12 @@ struct PointAndFindView: View {
             pointer.configure(style: watchSettings.aimStyle, flipped: watchSettings.flipPointing, location: location)
             pointer.start()
             crownFocused = true
+            if watchSettings.aimStyle == .point { WristTapNotification.requestPermissionIfNeeded() }
         }
-        .onDisappear { pointer.stop() }
+        .onDisappear {
+            pointer.stop()
+            WristTapNotification.clear()
+        }
         .task { await guideByTouch() }
     }
 
@@ -106,7 +116,7 @@ struct PointAndFindView: View {
     private func header(_ target: RadarContact) -> some View {
         VStack(spacing: 0) {
             Text(target.flight.displayIdentifier)
-                .font(.mono(16, .heavy))
+                .font(.mono(isDimmed ? 20 : 16, .heavy))
                 .foregroundStyle(Palette.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
@@ -137,8 +147,8 @@ struct PointAndFindView: View {
                 ProgressView().tint(Palette.ink)
             }
         }
-        .font(.system(size: 38, weight: .heavy))
-        .frame(height: 46)
+        .font(.system(size: isDimmed ? 50 : 38, weight: .heavy))
+        .frame(height: isDimmed ? 58 : 46)
         .contentTransition(.symbolEffect(.replace))
         .animation(.snappy(duration: 0.2), value: cueKey)
         .accessibilityElement()
@@ -154,7 +164,7 @@ struct PointAndFindView: View {
 
     private var cueText: some View {
         Text(instructionText)
-            .font(.mono(11, .bold))
+            .font(.mono(isDimmed ? 14 : 11, .bold))
             .foregroundStyle(guidance?.isOnTarget == true ? Palette.live : Palette.value)
             .multilineTextAlignment(.center)
             .lineLimit(2)
@@ -205,6 +215,15 @@ struct PointAndFindView: View {
                 if !locked {
                     locked = true
                     WatchHaptics.play(.success, enabled: haptics)
+                    // Arm out, the wrist counts as down and that tap may go unplayed: a
+                    // notification always reaches the wrist.
+                    if haptics, WKApplication.shared().applicationState != .active, let target {
+                        let look = watchSettings.aimStyle == .point ? "Look along your arm" : "Look past the red arrow"
+                        WristTapNotification.post(
+                            title: "On it: \(target.flight.displayIdentifier)",
+                            body: "\(look) · \(RadarFormat.miles(target.distanceMiles)) mi \(GeoMath.cardinal(target.bearing)) · \(RadarFormat.wholeNumber(target.altitudeFeet)) ft",
+                            contact: target)
+                    }
                 }
                 try? await Task.sleep(for: .milliseconds(200))
             case .warmer(let every):

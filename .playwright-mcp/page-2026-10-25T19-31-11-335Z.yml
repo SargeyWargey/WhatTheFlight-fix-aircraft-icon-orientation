@@ -1,0 +1,1117 @@
+- generic [active] [ref=f15e1]:
+  - link "Skip to content" [ref=f15e2] [cursor=pointer]:
+    - /url: "#ipsLayout__main"
+  - generic [ref=f15e4]:
+    - text:      
+    - banner [ref=f15e5]:
+      - generic [ref=f15e7]:
+        - link [ref=f15e10] [cursor=pointer]:
+          - /url: https://forums.x-plane.org/
+          - img "X-Plane.Org Forum" [ref=f15e12]
+        - list [ref=f15e15]:
+          - listitem [ref=f15e16]:
+            - button "Existing user? Sign In" [ref=f15e17] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f15e18]: 
+            - text: 
+          - listitem [ref=f15e20]:
+            - link "Sign Up" [ref=f15e21] [cursor=pointer]:
+              - /url: https://forums.x-plane.org/register/
+              - generic [aria-hidden] [ref=f15e22]: 
+      - navigation "Primary" [ref=f15e28]:
+        - list [ref=f15e30]:
+          - listitem [ref=f15e31]:
+            - button "News" [ref=f15e32] [cursor=pointer]:
+              - text: 
+              - generic [ref=f15e33]:
+                - generic [ref=f15e34]: News
+                - generic [aria-hidden] [ref=f15e35]: 
+            - link "News" [ref=f15e36] [cursor=pointer]:
+              - /url: https://forums.x-plane.org/forums/forum/717-weekly-digest-x-plane-news/
+              - text: 
+              - generic [ref=f15e37]:
+                - generic [ref=f15e38]: News
+                - generic [aria-hidden] [ref=f15e39]: 
+            - text:    
+          - listitem [ref=f15e40]:
+            - link "Portal" [ref=f15e41] [cursor=pointer]:
+              - /url: https://forums.x-plane.org
+              - text: 
+          - listitem [ref=f15e44]:
+            - button "Forum" [ref=f15e45] [cursor=pointer]:
+              - text: 
+              - generic [ref=f15e46]:
+                - generic [ref=f15e47]: Forum
+                - generic [aria-hidden] [ref=f15e48]: 
+            - link "Forum" [ref=f15e49] [cursor=pointer]:
+              - /url: https://forums.x-plane.org/forums/
+              - text: 
+              - generic [ref=f15e50]:
+                - generic [ref=f15e51]: Forum
+                - generic [aria-hidden] [ref=f15e52]: 
+            - text:           
+          - listitem [ref=f15e53]:
+            - link "Org Store" [ref=f15e54] [cursor=pointer]:
+              - /url: http://store.x-plane.org
+              - text: 
+          - listitem [ref=f15e57]:
+            - button "Downloads" [ref=f15e58] [cursor=pointer]:
+              - text: 
+              - generic [ref=f15e59]:
+                - generic [ref=f15e60]: Downloads
+                - generic [aria-hidden] [ref=f15e61]: 
+            - link "Downloads" [ref=f15e62] [cursor=pointer]:
+              - /url: https://forums.x-plane.org/files/
+              - text: 
+              - generic [ref=f15e63]:
+                - generic [ref=f15e64]: Downloads
+                - generic [aria-hidden] [ref=f15e65]: 
+            - text:      
+          - listitem [ref=f15e66]:
+            - button "New Members" [ref=f15e67] [cursor=pointer]:
+              - text: 
+              - generic [ref=f15e68]:
+                - generic [ref=f15e69]: New Members
+                - generic [aria-hidden] [ref=f15e70]: 
+            - link "New Members" [ref=f15e71] [cursor=pointer]:
+              - /url: https://forums.x-plane.org/announcement/3-forum-rules-and-guidelines/?%252Fannouncement%252F3-forum-rules-and-guidelines%252F=
+              - text: 
+              - generic [ref=f15e72]:
+                - generic [ref=f15e73]: New Members
+                - generic [aria-hidden] [ref=f15e74]: 
+            - text:         
+          - listitem [ref=f15e75]:
+            - button "Payware Support" [ref=f15e76] [cursor=pointer]:
+              - text: 
+              - generic [ref=f15e77]:
+                - generic [ref=f15e78]: Payware Support
+                - generic [aria-hidden] [ref=f15e79]: 
+            - link "Payware Support" [ref=f15e80] [cursor=pointer]:
+              - /url: https://forums.x-plane.org/forums/forum/74-commercial-vendors-support/
+              - text: 
+              - generic [ref=f15e81]:
+                - generic [ref=f15e82]: Payware Support
+                - generic [aria-hidden] [ref=f15e83]: 
+            - text:                            
+          - listitem [ref=f15e84]:
+            - button "Member Projects" [ref=f15e85] [cursor=pointer]:
+              - text: 
+              - generic [ref=f15e86]:
+                - generic [ref=f15e87]: Member Projects
+                - generic [aria-hidden] [ref=f15e88]: 
+            - link "Member Projects" [ref=f15e89] [cursor=pointer]:
+              - /url: https://forums.x-plane.org/forums/forum/70-x-planeorg-sponsored-projects/
+              - text: 
+              - generic [ref=f15e90]:
+                - generic [ref=f15e91]: Member Projects
+                - generic [aria-hidden] [ref=f15e92]: 
+            - text:                        
+          - listitem [ref=f15e93]:
+            - button "Flight School" [ref=f15e94] [cursor=pointer]:
+              - text: 
+              - generic [ref=f15e95]:
+                - generic [ref=f15e96]: Flight School
+                - generic [aria-hidden] [ref=f15e97]: 
+            - link "Flight School" [ref=f15e98] [cursor=pointer]:
+              - /url: https://forums.x-plane.org/forums/forum/33-flight-school/
+              - text: 
+              - generic [ref=f15e99]:
+                - generic [ref=f15e100]: Flight School
+                - generic [aria-hidden] [ref=f15e101]: 
+            - text:                
+          - listitem [ref=f15e102]:
+            - button "Activity" [ref=f15e103] [cursor=pointer]:
+              - text: 
+              - generic [ref=f15e104]:
+                - generic [ref=f15e105]: Activity
+                - generic [aria-hidden] [ref=f15e106]: 
+            - text:        
+          - text:  
+    - main [ref=f15e107]:
+      - generic [ref=f15e109]:
+        - navigation "Breadcrumbs" [ref=f15e113]:
+          - list [ref=f15e114]:
+            - listitem [ref=f15e115]:
+              - link "Home" [ref=f15e116] [cursor=pointer]:
+                - /url: https://forums.x-plane.org/
+                - generic [aria-hidden] [ref=f15e117]: 
+                - text: Home
+              - text: 
+            - listitem [ref=f15e118]:
+              - link "Forums" [ref=f15e119] [cursor=pointer]:
+                - /url: https://forums.x-plane.org/forums/
+              - text: 
+            - listitem [ref=f15e120]:
+              - link "X-Plane.org Sponsored Projects" [ref=f15e121] [cursor=pointer]:
+                - /url: https://forums.x-plane.org/forums/forum/70-x-planeorg-sponsored-projects/
+              - text: 
+            - listitem [ref=f15e122]:
+              - link "LiveTraffic Support" [ref=f15e123] [cursor=pointer]:
+                - /url: https://forums.x-plane.org/forums/forum/457-livetraffic-support/
+              - text: 
+            - listitem [ref=f15e124]:
+              - generic [ref=f15e125]: Airplanes.live inop for non-feeders (with misleading error "API Key invalid")
+          - list [ref=f15e126]:
+            - listitem [ref=f15e127]:
+              - link "All Activity" [ref=f15e128] [cursor=pointer]:
+                - /url: https://forums.x-plane.org/discover/
+                - generic [aria-hidden] [ref=f15e129]: 
+                - text: All Activity
+        - generic [ref=f15e132]:
+          - generic [ref=f15e134]:
+            - generic [ref=f15e135]:
+              - heading "Airplanes.live inop for non-feeders (with misleading error \"API Key invalid\")" [level=1] [ref=f15e138]
+              - list [ref=f15e139]:
+                - listitem [ref=f15e140]:
+                  - button "Share" [ref=f15e141] [cursor=pointer]:
+                    - generic [aria-hidden] [ref=f15e142]: 
+                  - text:      
+                - listitem [ref=f15e144]:
+                  - link "Followers" [ref=f15e146] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/login/
+                    - generic [ref=f15e147]:
+                      - generic [aria-hidden] [ref=f15e148]: 
+                      - generic [ref=f15e149]: Followers
+            - generic [ref=f15e152]:
+              - link [aria-hidden] [ref=f15e153] [cursor=pointer]:
+                - /url: https://forums.x-plane.org/profile/1208634-marco57/
+              - generic [ref=f15e155]:
+                - link "marco57" [ref=f15e157] [cursor=pointer]:
+                  - /url: https://forums.x-plane.org/profile/1208634-marco57/
+                - generic [ref=f15e158]:
+                  - time [ref=f15e159]: August 14
+                  - text: in
+                  - link "LiveTraffic Support" [ref=f15e160] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/forums/forum/457-livetraffic-support/
+          - list [ref=f15e162]:
+            - listitem [ref=f15e163]:
+              - link "Start new topic" [ref=f15e164] [cursor=pointer]:
+                - /url: https://forums.x-plane.org/forums/forum/457-livetraffic-support/?do=add
+                - generic [aria-hidden] [ref=f15e165]: 
+            - listitem [ref=f15e167]:
+              - link "Reply to this topic" [ref=f15e168] [cursor=pointer]:
+                - /url: "#replyForm"
+                - generic [aria-hidden] [ref=f15e169]: 
+          - text:  
+          - generic [ref=f15e171]:
+            - generic [ref=f15e173]:
+              - article [ref=f15e174]:
+                - complementary [ref=f15e175]:
+                  - link [aria-hidden] [ref=f15e177] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/profile/1208634-marco57/
+                  - heading [level=3] [ref=f15e179]:
+                    - link "marco57" [ref=f15e180] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/1208634-marco57/
+                  - generic [ref=f15e181]: Member
+                  - list [ref=f15e183]:
+                    - listitem [ref=f15e184]:
+                      - link "849 posts" [ref=f15e185] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/1208634-marco57/content/
+                        - generic [aria-hidden] [ref=f15e186]: 
+                        - generic [ref=f15e187]: "849"
+                        - generic [ref=f15e188]: posts
+                    - text: 
+                    - listitem [ref=f15e189]:
+                      - generic [ref=f15e190]:
+                        - generic [aria-hidden] [ref=f15e191]: 
+                        - generic [ref=f15e192]: "93"
+                        - generic [ref=f15e193]: Reputation
+                  - list [ref=f15e194]:
+                    - listitem [ref=f15e195]:
+                      - strong [ref=f15e196]: "OS:"
+                      - text: Windows
+                    - listitem [ref=f15e197]:
+                      - strong [ref=f15e198]: "X-Plane since :"
+                      - text: v11
+                - text: 
+                - generic [ref=f15e199]:
+                  - generic [ref=f15e200]:
+                    - time [ref=f15e203]: August 14
+                    - generic [ref=f15e204]:
+                      - paragraph [ref=f15e205]: It seems this function no longer works, has it been abandoned?
+                      - paragraph [ref=f15e206]: and bad link github for adsb.fi
+                      - paragraph [ref=f15e207]
+                      - paragraph [ref=f15e208]: cordially
+                  - list [ref=f15e210]:
+                    - listitem [ref=f15e211]:
+                      - button "MultiQuote" [ref=f15e212] [cursor=pointer]:
+                        - generic [aria-hidden] [ref=f15e213]: +
+                    - listitem [ref=f15e214]:
+                      - link "Quote" [ref=f15e215] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [aria-hidden] [ref=f15e216]: 
+                    - listitem
+              - article [ref=f15e218]:
+                - complementary [ref=f15e219]:
+                  - link [aria-hidden] [ref=f15e221] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/profile/94033-twinfan/
+                  - heading [level=3] [ref=f15e223]:
+                    - link "TwinFan" [ref=f15e224] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/94033-twinfan/
+                  - link " Community Leader" [ref=f15e226] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/staff/
+                  - link [ref=f15e228] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/staff/
+                  - list [ref=f15e229]:
+                    - listitem [ref=f15e230]:
+                      - link "1.8k posts" [ref=f15e231] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/94033-twinfan/content/
+                        - generic [aria-hidden] [ref=f15e232]: 
+                        - generic [ref=f15e233]: 1.8k
+                        - generic [ref=f15e234]: posts
+                    - listitem [ref=f15e235]:
+                      - link "1 Solutions" [ref=f15e236] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/94033-twinfan/solutions/
+                        - generic [aria-hidden] [ref=f15e237]: 
+                        - generic [ref=f15e238]: "1"
+                        - generic [ref=f15e239]: Solutions
+                    - text: 
+                    - listitem [ref=f15e240]:
+                      - generic [ref=f15e241]:
+                        - generic [aria-hidden] [ref=f15e242]: 
+                        - generic [ref=f15e243]: 1.1k
+                        - generic [ref=f15e244]: Reputation
+                  - list [ref=f15e245]:
+                    - listitem [ref=f15e246]:
+                      - strong [ref=f15e247]: "Location:"
+                      - text: EDLE Essen-Mülheim
+                    - listitem [ref=f15e248]:
+                      - strong [ref=f15e249]: "OS:"
+                      - text: Multiple (Windows/Mac)
+                    - listitem [ref=f15e250]:
+                      - strong [ref=f15e251]: "X-Plane since :"
+                      - text: v9
+                - text:  
+                - generic [ref=f15e252]:
+                  - generic [ref=f15e253]:
+                    - time [ref=f15e256]: August 14
+                    - generic [ref=f15e257]:
+                      - paragraph [ref=f15e258]: adsb.fi doesn't require an API key. It is a free channel. And for me it works. For proper help please go with full information into the support forum.
+                      - paragraph [ref=f15e259]:
+                        - text: What I do notice, though, is that
+                        - strong [ref=f15e260]: Airplanes.live returns HTTP 403 "Forbidden"
+                        - text: "...and LiveTraffic translates that into a misleading error message \"ADS-B Exchange: API Key test FAILED\". Sorry for the misleading error, which I could fix. But that's not the actual problem."
+                      - paragraph [ref=f15e261]: What I don't know is why Airplanes.live now returns HTTP 403 "Forbidden". I wasn't informed and the web site doesn't mention conditions either. It seems to require some sort of authorization now, to be requested from their support mail.
+                      - paragraph [ref=f15e262]: ADS-B Exchange developed similarly a while back, and same people behind that. Honestly...I'm actually a bit tired of chasing these changes. If Airplanes.live doesn't came back I will just remove it from LiveTraffic.
+                  - list [ref=f15e264]:
+                    - listitem [ref=f15e265]:
+                      - button "MultiQuote" [ref=f15e266] [cursor=pointer]:
+                        - generic [aria-hidden] [ref=f15e267]: +
+                    - listitem [ref=f15e268]:
+                      - link "Quote" [ref=f15e269] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [aria-hidden] [ref=f15e270]: 
+                    - listitem
+              - list [ref=f15e272]:
+                - listitem [ref=f15e273]:
+                  - time [ref=f15e275]: Aug 14
+                  - generic [ref=f15e276]:
+                    - link "TwinFan" [ref=f15e277] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/94033-twinfan/
+                    - text: changed the title to
+                    - emphasis [ref=f15e278]: Airplanes.live inop (with misleading error "API Key invalid")
+              - article [ref=f15e279]:
+                - complementary [ref=f15e280]:
+                  - link [aria-hidden] [ref=f15e282] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/profile/14220-nathanx/
+                  - heading [level=3] [ref=f15e284]:
+                    - link "NathanX" [ref=f15e285] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/14220-nathanx/
+                  - generic [ref=f15e286]: Member
+                  - list [ref=f15e288]:
+                    - listitem [ref=f15e289]:
+                      - link "141 posts" [ref=f15e290] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/14220-nathanx/content/
+                        - generic [aria-hidden] [ref=f15e291]: 
+                        - generic [ref=f15e292]: "141"
+                        - generic [ref=f15e293]: posts
+                    - listitem [ref=f15e294]:
+                      - link "3 Solutions" [ref=f15e295] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/14220-nathanx/solutions/
+                        - generic [aria-hidden] [ref=f15e296]: 
+                        - generic [ref=f15e297]: "3"
+                        - generic [ref=f15e298]: Solutions
+                    - text: 
+                    - listitem [ref=f15e299]:
+                      - generic [ref=f15e300]:
+                        - generic [aria-hidden] [ref=f15e301]: 
+                        - generic [ref=f15e302]: "35"
+                        - generic [ref=f15e303]: Reputation
+                  - list [ref=f15e304]:
+                    - listitem [ref=f15e305]:
+                      - strong [ref=f15e306]: "OS:"
+                      - text: Windows
+                    - listitem [ref=f15e307]:
+                      - strong [ref=f15e308]: "X-Plane since :"
+                      - text: v10
+                    - listitem [ref=f15e309]:
+                      - strong [ref=f15e310]: "Experience:"
+                      - text: Study Level Sim Pilot
+                - text: 
+                - generic [ref=f15e311]:
+                  - generic [ref=f15e312]:
+                    - time [ref=f15e315]: August 16
+                    - paragraph [ref=f15e317]:
+                      - text: "Here is the error in JSON: error \"Please contact us at"
+                      - link "contactATairplanes.live" [ref=f15e318] [cursor=pointer]:
+                        - /url: mailto:contact@airplanes.live
+                      - text: . Your email MUST include a link to your project if you have one, a description of the project, and what your user base is."
+                  - list [ref=f15e320]:
+                    - listitem [ref=f15e321]:
+                      - button "MultiQuote" [ref=f15e322] [cursor=pointer]:
+                        - generic [aria-hidden] [ref=f15e323]: +
+                    - listitem [ref=f15e324]:
+                      - link "Quote" [ref=f15e325] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [aria-hidden] [ref=f15e326]: 
+                    - listitem
+              - article [ref=f15e328]:
+                - complementary [ref=f15e329]:
+                  - link [aria-hidden] [ref=f15e331] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/profile/1431751-airplaneslive/
+                  - heading [level=3] [ref=f15e333]:
+                    - link "AirplanesLive" [ref=f15e334] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/1431751-airplaneslive/
+                  - generic [ref=f15e335]: New Members
+                  - list [ref=f15e337]:
+                    - listitem [ref=f15e338]:
+                      - link "2 posts" [ref=f15e339] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/1431751-airplaneslive/content/
+                        - generic [aria-hidden] [ref=f15e340]: 
+                        - generic [ref=f15e341]: "2"
+                        - generic [ref=f15e342]: posts
+                    - text: 
+                    - listitem [ref=f15e343]:
+                      - generic [ref=f15e344]:
+                        - generic [aria-hidden] [ref=f15e345]: 
+                        - generic [ref=f15e346]: "0"
+                        - generic [ref=f15e347]: Reputation
+                  - list [ref=f15e348]:
+                    - listitem [ref=f15e349]:
+                      - strong [ref=f15e350]: "Location:"
+                      - text: airplanes.live
+                    - listitem [ref=f15e351]: Interests:airplanes.live
+                    - listitem [ref=f15e352]:
+                      - strong [ref=f15e353]: "OS:"
+                      - text: Linux
+                    - listitem [ref=f15e354]:
+                      - strong [ref=f15e355]: "X-Plane since :"
+                      - text: v10
+                    - listitem [ref=f15e356]:
+                      - strong [ref=f15e357]: "Experience:"
+                      - text: Private Pilot
+                - text: 
+                - generic [ref=f15e358]:
+                  - generic [ref=f15e359]:
+                    - time [ref=f15e362]: August 16
+                    - generic [ref=f15e363]:
+                      - paragraph [ref=f15e364]: (Post amended by moderator for clarity and language to match the topic of this forum)
+                      - paragraph [ref=f15e365]:
+                        - link "Airplanes.LIVE" [ref=f15e366] [cursor=pointer]:
+                          - /url: https://airplanes.live/
+                        - text: supports
+                        - link "https://www.flyrealtraffic.com/" [ref=f15e367] [cursor=pointer]:
+                          - /url: https://www.flyrealtraffic.com/
+                        - text: since Balt is a very nice guy.Balt supports Airplanes.Live in return.
+                      - paragraph [ref=f15e368]:
+                        - text: (...) I suggest you all feed
+                        - link "Airplanes.Live" [ref=f15e369] [cursor=pointer]:
+                          - /url: https://Airplanes.Live
+                        - text: so he can continue to offer such a great service for so little.(...)Birger, no need to make changes, if a user has a feeder to APL then automatically the data works. Anyone complaining about no data isn't contributing a feed to Airplanes.Live. Maybe correct the error in a later release or just remove completely since we support Real-Traffic, up to you. Real-Traffic a great service.===Here is (an extract of) what was sent to API users, since is being misrepresented here.===
+                        - strong [ref=f15e370]: (...)
+                      - paragraph [ref=f15e371]:
+                        - strong [ref=f15e372]: API access is limited to feeder IP due to (excessive use).
+                        - strong [ref=f15e373]: If you are not currently contributing, there is no better time to get started.
+                      - paragraph [ref=f15e374]:
+                        - link [ref=f15e375] [cursor=pointer]:
+                          - /url: https://airplanes.live/get-started/
+                          - strong [ref=f15e376]: https://airplanes.live/get-started/
+                        - strong [ref=f15e377]: Thank you for your support.
+                        - text: Due to (excessive use, partly driven by AI coding tools), the free API has been taken down in order to prevent our eventual bankruptcy. We have been discussing this in our Discord for a month or more.(...)
+                      - paragraph [ref=f15e378]:
+                        - text: "Our goals:"
+                        - link "Airplanes.Live" [ref=f15e379] [cursor=pointer]:
+                          - /url: https://Airplanes.Live
+                        - text: needs to become sustainable long term.We do not currently have ads.We do not filter or remove traffic.We are owned by enthusiasts and the community.We ask anyone using our API data to host a feeder and sponsor their usage.
+                      - paragraph [ref=f15e380]: (...)
+                      - paragraph [ref=f15e381]:
+                        - generic [aria-hidden] [ref=f15e382]: 
+                        - strong [ref=f15e383]:
+                          - text: Edited
+                          - time [ref=f15e384]: August 17
+                          - text: by TwinFan
+                        - text: "Moderator: Stay with topic, forum rules (like no blaming)"
+                  - list [ref=f15e386]:
+                    - listitem [ref=f15e387]:
+                      - button "MultiQuote" [ref=f15e388] [cursor=pointer]:
+                        - generic [aria-hidden] [ref=f15e389]: +
+                    - listitem [ref=f15e390]:
+                      - link "Quote" [ref=f15e391] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [aria-hidden] [ref=f15e392]: 
+                    - listitem
+              - list [ref=f15e394]:
+                - listitem [ref=f15e395]:
+                  - time [ref=f15e397]: Aug 17
+                  - generic [ref=f15e398]:
+                    - link "TwinFan" [ref=f15e399] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/94033-twinfan/
+                    - text: changed the title to
+                    - emphasis [ref=f15e400]: Airplanes.live inop for non-feeders (with misleading error "API Key invalid")
+              - article [ref=f15e401]:
+                - complementary [ref=f15e402]:
+                  - link [aria-hidden] [ref=f15e404] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/profile/1431751-airplaneslive/
+                  - heading [level=3] [ref=f15e406]:
+                    - link "AirplanesLive" [ref=f15e407] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/1431751-airplaneslive/
+                  - generic [ref=f15e408]: New Members
+                  - list [ref=f15e410]:
+                    - listitem [ref=f15e411]:
+                      - link "2 posts" [ref=f15e412] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/1431751-airplaneslive/content/
+                        - generic [aria-hidden] [ref=f15e413]: 
+                        - generic [ref=f15e414]: "2"
+                        - generic [ref=f15e415]: posts
+                    - text: 
+                    - listitem [ref=f15e416]:
+                      - generic [ref=f15e417]:
+                        - generic [aria-hidden] [ref=f15e418]: 
+                        - generic [ref=f15e419]: "0"
+                        - generic [ref=f15e420]: Reputation
+                  - list [ref=f15e421]:
+                    - listitem [ref=f15e422]:
+                      - strong [ref=f15e423]: "Location:"
+                      - text: airplanes.live
+                    - listitem [ref=f15e424]: Interests:airplanes.live
+                    - listitem [ref=f15e425]:
+                      - strong [ref=f15e426]: "OS:"
+                      - text: Linux
+                    - listitem [ref=f15e427]:
+                      - strong [ref=f15e428]: "X-Plane since :"
+                      - text: v10
+                    - listitem [ref=f15e429]:
+                      - strong [ref=f15e430]: "Experience:"
+                      - text: Private Pilot
+                - text: 
+                - generic [ref=f15e431]:
+                  - generic [ref=f15e432]:
+                    - time [ref=f15e435]: August 17
+                    - generic [ref=f15e436]:
+                      - paragraph [ref=f15e437]: You removed all the context. Way to frame it. Anyway .. users that email will get the full scope and text. :/ Thanks for at least approving it.
+                      - paragraph [ref=f15e438]:
+                        - generic [aria-hidden] [ref=f15e439]: 
+                        - strong [ref=f15e440]:
+                          - text: Edited
+                          - time [ref=f15e441]: August 17
+                          - text: by AirplanesLive
+                  - list [ref=f15e443]:
+                    - listitem [ref=f15e444]:
+                      - button "MultiQuote" [ref=f15e445] [cursor=pointer]:
+                        - generic [aria-hidden] [ref=f15e446]: +
+                    - listitem [ref=f15e447]:
+                      - link "Quote" [ref=f15e448] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [aria-hidden] [ref=f15e449]: 
+                    - listitem
+              - list [ref=f15e451]:
+                - listitem [ref=f15e452]: 2 weeks later...
+              - article [ref=f15e453]:
+                - complementary [ref=f15e454]:
+                  - link [aria-hidden] [ref=f15e456] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/profile/1296899-rll/
+                  - heading [level=3] [ref=f15e458]:
+                    - link "RLL" [ref=f15e459] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/1296899-rll/
+                  - generic [ref=f15e460]: Member
+                  - list [ref=f15e462]:
+                    - listitem [ref=f15e463]:
+                      - link "302 posts" [ref=f15e464] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/1296899-rll/content/
+                        - generic [aria-hidden] [ref=f15e465]: 
+                        - generic [ref=f15e466]: "302"
+                        - generic [ref=f15e467]: posts
+                    - listitem [ref=f15e468]:
+                      - link "1 Solutions" [ref=f15e469] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/1296899-rll/solutions/
+                        - generic [aria-hidden] [ref=f15e470]: 
+                        - generic [ref=f15e471]: "1"
+                        - generic [ref=f15e472]: Solutions
+                    - text: 
+                    - listitem [ref=f15e473]:
+                      - generic [ref=f15e474]:
+                        - generic [aria-hidden] [ref=f15e475]: 
+                        - generic [ref=f15e476]: "21"
+                        - generic [ref=f15e477]: Reputation
+                  - list [ref=f15e478]:
+                    - listitem [ref=f15e479]:
+                      - strong [ref=f15e480]: "OS:"
+                      - text: Windows
+                    - listitem [ref=f15e481]:
+                      - strong [ref=f15e482]: "X-Plane since :"
+                      - text: v12
+                    - listitem [ref=f15e483]:
+                      - strong [ref=f15e484]: "Experience:"
+                      - text: Commercial Pilot,Glider Pilot,Certified Flight Instructor
+                - text: 
+                - generic [ref=f15e485]:
+                  - generic [ref=f15e486]:
+                    - time [ref=f15e489]: September 1
+                    - paragraph [ref=f15e491]: I downloaded Live Traffic from X-Plane but not sure exactly what I am getting as real traffic. I see some planes but always get an error message regarding 'ADS-B API key Failed' when starting. I presume I am getting a basic package of real traffic from Navigraph. Am I correct? If so, what (paid?) upgrade is recommended?
+                  - list [ref=f15e493]:
+                    - listitem [ref=f15e494]:
+                      - button "MultiQuote" [ref=f15e495] [cursor=pointer]:
+                        - generic [aria-hidden] [ref=f15e496]: +
+                    - listitem [ref=f15e497]:
+                      - link "Quote" [ref=f15e498] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [aria-hidden] [ref=f15e499]: 
+                    - listitem
+              - article [ref=f15e501]:
+                - complementary [ref=f15e502]:
+                  - link [aria-hidden] [ref=f15e504] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/profile/14220-nathanx/
+                  - heading [level=3] [ref=f15e506]:
+                    - link "NathanX" [ref=f15e507] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/14220-nathanx/
+                  - generic [ref=f15e508]: Member
+                  - list [ref=f15e510]:
+                    - listitem [ref=f15e511]:
+                      - link "141 posts" [ref=f15e512] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/14220-nathanx/content/
+                        - generic [aria-hidden] [ref=f15e513]: 
+                        - generic [ref=f15e514]: "141"
+                        - generic [ref=f15e515]: posts
+                    - listitem [ref=f15e516]:
+                      - link "3 Solutions" [ref=f15e517] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/14220-nathanx/solutions/
+                        - generic [aria-hidden] [ref=f15e518]: 
+                        - generic [ref=f15e519]: "3"
+                        - generic [ref=f15e520]: Solutions
+                    - text: 
+                    - listitem [ref=f15e521]:
+                      - generic [ref=f15e522]:
+                        - generic [aria-hidden] [ref=f15e523]: 
+                        - generic [ref=f15e524]: "35"
+                        - generic [ref=f15e525]: Reputation
+                  - list [ref=f15e526]:
+                    - listitem [ref=f15e527]:
+                      - strong [ref=f15e528]: "OS:"
+                      - text: Windows
+                    - listitem [ref=f15e529]:
+                      - strong [ref=f15e530]: "X-Plane since :"
+                      - text: v10
+                    - listitem [ref=f15e531]:
+                      - strong [ref=f15e532]: "Experience:"
+                      - text: Study Level Sim Pilot
+                - text: 
+                - generic [ref=f15e533]:
+                  - generic [ref=f15e534]:
+                    - time [ref=f15e537]: September 1
+                    - generic [ref=f15e538]:
+                      - paragraph [ref=f15e539]: The only free traffic is adsb.fi (no api key required). Most of the others requires you to be a feeder for the free api key.
+                      - paragraph [ref=f15e540]: Navigraph traffic (flightradar 24) requires Navigraph Unlimited subscription.
+                      - paragraph [ref=f15e541]:
+                        - text: Realtraffic
+                        - link "https://rtweb.flyrealtraffic.com/" [ref=f15e542] [cursor=pointer]:
+                          - /url: https://rtweb.flyrealtraffic.com/
+                        - text: is paid subscription.
+                      - paragraph [ref=f15e543]: If you are not willing to pay, then uncheck all the others, leaving adsb.fi checked.
+                  - list [ref=f15e545]:
+                    - listitem [ref=f15e546]:
+                      - button "MultiQuote" [ref=f15e547] [cursor=pointer]:
+                        - generic [aria-hidden] [ref=f15e548]: +
+                    - listitem [ref=f15e549]:
+                      - link "Quote" [ref=f15e550] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [aria-hidden] [ref=f15e551]: 
+                    - listitem
+              - article [ref=f15e553]:
+                - complementary [ref=f15e554]:
+                  - link [aria-hidden] [ref=f15e556] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/profile/94033-twinfan/
+                  - heading [level=3] [ref=f15e558]:
+                    - link "TwinFan" [ref=f15e559] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/94033-twinfan/
+                  - link " Community Leader" [ref=f15e561] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/staff/
+                  - link [ref=f15e563] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/staff/
+                  - list [ref=f15e564]:
+                    - listitem [ref=f15e565]:
+                      - link "1.8k posts" [ref=f15e566] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/94033-twinfan/content/
+                        - generic [aria-hidden] [ref=f15e567]: 
+                        - generic [ref=f15e568]: 1.8k
+                        - generic [ref=f15e569]: posts
+                    - listitem [ref=f15e570]:
+                      - link "1 Solutions" [ref=f15e571] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/94033-twinfan/solutions/
+                        - generic [aria-hidden] [ref=f15e572]: 
+                        - generic [ref=f15e573]: "1"
+                        - generic [ref=f15e574]: Solutions
+                    - text: 
+                    - listitem [ref=f15e575]:
+                      - generic [ref=f15e576]:
+                        - generic [aria-hidden] [ref=f15e577]: 
+                        - generic [ref=f15e578]: 1.1k
+                        - generic [ref=f15e579]: Reputation
+                  - list [ref=f15e580]:
+                    - listitem [ref=f15e581]:
+                      - strong [ref=f15e582]: "Location:"
+                      - text: EDLE Essen-Mülheim
+                    - listitem [ref=f15e583]:
+                      - strong [ref=f15e584]: "OS:"
+                      - text: Multiple (Windows/Mac)
+                    - listitem [ref=f15e585]:
+                      - strong [ref=f15e586]: "X-Plane since :"
+                      - text: v9
+                - text:  
+                - generic [ref=f15e587]:
+                  - generic [ref=f15e588]:
+                    - time [ref=f15e591]: September 1
+                    - generic [ref=f15e592]:
+                      - blockquote [ref=f15e593]:
+                        - generic [ref=f15e594]:
+                          - text: 
+                          - link "" [ref=f15e595] [cursor=pointer]:
+                            - /url: //forums.x-plane.org/?app=core&module=system&controller=content&do=find&content_class=forums_Topic&content_id=350530&content_commentid=3063081
+                          - text: On 9/1/2026 at 6:50 AM,
+                          - link "RLL" [ref=f15e597] [cursor=pointer]:
+                            - /url: //forums.x-plane.org/?app=core&module=members&controller=profile&id=1296899
+                          - text: "said:"
+                        - paragraph [ref=f15e599]: I see some planes but always get an error message regarding 'ADS-B API key Failed' when starting.
+                      - paragraph [ref=f15e600]:
+                        - text: "That's why I merged the post here: It is due to Airplanes.live no longer being free to access. It used to be, that's why it still is activated by default after first installation and then now produces this (sorry, misleading) \"API Key Failed\" error.Deactivate Airplanes.live in the"
+                        - link "Settings" [ref=f15e601] [cursor=pointer]:
+                          - /url: https://twinfan.gitbook.io/livetraffic/setup/installation/airplanes.live
+                        - text: of LiveTraffic. (In a future version, it will no longer be activated by default.)
+                      - paragraph [ref=f15e602]:
+                        - text: "For all other traffic data options: They are listed on the"
+                        - link "download page" [ref=f15e603] [cursor=pointer]:
+                          - /url: https://forums.x-plane.org/files/file/49749-livetraffic/
+                        - text: ", just a bit to the left of the Download button where it says \"1. NOTE: Before even considering...\"...or refer to"
+                        - link "the Documentation" [ref=f15e604] [cursor=pointer]:
+                          - /url: https://twinfan.gitbook.io/livetraffic/introduction/features/channels
+                        - text: for options. Check out LiveTraffic with what's available for free (not only adsb.fi, but also OpenText and OpenGlider), but the best coverage and data will require paid data.
+                  - generic [ref=f15e605]:
+                    - list [ref=f15e606]:
+                      - listitem [ref=f15e607]:
+                        - button "MultiQuote" [ref=f15e608] [cursor=pointer]:
+                          - generic [aria-hidden] [ref=f15e609]: +
+                      - listitem [ref=f15e610]:
+                        - link "Quote" [ref=f15e611] [cursor=pointer]:
+                          - /url: "#"
+                          - generic [aria-hidden] [ref=f15e612]: 
+                      - listitem
+                    - list [ref=f15e616]:
+                      - listitem [ref=f15e617]:
+                        - generic "Thanks" [ref=f15e618]:
+                          - img "Thanks" [ref=f15e620]
+                          - generic [ref=f15e621]: "1"
+              - article [ref=f15e622]:
+                - complementary [ref=f15e623]:
+                  - link [aria-hidden] [ref=f15e625] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/profile/1296899-rll/
+                  - heading [level=3] [ref=f15e627]:
+                    - link "RLL" [ref=f15e628] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/1296899-rll/
+                  - generic [ref=f15e629]: Member
+                  - list [ref=f15e631]:
+                    - listitem [ref=f15e632]:
+                      - link "302 posts" [ref=f15e633] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/1296899-rll/content/
+                        - generic [aria-hidden] [ref=f15e634]: 
+                        - generic [ref=f15e635]: "302"
+                        - generic [ref=f15e636]: posts
+                    - listitem [ref=f15e637]:
+                      - link "1 Solutions" [ref=f15e638] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/1296899-rll/solutions/
+                        - generic [aria-hidden] [ref=f15e639]: 
+                        - generic [ref=f15e640]: "1"
+                        - generic [ref=f15e641]: Solutions
+                    - text: 
+                    - listitem [ref=f15e642]:
+                      - generic [ref=f15e643]:
+                        - generic [aria-hidden] [ref=f15e644]: 
+                        - generic [ref=f15e645]: "21"
+                        - generic [ref=f15e646]: Reputation
+                  - list [ref=f15e647]:
+                    - listitem [ref=f15e648]:
+                      - strong [ref=f15e649]: "OS:"
+                      - text: Windows
+                    - listitem [ref=f15e650]:
+                      - strong [ref=f15e651]: "X-Plane since :"
+                      - text: v12
+                    - listitem [ref=f15e652]:
+                      - strong [ref=f15e653]: "Experience:"
+                      - text: Commercial Pilot,Glider Pilot,Certified Flight Instructor
+                - text: 
+                - generic [ref=f15e654]:
+                  - generic [ref=f15e655]:
+                    - time [ref=f15e658]: September 1
+                    - generic [ref=f15e659]:
+                      - blockquote [ref=f15e660]:
+                        - generic [ref=f15e661]:
+                          - text: 
+                          - link "" [ref=f15e662] [cursor=pointer]:
+                            - /url: //forums.x-plane.org/?app=core&module=system&controller=content&do=find&content_class=forums_Topic&content_id=350530&content_commentid=3063105
+                          - text: On 9/1/2026 at 8:15 AM,
+                          - link "NathanX" [ref=f15e664] [cursor=pointer]:
+                            - /url: //forums.x-plane.org/?app=core&module=members&controller=profile&id=14220
+                          - text: "said:"
+                        - generic [ref=f15e665]:
+                          - paragraph [ref=f15e666]: The only free traffic is adsb.fi (no api key required). Most of the others requires you to be a feeder for the free api key.
+                          - paragraph [ref=f15e667]: Navigraph traffic (flightradar 24) requires Navigraph Unlimited subscription.
+                          - paragraph [ref=f15e668]:
+                            - text: Realtraffic
+                            - link "https://rtweb.flyrealtraffic.com/" [ref=f15e669] [cursor=pointer]:
+                              - /url: https://rtweb.flyrealtraffic.com/
+                            - text: is paid subscription.
+                          - paragraph [ref=f15e670]: If you are not willing to pay, then uncheck all the others, leaving adsb.fi checked.
+                      - paragraph [ref=f15e671]: Thanks, I notice that if I select Flightradar24 Tracker in LiveTraffic settings, the selection gets removed with a notice that tells me no token is available and to authorize LiveTraffic with Navigraph. I'm not sure why I am getting this notice since I have a Navigraph unlimited paid subscription.
+                  - list [ref=f15e673]:
+                    - listitem [ref=f15e674]:
+                      - button "MultiQuote" [ref=f15e675] [cursor=pointer]:
+                        - generic [aria-hidden] [ref=f15e676]: +
+                    - listitem [ref=f15e677]:
+                      - link "Quote" [ref=f15e678] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [aria-hidden] [ref=f15e679]: 
+                    - listitem
+              - article [ref=f15e681]:
+                - complementary [ref=f15e682]:
+                  - link [aria-hidden] [ref=f15e684] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/profile/94033-twinfan/
+                  - heading [level=3] [ref=f15e686]:
+                    - link "TwinFan" [ref=f15e687] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/94033-twinfan/
+                  - link " Community Leader" [ref=f15e689] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/staff/
+                  - link [ref=f15e691] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/staff/
+                  - list [ref=f15e692]:
+                    - listitem [ref=f15e693]:
+                      - link "1.8k posts" [ref=f15e694] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/94033-twinfan/content/
+                        - generic [aria-hidden] [ref=f15e695]: 
+                        - generic [ref=f15e696]: 1.8k
+                        - generic [ref=f15e697]: posts
+                    - listitem [ref=f15e698]:
+                      - link "1 Solutions" [ref=f15e699] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/94033-twinfan/solutions/
+                        - generic [aria-hidden] [ref=f15e700]: 
+                        - generic [ref=f15e701]: "1"
+                        - generic [ref=f15e702]: Solutions
+                    - text: 
+                    - listitem [ref=f15e703]:
+                      - generic [ref=f15e704]:
+                        - generic [aria-hidden] [ref=f15e705]: 
+                        - generic [ref=f15e706]: 1.1k
+                        - generic [ref=f15e707]: Reputation
+                  - list [ref=f15e708]:
+                    - listitem [ref=f15e709]:
+                      - strong [ref=f15e710]: "Location:"
+                      - text: EDLE Essen-Mülheim
+                    - listitem [ref=f15e711]:
+                      - strong [ref=f15e712]: "OS:"
+                      - text: Multiple (Windows/Mac)
+                    - listitem [ref=f15e713]:
+                      - strong [ref=f15e714]: "X-Plane since :"
+                      - text: v9
+                - text:  
+                - generic [ref=f15e715]:
+                  - generic [ref=f15e716]:
+                    - time [ref=f15e719]: September 2
+                    - generic [ref=f15e720]:
+                      - blockquote [ref=f15e721]:
+                        - generic [ref=f15e722]:
+                          - text: 
+                          - link "" [ref=f15e723] [cursor=pointer]:
+                            - /url: //forums.x-plane.org/?app=core&module=system&controller=content&do=find&content_class=forums_Topic&content_id=350530&content_commentid=3063134
+                          - text: On 9/1/2026 at 10:41 AM,
+                          - link "RLL" [ref=f15e725] [cursor=pointer]:
+                            - /url: //forums.x-plane.org/?app=core&module=members&controller=profile&id=1296899
+                          - text: "said:"
+                        - paragraph [ref=f15e727]: I'm not sure why I am getting this notice since I have a Navigraph unlimited paid subscription.
+                      - paragraph [ref=f15e728]:
+                        - text: Please check the
+                        - link "documentation" [ref=f15e729] [cursor=pointer]:
+                          - /url: https://twinfan.gitbook.io/livetraffic/setup/installation/navigraph
+                        - text: ...there are (?) icons for each sections in the settings that get you to documentation and help.LiveTraffic needs to be linked to your Navigraph account. From what you are writing it remains unclear if you authorized LiveTraffic with your subscription.
+                      - paragraph [ref=f15e730]:
+                        - text: If that doesn't help you need to provide more details for us to be able to help, first and foremost an attached Log.txt file. Follow
+                        - link "the Support-HowTo" [ref=f15e731] [cursor=pointer]:
+                          - /url: https://forums.x-plane.org/forums/topic/174691-support-attach-a-logtxt-file-and-provide-the-following-details/
+                        - text: .
+                  - list [ref=f15e733]:
+                    - listitem [ref=f15e734]:
+                      - button "MultiQuote" [ref=f15e735] [cursor=pointer]:
+                        - generic [aria-hidden] [ref=f15e736]: +
+                    - listitem [ref=f15e737]:
+                      - link "Quote" [ref=f15e738] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [aria-hidden] [ref=f15e739]: 
+                    - listitem
+              - article [ref=f15e741]:
+                - complementary [ref=f15e742]:
+                  - link [aria-hidden] [ref=f15e744] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/profile/1296899-rll/
+                  - heading [level=3] [ref=f15e746]:
+                    - link "RLL" [ref=f15e747] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/1296899-rll/
+                  - generic [ref=f15e748]: Member
+                  - list [ref=f15e750]:
+                    - listitem [ref=f15e751]:
+                      - link "302 posts" [ref=f15e752] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/1296899-rll/content/
+                        - generic [aria-hidden] [ref=f15e753]: 
+                        - generic [ref=f15e754]: "302"
+                        - generic [ref=f15e755]: posts
+                    - listitem [ref=f15e756]:
+                      - link "1 Solutions" [ref=f15e757] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/1296899-rll/solutions/
+                        - generic [aria-hidden] [ref=f15e758]: 
+                        - generic [ref=f15e759]: "1"
+                        - generic [ref=f15e760]: Solutions
+                    - text: 
+                    - listitem [ref=f15e761]:
+                      - generic [ref=f15e762]:
+                        - generic [aria-hidden] [ref=f15e763]: 
+                        - generic [ref=f15e764]: "21"
+                        - generic [ref=f15e765]: Reputation
+                  - list [ref=f15e766]:
+                    - listitem [ref=f15e767]:
+                      - strong [ref=f15e768]: "OS:"
+                      - text: Windows
+                    - listitem [ref=f15e769]:
+                      - strong [ref=f15e770]: "X-Plane since :"
+                      - text: v12
+                    - listitem [ref=f15e771]:
+                      - strong [ref=f15e772]: "Experience:"
+                      - text: Commercial Pilot,Glider Pilot,Certified Flight Instructor
+                - text: 
+                - generic [ref=f15e773]:
+                  - generic [ref=f15e774]:
+                    - time [ref=f15e777]: September 2
+                    - generic [ref=f15e778]:
+                      - blockquote [ref=f15e779]:
+                        - generic [ref=f15e780]:
+                          - text: 
+                          - link "" [ref=f15e781] [cursor=pointer]:
+                            - /url: //forums.x-plane.org/?app=core&module=system&controller=content&do=find&content_class=forums_Topic&content_id=350530&content_commentid=3063269
+                          - text: On 9/2/2026 at 2:07 AM,
+                          - link "TwinFan" [ref=f15e783] [cursor=pointer]:
+                            - /url: //forums.x-plane.org/?app=core&module=members&controller=profile&id=94033
+                          - text: "said:"
+                        - generic [ref=f15e784]:
+                          - paragraph [ref=f15e785]:
+                            - text: Please check the
+                            - link "documentation" [ref=f15e786] [cursor=pointer]:
+                              - /url: https://twinfan.gitbook.io/livetraffic/setup/installation/navigraph
+                            - text: ...there are (?) icons for each sections in the settings that get you to documentation and help.LiveTraffic needs to be linked to your Navigraph account. From what you are writing it remains unclear if you authorized LiveTraffic with your subscription.
+                          - paragraph [ref=f15e787]:
+                            - text: If that doesn't help you need to provide more details for us to be able to help, first and foremost an attached Log.txt file. Follow
+                            - link "the Support-HowTo" [ref=f15e788] [cursor=pointer]:
+                              - /url: https://forums.x-plane.org/forums/topic/174691-support-attach-a-logtxt-file-and-provide-the-following-details/
+                            - text: .
+                      - blockquote [ref=f15e789]:
+                        - generic [ref=f15e790]:
+                          - text: 
+                          - link "" [ref=f15e791] [cursor=pointer]:
+                            - /url: //forums.x-plane.org/?app=core&module=system&controller=content&do=find&content_class=forums_Topic&content_id=350530&content_commentid=3063269
+                          - text: On 9/2/2026 at 2:07 AM,
+                          - link "TwinFan" [ref=f15e793] [cursor=pointer]:
+                            - /url: //forums.x-plane.org/?app=core&module=members&controller=profile&id=94033
+                          - text: "said:"
+                        - generic [ref=f15e794]:
+                          - paragraph [ref=f15e795]:
+                            - text: Please check the
+                            - link "documentation" [ref=f15e796] [cursor=pointer]:
+                              - /url: https://twinfan.gitbook.io/livetraffic/setup/installation/navigraph
+                            - text: ...there are (?) icons for each sections in the settings that get you to documentation and help.LiveTraffic needs to be linked to your Navigraph account. From what you are writing it remains unclear if you authorized LiveTraffic with your subscription.
+                          - paragraph [ref=f15e797]:
+                            - text: If that doesn't help you need to provide more details for us to be able to help, first and foremost an attached Log.txt file. Follow
+                            - link "the Support-HowTo" [ref=f15e798] [cursor=pointer]:
+                              - /url: https://forums.x-plane.org/forums/topic/174691-support-attach-a-logtxt-file-and-provide-the-following-details/
+                            - text: .
+                      - paragraph [ref=f15e799]: "Thanks, TwinFan. I apologize for not paying close enough attention to the documentation. When I first looked at my LiveTraffic settings, I didn't scroll down far enough to see the 'authorization' tab for Navigraph. I clicked on it and the rest was magic. I have two more questions:"
+                      - paragraph [ref=f15e800]:
+                        - text: 1 - Is
+                        - link "adsb.fi" [ref=f15e801] [cursor=pointer]:
+                          - /url: https://adsb.fi
+                        - text: still necessary or desired with Flightradar24 Tracker now active?
+                      - paragraph [ref=f15e802]: 2 - Is 'TCAS controlled (requested)' necessary if I'm only flying the Vision Jet SF50? The default setting is unclicked.
+                  - list [ref=f15e804]:
+                    - listitem [ref=f15e805]:
+                      - button "MultiQuote" [ref=f15e806] [cursor=pointer]:
+                        - generic [aria-hidden] [ref=f15e807]: +
+                    - listitem [ref=f15e808]:
+                      - link "Quote" [ref=f15e809] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [aria-hidden] [ref=f15e810]: 
+                    - listitem
+              - article [ref=f15e812]:
+                - complementary [ref=f15e813]:
+                  - link [aria-hidden] [ref=f15e815] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/profile/94033-twinfan/
+                  - heading [level=3] [ref=f15e817]:
+                    - link "TwinFan" [ref=f15e818] [cursor=pointer]:
+                      - /url: https://forums.x-plane.org/profile/94033-twinfan/
+                  - link " Community Leader" [ref=f15e820] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/staff/
+                  - link [ref=f15e822] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/staff/
+                  - list [ref=f15e823]:
+                    - listitem [ref=f15e824]:
+                      - link "1.8k posts" [ref=f15e825] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/94033-twinfan/content/
+                        - generic [aria-hidden] [ref=f15e826]: 
+                        - generic [ref=f15e827]: 1.8k
+                        - generic [ref=f15e828]: posts
+                    - listitem [ref=f15e829]:
+                      - link "1 Solutions" [ref=f15e830] [cursor=pointer]:
+                        - /url: https://forums.x-plane.org/profile/94033-twinfan/solutions/
+                        - generic [aria-hidden] [ref=f15e831]: 
+                        - generic [ref=f15e832]: "1"
+                        - generic [ref=f15e833]: Solutions
+                    - text: 
+                    - listitem [ref=f15e834]:
+                      - generic [ref=f15e835]:
+                        - generic [aria-hidden] [ref=f15e836]: 
+                        - generic [ref=f15e837]: 1.1k
+                        - generic [ref=f15e838]: Reputation
+                  - list [ref=f15e839]:
+                    - listitem [ref=f15e840]:
+                      - strong [ref=f15e841]: "Location:"
+                      - text: EDLE Essen-Mülheim
+                    - listitem [ref=f15e842]:
+                      - strong [ref=f15e843]: "OS:"
+                      - text: Multiple (Windows/Mac)
+                    - listitem [ref=f15e844]:
+                      - strong [ref=f15e845]: "X-Plane since :"
+                      - text: v9
+                - text:  
+                - generic [ref=f15e846]:
+                  - generic [ref=f15e847]:
+                    - time [ref=f15e850]: September 2
+                    - list [ref=f15e852]:
+                      - listitem [ref=f15e853]:
+                        - paragraph [ref=f15e854]:
+                          - text: You can run as many data channels in parallel as you like.
+                          - link "adsb.fi" [ref=f15e855] [cursor=pointer]:
+                            - /url: https://adsb.fi
+                          - text: can still add data beyond Navigraph in some places. I would keep it always on. And
+                          - link "Open Glider" [ref=f15e856] [cursor=pointer]:
+                            - /url: https://twinfan.gitbook.io/livetraffic/setup/installation/ogn
+                          - text: ", which adds a totally different set of planes, which are not typically included in the ADS-B data of Navigraph or all the other channels."
+                      - listitem [ref=f15e857]:
+                        - paragraph [ref=f15e858]:
+                          - text: For what TCAS does I refer you again to
+                          - link "the documentation" [ref=f15e859] [cursor=pointer]:
+                            - /url: https://twinfan.gitbook.io/livetraffic/introduction/features/tcas
+                          - text: . It should actually be On by default, but, as the documentation explains in
+                          - link "a different place" [ref=f15e860] [cursor=pointer]:
+                            - /url: https://twinfan.gitbook.io/livetraffic/introduction/limitations#there-can-be-only-one-multiplayer-client
+                          - text: ", if LiveTraffic isn't alone it might not"
+                          - emphasis [ref=f15e861]: get
+                          - text: control.
+                  - generic [ref=f15e862]:
+                    - list [ref=f15e863]:
+                      - listitem [ref=f15e864]:
+                        - button "MultiQuote" [ref=f15e865] [cursor=pointer]:
+                          - generic [aria-hidden] [ref=f15e866]: +
+                      - listitem [ref=f15e867]:
+                        - link "Quote" [ref=f15e868] [cursor=pointer]:
+                          - /url: "#"
+                          - generic [aria-hidden] [ref=f15e869]: 
+                      - listitem
+                    - list [ref=f15e873]:
+                      - listitem [ref=f15e874]:
+                        - generic "Like" [ref=f15e875]:
+                          - img "Like" [ref=f15e877]
+                          - generic [ref=f15e878]: "1"
+            - generic [ref=f15e879]:
+              - generic [ref=f15e880]:
+                - heading "Join the conversation" [level=2] [ref=f15e881]
+                - paragraph [ref=f15e882]:
+                  - text: You can post now and register later. If you have an account,
+                  - link "sign in now" [ref=f15e883] [cursor=pointer]:
+                    - /url: https://forums.x-plane.org/login/
+                  - text: to post with your account.
+                  - generic [ref=f15e884]:
+                    - strong [ref=f15e885]: "Note:"
+                    - text: Your post will require moderator approval before it will be visible.
+              - generic [ref=f15e887]:
+                - img "Guest" [ref=f15e890]
+                - generic [ref=f15e894] [cursor=pointer]:
+                  - generic [aria-hidden] [ref=f15e895]: 
+                  - text: Reply to this topic...
+            - text:        
+          - link "Go to topic listing " [ref=f15e898] [cursor=pointer]:
+            - /url: https://forums.x-plane.org/forums/forum/457-livetraffic-support/
+            - generic [ref=f15e899]: Go to topic listing
+            - text: 
+        - navigation "Breadcrumbs" [ref=f15e900]:
+          - list [ref=f15e901]:
+            - listitem [ref=f15e902]:
+              - link "Home" [ref=f15e903] [cursor=pointer]:
+                - /url: https://forums.x-plane.org/
+                - generic [aria-hidden] [ref=f15e904]: 
+                - text: Home
+              - text: 
+            - listitem [ref=f15e905]:
+              - link "Forums" [ref=f15e906] [cursor=pointer]:
+                - /url: https://forums.x-plane.org/forums/
+              - text: 
+            - listitem [ref=f15e907]:
+              - link "X-Plane.org Sponsored Projects" [ref=f15e908] [cursor=pointer]:
+                - /url: https://forums.x-plane.org/forums/forum/70-x-planeorg-sponsored-projects/
+              - text: 
+            - listitem [ref=f15e909]:
+              - link "LiveTraffic Support" [ref=f15e910] [cursor=pointer]:
+                - /url: https://forums.x-plane.org/forums/forum/457-livetraffic-support/
+              - text: 
+            - listitem [ref=f15e911]:
+              - generic [ref=f15e912]: Airplanes.live inop for non-feeders (with misleading error "API Key invalid")
+          - list [ref=f15e913]:
+            - listitem [ref=f15e914]:
+              - link "All Activity" [ref=f15e915] [cursor=pointer]:
+                - /url: https://forums.x-plane.org/discover/
+                - generic [aria-hidden] [ref=f15e916]: 
+                - text: All Activity
+    - contentinfo [ref=f15e918]:
+      - generic [ref=f15e920]:
+        - list [ref=f15e921]:
+          - listitem "Light Mode" [ref=f15e922]:
+            - button "Light Mode" [ref=f15e923] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f15e924]: 
+          - listitem "Dark Mode" [ref=f15e926]:
+            - button "Dark Mode" [ref=f15e927] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f15e928]: 
+          - listitem "System Preference" [ref=f15e930]:
+            - button "System Preference" [ref=f15e931] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f15e932]: 
+        - list [ref=f15e934]:
+          - listitem [ref=f15e935]:
+            - link "x" [ref=f15e936] [cursor=pointer]:
+              - /url: https://x.com/XPlanedotorg
+        - separator [ref=f15e940]
+        - list [ref=f15e941]:
+          - listitem [ref=f15e942]:
+            - link "Privacy Policy" [ref=f15e943] [cursor=pointer]:
+              - /url: https://forums.x-plane.org/privacy/
+          - listitem [ref=f15e944]:
+            - link "Contact Us" [ref=f15e945] [cursor=pointer]:
+              - /url: https://forums.x-plane.org/contact/
+          - listitem [ref=f15e946]:
+            - link "Cookies" [ref=f15e947] [cursor=pointer]:
+              - /url: https://forums.x-plane.org/cookies/
+          - listitem [ref=f15e948]:
+            - button "RSS" [ref=f15e949] [cursor=pointer]:
+              - generic [aria-hidden] [ref=f15e950]: 
+              - text: RSS
+        - paragraph [ref=f15e951]:
+          - generic [ref=f15e952]: X-Plane.Org
+          - link "Powered by Invision Community" [ref=f15e953] [cursor=pointer]:
+            - /url: https://www.invisioncommunity.com/
+  - text:                                                                                                                                           

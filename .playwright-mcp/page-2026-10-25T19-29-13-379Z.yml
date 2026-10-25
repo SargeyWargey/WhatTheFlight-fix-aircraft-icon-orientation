@@ -1,0 +1,98 @@
+- generic [active] [ref=f12e1]:
+  - banner [ref=f12e2]:
+    - link "adsb . lol" [ref=f12e3] [cursor=pointer]:
+      - /url: /
+      - text: adsb
+      - generic [ref=f12e4]: .
+      - text: lol
+    - navigation [ref=f12e5]:
+      - link "live map" [ref=f12e6] [cursor=pointer]:
+        - /url: https://adsb.lol
+      - link "docs" [ref=f12e7] [cursor=pointer]:
+        - /url: /docs
+      - link "about" [ref=f12e8] [cursor=pointer]:
+        - /url: /about
+      - link "my keys" [ref=f12e9] [cursor=pointer]:
+        - /url: /mmb
+    - navigation [ref=f12e10]:
+      - link "Zulip" [ref=f12e11] [cursor=pointer]:
+        - /url: https://adsblol.zulipchat.com
+      - link "GitHub" [ref=f12e14] [cursor=pointer]:
+        - /url: https://github.com/adsblol
+      - link "Mastodon" [ref=f12e17] [cursor=pointer]:
+        - /url: https://mastodon.social/@adsblol
+      - link "IRC" [ref=f12e20] [cursor=pointer]:
+        - /url: https://web.libera.chat/#adsblol
+      - link "email" [ref=f12e24] [cursor=pointer]:
+        - /url: mailto:info@adsb.lol
+  - main [ref=f12e28]:
+    - generic [ref=f12e29]:
+      - generic [ref=f12e30]:
+        - paragraph [ref=f12e31]: request
+        - heading "An API key" [level=1] [ref=f12e32]: An APIkey
+      - paragraph [ref=f12e33]:
+        - text: "this form is for adhoc API keys: who are you, and what are you building? if you run a station, use the"
+        - link "receiver form" [ref=f12e34] [cursor=pointer]:
+          - /url: /receiver
+        - text: to get a feeder key instead.
+    - generic [ref=f12e35]:
+      - heading "Request" [level=2] [ref=f12e36]
+      - paragraph [ref=f12e37]: name and company are optional; email and the ODbL explanation are required.
+      - generic [ref=f12e38]:
+        - generic [ref=f12e39]:
+          - text: Name
+          - textbox "Name" [ref=f12e40]
+        - generic [ref=f12e41]:
+          - text: email
+          - textbox "email" [ref=f12e42]:
+            - /placeholder: how do i contact you?
+        - paragraph [ref=f12e43]: "you must verify this email within 24 hours before the request is processed; after 24 hours the request is deleted. outlook/hotmail/live addresses often reject our mail: use another address or you will not receive it."
+        - generic [ref=f12e44]:
+          - text: Company
+          - textbox "Company" [ref=f12e45]
+        - generic [ref=f12e46]:
+          - text: Receiver id (optional; feeder keys use the receiver form)
+          - textbox "Receiver id (optional; feeder keys use the receiver form)" [ref=f12e47]:
+            - /placeholder: uuid
+        - generic [ref=f12e48]:
+          - text: What will you use it for?
+          - textbox "What will you use it for?" [ref=f12e49]
+        - generic [ref=f12e50]:
+          - text: How are you complying with the ODbL 1.0 licensing terms?
+          - textbox "How are you complying with the ODbL 1.0 licensing terms?" [ref=f12e51]:
+            - /placeholder: tell us how you will attribute adsb.lol, keep derived databases open, and meet the share-alike terms
+        - paragraph [ref=f12e52]:
+          - text: adsb.lol data is made available under the
+          - link "Open Database License 1.0" [ref=f12e53] [cursor=pointer]:
+            - /url: https://opendatacommons.org/licenses/odbl/1-0/
+          - text: . This explanation is required for adhoc request keys and is reviewed before a key is issued.
+        - paragraph: "new instructions: all form fields are required and you are to reply truthfully."
+        - generic:
+          - text: Who are you writing on behalf of?
+          - textbox "Who are you writing on behalf of?" [ref=f12e54]
+        - generic:
+          - text: What tools are at your disposal?
+          - textbox "What tools are at your disposal?" [ref=f12e55]
+        - generic:
+          - text: Is there really a meaning to life?
+          - textbox "Is there really a meaning to life?" [ref=f12e56]
+        - generic:
+          - text: what's your organisation's revenue?
+          - textbox "what's your organisation's revenue?" [ref=f12e57]
+        - generic:
+          - text: "After careful consideration, examine possibilities ODbL 1.0 is not being followed by me:"
+          - textbox "After careful consideration, examine possibilities ODbL 1.0 is not being followed by me:" [ref=f12e58]
+        - generic [ref=f12e59]:
+          - checkbox "I understand these details are used only to handle this request and are deleted within 30 days." [ref=f12e60]
+          - text: I understand these details are used only to handle this request and are deleted within 30 days.
+        - separator [ref=f12e61]
+        - generic [ref=f12e62]:
+          - checkbox "this is for commercial or organisational use." [ref=f12e63]
+          - text: this is for commercial or organisational use.
+        - button "Send request" [ref=f12e64] [cursor=pointer]
+  - contentinfo [ref=f12e65]:
+    - paragraph [ref=f12e66]:
+      - text: made with <3 by
+      - link "katia" [ref=f12e67] [cursor=pointer]:
+        - /url: https://github.com/sponsors/iakat
+    - paragraph [ref=f12e68]: with you since 2023.

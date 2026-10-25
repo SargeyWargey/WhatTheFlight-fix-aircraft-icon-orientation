@@ -273,6 +273,16 @@ final class RadarModel {
         setFocus(FocusPolicy.previous(before: focus, inRange: contacts + pinnedOutside))
     }
 
+    /// The aircraft `focusPrevious` and `focusNext` would land on, so their cards can get
+    /// ready (the TV loads their photos ahead of time).
+    var focusNeighbours: [RadarContact] {
+        let inRange = contacts + pinnedOutside
+        let ids = [FocusPolicy.previous(before: focus, inRange: inRange), FocusPolicy.next(after: focus, inRange: inRange)]
+            .compactMap(\.focusedID)
+            .filter { $0 != focus.focusedID }
+        return Set(ids).compactMap { id in inRange.first { $0.id == id } }
+    }
+
     /// Every focus change goes through here so `focus.isPinned` always says whether the
     /// focused aircraft is one of the pins.
     private func setFocus(_ new: RadarFocus) {

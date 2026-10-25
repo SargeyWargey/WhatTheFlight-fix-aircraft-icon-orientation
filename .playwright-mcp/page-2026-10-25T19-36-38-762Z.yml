@@ -1,0 +1,32 @@
+- generic [ref=f91e2]:
+  - navigation [ref=f91e3]:
+    - generic [ref=f91e4]:
+      - link "ADSB.lol Status" [ref=f91e6] [cursor=pointer]:
+        - /url: https://status.adsb.lol
+      - list [ref=f91e8]:
+        - listitem [ref=f91e9]:
+          - link "Status" [ref=f91e10] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=f91e11]:
+          - link "GitHub" [ref=f91e12] [cursor=pointer]:
+            - /url: https://github.com/adsblol/status
+  - main [ref=f91e13]:
+    - generic [ref=f91e14]:
+      - heading "ADSB.lol Status" [level=1] [ref=f91e15]
+      - paragraph [ref=f91e16]: Status page for ADSB.lol
+    - generic [ref=f91e31]:
+      - heading "Live Status" [level=2] [ref=f91e32]
+      - generic [ref=f91e33]:
+        - generic [ref=f91e34]: 24h
+        - generic [ref=f91e35]: 7d
+        - generic [ref=f91e36]: 30d
+        - generic [ref=f91e37]: 1y
+        - generic [ref=f91e38]: all
+  - contentinfo [ref=f91e60]:
+    - paragraph [ref=f91e61]:
+      - text: This page is
+      - link "open source" [ref=f91e62] [cursor=pointer]:
+        - /url: https://github.com/adsblol/status
+      - text: ", powered by"
+      - link "Upptime" [ref=f91e63] [cursor=pointer]:
+        - /url: https://upptime.js.org

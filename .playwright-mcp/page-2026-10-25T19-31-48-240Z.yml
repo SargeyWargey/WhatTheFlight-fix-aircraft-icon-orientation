@@ -1,0 +1,17 @@
+- generic [active] [ref=f33e1]:
+  - alert [ref=f33e2]
+  - region "Notifications alt+T"
+  - generic [ref=f33e4]:
+    - banner [ref=f33e5]:
+      - generic [ref=f33e6]:
+        - button [ref=f33e8]:
+          - link [ref=f33e9] [cursor=pointer]:
+            - /url: /hub
+            - 'img "RapidAPI Hub: public API Marketplace" [ref=f33e10]'
+        - generic [ref=f33e11]: Search APIs
+        - generic [ref=f33e17]:
+          - button "Help" [ref=f33e18]:
+            - img [aria-hidden] [ref=f33e19] [cursor=pointer]
+          - button "Sign In" [ref=f33e21]
+          - button "Sign Up" [ref=f33e22]
+    - main [ref=f33e29]

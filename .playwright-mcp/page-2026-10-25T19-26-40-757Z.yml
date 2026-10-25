@@ -1,0 +1,165 @@
+- generic [active] [ref=f7e1]:
+  - region "Cookie Consent Prompt" [ref=f7e2]:
+    - generic [ref=f7e4]:
+      - generic [ref=f7e5]:
+        - text: We use essential cookies to make our site work. With your consent, we may also use non-essential cookies to improve user experience, personalize advertisements, and analyze web traffic. For these reasons, we may share your site usage data with our advertising and analytics partners. By clicking “Accept,” you agree to our website's cookie use as described in our
+        - button "Cookie Policy" [ref=f7e6] [cursor=pointer]
+        - text: and
+        - button "Privacy Policy" [ref=f7e7] [cursor=pointer]
+        - text: . You can change your cookie settings at any time by clicking “
+        - button "Preferences" [ref=f7e8] [cursor=pointer]
+        - text: .”
+      - generic [ref=f7e9]:
+        - button "Preferences" [ref=f7e10] [cursor=pointer]
+        - button "Decline" [ref=f7e11] [cursor=pointer]
+        - button "Accept" [ref=f7e12] [cursor=pointer]
+  - generic [ref=f7e13]:
+    - navigation [ref=f7e14]:
+      - generic [ref=f7e15]:
+        - link [ref=f7e16] [cursor=pointer]:
+          - /url: /
+          - img "airplanes.live logo" [ref=f7e17]
+        - list [ref=f7e19]:
+          - listitem [ref=f7e20]:
+            - link "Home" [ref=f7e21] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=f7e22]:
+            - button "Get Started" [ref=f7e23] [cursor=pointer]
+          - listitem [ref=f7e24]:
+            - button "Tracking" [ref=f7e25] [cursor=pointer]
+          - listitem [ref=f7e26]:
+            - link "Store" [ref=f7e27] [cursor=pointer]:
+              - /url: https://store.airplanes.live
+          - listitem [ref=f7e28]:
+            - button "Data" [ref=f7e29] [cursor=pointer]
+          - listitem [ref=f7e30]:
+            - button "About" [ref=f7e31] [cursor=pointer]
+    - navigation "Breadcrumb" [ref=f7e32]:
+      - list [ref=f7e33]:
+        - listitem [ref=f7e34]:
+          - link "Home" [ref=f7e35] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=f7e36]: / FAQ
+    - heading "FAQ" [level=1] [ref=f7e37]
+    - heading "What is Airplanes.live?" [level=2] [ref=f7e38]
+    - paragraph [ref=f7e39]:
+      - text: Airplanes.live is a community-run ADS-B aggregator. Volunteer receivers around the world capture
+      - link "ADS-B" [ref=f7e40] [cursor=pointer]:
+        - /url: /what-is-ads-b/
+      - text: and MLAT signals from aircraft overhead, and the combined feed becomes a live map that is never filtered or blocked. Anyone can watch it, search it, or contribute their own receiver data to it.
+    - paragraph [ref=f7e41]:
+      - text: Whether you are a plane spotter or simply curious about the skies above, the map shows what the receivers actually heard, including
+      - link "military aircraft" [ref=f7e42] [cursor=pointer]:
+        - /url: /military/
+      - text: ","
+      - link "aircraft squawking an emergency" [ref=f7e43] [cursor=pointer]:
+        - /url: /emergency/
+      - text: and
+      - link "LADD-enrolled aircraft" [ref=f7e44] [cursor=pointer]:
+        - /url: /ladd/
+      - text: that other trackers suppress. Reference pages cover
+      - link "aircraft types" [ref=f7e45] [cursor=pointer]:
+        - /url: /live/aircrafttype/
+      - text: ","
+      - link "airlines" [ref=f7e46] [cursor=pointer]:
+        - /url: /live/airline/
+      - text: and
+      - link "airports" [ref=f7e47] [cursor=pointer]:
+        - /url: /live/airport/
+      - text: .
+    - heading "How do I join?" [level=2] [ref=f7e48]
+    - paragraph [ref=f7e49]:
+      - text: Run our
+      - link "install script" [ref=f7e50] [cursor=pointer]:
+        - /url: https://github.com/airplanes-live/feed
+      - text: on any existing ADS-B receiver and it starts feeding Airplanes.live in about a minute. It will not disturb feeds you already send elsewhere, and nothing is exclusive. If you have no receiver yet, the
+      - link "hardware guide" [ref=f7e51] [cursor=pointer]:
+        - /url: /hardware/
+      - text: and
+      - link "Getting Started" [ref=f7e52] [cursor=pointer]:
+        - /url: /get-started/
+      - text: walk through building one.
+    - paragraph [ref=f7e53]:
+      - link "How to feed" [ref=f7e54] [cursor=pointer]:
+        - /url: /how-to-feed/
+      - text: lists the exact commands and the check that confirms your data is arriving.
+    - heading "Why send data?" [level=2] [ref=f7e55]
+    - paragraph [ref=f7e56]:
+      - text: Your receiver adds coverage in your area, and your timestamped Mode S data supports
+      - link "MLAT" [ref=f7e57] [cursor=pointer]:
+        - /url: /what-is-ads-b/
+      - text: for other users. The combined feed is used by search and rescue, firefighting and emergency services. In return you get the full unfiltered map, aeronautical charts, weather radar, data replay and detailed aircraft information.
+    - paragraph [ref=f7e58]: "What a feeder gets access to:"
+    - list [ref=f7e59]:
+      - listitem [ref=f7e60]: Detailed aircraft information
+      - listitem [ref=f7e61]: Detailed ADS-B data
+      - listitem [ref=f7e62]: Public weather radar
+      - listitem [ref=f7e63]: Aeronautical charts and layers
+      - listitem [ref=f7e64]: Ability to replay data
+      - listitem [ref=f7e65]: MLAT-calculated Mode S positions
+      - listitem [ref=f7e66]: No filtering or blocking
+    - paragraph [ref=f7e67]:
+      - text: It is also simply fun to see the planes over your own area.
+      - link "Airplanes.live" [ref=f7e68] [cursor=pointer]:
+        - /url: /
+      - text: is made by and for aircraft tracking enthusiasts, and it is not owned by a private equity firm or run for profit like the other exchanges.
+    - heading "Who are we?" [level=2] [ref=f7e69]
+    - paragraph [ref=f7e70]: We are plane tracking enthusiasts and coders who spent nearly eight months forming an organisation that, under its by-laws, cannot be sold, transferred or taken over by any one individual. Airplanes.live is built by and for aircraft tracking enthusiasts, and it exists for the public good rather than profit.
+    - paragraph [ref=f7e71]: We started this because we grew tired of the commercial pressures, misinformation and disputes that have repeatedly disrupted the tracking community. We are here for the long term. We are not working to get rich and sell out to a corporation.
+    - paragraph [ref=f7e72]: Some commercial operators present themselves as enthusiasts while most of us just want to enjoy the hobby and share it with the next generation. FlightAware (owned by Raytheon), FlightRadar24 and the rest are popular and well known, but they exist to generate profit, not for public good or to support the needs of the wider community. Some of us ran and developed a well known tracking site that was sold to a private equity firm in 2023, without our knowledge and without our consent, and without regard for the community we supported.
+    - paragraph [ref=f7e73]:
+      - text: "Read the court filing from the team that developed the infrastructure:"
+      - link "Golden Hammer v JETNET, Dan Streufert of ADSBx et all" [ref=f7e74] [cursor=pointer]:
+        - /url: /faq/golden-hammer-v-jetnet-et-al.pdf
+      - text: .
+    - heading "Our commitment" [level=2] [ref=f7e75]
+    - paragraph [ref=f7e76]: We will never sell out or betray our mission to provide a stable, long-term home for all aircraft tracking enthusiasts.
+    - paragraph [ref=f7e77]:
+      - text: Have more questions? Come say hello on
+      - link "Discord!" [ref=f7e78] [cursor=pointer]:
+        - /url: https://discord.gg/adsb
+    - contentinfo [ref=f7e79]:
+      - navigation "Site sections" [ref=f7e80]:
+        - list [ref=f7e81]:
+          - listitem [ref=f7e82]:
+            - link "Airports" [ref=f7e83] [cursor=pointer]:
+              - /url: /live/airport/
+          - listitem [ref=f7e84]:
+            - link "Airlines" [ref=f7e85] [cursor=pointer]:
+              - /url: /live/airline/
+          - listitem [ref=f7e86]:
+            - link "Aircraft Types" [ref=f7e87] [cursor=pointer]:
+              - /url: /live/aircrafttype/
+          - listitem [ref=f7e88]:
+            - link "What Is ADS-B?" [ref=f7e89] [cursor=pointer]:
+              - /url: /what-is-ads-b/
+          - listitem [ref=f7e90]:
+            - link "Start Feeding" [ref=f7e91] [cursor=pointer]:
+              - /url: /get-started/
+          - listitem [ref=f7e92]:
+            - link "FAQ" [ref=f7e93] [cursor=pointer]:
+              - /url: /faq/
+          - listitem [ref=f7e94]:
+            - link "Live Map" [ref=f7e95] [cursor=pointer]:
+              - /url: https://globe.airplanes.live
+      - generic [ref=f7e96]:
+        - generic [ref=f7e97]:
+          - link "Privacy" [ref=f7e98] [cursor=pointer]:
+            - /url: /privacy-policy/
+          - text: "|"
+          - link "Terms of Use" [ref=f7e99] [cursor=pointer]:
+            - /url: /terms-of-use/
+          - text: "|"
+          - link "Consent Preferences" [ref=f7e100] [cursor=pointer]:
+            - /url: "#"
+          - text: "| Copyright 2023-2026 airplanes.live"
+        - generic [ref=f7e101]:
+          - link [ref=f7e102] [cursor=pointer]:
+            - /url: https://twitter.com/live_airplanes
+            - img "airplanes.live on X (Twitter)" [ref=f7e103]
+          - link [ref=f7e104] [cursor=pointer]:
+            - /url: https://discord.gg/adsb
+            - img "Join the airplanes.live Discord" [ref=f7e105]
+          - link "airplanes.live on GitHub" [ref=f7e106] [cursor=pointer]:
+            - /url: https://github.com/airplanes-live
+            - generic [aria-hidden] [ref=f7e107]: 

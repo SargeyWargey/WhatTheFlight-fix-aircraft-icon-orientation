@@ -237,6 +237,18 @@ final class RadarModelTests: XCTestCase {
         XCTAssertEqual(model.focus.focusedID, "a")
     }
 
+    func testFocusNeighboursAreWhereTheRemoteStepsNext() async {
+        feed.flights = [TestTraffic.flight("a", miles: 1), TestTraffic.flight("b", miles: 2, bearing: 90), TestTraffic.flight("c", miles: 3, bearing: 180)]
+        await model.pollOnce()
+        // On the nearest ◀ goes nowhere, so only ▶'s aircraft.
+        XCTAssertEqual(model.focusNeighbours.map(\.id), ["b"])
+        model.focusNext()
+        XCTAssertEqual(Set(model.focusNeighbours.map(\.id)), ["a", "c"])
+        model.focusNext()
+        // On the farthest ▶ wraps round to the nearest.
+        XCTAssertEqual(Set(model.focusNeighbours.map(\.id)), ["b", "a"])
+    }
+
     func testFocusingAnOutOfRangeAircraftPinsIt() async {
         feed.flights = [TestTraffic.flight("in", miles: 2), TestTraffic.flight("out", miles: 25)]
         await model.pollOnce()

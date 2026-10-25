@@ -1,0 +1,244 @@
+- generic [active] [ref=f82e1]:
+  - link "Skip to content" [ref=f82e2] [cursor=pointer]:
+    - /url: "#main"
+  - navigation "Main" [ref=f82e3]:
+    - generic [ref=f82e4]:
+      - link "FlyItalyADSB" [ref=f82e5] [cursor=pointer]:
+        - /url: /en/
+      - generic [ref=f82e7]:
+        - link "Map ↗" [ref=f82e8] [cursor=pointer]:
+          - /url: https://mappa.flyitalyadsb.com
+        - link "Airports" [ref=f82e9] [cursor=pointer]:
+          - /url: /en/airports/
+        - link "Aircraft" [ref=f82e10] [cursor=pointer]:
+          - /url: /en/aircraft/
+        - link "Data" [ref=f82e12] [cursor=pointer]:
+          - /url: /en/data/
+        - link "Network" [ref=f82e16] [cursor=pointer]:
+          - /url: /en/network/
+        - link "Research" [ref=f82e20] [cursor=pointer]:
+          - /url: /en/research/
+        - link "About" [ref=f82e24] [cursor=pointer]:
+          - /url: /en/about/
+        - 'link "Status : All systems operational" [ref=f82e27] [cursor=pointer]':
+          - /url: /en/status/
+          - text: Status
+          - generic [ref=f82e29]: ": All systems operational"
+        - link "API & MCP" [ref=f82e30] [cursor=pointer]:
+          - /url: /en/data/api/
+        - link "Italiano" [ref=f82e31] [cursor=pointer]:
+          - /url: /dati/api/docs/changelog/
+          - text: IT
+  - main [ref=f82e32]:
+    - generic [ref=f82e33]:
+      - complementary [ref=f82e34]:
+        - navigation "Documentation" [ref=f82e35]:
+          - link "Documentation" [ref=f82e36] [cursor=pointer]:
+            - /url: /en/data/api/docs/
+          - list [ref=f82e37]:
+            - listitem [ref=f82e38]:
+              - link "Quickstart" [ref=f82e39] [cursor=pointer]:
+                - /url: /en/data/api/docs/quickstart/
+            - listitem [ref=f82e40]:
+              - link "Authentication" [ref=f82e41] [cursor=pointer]:
+                - /url: /en/data/api/docs/authentication/
+            - listitem [ref=f82e42]:
+              - link "Endpoints" [ref=f82e43] [cursor=pointer]:
+                - /url: /en/data/api/docs/endpoints/
+            - listitem [ref=f82e44]:
+              - link "Fields and units" [ref=f82e45] [cursor=pointer]:
+                - /url: /en/data/api/docs/fields/
+            - listitem [ref=f82e46]:
+              - link "Limits and errors" [ref=f82e47] [cursor=pointer]:
+                - /url: /en/data/api/docs/limits-and-errors/
+            - listitem [ref=f82e48]:
+              - link "History" [ref=f82e49] [cursor=pointer]:
+                - /url: /en/data/api/docs/history/
+            - listitem [ref=f82e50]:
+              - link "Alerts and notable traffic" [ref=f82e51] [cursor=pointer]:
+                - /url: /en/data/api/docs/alerts/
+            - listitem [ref=f82e52]:
+              - link "MCP server" [ref=f82e53] [cursor=pointer]:
+                - /url: /en/data/api/docs/mcp/
+            - listitem [ref=f82e54]:
+              - link "Commercial use" [ref=f82e55] [cursor=pointer]:
+                - /url: /en/data/api/docs/commercial-use/
+            - listitem [ref=f82e56]:
+              - link "Changelog" [ref=f82e57] [cursor=pointer]:
+                - /url: /en/data/api/docs/changelog/
+          - generic [ref=f82e58]:
+            - link "REST API" [ref=f82e59] [cursor=pointer]:
+              - /url: /en/data/api/
+            - link "FAQ" [ref=f82e60] [cursor=pointer]:
+              - /url: /en/faq/
+            - link "OpenAPI" [ref=f82e61] [cursor=pointer]:
+              - /url: /openapi.json
+      - article [ref=f82e62]:
+        - generic [ref=f82e63]:
+          - link "Documentation" [ref=f82e64] [cursor=pointer]:
+            - /url: /en/data/api/docs/
+          - text: /
+        - heading "Changelog" [level=1] [ref=f82e65]
+        - paragraph [ref=f82e66]: "What's new in the FlyItalyADSB REST API and MCP server, newest first: endpoints, tools, limits and fixes, each with its date."
+        - paragraph [ref=f82e67]:
+          - text: Updated
+          - time [ref=f82e68]: 25 October 2026
+        - table [ref=f82e70]:
+          - rowgroup [ref=f82e71]:
+            - row [ref=f82e72]:
+              - columnheader "Date" [ref=f82e73]
+              - columnheader "What’s new" [ref=f82e74]
+          - rowgroup [ref=f82e75]:
+            - row [ref=f82e76]:
+              - cell "27/10/2026" [ref=f82e77]
+              - 'cell "Coming: the Free plan’s per-key limits take effect (until then only the per-IP limit applies)." [ref=f82e78]'
+            - row [ref=f82e79]:
+              - cell "25/10/2026" [ref=f82e80]
+              - 'cell "The map in the chat shows all the traffic in the area you are looking at, also when you move it, and Live is on from the start: an update every 3 seconds." [ref=f82e81]'
+            - row [ref=f82e82]:
+              - cell "22/10/2026" [ref=f82e83]
+              - 'cell "A map in the chat: on Claude and ChatGPT, the MCP tools that return aircraft also show them on an interactive map." [ref=f82e84]'
+            - row [ref=f82e85]:
+              - cell "22/10/2026" [ref=f82e86]
+              - cell [ref=f82e87]:
+                - text: "Notable traffic:"
+                - code [ref=f82e88]: /v2/events
+                - text: (emergencies 7500/7600/7700, military and other notable aircraft by area, up to 7 days) and the MCP tool
+                - code [ref=f82e89]: notable_traffic
+                - text: . On paid plans, signed webhook alerts (
+                - link "Alerts" [ref=f82e90] [cursor=pointer]:
+                  - /url: /en/data/api/docs/alerts/
+                - text: ).
+            - row [ref=f82e91]:
+              - cell "22/10/2026" [ref=f82e92]
+              - cell [ref=f82e93]:
+                - text: "Overflights:"
+                - code [ref=f82e94]: /v2/overflights
+                - text: and the MCP tool
+                - code [ref=f82e95]: overflights
+                - text: ", the aircraft that flew over a place between two times (since 17/08/2026)."
+            - row [ref=f82e96]:
+              - cell "22/10/2026" [ref=f82e97]
+              - cell [ref=f82e98]:
+                - text: "Aircraft profile:"
+                - code [ref=f82e99]: "/v2/profile/{icao}"
+                - text: and the MCP tool
+                - code [ref=f82e100]: aircraft_profile
+                - text: .
+            - row [ref=f82e101]:
+              - cell "22/10/2026" [ref=f82e102]
+              - cell [ref=f82e103]:
+                - text: "”Near me” on the MCP server: the position saved on the account ("
+                - code [ref=f82e104]: set_my_location
+                - text: ", My API), or ChatGPT’s city. Agent registration with"
+                - link "auth.md" [ref=f82e105] [cursor=pointer]:
+                  - /url: /auth.md
+                - text: . Documentation and
+                - link "FAQ" [ref=f82e106] [cursor=pointer]:
+                  - /url: /en/faq/
+                - text: .
+            - row [ref=f82e107]:
+              - cell "21/10/2026" [ref=f82e108]
+              - 'cell "OAuth on the MCP server: Claude and other assistants connect with Connect, without copying keys." [ref=f82e109]'
+            - row [ref=f82e110]:
+              - cell "20/10/2026" [ref=f82e111]
+              - 'cell "Feeder perk: Pro limits for free on the Free keys of people who feed the network, for non-commercial use." [ref=f82e112]'
+            - row [ref=f82e113]:
+              - cell "19/10/2026" [ref=f82e114]
+              - 'cell "Self-serve paid plans: Starter, Pro, Business." [ref=f82e115]'
+            - row [ref=f82e116]:
+              - cell "18/10/2026" [ref=f82e117]
+              - cell "History also covers 2022–2024." [ref=f82e118]
+            - row [ref=f82e119]:
+              - cell "02/09/2026" [ref=f82e120]
+              - cell [ref=f82e121]:
+                - text: "Self-serve history:"
+                - code [ref=f82e122]: "/v2/history/{icao}"
+                - text: and
+                - code [ref=f82e123]: "/v2/history/{icao}/{date}"
+                - text: .
+            - row [ref=f82e124]:
+              - cell "31/08/2026" [ref=f82e125]
+              - cell "REST API v2 and MCP server." [ref=f82e126]
+        - navigation [ref=f82e127]:
+          - link "← Previous Commercial use" [ref=f82e128] [cursor=pointer]:
+            - /url: /en/data/api/docs/commercial-use/
+            - text: ← PreviousCommercial use
+  - contentinfo [ref=f82e129]:
+    - generic [ref=f82e130]:
+      - generic [ref=f82e131]:
+        - generic [ref=f82e132]:
+          - generic [ref=f82e133]: FlyItalyADSB
+          - paragraph [ref=f82e135]: Open ADS-B data, global network born in Italy, our own MLAT. A community network.
+        - generic [ref=f82e136]:
+          - generic [ref=f82e137]: Data
+          - list [ref=f82e138]:
+            - listitem [ref=f82e139]:
+              - link "About our data" [ref=f82e140] [cursor=pointer]:
+                - /url: /en/data/
+            - listitem [ref=f82e141]:
+              - link "Airports" [ref=f82e142] [cursor=pointer]:
+                - /url: /en/airports/
+            - listitem [ref=f82e143]:
+              - link "Aircraft types" [ref=f82e144] [cursor=pointer]:
+                - /url: /en/aircraft/
+            - listitem [ref=f82e145]:
+              - link "Archive" [ref=f82e146] [cursor=pointer]:
+                - /url: /en/data/archive/
+            - listitem [ref=f82e147]:
+              - link "REST API" [ref=f82e148] [cursor=pointer]:
+                - /url: /en/data/api/
+            - listitem [ref=f82e149]:
+              - link "MCP and AI agents" [ref=f82e150] [cursor=pointer]:
+                - /url: /en/data/mcp/
+            - listitem [ref=f82e151]:
+              - link "API documentation" [ref=f82e152] [cursor=pointer]:
+                - /url: /en/data/api/docs/
+            - listitem [ref=f82e153]:
+              - link "FAQ" [ref=f82e154] [cursor=pointer]:
+                - /url: /en/faq/
+        - generic [ref=f82e155]:
+          - generic [ref=f82e156]: Community
+          - list [ref=f82e157]:
+            - listitem [ref=f82e158]:
+              - link "The network" [ref=f82e159] [cursor=pointer]:
+                - /url: /en/network/
+            - listitem [ref=f82e160]:
+              - link "Become a feeder" [ref=f82e161] [cursor=pointer]:
+                - /url: /en/community/feeder/
+            - listitem [ref=f82e162]:
+              - link "Is my data arriving?" [ref=f82e163] [cursor=pointer]:
+                - /url: /en/community/feeder-status/
+            - listitem [ref=f82e164]:
+              - link "How MLAT works" [ref=f82e165] [cursor=pointer]:
+                - /url: /en/community/mlat/
+            - listitem [ref=f82e166]:
+              - link "Research" [ref=f82e167] [cursor=pointer]:
+                - /url: /en/research/
+        - generic [ref=f82e168]:
+          - generic [ref=f82e169]: Project
+          - list [ref=f82e170]:
+            - listitem [ref=f82e171]:
+              - link "About" [ref=f82e172] [cursor=pointer]:
+                - /url: /en/about/
+            - listitem [ref=f82e173]:
+              - link "Contact us" [ref=f82e174] [cursor=pointer]:
+                - /url: /en/contact/
+            - listitem [ref=f82e175]:
+              - link "Service status" [ref=f82e176] [cursor=pointer]:
+                - /url: /en/status/
+            - listitem [ref=f82e177]:
+              - link "GitHub ↗" [ref=f82e178] [cursor=pointer]:
+                - /url: https://github.com/flyitalyadsb
+      - generic [ref=f82e179]:
+        - paragraph [ref=f82e180]:
+          - text: © 2026 FlyItalyADSB · Data license
+          - link "CC BY-SA 4.0" [ref=f82e181] [cursor=pointer]:
+            - /url: https://creativecommons.org/licenses/by-sa/4.0/
+        - paragraph [ref=f82e182]:
+          - text: Service provided by Nesso Labs S.r.l. · VAT IT04754860981 ·
+          - link "Terms" [ref=f82e183] [cursor=pointer]:
+            - /url: /en/terms/
+          - text: ·
+          - link "Privacy" [ref=f82e184] [cursor=pointer]:
+            - /url: /en/privacy/

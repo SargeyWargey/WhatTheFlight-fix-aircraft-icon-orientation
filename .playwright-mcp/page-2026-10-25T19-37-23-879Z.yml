@@ -1,0 +1,110 @@
+- generic [active] [ref=f92e1]:
+  - navigation [ref=f92e2]:
+    - generic [ref=f92e3]:
+      - link "Return to OpenSky Home" [ref=f92e4] [cursor=pointer]:
+        - /url: /
+        - img "Your Logo" [ref=f92e5]
+      - list [ref=f92e7]:
+        - listitem [ref=f92e8]:
+          - link "Home" [ref=f92e9] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=f92e10]:
+          - button "Feed Data" [ref=f92e11] [cursor=pointer]
+        - listitem [ref=f92e12]:
+          - button "Our Data" [ref=f92e13] [cursor=pointer]
+        - listitem [ref=f92e14]:
+          - button "About" [ref=f92e15] [cursor=pointer]
+        - listitem [ref=f92e16]:
+          - link "Flight Map" [ref=f92e17] [cursor=pointer]:
+            - /url: https://map.opensky-network.org/
+        - text: 
+      - generic [ref=f92e18]:
+        - link [ref=f92e19] [cursor=pointer]:
+          - /url: https://discord.gg/RPh89jpVVz
+          - img [ref=f92e20]: 
+        - link "Sign in" [ref=f92e22] [cursor=pointer]:
+          - /url: /login
+  - main [ref=f92e23]:
+    - generic [ref=f92e24]:
+      - generic [ref=f92e25]:
+        - img "Hero Image" [ref=f92e27]
+        - generic [ref=f92e28]:
+          - heading "OpenSky Network" [level=1] [ref=f92e29]
+          - heading "Open Air Traffic Data for Research." [level=4] [ref=f92e30]
+          - paragraph [ref=f92e31]: ADS-B, Mode-S, ADS-C, FLARM and VHF data.
+      - generic [ref=f92e33]:
+        - heading "🛩🛩🛩 Latest News & Updates 🛩🛩🛩" [level=2] [ref=f92e34]
+        - generic [ref=f92e36]:
+          - heading "The 14th OpenSky Symposium" [level=5] [ref=f92e37]
+          - paragraph [ref=f92e38]: Posted on 14 September 2026
+          - list [ref=f92e41]:
+            - listitem [ref=f92e42]:
+              - text: 🔹 The 2026 OpenSky Symposium will be held at CRIDA in Madrid, Spain on
+              - strong [ref=f92e43]: 29-30 October
+              - text: .
+            - listitem [ref=f92e44]:
+              - text: 🔹 The programme is now online. Registration is open. See the
+              - link "Symposium website" [ref=f92e45] [cursor=pointer]:
+                - /url: https://symposium.opensky-network.org/
+              - text: for the programme, and
+              - link "register here" [ref=f92e46] [cursor=pointer]:
+                - /url: https://symposium.opensky-network.org/#registration
+              - text: .
+      - generic [ref=f92e48]:
+        - generic [ref=f92e50]:
+          - img "Flight Map" [ref=f92e51]
+          - generic [ref=f92e52]:
+            - heading "Live Flight Map" [level=5] [ref=f92e53]
+            - paragraph [ref=f92e54]: View our live flight map.
+            - link "Flight Map" [ref=f92e56] [cursor=pointer]:
+              - /url: https://map.opensky-network.org/
+        - generic [ref=f92e58]:
+          - img "About OpenSky" [ref=f92e59]
+          - generic [ref=f92e60]:
+            - heading "About OpenSky" [level=5] [ref=f92e61]
+            - paragraph [ref=f92e62]: Learn more about OpenSky Network here.
+            - link "About" [ref=f92e64] [cursor=pointer]:
+              - /url: /about
+        - generic [ref=f92e66]:
+          - img "Become a Feeder" [ref=f92e67]
+          - generic [ref=f92e68]:
+            - heading "Feed Data" [level=5] [ref=f92e69]
+            - paragraph [ref=f92e70]: Join our network by contributing your data to enhance global air traffic monitoring.
+            - link "Feed Data" [ref=f92e72] [cursor=pointer]:
+              - /url: /feed
+        - generic [ref=f92e74]:
+          - img "Our Data" [ref=f92e75]
+          - generic [ref=f92e76]:
+            - heading "Our Data" [level=5] [ref=f92e77]
+            - paragraph [ref=f92e78]: Explore our comprehensive datasets for your research and analysis needs.
+            - link "Our Data" [ref=f92e80] [cursor=pointer]:
+              - /url: /data
+  - contentinfo [ref=f92e81]:
+    - generic [ref=f92e83]:
+      - generic "Return to OpenSky Home" [ref=f92e84]:
+        - link [ref=f92e85] [cursor=pointer]:
+          - /url: /
+          - img "OpenSky Logo" [ref=f92e86]
+      - list [ref=f92e87]:
+        - listitem [ref=f92e88]:
+          - link "Home" [ref=f92e89] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=f92e90]:
+          - link "Feed Data" [ref=f92e91] [cursor=pointer]:
+            - /url: /feed
+        - listitem [ref=f92e92]:
+          - link "Our Data" [ref=f92e93] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=f92e94]:
+          - link "About" [ref=f92e95] [cursor=pointer]:
+            - /url: /about
+        - listitem [ref=f92e96]:
+          - link "Flight Map" [ref=f92e97] [cursor=pointer]:
+            - /url: https://map.opensky-network.org/
+      - generic [ref=f92e98]:
+        - link "Join our Discord Server" [ref=f92e99] [cursor=pointer]:
+          - /url: https://discord.gg/RPh89jpVVz
+          - img [ref=f92e100]: 
+        - link "Sign in" [ref=f92e102] [cursor=pointer]:
+          - /url: /login
+      - text: 

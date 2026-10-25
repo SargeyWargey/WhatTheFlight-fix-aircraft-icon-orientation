@@ -1,0 +1,7 @@
+[       6ms] [LOG] 13:35:06 clear timers @ https://flyitalyadsb.com/fia/static/1.438.21/posthog-recorder.js:0
+[       7ms] [LOG] 13:35:06 set timers  @ https://flyitalyadsb.com/fia/static/1.438.21/posthog-recorder.js:0
+[    1008ms] [LOG] Route API returned this invalid element: null, probably for {callsign: WZZ84, icao: 4d248d, lat: 49.00163, lng: 10.729812} @ https://flyitalyadsb.com/fia/static/1.438.21/posthog-recorder.js:0
+[    1009ms] [LOG] Route API returned this invalid element: null, probably for {callsign: RYR7SA, icao: 4d2233, lat: 45.007821, lng: 11.545425} @ https://flyitalyadsb.com/fia/static/1.438.21/posthog-recorder.js:0
+[    1592ms] [WARNING] [webmcp-interceptor] document.modelContext is not available.
+To enable WebMCP, use Chrome M146+ and enable:
+chrome://flags/#enable-experimental-web-platform-features @ https://flyitalyadsb.com/.webmcp/bridge.js:2131

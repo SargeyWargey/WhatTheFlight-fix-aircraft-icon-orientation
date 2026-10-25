@@ -1,0 +1,2 @@
+[     385ms] [LOG] [OpenReplay] Tracker initialized successfully @ https://theairtraffic.com/_next/static/chunks/0mdpteajf7j13.js:8
+[    1241ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://api.openreplay.com/ingest/v1/web/start:0

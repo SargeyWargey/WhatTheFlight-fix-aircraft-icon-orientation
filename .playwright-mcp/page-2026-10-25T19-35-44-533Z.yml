@@ -1,0 +1,73 @@
+- generic [active] [ref=f84e1]:
+  - generic [ref=f84e2]:
+    - navigation [ref=f84e3]:
+      - generic [ref=f84e4]:
+        - link "TheAirTraffic" [ref=f84e5] [cursor=pointer]:
+          - /url: /
+        - list [ref=f84e7]:
+          - listitem [ref=f84e8]:
+            - link "Home" [ref=f84e9] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=f84e10]:
+            - link "Live Map" [ref=f84e11] [cursor=pointer]:
+              - /url: https://globe.theairtraffic.com
+          - listitem [ref=f84e12]:
+            - button "Feeders" [ref=f84e13] [cursor=pointer]
+    - main [ref=f84e14]:
+      - generic [ref=f84e29]:
+        - heading "TheAirTraffic" [level=1] [ref=f84e30]
+        - paragraph [ref=f84e32]:
+          - generic [ref=f84e33]: Global Flight Data Aggregator & Real-Time Tracking
+      - generic [ref=f84e34]:
+        - generic [ref=f84e35]:
+          - heading "About TheAirTraffic" [level=2] [ref=f84e36]
+          - paragraph [ref=f84e38]: TheAirTraffic is a global flight tracking website created by Ground Control. We launched in early 2023 to provide unrestricted air traffic data, both real-time and historical, to users. We are committed to sharing data and providing an opportunity for others to learn from it. TheAirTraffic powers Ground Control's wide family of flight bots. Our flight tracking aims to take the best of the easy to use flight tracking websites and combine it with the ability to track any aircraft. Then anyone can easily track any aircraft!
+        - generic [ref=f84e39]:
+          - link "Live Map Track every aircraft in real time" [ref=f84e40] [cursor=pointer]:
+            - /url: https://globe.theairtraffic.com
+            - generic [ref=f84e43]:
+              - generic [ref=f84e44]: Live Map
+              - generic [ref=f84e45]: Track every aircraft in real time
+          - link "How to Feed Share your ADS-B receiver data" [ref=f84e47] [cursor=pointer]:
+            - /url: /how-to-feed/
+            - generic [ref=f84e50]:
+              - generic [ref=f84e51]: How to Feed
+              - generic [ref=f84e52]: Share your ADS-B receiver data
+          - link "Check Feed Status Verify your feeder is connected" [ref=f84e54] [cursor=pointer]:
+            - /url: /myip
+            - generic [ref=f84e57]:
+              - generic [ref=f84e58]: Check Feed Status
+              - generic [ref=f84e59]: Verify your feeder is connected
+        - generic [ref=f84e61]:
+          - heading "Join the Community" [level=2] [ref=f84e62]
+          - generic [ref=f84e63]:
+            - link "Discord" [ref=f84e64] [cursor=pointer]:
+              - /url: https://grndcntrl.net/discord
+            - link "r/TheAirTraffic" [ref=f84e67] [cursor=pointer]:
+              - /url: https://www.reddit.com/r/TheAirTraffic
+            - link "@TheAirTraffic" [ref=f84e70] [cursor=pointer]:
+              - /url: https://x.com/TheAirTraffic
+    - contentinfo [ref=f84e73]:
+      - generic [ref=f84e75]:
+        - generic [ref=f84e76]:
+          - heading "TheAirTraffic" [level=5] [ref=f84e77]
+          - paragraph [ref=f84e78]: Global Flight Tracking & Aviation Intelligence
+          - generic [ref=f84e79]:
+            - link "Discord" [ref=f84e80] [cursor=pointer]:
+              - /url: https://grndcntrl.net/discord
+            - link "Reddit" [ref=f84e82] [cursor=pointer]:
+              - /url: https://www.reddit.com/r/TheAirTraffic
+            - link "X" [ref=f84e84] [cursor=pointer]:
+              - /url: https://x.com/TheAirTraffic
+        - generic [ref=f84e86]:
+          - generic [ref=f84e87]:
+            - link "contact@theairtraffic.com" [ref=f84e88] [cursor=pointer]:
+              - /url: mailto:contact@theairtraffic.com
+            - link "Privacy Policy" [ref=f84e89] [cursor=pointer]:
+              - /url: /privacy
+            - link "About" [ref=f84e90] [cursor=pointer]:
+              - /url: https://grndcntrl.net/about
+            - link "Ground Control" [ref=f84e91] [cursor=pointer]:
+              - /url: https://grndcntrl.net
+          - paragraph [ref=f84e92]: © 2026 All Rights Reserved
+  - alert [ref=f84e93]

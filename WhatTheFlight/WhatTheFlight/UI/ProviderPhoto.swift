@@ -53,7 +53,8 @@ struct ProviderPhoto<Placeholder: View>: View {
 /// An aircraft's Planespotters photo as a rounded tile with the photographer's credit, for
 /// the flight cards (the radar's centre, the map card, Sky View). Nothing at all shows until
 /// the photo has arrived, or if there isn't one. `gap`, the space before it on `edge`, comes
-/// with the photo, so a card without one keeps its own spacing.
+/// with the photo, so a card without one keeps its own spacing. (The TV's radar puts it in a
+/// slot of its own instead: `FlightHero.PhotoPlacement.trailing`.)
 struct AircraftPhotoTile: View {
     let registration: String?
     let hex: String?
@@ -100,6 +101,16 @@ struct AircraftPhotoTile: View {
             Self.found.setObject(Found(photo), forKey: key as NSString)
             withAnimation(.smooth) { loaded = Loaded(key: key, photo: photo, image: image) }
         }
+    }
+
+    /// Looks up and decodes an aircraft's photo ahead of time, so its tile shows it the moment
+    /// it's built (the TV warms the aircraft either side of the focused one).
+    static func prefetch(registration: String?, hex: String?) async {
+        guard let key = key(registration, hex) else { return }
+        if let photo = found.object(forKey: key as NSString)?.photo, ProviderPhotoCache.image(for: photo.imageURL) != nil { return }
+        guard let photo = await AircraftPhotoProvider.shared.photo(registration: registration, hex: hex),
+              await ProviderPhotoCache.load(photo) != nil else { return }
+        found.setObject(Found(photo), forKey: key as NSString)
     }
 
     private func tile(_ loaded: Loaded) -> some View {

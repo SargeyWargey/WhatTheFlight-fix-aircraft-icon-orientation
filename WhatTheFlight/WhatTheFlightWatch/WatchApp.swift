@@ -54,9 +54,11 @@ final class WatchAppDelegate: NSObject, WKApplicationDelegate, UNUserNotificatio
         }
     }
 
-    /// Alerts the iPhone forwards while the Watch app is open: the radar already buzzed.
+    /// Alerts the iPhone forwards while the Watch app is open: the radar already buzzed. A
+    /// wrist tap the Watch posted itself (`WristTapNotification`) keeps its sound: the tap is
+    /// the point.
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        [.banner]
+        notification.request.content.userInfo[WristTapNotification.key] as? Bool == true ? [.banner, .sound] : [.banner]
     }
 
     /// Tapping the notification opens that flight; "Find in the Sky" guides you to it.

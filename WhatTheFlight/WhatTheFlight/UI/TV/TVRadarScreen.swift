@@ -113,6 +113,14 @@ struct TVRadarScreen: View {
         .onChange(of: mapIsShowing, initial: true) { _, isShowing in
             if isShowing { suggestKeepingAwake() } else if showMapPanel { closeMapPanel() }
         }
+        .task(id: PhotoWarmKey(focusedID: model.focus.focusedID, isOn: settings.showsCardPhotos)) {
+            // Card photos: get the photos for the aircraft either side ready, so ◀ ▶ land on
+            // a card that already has its photo.
+            guard settings.showsCardPhotos else { return }
+            for contact in model.focusNeighbours {
+                await AircraftPhotoTile.prefetch(registration: contact.flight.registration, hex: contact.flight.hex)
+            }
+        }
         .task(id: SettleKey(lastInput: lastInput, showsMap: showsMap)) {
             guard showsMap else { return }
             try? await Task.sleep(for: .seconds(30))
@@ -159,8 +167,10 @@ struct TVRadarScreen: View {
                 scale: Self.scale
             )
             // Beside the map the pane is narrower, so the hero takes more of it to keep its stats
-            // on one line.
-            let heroWidth = geo.size.width * (showsSplit ? 0.8 : 0.62)
+            // on one line. With a photo the hero fills its room edge to edge, so beside the map
+            // it stops a little short of the icons' labels, and on the full radar it spreads out.
+            let hasPhoto = heroPhotoWidth != nil
+            let heroWidth = geo.size.width * (showsSplit ? (hasPhoto ? 0.75 : 0.8) : (hasPhoto ? 0.72 : 0.62))
 
             ZStack {
                 if showsMap {
@@ -257,10 +267,11 @@ struct TVRadarScreen: View {
                     .frame(width: width * 0.8)
                     .transition(.opacity)
             } else if let contact = model.focusedContact {
-                let scale = heroHeight > 0 ? min(Self.heroScale, Self.heroRoom / heroHeight) : Self.heroScale
+                let photoWidth = heroPhotoWidth
+                let scale = Self.fittedHeroScale(width: width, height: heroHeight, photoWidth: photoWidth)
                 heroButton(contact) {
                     FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading, wideStats: true, detailScale: 1.4,
-                               photo: settings.showsCardPhotos ? .bottom : .none)
+                               photo: photoWidth.map { .trailing(width: $0) } ?? .none)
                         .id(contact.id)
                         .frame(width: width / scale)
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { heroHeight = $0 }
@@ -272,6 +283,22 @@ struct TVRadarScreen: View {
         }
         .animation(.smooth(duration: 0.35), value: model.focus.focusedID)
         .animation(.smooth(duration: 0.35), value: centerState)
+    }
+
+    /// Card photos on: the width of the photo beside the radar hero's details (smaller beside
+    /// the map, where the pane is narrower).
+    private var heroPhotoWidth: CGFloat? {
+        settings.showsCardPhotos ? (showsSplit ? 180 : 270) : nil
+    }
+
+    /// The hero's scale: as large as the room allows, never past `heroScale`. With a photo the
+    /// hero is a fixed width (details column, gap, photo), so it's the same for every aircraft.
+    private static func fittedHeroScale(width: CGFloat, height: CGFloat, photoWidth: CGFloat?) -> CGFloat {
+        var scale = height > 0 ? min(heroScale, heroRoom / height) : heroScale
+        if let photoWidth {
+            scale = min(scale, width / (FlightHero.trailingDetailsWidth + FlightHero.trailingGap + photoWidth))
+        }
+        return scale
     }
 
     /// The map's card: the same hero, smaller, or the same empty-state copy as the radar.
@@ -449,6 +476,11 @@ struct TVRadarScreen: View {
     private struct SettleKey: Equatable {
         let lastInput: Date
         let showsMap: Bool
+    }
+
+    private struct PhotoWarmKey: Equatable {
+        let focusedID: String?
+        let isOn: Bool
     }
 
     /// Any remote input brings the badge and hints back and restarts the 30 s timer.

@@ -1,0 +1,190 @@
+- generic [active] [ref=f8e1]:
+  - link "Skip to content" [ref=f8e2] [cursor=pointer]:
+    - /url: "#main"
+  - navigation "Main" [ref=f8e3]:
+    - generic [ref=f8e4]:
+      - link "FlyItalyADSB" [ref=f8e5] [cursor=pointer]:
+        - /url: /en/
+      - generic [ref=f8e7]:
+        - link "Map ↗" [ref=f8e8] [cursor=pointer]:
+          - /url: https://mappa.flyitalyadsb.com
+        - link "Airports" [ref=f8e9] [cursor=pointer]:
+          - /url: /en/airports/
+        - link "Aircraft" [ref=f8e10] [cursor=pointer]:
+          - /url: /en/aircraft/
+        - link "Data" [ref=f8e12] [cursor=pointer]:
+          - /url: /en/data/
+        - link "Network" [ref=f8e16] [cursor=pointer]:
+          - /url: /en/network/
+        - link "Research" [ref=f8e20] [cursor=pointer]:
+          - /url: /en/research/
+        - link "About" [ref=f8e24] [cursor=pointer]:
+          - /url: /en/about/
+        - 'link "Status : Service status" [ref=f8e27] [cursor=pointer]':
+          - /url: /en/status/
+          - text: Status
+          - generic [ref=f8e29]: ": Service status"
+        - link "API & MCP" [ref=f8e30] [cursor=pointer]:
+          - /url: /en/data/api/
+        - link "Italiano" [ref=f8e31] [cursor=pointer]:
+          - /url: /dati/confronto/
+          - text: IT
+  - main [ref=f8e32]:
+    - generic [ref=f8e33]:
+      - generic [ref=f8e34]:
+        - paragraph [ref=f8e35]:
+          - link "Data" [ref=f8e36] [cursor=pointer]:
+            - /url: /en/data/
+          - text: / ADS-B API comparison
+        - heading "ADS‑B API comparison" [level=1] [ref=f8e37]
+        - paragraph [ref=f8e38]: "A factual reference — meant to be useful to a developer and to an AI agent answering \"what open ADS-B APIs exist\" alike — on how the major community flight-tracking networks offer self-serve access to their data: rate limits, whether you need to feed a receiver, and commercial-use terms. No value judgment — just each provider's public terms, so you can form your own comparison."
+      - table [ref=f8e40]:
+        - caption [ref=f8e41]: "Comparison of self-serve ADS-B APIs: rate limit, feeder requirement, commercial use"
+        - rowgroup [ref=f8e42]:
+          - row [ref=f8e43]:
+            - columnheader "Provider" [ref=f8e44]
+            - columnheader "Base URL" [ref=f8e45]
+            - columnheader "Rate limit" [ref=f8e46]
+            - columnheader "Feeder required?" [ref=f8e47]
+            - columnheader "Commercial use" [ref=f8e48]
+            - columnheader "Notes" [ref=f8e49]
+        - rowgroup [ref=f8e50]:
+          - row [ref=f8e51]:
+            - rowheader "FlyItalyADSB" [ref=f8e52]
+            - cell "api.flyitalyadsb.com/v2" [ref=f8e53]
+            - 'cell "Free plan: 30 requests/min per key from 27 October 2026 (before that 100/min per IP); paid plans from €9/month with per-key limits up to 1,000 requests/min" [ref=f8e54]'
+            - cell "No — key by email, free and instant" [ref=f8e55]
+            - cell "Allowed on every plan, free included, within its limits, inside apps and devices you sell too; reselling the data as an API or feed, SLA or volume beyond Business need an enterprise agreement" [ref=f8e56]
+            - cell "Also includes an MCP server for AI agents; own MLAT over all of Italy (military included); self-serve history (/v2/history) with a daily per-aircraft track" [ref=f8e57]
+          - row [ref=f8e58]:
+            - rowheader "adsb.fi" [ref=f8e59]
+            - cell "opendata.adsb.fi/api/v2" [ref=f8e60]
+            - cell "1 request/s on public endpoints; feeders get /v2/snapshot (refreshed every 30s, auto-unlocked by the feeder's IP)" [ref=f8e61]
+            - cell "No for basic public access" [ref=f8e62]
+            - cell "Personal, non-commercial use; attribution and a link required" [ref=f8e63]
+            - cell "Compatible with the ADSBExchange v2 API schema" [ref=f8e64]
+          - row [ref=f8e65]:
+            - rowheader "airplanes.live" [ref=f8e66]
+            - cell "api.airplanes.live/v2" [ref=f8e67]
+            - 'cell "1 request/s (free tier); Contributor tier: 8,640 requests/day with historical access, vs. 500/day on the free tier" [ref=f8e68]'
+            - cell "Not required today — they state this could change" [ref=f8e69]
+            - cell "Non-commercial use" [ref=f8e70]
+            - cell "No SLA or uptime guarantee stated" [ref=f8e71]
+          - row [ref=f8e72]:
+            - rowheader "adsb.lol" [ref=f8e73]
+            - cell "api.adsb.lol/v2" [ref=f8e74]
+            - cell "Dynamic, based on load" [ref=f8e75]
+            - cell "No for the public API; yes for re-api (feeder-IP only); a key obtained by feeding is announced as a future requirement" [ref=f8e76]
+            - cell "Not specified" [ref=f8e77]
+            - cell "Drop-in replacement for the ADSBExchange API schema; ODbL data, free annual historical dumps (globe_history_YYYY); re-api is the whole network's unfiltered readsb interface" [ref=f8e78]
+          - row [ref=f8e79]:
+            - rowheader "ADSB One" [ref=f8e80]
+            - cell "api.adsb.one/v2" [ref=f8e81]
+            - cell "1 request/s" [ref=f8e82]
+            - cell "No" [ref=f8e83]
+            - cell "Not specified" [ref=f8e84]
+            - cell "Compliant with the ADSBExchange v2 API schema. Its API repository appears archived as of April 2026 after merging into airplanes.live — verify liveness before building on it" [ref=f8e85]
+          - row [ref=f8e86]:
+            - rowheader "OpenSky Network" [ref=f8e87]
+            - cell "credit-based system, not a fixed-rate REST limit" [ref=f8e88]
+            - 'cell "400 credits/day anonymous, 4,000 registered, 8,000 for an active feeder (≥30% uptime that month); 14,400/hour for commercial licensees. Cost scales with query area: 1 credit up to 25 sq°, 4 for a global query; /flights and /tracks up to 960 credits per daily partition" [ref=f8e89]'
+            - cell "Not required for base access; required for the top tier" [ref=f8e90]
+            - cell "Separate commercial tier available" [ref=f8e91]
+            - cell "OAuth2 client-credentials auth only (basic auth no longer accepted); active-feeder status is recalculated automatically" [ref=f8e92]
+          - row [ref=f8e93]:
+            - rowheader "ADS-B Exchange" [ref=f8e94]
+            - cell "Community API on RapidAPI (no free self-serve access)" [ref=f8e95]
+            - cell "10,000 requests/month for $10" [ref=f8e96]
+            - cell "Required for the rare reduced-rate exceptions" [ref=f8e97]
+            - cell "Explicitly non-commercial; any project by a commercial entity — even for internal use, without reselling the result — requires a commercial license" [ref=f8e98]
+            - cell "The old \"feeder → free key\" scheme no longer exists since ADS-B Exchange closed direct access" [ref=f8e99]
+      - paragraph [ref=f8e100]: Data gathered from each provider's public documentation as of September 2, 2026. Third-party service terms change — always check the official source for whichever provider you're interested in before depending on it, especially for adsb.lol (announces a future key requirement) and ADSB One (API repository appears archived).
+      - generic [ref=f8e101]:
+        - heading "Get a FlyItalyADSB key" [level=2] [ref=f8e102]
+        - paragraph [ref=f8e103]:
+          - text: Self-serve, free, instant — just an email. Works for both the REST API and the
+          - link "MCP server for AI agents" [ref=f8e104] [cursor=pointer]:
+            - /url: /en/data/mcp/
+          - text: .
+        - link "Get a free key →" [ref=f8e105] [cursor=pointer]:
+          - /url: /en/data/api/#api-key
+        - link "Plans from €9/month" [ref=f8e106] [cursor=pointer]:
+          - /url: /en/data/api/#piani
+  - contentinfo [ref=f8e107]:
+    - generic [ref=f8e108]:
+      - generic [ref=f8e109]:
+        - generic [ref=f8e110]:
+          - generic [ref=f8e111]: FlyItalyADSB
+          - paragraph [ref=f8e113]: Open ADS-B data, global network born in Italy, our own MLAT. A community network.
+        - generic [ref=f8e114]:
+          - generic [ref=f8e115]: Data
+          - list [ref=f8e116]:
+            - listitem [ref=f8e117]:
+              - link "About our data" [ref=f8e118] [cursor=pointer]:
+                - /url: /en/data/
+            - listitem [ref=f8e119]:
+              - link "Airports" [ref=f8e120] [cursor=pointer]:
+                - /url: /en/airports/
+            - listitem [ref=f8e121]:
+              - link "Aircraft types" [ref=f8e122] [cursor=pointer]:
+                - /url: /en/aircraft/
+            - listitem [ref=f8e123]:
+              - link "Archive" [ref=f8e124] [cursor=pointer]:
+                - /url: /en/data/archive/
+            - listitem [ref=f8e125]:
+              - link "REST API" [ref=f8e126] [cursor=pointer]:
+                - /url: /en/data/api/
+            - listitem [ref=f8e127]:
+              - link "MCP and AI agents" [ref=f8e128] [cursor=pointer]:
+                - /url: /en/data/mcp/
+            - listitem [ref=f8e129]:
+              - link "API documentation" [ref=f8e130] [cursor=pointer]:
+                - /url: /en/data/api/docs/
+            - listitem [ref=f8e131]:
+              - link "FAQ" [ref=f8e132] [cursor=pointer]:
+                - /url: /en/faq/
+        - generic [ref=f8e133]:
+          - generic [ref=f8e134]: Community
+          - list [ref=f8e135]:
+            - listitem [ref=f8e136]:
+              - link "The network" [ref=f8e137] [cursor=pointer]:
+                - /url: /en/network/
+            - listitem [ref=f8e138]:
+              - link "Become a feeder" [ref=f8e139] [cursor=pointer]:
+                - /url: /en/community/feeder/
+            - listitem [ref=f8e140]:
+              - link "Is my data arriving?" [ref=f8e141] [cursor=pointer]:
+                - /url: /en/community/feeder-status/
+            - listitem [ref=f8e142]:
+              - link "How MLAT works" [ref=f8e143] [cursor=pointer]:
+                - /url: /en/community/mlat/
+            - listitem [ref=f8e144]:
+              - link "Research" [ref=f8e145] [cursor=pointer]:
+                - /url: /en/research/
+        - generic [ref=f8e146]:
+          - generic [ref=f8e147]: Project
+          - list [ref=f8e148]:
+            - listitem [ref=f8e149]:
+              - link "About" [ref=f8e150] [cursor=pointer]:
+                - /url: /en/about/
+            - listitem [ref=f8e151]:
+              - link "Contact us" [ref=f8e152] [cursor=pointer]:
+                - /url: /en/contact/
+            - listitem [ref=f8e153]:
+              - link "Service status" [ref=f8e154] [cursor=pointer]:
+                - /url: /en/status/
+            - listitem [ref=f8e155]:
+              - link "GitHub ↗" [ref=f8e156] [cursor=pointer]:
+                - /url: https://github.com/flyitalyadsb
+      - generic [ref=f8e157]:
+        - paragraph [ref=f8e158]:
+          - text: © 2026 FlyItalyADSB · Data license
+          - link "CC BY-SA 4.0" [ref=f8e159] [cursor=pointer]:
+            - /url: https://creativecommons.org/licenses/by-sa/4.0/
+        - paragraph [ref=f8e160]:
+          - text: Service provided by Nesso Labs S.r.l. · VAT IT04754860981 ·
+          - link "Terms" [ref=f8e161] [cursor=pointer]:
+            - /url: /en/terms/
+          - text: ·
+          - link "Privacy" [ref=f8e162] [cursor=pointer]:
+            - /url: /en/privacy/

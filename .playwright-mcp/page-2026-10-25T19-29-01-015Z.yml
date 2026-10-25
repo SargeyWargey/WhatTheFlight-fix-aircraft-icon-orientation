@@ -1,0 +1,114 @@
+- generic [active] [ref=f11e1]:
+  - banner [ref=f11e2]:
+    - link "adsb . lol" [ref=f11e3] [cursor=pointer]:
+      - /url: /
+      - text: adsb
+      - generic [ref=f11e4]: .
+      - text: lol
+    - navigation [ref=f11e5]:
+      - link "live map" [ref=f11e6] [cursor=pointer]:
+        - /url: https://adsb.lol
+      - link "docs" [ref=f11e7] [cursor=pointer]:
+        - /url: /docs
+      - link "about" [ref=f11e8] [cursor=pointer]:
+        - /url: /about
+      - link "my keys" [ref=f11e9] [cursor=pointer]:
+        - /url: /mmb
+    - navigation [ref=f11e10]:
+      - link "Zulip" [ref=f11e11] [cursor=pointer]:
+        - /url: https://adsblol.zulipchat.com
+      - link "GitHub" [ref=f11e14] [cursor=pointer]:
+        - /url: https://github.com/adsblol
+      - link "Mastodon" [ref=f11e17] [cursor=pointer]:
+        - /url: https://mastodon.social/@adsblol
+      - link "IRC" [ref=f11e20] [cursor=pointer]:
+        - /url: https://web.libera.chat/#adsblol
+      - link "email" [ref=f11e24] [cursor=pointer]:
+        - /url: mailto:info@adsb.lol
+  - main [ref=f11e28]:
+    - generic [ref=f11e29]:
+      - complementary [ref=f11e30]:
+        - paragraph [ref=f11e31]: docs
+        - heading "🧭 overview" [level=3] [ref=f11e32]
+        - list [ref=f11e33]:
+          - listitem [ref=f11e34]:
+            - link "Introduction" [ref=f11e35] [cursor=pointer]:
+              - /url: /docs/overview/introduction
+        - heading "📡 feeding" [level=3] [ref=f11e36]
+        - list [ref=f11e37]:
+          - listitem [ref=f11e38]:
+            - link "Sharing your data" [ref=f11e39] [cursor=pointer]:
+              - /url: /docs/get-started/introduction
+          - listitem [ref=f11e40]:
+            - link "ADSB.im" [ref=f11e41] [cursor=pointer]:
+              - /url: /docs/get-started/adsb-image
+          - listitem [ref=f11e42]:
+            - link "Bare Metal" [ref=f11e43] [cursor=pointer]:
+              - /url: /docs/get-started/bare-metal
+        - heading "🔑 feeders only" [level=3] [ref=f11e44]
+        - list [ref=f11e45]:
+          - listitem [ref=f11e46]:
+            - link "Introduction" [ref=f11e47] [cursor=pointer]:
+              - /url: /docs/feeders-only/introduction
+          - listitem [ref=f11e48]:
+            - link "My Map" [ref=f11e49] [cursor=pointer]:
+              - /url: /docs/feeders-only/my-map
+          - listitem [ref=f11e50]:
+            - link "MLAT Map" [ref=f11e51] [cursor=pointer]:
+              - /url: /docs/feeders-only/mlat-map
+          - listitem [ref=f11e52]:
+            - link "re-api" [ref=f11e53] [cursor=pointer]:
+              - /url: /docs/feeders-only/re-api
+        - heading "🗂️ open data" [level=3] [ref=f11e54]
+        - list [ref=f11e55]:
+          - listitem [ref=f11e56]:
+            - link "API" [ref=f11e57] [cursor=pointer]:
+              - /url: /docs/open-data/api
+          - listitem [ref=f11e58]:
+            - link "Historical data" [ref=f11e59] [cursor=pointer]:
+              - /url: /docs/open-data/historical
+          - listitem [ref=f11e60]:
+            - link "Aircraft Data Links" [ref=f11e61] [cursor=pointer]:
+              - /url: /docs/open-data/aircraft-data-links
+        - heading "📻 hardware" [level=3] [ref=f11e62]
+        - list [ref=f11e63]:
+          - listitem [ref=f11e64]:
+            - link "ADS-B + UAT Equipment" [ref=f11e65] [cursor=pointer]:
+              - /url: /docs/hardware/equipment
+        - heading "💛 acknowledgements" [level=3] [ref=f11e66]
+        - list [ref=f11e67]:
+          - listitem [ref=f11e68]:
+            - link "Open Source" [ref=f11e69] [cursor=pointer]:
+              - /url: /docs/acknowledgements/open-source
+          - listitem [ref=f11e70]:
+            - link "Partners" [ref=f11e71] [cursor=pointer]:
+              - /url: /docs/acknowledgements/partners
+        - heading "🔒 privacy & license" [level=3] [ref=f11e72]
+        - list [ref=f11e73]:
+          - listitem [ref=f11e74]:
+            - link "Privacy and License" [ref=f11e75] [cursor=pointer]:
+              - /url: /docs/privacy-license
+      - article [ref=f11e76]:
+        - heading "API" [level=1] [ref=f11e77]
+        - paragraph [ref=f11e78]: the API is available to everyone.
+        - paragraph [ref=f11e79]:
+          - strong [ref=f11e80]: want a key for this API?
+          - text: you can request one on the
+          - link "request page" [ref=f11e81] [cursor=pointer]:
+            - /url: /request
+          - text: .
+        - paragraph [ref=f11e82]:
+          - text: "license:"
+          - link "ODbL 1.0" [ref=f11e83] [cursor=pointer]:
+            - /url: https://opendatacommons.org/licenses/odbl/1.0/
+        - paragraph [ref=f11e84]: the API is available to everyone.
+        - heading "usage" [level=2] [ref=f11e85]
+        - paragraph [ref=f11e86]:
+          - link "https://api.adsb.lol" [ref=f11e87] [cursor=pointer]:
+            - /url: https://api.adsb.lol
+  - contentinfo [ref=f11e88]:
+    - paragraph [ref=f11e89]:
+      - text: made with <3 by
+      - link "katia" [ref=f11e90] [cursor=pointer]:
+        - /url: https://github.com/sponsors/iakat
+    - paragraph [ref=f11e91]: with you since 2023.

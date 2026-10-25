@@ -1,0 +1,22 @@
+[     287ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ about:blank:0
+[     374ms] [WARNING] [webmcp-interceptor] document.modelContext is not available.
+To enable WebMCP, use Chrome M146+ and enable:
+chrome://flags/#enable-experimental-web-platform-features @ https://flyitalyadsb.com/.webmcp/bridge.js:2131
+[     951ms] [WARNING] [webmcp-interceptor] document.modelContext is not available.
+To enable WebMCP, use Chrome M146+ and enable:
+chrome://flags/#enable-experimental-web-platform-features @ https://mappa.flyitalyadsb.com/.webmcp/bridge.js:2131
+[    1294ms] [LOG] zstddec: wasm memory size increased to: 2097152 @ https://mappa.flyitalyadsb.com/libs/zstddec-tar1090-0.0.5.js:19
+[    1723ms] [TIMEEND] webglInit: 189.8388671875 ms @ https://mappa.flyitalyadsb.com/script.js:2618
+[    1731ms] [LOG] 13:34:50 set timers  @ https://mappa.flyitalyadsb.com/script.js:2146
+[    1732ms] [TIMEEND] Page Load: 601.30908203125 ms @ https://mappa.flyitalyadsb.com/script.js:2401
+[    1740ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://mappa.flyitalyadsb.com/chunks/chunks.json?_=1792956890166:0
+[    1798ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://mappa.flyitalyadsb.com/db2/ranges.js:0
+[    1831ms] [TIMEEND] afterFirstFetch(): 1.601806640625 ms @ https://mappa.flyitalyadsb.com/script.js:589
+[    2004ms] [TIMEEND] first fetch(): 272.698974609375 ms @ https://mappa.flyitalyadsb.com/script.js:452
+[    2391ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://mappa.flyitalyadsb.com/db2/operators.js:0
+[    2411ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://mappa.flyitalyadsb.com/db2/icao_aircraft_types2.js:0
+[    9256ms] [LOG] Route API returned this invalid element: null, probably for {callsign: JAF7MJ, icao: 44b438, lat: 43.201538, lng: -4.569929} @ https://flyitalyadsb.com/fia/static/1.438.21/posthog-recorder.js:0
+[    9257ms] [LOG] Route API returned this invalid element: null, probably for {callsign: RYR8WZ, icao: 4ca707, lat: 39.568937, lng: -4.258179} @ https://flyitalyadsb.com/fia/static/1.438.21/posthog-recorder.js:0
+[   14373ms] [LOG] routeAPI: updating  JAF7MJ 11:02:36 11:02:36 @ https://flyitalyadsb.com/fia/static/1.438.21/posthog-recorder.js:0
+[   14374ms] [LOG] routeAPI: updating  RYR8WZ 11:02:36 11:02:36 @ https://flyitalyadsb.com/fia/static/1.438.21/posthog-recorder.js:0
+[   15023ms] [LOG] Route API returned this invalid element: null, probably for {callsign: RYR6SR, icao: 4cae4b, lat: 49.264278, lng: 6.536142} @ https://flyitalyadsb.com/fia/static/1.438.21/posthog-recorder.js:0

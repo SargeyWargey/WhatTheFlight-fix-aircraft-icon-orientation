@@ -1,0 +1,158 @@
+- generic [active] [ref=f42e1]:
+  - navigation [ref=f42e2]:
+    - generic [ref=f42e3]:
+      - link "Return to OpenSky Home" [ref=f42e4] [cursor=pointer]:
+        - /url: /
+        - img "Your Logo" [ref=f42e5]
+      - list [ref=f42e7]:
+        - listitem [ref=f42e8]:
+          - link "Home" [ref=f42e9] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=f42e10]:
+          - button "Feed Data" [ref=f42e11] [cursor=pointer]
+        - listitem [ref=f42e12]:
+          - button "Our Data" [ref=f42e13] [cursor=pointer]
+        - listitem [ref=f42e14]:
+          - button "About" [ref=f42e15] [cursor=pointer]
+        - listitem [ref=f42e16]:
+          - link "Flight Map" [ref=f42e17] [cursor=pointer]:
+            - /url: https://map.opensky-network.org/
+        - text: 
+      - generic [ref=f42e18]:
+        - link [ref=f42e19] [cursor=pointer]:
+          - /url: https://discord.gg/RPh89jpVVz
+          - img [ref=f42e20]: 
+        - link "Sign in" [ref=f42e22] [cursor=pointer]:
+          - /url: /login
+  - main [ref=f42e23]:
+    - generic [ref=f42e24]:
+      - navigation "breadcrumb" [ref=f42e26]:
+        - list [ref=f42e27]:
+          - listitem [ref=f42e28]:
+            - link "Home" [ref=f42e29] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=f42e30]:
+            - text: /
+            - link "About" [ref=f42e31] [cursor=pointer]:
+              - /url: /about
+          - listitem [ref=f42e32]:
+            - text: /
+            - link "FAQ" [ref=f42e33] [cursor=pointer]:
+              - /url: /about/faq
+          - listitem [ref=f42e34]:
+            - text: /
+            - link "Network Coverage" [ref=f42e35] [cursor=pointer]:
+              - /url: /about/network
+          - listitem [ref=f42e36]:
+            - text: /
+            - link "Social Impact" [ref=f42e37] [cursor=pointer]:
+              - /url: /about/social-impact
+          - listitem [ref=f42e38]: / Terms of Use
+          - listitem [ref=f42e39]:
+            - text: /
+            - link "Privacy Policy" [ref=f42e40] [cursor=pointer]:
+              - /url: /about/privacy-policy
+          - listitem [ref=f42e41]:
+            - text: /
+            - link "Publications" [ref=f42e42] [cursor=pointer]:
+              - /url: /about/publications
+      - heading "General Terms of Use & Data License Agreement" [level=1] [ref=f42e43]
+      - alert [ref=f42e44]:
+        - strong [ref=f42e45]: "Tl;dr: License required in the following cases:"
+        - list [ref=f42e46]:
+          - listitem [ref=f42e47]:
+            - strong [ref=f42e48]: "Commercial or for-profit entities:"
+            - text: Any use by a for-profit or commercial entity — including government and military contractors — requires a written license from OpenSky Network, regardless of purpose.
+          - listitem [ref=f42e49]:
+            - strong [ref=f42e50]: "Operational REST API use:"
+            - text: Use of the REST API in any operational capacity — including integration into a live product, service, or automated system (even if only internal) — requires a previous written agreement, even for non-profit or governmental entities.
+        - paragraph [ref=f42e51]:
+          - text: To obtain a license, contact
+          - link "contact[at]opensky-network.org" [ref=f42e52] [cursor=pointer]:
+            - /url: mailto:contact@opensky-network.org
+          - text: .
+      - generic [ref=f42e53]:
+        - paragraph [ref=f42e54]: The following terms comprise the Acceptable Use Policy and Data License Agreement (collectively, the "AGREEMENT"), for all data sets made available to You by the OpenSky Network, an non-profit association pursuant to Article 60 ff. of the Swiss Civil Code, located in Burgdorf, Switzerland. Certain data sets may have additional Supplemental provisions. References to this AGREEMENT shall include any and all relevant Supplemental provisions. OpenSky Network has the authority and reserves the right, in its sole discretion, to refuse requests for data set(s) or discontinue further access and use to anyone. If You feel Your request is inappropriately denied please contact OpenSky Network by sending a message to contact[at]opensky-network.org. In consideration for requesting and receiving access to OpenSky Network data set(s), You acknowledge that You understand and agree to be bound by the terms and conditions of this AGREEMENT. Any violation of this AGREEMENT may result in the immediate suspension or termination of this AGREEMENT and/or other action entitled by law such as injunctive or equitable relief. You are individually liable and responsible for compliance with this AGREEMENT. This AGREEMENT is legally binding under the laws of the Swiss Confederation. You may terminate this AGREEMENT by contacting OpenSky Network in writing and receiving acknowledgement of such request.
+        - heading "1. LICENSE" [level=4] [ref=f42e55]
+        - paragraph [ref=f42e56]: OpenSky Network’s authorization to access the data grants You a limited, non-exclusive, non-transferable, non-assignable, and terminable license to copy, modify, and use the data in accordance with this AGREEMENT solely for the purpose of non-profit research and non-profit education. Government entities may obtain an exemption at the discretion of the OpenSky Network. No license is granted for any other purpose and there are no implied licenses in this AGREEMENT.
+        - paragraph [ref=f42e57]:
+          - strong [ref=f42e58]: Any use by a for-profit or commercial entity requires written permission and a license granted by the OpenSky Network. This includes any and all government and military contractors. Operational use of the REST API in any live product, service, or automated system also requires a written license, regardless of the entity’s non-profit status.
+        - paragraph [ref=f42e59]: This AGREEMENT shall become effective as of the date of approval by OpenSky Network. This AGREEMENT is subject to modification or revocation at any time at OpenSky Network sole discretion. OpenSky Network shall have the right to use any of Your feedback received during the license period for its non-profit educational and/or research purposes.
+        - heading "2. GENERAL CONDITIONS" [level=4] [ref=f42e60]
+        - paragraph [ref=f42e61]: (i) You will not impersonate any individual or entity, misrepresent any affiliation with another person, entity or association, use false information, or otherwise conceal Your identity from Opensky Network at any time for any purpose.
+        - paragraph [ref=f42e62]: (ii) You consent that OpenSky Network can make public or otherwise disclose Your name as the registered requester, the name of Your Affiliated Institution, the name of the data set(s) that OpenSky has made available to You under this AGREEMENT, and the brief description of the type of research being undertaken that You provided to OpenSky Network.
+        - paragraph [ref=f42e63]: "(iii) You will abide by any and all modifications. If a modification occurs, it will be explicitly communicated to You via Your registered email address and shall become effective fifteen (15) days after the transmission of such notification. Your continued access to or use of the data after such time shall indicate Your assent to any and all modification(s). If You do not agree to comply with the modification(s), You agree that You will: (a) inform OpenSky Network immediately, at which point Your access to the data will be terminated and no longer authorized; and, (b) no longer access or use this data."
+        - heading "3. USE RESTRICTIONS" [level=4] [ref=f42e64]
+        - paragraph [ref=f42e65]: If You have any concerns or questions about these restrictions, You are encouraged to contact OpenSky Network’s management committee via email. To obtain an exemption from any of these restrictions, You will need a written authorization from OpenSky Network’s management committee.
+        - paragraph [ref=f42e66]: (i) While using non-anonymized data set(s), You will respect the privacy of persons that may be identified in the data. For any publication or other disclosure, You will anonymize or de-identify personally-identifiable information, aircraft identifiers, sensor locations and other data identified in Supplemental provisions (if any). If You have any concerns or questions about anonymization, You are encouraged to contact OpenSky Network’s management committee via email.
+        - paragraph [ref=f42e67]: (ii) While using anonymized data set(s), You will not attempt to reverse engineer, de-anonymize, derive or otherwise re-identify anonymized information.
+        - paragraph [ref=f42e68]: (iii) You will not distribute, disclose, transfer or otherwise make available the data set(s) to any person other than those employed by your institute who are assisting or collaborating with You using the data set(s). Other entities with whom You are collaborating in research using the data set(s) must request access to the data set(s) separately and directly from OpenSky Network.
+        - paragraph [ref=f42e69]: (iv) All conditions, restrictions and obligations attached to this data shall accompany any and all subsequent uses and disclosures of this data set by You. Therefore, You are personally and fully responsible for communicating this AGREEMENT and ensuring its compliance as to any and all users described above to whom You make the data available.
+        - paragraph [ref=f42e70]: (v) You will not register multiple accounts on the OpenSky Network website. Specifically, You must not use multiple accounts in order to circumvent technical restrictions or blocks (e.g. obtaining additional requests to the REST API).
+        - paragraph [ref=f42e71]: (vi) The REST API is provided for non-profit research and educational use only. Use of the REST API in any operational capacity — including but not limited to integration into a live product, service, or automated system — requires a written license from OpenSky Network, regardless of the entity's non-profit status.
+        - heading "4. USE OBLIGATIONS" [level=4] [ref=f42e72]
+        - paragraph [ref=f42e73]: "(i) If You create a publication (including web pages, papers published by a third party, and publicly available presentations) using data from this data set, You must provide OpenSky Network with a copy of (or a link to) the publication and You must cite the data as follows:"
+        - blockquote [ref=f42e74]:
+          - paragraph [ref=f42e75]:
+            - emphasis [ref=f42e76]: "Bringing up OpenSky: A large-scale ADS-B sensor network for research Matthias Schäfer, Martin Strohmeier, Vincent Lenders, Ivan Martinovic, Matthias Wilhelm ACM/IEEE International Conference on Information Processing in Sensor Networks, April 2014"
+        - paragraph [ref=f42e77]: "To refer to the website directly, You can additionally use:"
+        - blockquote [ref=f42e78]:
+          - paragraph [ref=f42e79]:
+            - emphasis [ref=f42e80]: The OpenSky Network, http://www.opensky-network.org
+        - paragraph [ref=f42e81]: (ii) You agree to expunge any and all copies of the received data set(s) upon completion or termination of stated research and/or termination of data access or use. Completion of stated research shall allow for a reasonable period of time that You may need to retain the data set(s) in order to satisfy scientific reproducibility obligations.
+        - heading "5. USE OBLIGATIONS" [level=4] [ref=f42e82]
+        - paragraph [ref=f42e83]: (i) You agree to safeguard any and all sensitive data as required, or may be required, by law by using at least the same degree of care that You use for your own data of alike nature but no less than a reasonable degree of care, to protect the confidentiality of data and/or the privacy of any identifiable person and to prevent its unauthorized disclosure and use. Data is confidential if it is marked as such, if by its nature or content is reasonably distinguishable as confidential, or if You have reasonable cause to believe that its disclosure to a third party would cause harm or damage.
+        - paragraph [ref=f42e84]: "Data is not confidential, and therefore not sensitive if: (a) You already knew the data before it was disclosed to You by OpenSky Network; (b) You gain subsequent knowledge of the data by either lawfully obtaining it from another source under no obligation of confidentiality, or You develop it independently; (c) the data is or becomes generally available to the public through no wrongful act of You or any other party; (e) it is required to be disclosed under applicable law, regulation or court order provided You notify OpenSky Network prior to making such a disclosure so that OpenSky Network may take appropriate action."
+        - paragraph [ref=f42e85]: "(ii) You will notify OpenSky Network immediately of all relevant details if: (a) confidentiality or privacy is compromised; or (b) You receive any legal, investigatory, or other government demand to reverse engineer, decrypt, de-anonymize or otherwise disclose anonymized or confidential data."
+        - paragraph [ref=f42e86]: (iii) If requested, You will provide OpenSky Network evidence of compliance with this AGREEMENT, such as a written description of Your data protection plan or a written affirmation that You have disposed of any and all copies of the received data set from all systems reasonably known to you.
+        - paragraph [ref=f42e87]: (iv) DISCLAIMER OF WARRANTIES. OPENSKY NETWORK USES ITS BEST EFFORTS TO PROVIDE DATA IN ACCORDANCE WITH ETHICAL PRINCIPLES AND SCIENTIFIC INTEGRITY. HOWEVER, THE DATA PROVIDED HEREIN IS ON AN "AS IS" BASIS. NEITHER OPENSKY NETWORK, ITS MEMBERS, ITS MANAGEMENT COMMITTEE, RESEARCH PARTNERS, LICENSORS, AND DATA PROVIDERS MAKE ANY WARRANTY, EITHER IMPLIED OR EXPRESS, OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, INCLUDING, BUT NOT LIMITED TO, THE ACCURACY, TIMELINESS, COMPLETENESS, RELIABILITY, OR AVAILABILITY OF OPENSKY NETWORK DATA, APPLICATIONS, OR SERVICES ACCESSIBLE THROUGH OR MADE AVAILABLE BY OPENSKY NETWORK.
+        - paragraph [ref=f42e88]: TO THE EXTENT ALLOWED BY LAW, YOU WILL INDEMNIFY, DEFEND AND HOLD HARMLESS OPENSKY NETWORK FROM ALL LIABILITIES, CLAIMS, DEMANDS, COSTS, JUDGMENTS, DAMAGES, LOSSES AND EXPENSES ARISING OUT OF OR IN CONNECTION WITH ANY USE OF THE DATA BY YOU. IN NO EVENT SHALL OPENSKY NETWORK BE LIABLE TO YOU OR ANY THIRD PARTY FOR ANY INDIRECT, CONSEQUENTIAL, INCIDENTAL, SPECIAL OR PUNITIVE DAMAGES, ARISING FROM YOUR USE OF THE DATA.
+        - heading "6. INTELLECTUAL PROPERTY" [level=4] [ref=f42e89]
+        - paragraph [ref=f42e90]: This section applies only if You are licensing the data for the purpose of commercial internal testing and evaluating the data as first granted expressly through written permission by the OpenSky Network.
+        - paragraph [ref=f42e91]: (i) Except as specifically provided in paragraph (ii) of this Section, all right, title and interest in and to any "Intellectual Property" any invention, discovery, improvement, computer or other program, related documentation and work of authorship that is developed for commercial use by You or Your employer, employees or agents, either individually or jointly with OpenSky Network, using any information provided by OpenSky Network under this AGREEMENT, shall be the joint property of OpenSky Network and You, and that shared portion is hereby assigned to OpenSky Network, solely for its non-profit educational and/or research purposes. As between OpenSky Network and You, You retain exclusive and all right, title and interest in and to "Your Intellectual Property" the information originating with or provided by You.
+        - paragraph [ref=f42e92]: (ii) You obtain an exemption from the default Intellectual Property provisions in Section (i) for specific developments via a written authorization from OpenSky Network’s management committee.
+        - heading "7. DATA COLLECTION AND TRANSMISSION" [level=4] [ref=f42e93]
+        - paragraph [ref=f42e94]: (i) Installation of sensors and all relevant equipment, data collection and transmission to the server of OpenSky Network is offered by You voluntarily and without compensation. You are free to participate in the network of sensors by installing a sensor, collecting data and sending it to OpenSky Network. You are free to stop sending this data whenever You wish. It is strictly forbidden to send any modified or manipulated or fabricated data, except where explicitly agreed otherwise.
+        - paragraph [ref=f42e95]: (ii) When You provide OpenSky Network with data, You grant, or warrant OpenSky Network a royalty-free, worldwide, perpetual, irrevocable, non-exclusive right and license to sublicense, use, reproduce, modify, adapt, publish, display, translate and distribute the data (in whole or in part) and/or to incorporate it in other works in any form, media or technology now known or hereafter developed. You agree not to assert any claim, whether based on tort, contract, or other legal theory, against OpenSky Network or its sublicensees relating to OpenSky Network’s or its sublicensees’ use of the data You provide to OpenSky Network, and you hereby release OpenSky Network and its sublicensees from any such claims.
+        - paragraph [ref=f42e96]: (iii) You represent that the data You provide to OpenSky Network a) will not infringe any third party's copyright, patent, trademark, trade secret or other proprietary rights; b) will not violate any law, statute, ordinance or regulation; c) will not contain data that is intended to damage, detrimentally interfere with, surreptitiously intercept or expropriate any system, data or information; d) will not violate any third party's rights of publicity or privacy; and e) will not be defamatory, unlawfully threatening or harassing, harmful to minors in any way, or otherwise offensive or inappropriate. You are responsible for complying with all laws applicable to the data You provide to OpenSky Network.
+        - heading "8. PERSONAL DATA" [level=4] [ref=f42e97]
+        - paragraph [ref=f42e98]: OpenSky Network keeps a file of personal data of its registered users, according to Swiss Privacy Law. Data stored at the website’s database is exclusively the data that you provide upon registration. The purpose of this data collection is their storage on a server, for your identification by the server and your access to the pages and services of OpenSky Network. Your personal data are not transmitted to third parties. By accepting these Terms and Conditions of Use you also allow OpenSky Network to process your personal data.
+        - paragraph [ref=f42e99]: You have the right to delete, reform, modify and update your data. You can at any time deactivate your account by contacting us via email. You may contact us for any other information or objection you may have on data processing.
+        - paragraph [ref=f42e100]: Your e-mail address will not be used to send unsolicited commercial messages (spam). Newsletters or other informative mail may be sent from OpenSky Network unless you explicitly oppose to this via email.
+        - heading "9. USER ACCOUNT" [level=4] [ref=f42e101]
+        - paragraph [ref=f42e102]: Each user is personally and solely responsible for all actions and transactions made through his/her account. You are responsible for maintaining the confidentiality of your password and you should ensure that you exit properly from your account at the end of each session.
+        - paragraph [ref=f42e103]: In case you notice any unauthorized use of your account or any other (real or potential) breach of security, you have to immediately notify the Website’s administrators. OpenSky Network is under no circumstances liable for any loss or damages arising from your failure to comply with this term. OpenSky Network maintains the right to delete an account, if violation of any of these Terms is proved.
+        - paragraph [ref=f42e104]: "If you wish to deactivate your account please contact us via email to contact[at]opensky-network.org. (NOTE FOR GOOGLE: WE ARE NOT A CREDIT CARD COMPANY!)"
+        - heading "10. FREE ISSUE MATERIALS" [level=4] [ref=f42e105]
+        - paragraph [ref=f42e106]: (i) Receivers or other equipment issued to You at no charge by the OpenSky Network (collectively “free issue materials”), will be used solely as agreed upon with OpenSky Network’s management committee. You will take free issue materials into operation within one week after receiving it. You will ensure that the equipment will not be subject to external influences which may damage the equipment. If requested, you will provide all information related to the free issue materials themselves, their deployment, and the conditions under which they are deployed to OpenSky Network.
+        - paragraph [ref=f42e107]: (ii) If You are not able to use the free issue materials anymore, you will inform the OpenSky Network’s management committee immediately via email.
+        - paragraph [ref=f42e108]: (iii) If requested, You will return all free issue materials to OpenSky Network by sending it back to the OpenSky Network within 2 weeks
+  - contentinfo [ref=f42e109]:
+    - generic [ref=f42e111]:
+      - generic "Return to OpenSky Home" [ref=f42e112]:
+        - link [ref=f42e113] [cursor=pointer]:
+          - /url: /
+          - img "OpenSky Logo" [ref=f42e114]
+      - list [ref=f42e115]:
+        - listitem [ref=f42e116]:
+          - link "Home" [ref=f42e117] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=f42e118]:
+          - link "Feed Data" [ref=f42e119] [cursor=pointer]:
+            - /url: /feed
+        - listitem [ref=f42e120]:
+          - link "Our Data" [ref=f42e121] [cursor=pointer]:
+            - /url: "#"
+        - listitem [ref=f42e122]:
+          - link "About" [ref=f42e123] [cursor=pointer]:
+            - /url: /about
+        - listitem [ref=f42e124]:
+          - link "Flight Map" [ref=f42e125] [cursor=pointer]:
+            - /url: https://map.opensky-network.org/
+      - generic [ref=f42e126]:
+        - link "Join our Discord Server" [ref=f42e127] [cursor=pointer]:
+          - /url: https://discord.gg/RPh89jpVVz
+          - img [ref=f42e128]: 
+        - link "Sign in" [ref=f42e130] [cursor=pointer]:
+          - /url: /login
+      - text: 

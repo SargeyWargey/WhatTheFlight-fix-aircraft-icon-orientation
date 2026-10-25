@@ -1,0 +1,270 @@
+- generic [active] [ref=f74e1]:
+  - link "Skip to content" [ref=f74e2] [cursor=pointer]:
+    - /url: "#main"
+  - navigation "Main" [ref=f74e3]:
+    - generic [ref=f74e4]:
+      - link "FlyItalyADSB" [ref=f74e5] [cursor=pointer]:
+        - /url: /en/
+      - generic [ref=f74e7]:
+        - link "Map ↗" [ref=f74e8] [cursor=pointer]:
+          - /url: https://mappa.flyitalyadsb.com
+        - link "Airports" [ref=f74e9] [cursor=pointer]:
+          - /url: /en/airports/
+        - link "Aircraft" [ref=f74e10] [cursor=pointer]:
+          - /url: /en/aircraft/
+        - link "Data" [ref=f74e12] [cursor=pointer]:
+          - /url: /en/data/
+        - link "Network" [ref=f74e16] [cursor=pointer]:
+          - /url: /en/network/
+        - link "Research" [ref=f74e20] [cursor=pointer]:
+          - /url: /en/research/
+        - link "About" [ref=f74e24] [cursor=pointer]:
+          - /url: /en/about/
+        - 'link "Status : All systems operational" [ref=f74e27] [cursor=pointer]':
+          - /url: /en/status/
+          - text: Status
+          - generic [ref=f74e29]: ": All systems operational"
+        - link "API & MCP" [ref=f74e30] [cursor=pointer]:
+          - /url: /en/data/api/
+        - link "Italiano" [ref=f74e31] [cursor=pointer]:
+          - /url: /
+          - text: IT
+  - main [ref=f74e32]:
+    - generic [ref=f74e33]:
+      - iframe [ref=f74e34]:
+        - generic [ref=f75e2]:
+          - text: ➕︎
+          - generic [ref=f75e3]:
+            - generic [ref=f75e5]:
+              - generic:
+                - list [ref=f75e11]:
+                  - listitem [ref=f75e12]:
+                    - text: ©
+                    - link "OpenStreetMap" [ref=f75e13] [cursor=pointer]:
+                      - /url: https://www.openstreetmap.org/copyright
+                    - text: contributors.
+                - generic: 100 NM
+            - button [ref=f75e15]
+      - generic [ref=f74e36]:
+        - paragraph [ref=f74e37]: global network · unfiltered data
+        - heading "Open ADS-B data a global network born in Italy" [level=1] [ref=f74e38]
+        - paragraph [ref=f74e39]: More than 3,200 receivers around the world send us ADS-B and Mode-S directly, with multilateration of our own — military aircraft included. Open, unfiltered.
+        - generic [ref=f74e40]:
+          - link "Explore the map →" [ref=f74e41] [cursor=pointer]:
+            - /url: https://mappa.flyitalyadsb.com
+          - link "Research" [ref=f74e42] [cursor=pointer]:
+            - /url: /en/research/
+      - generic [ref=f74e44]:
+        - generic [ref=f74e45]:
+          - generic [ref=f74e46]: aircraft now
+          - generic [ref=f74e47]:
+            - generic [ref=f74e49]: "live:"
+            - text: 11,916
+        - generic [ref=f74e50]:
+          - generic [ref=f74e51]: msg/sec
+          - generic [ref=f74e52]: 118,229
+        - generic [ref=f74e53]:
+          - generic [ref=f74e54]: direct feeders
+          - generic [ref=f74e55]: 3,200+
+        - generic [ref=f74e56]:
+          - generic [ref=f74e57]: coverage
+          - generic [ref=f74e58]: global
+    - generic [ref=f74e59]:
+      - paragraph [ref=f74e60]: What we collect
+      - table [ref=f74e61]:
+        - rowgroup [ref=f74e62]:
+          - row [ref=f74e63]:
+            - cell "Global ADS-B" [ref=f74e64]
+            - cell "Feed from 3,200+ receivers that send to us first-hand, across Europe, the Americas, Asia and Oceania, plus a small share from ADSBHub and OGN." [ref=f74e65]
+            - cell "aircraft.json · 2s" [ref=f74e66]
+          - row [ref=f74e67]:
+            - cell "Our own MLAT" [ref=f74e68]
+            - cell [ref=f74e69]:
+              - text: Multilateration on aircraft without full ADS-B transponders, military included. Our own server, 1,800+ synchronised receivers —
+              - link "exact count and date →" [ref=f74e70] [cursor=pointer]:
+                - /url: /en/network/
+            - cell "mlat-server · port 30100" [ref=f74e71]
+          - row [ref=f74e72]:
+            - cell "Mode-S BDS50/BDS60" [ref=f74e73]
+            - cell "True Air Speed, magnetic heading and Mach number via Mode-S Comm-B. Used to reconstruct upper-troposphere wind profiles." [ref=f74e74]
+            - cell "BDS50 · BDS60" [ref=f74e75]
+    - generic [ref=f74e76]:
+      - generic [ref=f74e77]:
+        - generic [ref=f74e78]:
+          - paragraph [ref=f74e79]: Ongoing research
+          - heading "From airspace to science" [level=2] [ref=f74e80]
+        - link "All projects →" [ref=f74e81] [cursor=pointer]:
+          - /url: /en/research/
+      - link "weather32 Meteorology Ongoing Upper-troposphere wind measurement from aircraft in flight Commercial aircraft are distributed meteorological sensors at altitude. By extracting wind components from Mode-S messages (BDS50/BDS60) and comparing them against ERA5 reanalysis and IASI satellite profiles, we are validating the quality of avionics data as an independent meteorological source. Method W = Vground − Vair Validation ERA5 · IASI (MetOp) Typical RMSE 6.5–7.4 m/s (u, v) Mode-S vs ERA5 Bias u +0.21 m/s Bias v +1.77 m/s RMSE u 7.38 m/s RMSE v 6.57 m/s Jun 23, 2025" [ref=f74e82] [cursor=pointer]:
+        - /url: /en/research/weather/
+        - generic [ref=f74e83]:
+          - generic [ref=f74e84]:
+            - generic [ref=f74e85]:
+              - generic [ref=f74e86]: weather32
+              - generic [ref=f74e87]: Meteorology
+              - generic [ref=f74e88]: Ongoing
+            - heading "Upper-troposphere wind measurement from aircraft in flight" [level=3] [ref=f74e89]
+            - paragraph [ref=f74e90]: Commercial aircraft are distributed meteorological sensors at altitude. By extracting wind components from Mode-S messages (BDS50/BDS60) and comparing them against ERA5 reanalysis and IASI satellite profiles, we are validating the quality of avionics data as an independent meteorological source.
+            - generic [ref=f74e91]:
+              - generic [ref=f74e92]:
+                - generic [ref=f74e93]: Method
+                - generic [ref=f74e94]:
+                  - text: W = V
+                  - subscript [ref=f74e95]: ground
+                  - text: − V
+                  - subscript [ref=f74e96]: air
+              - generic [ref=f74e97]:
+                - generic [ref=f74e98]: Validation
+                - generic [ref=f74e99]: ERA5 · IASI (MetOp)
+              - generic [ref=f74e100]:
+                - generic [ref=f74e101]: Typical RMSE
+                - generic [ref=f74e102]: 6.5–7.4 m/s (u, v)
+          - generic [ref=f74e103]:
+            - generic [ref=f74e104]: Mode-S vs ERA5
+            - generic [ref=f74e105]:
+              - generic [ref=f74e106]:
+                - generic [ref=f74e107]: Bias u
+                - generic [ref=f74e108]: +0.21 m/s
+              - generic [ref=f74e109]:
+                - generic [ref=f74e110]: Bias v
+                - generic [ref=f74e111]: +1.77 m/s
+              - generic [ref=f74e112]:
+                - generic [ref=f74e113]: RMSE u
+                - generic [ref=f74e114]: 7.38 m/s
+              - generic [ref=f74e115]:
+                - generic [ref=f74e116]: RMSE v
+                - generic [ref=f74e117]: 6.57 m/s
+            - generic [ref=f74e118]: Jun 23, 2025
+    - generic [ref=f74e120]:
+      - generic [ref=f74e121]:
+        - generic [ref=f74e122]:
+          - paragraph [ref=f74e123]: Developers & AI agents
+          - heading "Query the data via API or from your AI" [level=2] [ref=f74e124]
+          - paragraph [ref=f74e125]:
+            - text: Public REST API and an MCP server for Claude, ChatGPT and other agents — a free, instant key by email, no manual approval; plans from €9/month when you need more volume. See also
+            - link "llms.txt" [ref=f74e126] [cursor=pointer]:
+              - /url: /llms.txt
+            - text: .
+        - generic [ref=f74e127]:
+          - link "Free key and plans →" [ref=f74e128] [cursor=pointer]:
+            - /url: /en/data/api/#piani
+          - link "REST API" [ref=f74e129] [cursor=pointer]:
+            - /url: /en/data/api/
+          - link "MCP server" [ref=f74e130] [cursor=pointer]:
+            - /url: /en/data/mcp/
+      - generic [ref=f74e131]:
+        - generic [ref=f74e132]:
+          - code [ref=f74e133]: find_aircraft
+          - paragraph [ref=f74e134]: Look up by ICAO hex, callsign or registration
+        - generic [ref=f74e135]:
+          - code [ref=f74e136]: aircraft_near
+          - paragraph [ref=f74e137]: Aircraft within a radius, anywhere in the world
+        - generic [ref=f74e138]:
+          - code [ref=f74e139]: special_traffic
+          - paragraph [ref=f74e140]: Military, PIA or LADD traffic
+        - generic [ref=f74e141]:
+          - code [ref=f74e142]: aircraft_history
+          - paragraph [ref=f74e143]: One aircraft's historical track for a day — self-serve, since 2022
+        - generic [ref=f74e144]:
+          - code [ref=f74e145]: aircraft_profile
+          - paragraph [ref=f74e146]: "One aircraft's profile: identity, live status, history"
+        - generic [ref=f74e147]:
+          - code [ref=f74e148]: overflights
+          - paragraph [ref=f74e149]: The aircraft that flew over a place between two times
+        - generic [ref=f74e150]:
+          - code [ref=f74e151]: notable_traffic
+          - paragraph [ref=f74e152]: Recent emergencies and military traffic in an area
+        - generic [ref=f74e153]:
+          - code [ref=f74e154]: set_my_location
+          - paragraph [ref=f74e155]: Your saved position, for “near me”
+      - paragraph [ref=f74e156]:
+        - link "How to connect it to Claude or ChatGPT, and the map in the chat →" [ref=f74e157] [cursor=pointer]:
+          - /url: /en/data/mcp/
+    - generic [ref=f74e159]:
+      - generic [ref=f74e160]:
+        - paragraph [ref=f74e161]: Contribute
+        - heading "Join the network" [level=2] [ref=f74e162]
+        - paragraph [ref=f74e163]: Data quality depends on network density. A Raspberry Pi and an RTL-SDR antenna are all you need to add coverage to your area. Total cost under €30.
+      - generic [ref=f74e164]:
+        - link "Become a feeder →" [ref=f74e165] [cursor=pointer]:
+          - /url: /en/community/feeder/
+        - link "About us" [ref=f74e166] [cursor=pointer]:
+          - /url: /en/about/
+  - contentinfo [ref=f74e167]:
+    - generic [ref=f74e168]:
+      - generic [ref=f74e169]:
+        - generic [ref=f74e170]:
+          - generic [ref=f74e171]: FlyItalyADSB
+          - paragraph [ref=f74e173]: Open ADS-B data, global network born in Italy, our own MLAT. A community network.
+        - generic [ref=f74e174]:
+          - generic [ref=f74e175]: Data
+          - list [ref=f74e176]:
+            - listitem [ref=f74e177]:
+              - link "About our data" [ref=f74e178] [cursor=pointer]:
+                - /url: /en/data/
+            - listitem [ref=f74e179]:
+              - link "Airports" [ref=f74e180] [cursor=pointer]:
+                - /url: /en/airports/
+            - listitem [ref=f74e181]:
+              - link "Aircraft types" [ref=f74e182] [cursor=pointer]:
+                - /url: /en/aircraft/
+            - listitem [ref=f74e183]:
+              - link "Archive" [ref=f74e184] [cursor=pointer]:
+                - /url: /en/data/archive/
+            - listitem [ref=f74e185]:
+              - link "REST API" [ref=f74e186] [cursor=pointer]:
+                - /url: /en/data/api/
+            - listitem [ref=f74e187]:
+              - link "MCP and AI agents" [ref=f74e188] [cursor=pointer]:
+                - /url: /en/data/mcp/
+            - listitem [ref=f74e189]:
+              - link "API documentation" [ref=f74e190] [cursor=pointer]:
+                - /url: /en/data/api/docs/
+            - listitem [ref=f74e191]:
+              - link "FAQ" [ref=f74e192] [cursor=pointer]:
+                - /url: /en/faq/
+        - generic [ref=f74e193]:
+          - generic [ref=f74e194]: Community
+          - list [ref=f74e195]:
+            - listitem [ref=f74e196]:
+              - link "The network" [ref=f74e197] [cursor=pointer]:
+                - /url: /en/network/
+            - listitem [ref=f74e198]:
+              - link "Become a feeder" [ref=f74e199] [cursor=pointer]:
+                - /url: /en/community/feeder/
+            - listitem [ref=f74e200]:
+              - link "Is my data arriving?" [ref=f74e201] [cursor=pointer]:
+                - /url: /en/community/feeder-status/
+            - listitem [ref=f74e202]:
+              - link "How MLAT works" [ref=f74e203] [cursor=pointer]:
+                - /url: /en/community/mlat/
+            - listitem [ref=f74e204]:
+              - link "Research" [ref=f74e205] [cursor=pointer]:
+                - /url: /en/research/
+        - generic [ref=f74e206]:
+          - generic [ref=f74e207]: Project
+          - list [ref=f74e208]:
+            - listitem [ref=f74e209]:
+              - link "About" [ref=f74e210] [cursor=pointer]:
+                - /url: /en/about/
+            - listitem [ref=f74e211]:
+              - link "Contact us" [ref=f74e212] [cursor=pointer]:
+                - /url: /en/contact/
+            - listitem [ref=f74e213]:
+              - link "Service status" [ref=f74e214] [cursor=pointer]:
+                - /url: /en/status/
+            - listitem [ref=f74e215]:
+              - link "GitHub ↗" [ref=f74e216] [cursor=pointer]:
+                - /url: https://github.com/flyitalyadsb
+      - generic [ref=f74e217]:
+        - paragraph [ref=f74e218]:
+          - text: © 2026 FlyItalyADSB · Data license
+          - link "CC BY-SA 4.0" [ref=f74e219] [cursor=pointer]:
+            - /url: https://creativecommons.org/licenses/by-sa/4.0/
+        - paragraph [ref=f74e220]:
+          - text: Service provided by Nesso Labs S.r.l. · VAT IT04754860981 ·
+          - link "Terms" [ref=f74e221] [cursor=pointer]:
+            - /url: /en/terms/
+          - text: ·
+          - link "Privacy" [ref=f74e222] [cursor=pointer]:
+            - /url: /en/privacy/

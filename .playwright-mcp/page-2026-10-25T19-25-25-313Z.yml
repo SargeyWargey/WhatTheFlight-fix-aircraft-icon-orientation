@@ -1,0 +1,87 @@
+- generic [active] [ref=f3e1]:
+  - region "Cookie Consent Prompt" [ref=f3e2]:
+    - generic [ref=f3e4]:
+      - generic [ref=f3e5]:
+        - text: We use essential cookies to make our site work. With your consent, we may also use non-essential cookies to improve user experience, personalize advertisements, and analyze web traffic. For these reasons, we may share your site usage data with our advertising and analytics partners. By clicking “Accept,” you agree to our website's cookie use as described in our
+        - button "Cookie Policy" [ref=f3e6] [cursor=pointer]
+        - text: and
+        - button "Privacy Policy" [ref=f3e7] [cursor=pointer]
+        - text: . You can change your cookie settings at any time by clicking “
+        - button "Preferences" [ref=f3e8] [cursor=pointer]
+        - text: .”
+      - generic [ref=f3e9]:
+        - button "Preferences" [ref=f3e10] [cursor=pointer]
+        - button "Decline" [ref=f3e11] [cursor=pointer]
+        - button "Accept" [ref=f3e12] [cursor=pointer]
+  - generic [ref=f3e13]:
+    - navigation [ref=f3e14]:
+      - generic [ref=f3e15]:
+        - link [ref=f3e16] [cursor=pointer]:
+          - /url: /
+          - img "airplanes.live logo" [ref=f3e17]
+        - list [ref=f3e19]:
+          - listitem [ref=f3e20]:
+            - link "Home" [ref=f3e21] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=f3e22]:
+            - button "Get Started" [ref=f3e23] [cursor=pointer]
+          - listitem [ref=f3e24]:
+            - button "Tracking" [ref=f3e25] [cursor=pointer]
+          - listitem [ref=f3e26]:
+            - link "Store" [ref=f3e27] [cursor=pointer]:
+              - /url: https://store.airplanes.live
+          - listitem [ref=f3e28]:
+            - button "Data" [ref=f3e29] [cursor=pointer]
+          - listitem [ref=f3e30]:
+            - button "About" [ref=f3e31] [cursor=pointer]
+    - navigation "Breadcrumb" [ref=f3e32]:
+      - list [ref=f3e33]:
+        - listitem [ref=f3e34]:
+          - link "Home" [ref=f3e35] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=f3e36]: / API Documentation
+    - contentinfo [ref=f3e43]:
+      - navigation "Site sections" [ref=f3e44]:
+        - list [ref=f3e45]:
+          - listitem [ref=f3e46]:
+            - link "Airports" [ref=f3e47] [cursor=pointer]:
+              - /url: /live/airport/
+          - listitem [ref=f3e48]:
+            - link "Airlines" [ref=f3e49] [cursor=pointer]:
+              - /url: /live/airline/
+          - listitem [ref=f3e50]:
+            - link "Aircraft Types" [ref=f3e51] [cursor=pointer]:
+              - /url: /live/aircrafttype/
+          - listitem [ref=f3e52]:
+            - link "What Is ADS-B?" [ref=f3e53] [cursor=pointer]:
+              - /url: /what-is-ads-b/
+          - listitem [ref=f3e54]:
+            - link "Start Feeding" [ref=f3e55] [cursor=pointer]:
+              - /url: /get-started/
+          - listitem [ref=f3e56]:
+            - link "FAQ" [ref=f3e57] [cursor=pointer]:
+              - /url: /faq/
+          - listitem [ref=f3e58]:
+            - link "Live Map" [ref=f3e59] [cursor=pointer]:
+              - /url: https://globe.airplanes.live
+      - generic [ref=f3e60]:
+        - generic [ref=f3e61]:
+          - link "Privacy" [ref=f3e62] [cursor=pointer]:
+            - /url: /privacy-policy/
+          - text: "|"
+          - link "Terms of Use" [ref=f3e63] [cursor=pointer]:
+            - /url: /terms-of-use/
+          - text: "|"
+          - link "Consent Preferences" [ref=f3e64] [cursor=pointer]:
+            - /url: "#"
+          - text: "| Copyright 2023-2026 airplanes.live"
+        - generic [ref=f3e65]:
+          - link [ref=f3e66] [cursor=pointer]:
+            - /url: https://twitter.com/live_airplanes
+            - img "airplanes.live on X (Twitter)" [ref=f3e67]
+          - link [ref=f3e68] [cursor=pointer]:
+            - /url: https://discord.gg/adsb
+            - img "Join the airplanes.live Discord" [ref=f3e69]
+          - link "airplanes.live on GitHub" [ref=f3e70] [cursor=pointer]:
+            - /url: https://github.com/airplanes-live
+            - generic [aria-hidden] [ref=f3e71]: 

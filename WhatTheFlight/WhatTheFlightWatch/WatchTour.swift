@@ -104,7 +104,7 @@ struct WatchTourView: View {
 
     private var point: some View {
         TourCard(title: "Point",
-                 text: "Arm out, fingers at the plane: your forearm is the pointer. Hold still for half a second — a tap on your wrist, its name on screen, and it's read aloud. The screen turns so you can read it, but watchOS may dim it.") {
+                 text: "Arm out, fingers at the plane: your forearm is the pointer. Hold still for half a second — a tap on your wrist, its name on screen, and it's read aloud. The screen turns so you can read it; watchOS may dim it, but the tap and the voice still come. Tip: Settings → General → Return to Clock → What The Flight? → After 1 hour keeps it up while you point.") {
             IdentifyScene(style: .point, hapticsEnabled: settings.hapticsEnabled)
         }
     }

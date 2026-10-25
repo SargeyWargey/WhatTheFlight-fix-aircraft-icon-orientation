@@ -25,18 +25,41 @@ struct FlightHero: View {
     /// a photo to show.
     var photo: PhotoPlacement = .none
 
-    enum PhotoPlacement {
+    enum PhotoPlacement: Equatable {
         case none
         /// Under everything else, the stats and approach included (the radar's centre).
         case bottom
         /// Beside the flight number and route, the stats running full width underneath (the
         /// map card, whose single row of stats needs the room).
         case beside
+        /// To the right of everything else, in a slot that's always there (the TV's radar): the
+        /// details sit in a column of their own fixed width, so stepping from aircraft to
+        /// aircraft never moves them, photo or not. Until the photo arrives, and for aircraft
+        /// without one, the slot shows the aircraft's silhouette.
+        case trailing(width: CGFloat)
     }
+
+    /// `.trailing`: the details column's width, room for the widest row of TV stats.
+    static let trailingDetailsWidth: CGFloat = 480
+    static let trailingGap: CGFloat = 40
 
     private var flight: Flight { contact.flight }
 
     var body: some View {
+        if case .trailing(let width) = photo {
+            HStack(spacing: Self.trailingGap) {
+                details
+                    .frame(width: Self.trailingDetailsWidth)
+                photoSlot(width: width)
+            }
+            .multilineTextAlignment(.center)
+        } else {
+            details
+                .multilineTextAlignment(.center)
+        }
+    }
+
+    private var details: some View {
         VStack(spacing: 0) {
             if let top = contact.profile.notable.first {
                 NotableBadge(info: top, scale: detailScale)
@@ -74,7 +97,24 @@ struct FlightHero: View {
                                   gap: 18 * size, edge: .top, outline: Palette.ink.opacity(0.15))
             }
         }
-        .multilineTextAlignment(.center)
+    }
+
+    /// `.trailing`: a 3 : 2 tile holding the aircraft's silhouette, which its photo covers once
+    /// it has loaded.
+    private func photoSlot(width: CGFloat) -> some View {
+        let height = width * 2 / 3
+        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
+        return ZStack {
+            shape.fill(Palette.ink.opacity(0.05))
+            AircraftGlyph(silhouette: contact.profile.silhouette, size: height * 0.55, spinsRotor: false)
+                .rotationEffect(.degrees(90))
+                .foregroundStyle(Palette.ink.opacity(0.16))
+            AircraftPhotoTile(registration: flight.registration, hex: flight.hex, width: width, height: height,
+                              outline: .clear)
+        }
+        .frame(width: width, height: height)
+        .overlay(shape.strokeBorder(Palette.ink.opacity(0.15), lineWidth: 0.5))
+        .accessibilityHidden(true)
     }
 
     /// Who's flying, the flight number and the route.

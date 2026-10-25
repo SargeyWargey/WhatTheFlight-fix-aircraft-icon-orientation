@@ -1,0 +1,3 @@
+[     290ms] [WARNING] [webmcp-interceptor] document.modelContext is not available.
+To enable WebMCP, use Chrome M146+ and enable:
+chrome://flags/#enable-experimental-web-platform-features @ https://flyitalyadsb.com/fia/static/1.436.1/posthog-recorder.js:0

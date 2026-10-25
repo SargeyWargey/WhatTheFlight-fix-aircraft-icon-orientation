@@ -1,0 +1,430 @@
+- generic [active] [ref=f93e1]:
+  - link "Skip to content" [ref=f93e2] [cursor=pointer]:
+    - /url: "#main"
+  - navigation "Main" [ref=f93e3]:
+    - generic [ref=f93e4]:
+      - link "FlyItalyADSB" [ref=f93e5] [cursor=pointer]:
+        - /url: /en/
+      - generic [ref=f93e7]:
+        - link "Map ↗" [ref=f93e8] [cursor=pointer]:
+          - /url: https://mappa.flyitalyadsb.com
+        - link "Airports" [ref=f93e9] [cursor=pointer]:
+          - /url: /en/airports/
+        - link "Aircraft" [ref=f93e10] [cursor=pointer]:
+          - /url: /en/aircraft/
+        - link "Data" [ref=f93e12] [cursor=pointer]:
+          - /url: /en/data/
+        - link "Network" [ref=f93e16] [cursor=pointer]:
+          - /url: /en/network/
+        - link "Research" [ref=f93e20] [cursor=pointer]:
+          - /url: /en/research/
+        - link "About" [ref=f93e24] [cursor=pointer]:
+          - /url: /en/about/
+        - 'link "Status : Service status" [ref=f93e27] [cursor=pointer]':
+          - /url: /en/status/
+          - text: Status
+          - generic [ref=f93e29]: ": Service status"
+        - link "API & MCP" [ref=f93e30] [cursor=pointer]:
+          - /url: /en/data/api/
+        - link "Italiano" [ref=f93e31] [cursor=pointer]:
+          - /url: /dati/api/docs/endpoint/
+          - text: IT
+  - main [ref=f93e32]:
+    - generic [ref=f93e33]:
+      - complementary [ref=f93e34]:
+        - navigation "Documentation" [ref=f93e35]:
+          - link "Documentation" [ref=f93e36] [cursor=pointer]:
+            - /url: /en/data/api/docs/
+          - list [ref=f93e37]:
+            - listitem [ref=f93e38]:
+              - link "Quickstart" [ref=f93e39] [cursor=pointer]:
+                - /url: /en/data/api/docs/quickstart/
+            - listitem [ref=f93e40]:
+              - link "Authentication" [ref=f93e41] [cursor=pointer]:
+                - /url: /en/data/api/docs/authentication/
+            - listitem [ref=f93e42]:
+              - link "Endpoints" [ref=f93e43] [cursor=pointer]:
+                - /url: /en/data/api/docs/endpoints/
+            - listitem [ref=f93e44]:
+              - link "Fields and units" [ref=f93e45] [cursor=pointer]:
+                - /url: /en/data/api/docs/fields/
+            - listitem [ref=f93e46]:
+              - link "Limits and errors" [ref=f93e47] [cursor=pointer]:
+                - /url: /en/data/api/docs/limits-and-errors/
+            - listitem [ref=f93e48]:
+              - link "History" [ref=f93e49] [cursor=pointer]:
+                - /url: /en/data/api/docs/history/
+            - listitem [ref=f93e50]:
+              - link "Alerts and notable traffic" [ref=f93e51] [cursor=pointer]:
+                - /url: /en/data/api/docs/alerts/
+            - listitem [ref=f93e52]:
+              - link "MCP server" [ref=f93e53] [cursor=pointer]:
+                - /url: /en/data/api/docs/mcp/
+            - listitem [ref=f93e54]:
+              - link "Commercial use" [ref=f93e55] [cursor=pointer]:
+                - /url: /en/data/api/docs/commercial-use/
+            - listitem [ref=f93e56]:
+              - link "Changelog" [ref=f93e57] [cursor=pointer]:
+                - /url: /en/data/api/docs/changelog/
+          - generic [ref=f93e58]:
+            - link "REST API" [ref=f93e59] [cursor=pointer]:
+              - /url: /en/data/api/
+            - link "FAQ" [ref=f93e60] [cursor=pointer]:
+              - /url: /en/faq/
+            - link "OpenAPI" [ref=f93e61] [cursor=pointer]:
+              - /url: /openapi.json
+      - article [ref=f93e62]:
+        - generic [ref=f93e63]:
+          - link "Documentation" [ref=f93e64] [cursor=pointer]:
+            - /url: /en/data/api/docs/
+          - text: /
+        - heading "Endpoints" [level=1] [ref=f93e65]
+        - paragraph [ref=f93e66]: "Every FlyItalyADSB REST API v2 endpoint: aircraft by hex, callsign or registration, within a radius, military, PIA, LADD, history, profile, overflights."
+        - paragraph [ref=f93e67]:
+          - text: Updated
+          - time [ref=f93e68]: 22 October 2026
+        - navigation "On this page" [ref=f93e69]:
+          - list [ref=f93e71]:
+            - listitem [ref=f93e72]:
+              - link "One aircraft" [ref=f93e73] [cursor=pointer]:
+                - /url: "#one-aircraft"
+            - listitem [ref=f93e74]:
+              - link "Aircraft within a radius" [ref=f93e75] [cursor=pointer]:
+                - /url: "#aircraft-within-a-radius"
+            - listitem [ref=f93e76]:
+              - link "Military, PIA, LADD" [ref=f93e77] [cursor=pointer]:
+                - /url: "#military-pia-ladd"
+            - listitem [ref=f93e78]:
+              - link "History" [ref=f93e79] [cursor=pointer]:
+                - /url: "#history"
+            - listitem [ref=f93e80]:
+              - link "Aircraft profile" [ref=f93e81] [cursor=pointer]:
+                - /url: "#aircraft-profile"
+            - listitem [ref=f93e82]:
+              - link "Notable traffic and webhooks" [ref=f93e83] [cursor=pointer]:
+                - /url: "#notable-traffic-and-webhooks"
+            - listitem [ref=f93e84]:
+              - link "Errors" [ref=f93e85] [cursor=pointer]:
+                - /url: "#errors"
+        - generic [ref=f93e86]:
+          - paragraph [ref=f93e87]:
+            - strong [ref=f93e88]: "Base URL:"
+            - code [ref=f93e89]: https://api.flyitalyadsb.com/v2
+            - text: . Every endpoint is a
+            - code [ref=f93e90]: GET
+            - text: ", answers in JSON and needs the"
+            - code [ref=f93e91]: X-Api-Key
+            - text: header. The full machine-readable spec is
+            - link "openapi.json" [ref=f93e92] [cursor=pointer]:
+              - /url: /openapi.json
+            - text: .
+          - table [ref=f93e93]:
+            - rowgroup [ref=f93e94]:
+              - row [ref=f93e95]:
+                - columnheader "Endpoint" [ref=f93e96]
+                - columnheader "Returns" [ref=f93e97]
+            - rowgroup [ref=f93e98]:
+              - row [ref=f93e99]:
+                - cell [ref=f93e100]:
+                  - code [ref=f93e101]: "/icao/{hex}"
+                - cell "one aircraft by 24-bit ICAO address" [ref=f93e102]
+              - row [ref=f93e103]:
+                - cell [ref=f93e104]:
+                  - code [ref=f93e105]: "/callsign/{callsign}"
+                - cell "one aircraft by callsign (flight number)" [ref=f93e106]
+              - row [ref=f93e107]:
+                - cell [ref=f93e108]:
+                  - code [ref=f93e109]: "/reg/{reg}"
+                - cell "one aircraft by registration" [ref=f93e110]
+              - row [ref=f93e111]:
+                - cell [ref=f93e112]:
+                  - code [ref=f93e113]: "/lat/{lat}/lon/{lon}/dist/{km}"
+                - cell [ref=f93e114]:
+                  - text: every aircraft within
+                  - code [ref=f93e115]: km
+                  - text: kilometres of a point
+              - row [ref=f93e116]:
+                - cell [ref=f93e117]:
+                  - code [ref=f93e118]: /mil
+                - cell "the military traffic seen now" [ref=f93e119]
+              - row [ref=f93e120]:
+                - cell [ref=f93e121]:
+                  - code [ref=f93e122]: /pia
+                - cell "aircraft with a privacy ICAO address (PIA)" [ref=f93e123]
+              - row [ref=f93e124]:
+                - cell [ref=f93e125]:
+                  - code [ref=f93e126]: /ladd
+                - cell "aircraft in the FAA LADD programme" [ref=f93e127]
+              - row [ref=f93e128]:
+                - cell [ref=f93e129]:
+                  - code [ref=f93e130]: "/history/{icao}"
+                - cell "the dates with a track for one aircraft" [ref=f93e131]
+              - row [ref=f93e132]:
+                - cell [ref=f93e133]:
+                  - code [ref=f93e134]: "/history/{icao}/{date}"
+                - cell "one aircraft’s track on one day" [ref=f93e135]
+              - row [ref=f93e136]:
+                - cell [ref=f93e137]:
+                  - code [ref=f93e138]: "/profile/{icao}"
+                - 'cell "what we know about one aircraft: identity, live status, history summary" [ref=f93e139]'
+              - row [ref=f93e140]:
+                - cell [ref=f93e141]:
+                  - code [ref=f93e142]: /overflights?lat=&lon=&dist=&from=&to=
+                - cell [ref=f93e143]:
+                  - text: the aircraft that flew within
+                  - code [ref=f93e144]: dist
+                  - text: km of a point between two times
+              - row [ref=f93e145]:
+                - cell [ref=f93e146]:
+                  - code [ref=f93e147]: /events?lat=…&lon=…&dist=…
+                - cell "notable traffic (emergencies, military) within a radius, over the last hours" [ref=f93e148]
+          - heading "One aircraft" [level=2] [ref=f93e149]
+          - paragraph [ref=f93e150]:
+            - code [ref=f93e151]: "/icao/{hex}"
+            - text: ","
+            - code [ref=f93e152]: "/callsign/{callsign}"
+            - text: and
+            - code [ref=f93e153]: "/reg/{reg}"
+            - text: return the aircraft’s record if it is seen right now, otherwise
+            - code [ref=f93e154]: "404"
+            - text: with
+            - code [ref=f93e155]: "{\"error\": \"not found\"}"
+            - text: ". The hex is 6 characters, either case; callsign and registration ignore case and spaces. There is no single request for several aircraft: one request per aircraft, or one per radius."
+          - code [ref=f93e157]:
+            - generic [ref=f93e158]: "curl -H \"X-Api-Key: YOUR_KEY\" https://api.flyitalyadsb.com/v2/reg/I-ABCD"
+          - heading "Aircraft within a radius" [level=2] [ref=f93e159]
+          - paragraph [ref=f93e160]:
+            - code [ref=f93e161]: "/lat/{lat}/lon/{lon}/dist/{km}"
+            - text: ":"
+          - list [ref=f93e162]:
+            - listitem [ref=f93e163]: coordinates in decimal degrees;
+            - listitem [ref=f93e164]:
+              - text: the radius in
+              - strong [ref=f93e165]: kilometres
+              - text: ", not the nautical miles some other ADS-B APIs use;"
+            - listitem [ref=f93e166]: it works anywhere on Earth, across the 180° meridian too.
+          - paragraph [ref=f93e167]:
+            - text: The maximum radius depends on the plan (see
+            - link "Limits and errors" [ref=f93e168] [cursor=pointer]:
+              - /url: /en/data/api/docs/limits-and-errors/
+            - text: ). Above it, the answer is
+            - code [ref=f93e169]: "403"
+            - text: with
+            - code [ref=f93e170]: max_radius_km
+            - text: ". Pro and Business have no maximum and can ask for the whole world in one request:"
+            - code [ref=f93e171]: /lat/0/lon/0/dist/20040
+            - text: .
+          - paragraph [ref=f93e172]:
+            - text: The answer is
+            - code [ref=f93e173]: "{\"now\", \"count\", \"ac\": [...]}"
+            - text: ", with the same fields for every aircraft."
+          - heading "Military, PIA, LADD" [level=2] [ref=f93e174]
+          - paragraph [ref=f93e175]:
+            - code [ref=f93e176]: /mil
+            - text: ","
+            - code [ref=f93e177]: /pia
+            - text: and
+            - code [ref=f93e178]: /ladd
+            - text: return the network-wide list, in the same format as a radius. They are the aircraft with the matching
+            - code [ref=f93e179]: dbFlags
+            - text: bits (see
+            - link "Fields and units" [ref=f93e180] [cursor=pointer]:
+              - /url: /en/data/api/docs/fields/
+            - text: "). The data is unfiltered: PIA and LADD aircraft are flagged, not hidden."
+          - heading "History" [level=2] [ref=f93e181]
+          - paragraph [ref=f93e182]:
+            - code [ref=f93e183]: "/history/{icao}"
+            - text: lists the dates available for one aircraft, and
+            - code [ref=f93e184]: "/history/{icao}/{YYYY-MM-DD}"
+            - text: returns that day’s track. Coverage and format are in
+            - link "History" [ref=f93e185] [cursor=pointer]:
+              - /url: /en/data/api/docs/history/
+            - text: .
+          - paragraph [ref=f93e186]:
+            - code [ref=f93e187]: /overflights
+            - text: "answers “what flew over this place between these two times”: one entry per aircraft, with the time and distance of its closest point. Parameters, coverage and limits are in"
+            - link "History" [ref=f93e188] [cursor=pointer]:
+              - /url: /en/data/api/docs/history/#what-flew-over-a-place
+            - text: .
+          - heading "Aircraft profile" [level=2] [ref=f93e189]
+          - paragraph [ref=f93e190]:
+            - code [ref=f93e191]: "/profile/{icao}"
+            - text: "puts together, in one request, what the other endpoints say about one aircraft:"
+          - list [ref=f93e192]:
+            - listitem [ref=f93e193]:
+              - code [ref=f93e194]: identity
+              - text: ": registration, ICAO type ("
+              - code [ref=f93e195]: icao_type
+              - text: ),
+              - code [ref=f93e196]: type_description
+              - text: ","
+              - code [ref=f93e197]: year
+              - text: when the aircraft database has it, and the
+              - code [ref=f93e198]: dbFlags
+              - text: bits already decoded (
+              - code [ref=f93e199]: military
+              - text: ","
+              - code [ref=f93e200]: interesting
+              - text: ","
+              - code [ref=f93e201]: pia
+              - text: ","
+              - code [ref=f93e202]: ladd
+              - text: );
+            - listitem [ref=f93e203]:
+              - code [ref=f93e204]: live
+              - text: ":"
+              - code [ref=f93e205]: seen_now
+              - text: ", and if it is being received now its callsign, position, altitude, speed and"
+              - code [ref=f93e206]: source
+              - text: ", the source of the position ("
+              - code [ref=f93e207]: adsb_icao
+              - text: ","
+              - code [ref=f93e208]: mlat
+              - text: ","
+              - code [ref=f93e209]: tisb_icao
+              - text: …), with
+              - code [ref=f93e210]: seen_pos
+              - text: in seconds;
+            - listitem [ref=f93e211]:
+              - code [ref=f93e212]: history
+              - text: ":"
+              - code [ref=f93e213]: first_day
+              - text: and
+              - code [ref=f93e214]: last_day
+              - text: with a track,
+              - code [ref=f93e215]: days_last_30
+              - text: (today and the 29 days before, UTC) and
+              - code [ref=f93e216]: total_days
+              - text: ", from the same dates as"
+              - code [ref=f93e217]: "/history/{icao}"
+              - text: ;
+            - listitem [ref=f93e218]:
+              - code [ref=f93e219]: links
+              - text: ":"
+              - code [ref=f93e220]: map
+              - text: ", the public map on this aircraft (live, or its last track the map can show), and"
+              - code [ref=f93e221]: history
+              - text: ;
+            - listitem [ref=f93e222]:
+              - code [ref=f93e223]: photos
+              - text: ":"
+              - code [ref=f93e224]: page
+              - text: ", a link to the aircraft’s photos on Planespotters.net."
+          - paragraph [ref=f93e225]:
+            - text: It answers
+            - code [ref=f93e226]: "404"
+            - text: if the aircraft is not received now and has no history.
+          - code [ref=f93e228]:
+            - generic [ref=f93e229]: "curl -H \"X-Api-Key: YOUR_KEY\" https://api.flyitalyadsb.com/v2/profile/3c66a3"
+          - paragraph [ref=f93e230]:
+            - text: "The profile is about the aircraft: it never returns the names of owners or operators. It has no photo, because Planespotters.net’s terms do not allow their photos to be served through another API:"
+            - code [ref=f93e231]: photos.page
+            - text: is a link to their public page, where every photo credits its photographer, and the aircraft panel of the map shows one the same way. For PIA and LADD aircraft
+            - code [ref=f93e232]: photos.page
+            - text: is
+            - code [ref=f93e233]: "null"
+            - text: and
+            - code [ref=f93e234]: withheld
+            - text: says why. Their data is still in the profile, flagged, as everywhere in the API.
+          - heading "Notable traffic and webhooks" [level=2] [ref=f93e235]
+          - paragraph [ref=f93e236]:
+            - code [ref=f93e237]: /events
+            - text: lists the emergencies, military and other notable aircraft the network recorded in an area, and paid plans can receive them as signed webhooks (
+            - code [ref=f93e238]: POST /v2/webhooks
+            - text: ). Both are in
+            - link "Alerts and notable traffic" [ref=f93e239] [cursor=pointer]:
+              - /url: /en/data/api/docs/alerts/
+            - text: .
+          - heading "Errors" [level=2] [ref=f93e240]
+          - paragraph [ref=f93e241]:
+            - text: Errors are JSON with a plain-English
+            - code [ref=f93e242]: error
+            - text: field. Codes and fixes are in
+            - link "Limits and errors" [ref=f93e243] [cursor=pointer]:
+              - /url: /en/data/api/docs/limits-and-errors/
+            - text: .
+        - navigation [ref=f93e244]:
+          - link "← Previous Authentication" [ref=f93e245] [cursor=pointer]:
+            - /url: /en/data/api/docs/authentication/
+            - text: ← PreviousAuthentication
+          - link "Next → Fields and units" [ref=f93e246] [cursor=pointer]:
+            - /url: /en/data/api/docs/fields/
+            - text: Next →Fields and units
+  - contentinfo [ref=f93e247]:
+    - generic [ref=f93e248]:
+      - generic [ref=f93e249]:
+        - generic [ref=f93e250]:
+          - generic [ref=f93e251]: FlyItalyADSB
+          - paragraph [ref=f93e253]: Open ADS-B data, global network born in Italy, our own MLAT. A community network.
+        - generic [ref=f93e254]:
+          - generic [ref=f93e255]: Data
+          - list [ref=f93e256]:
+            - listitem [ref=f93e257]:
+              - link "About our data" [ref=f93e258] [cursor=pointer]:
+                - /url: /en/data/
+            - listitem [ref=f93e259]:
+              - link "Airports" [ref=f93e260] [cursor=pointer]:
+                - /url: /en/airports/
+            - listitem [ref=f93e261]:
+              - link "Aircraft types" [ref=f93e262] [cursor=pointer]:
+                - /url: /en/aircraft/
+            - listitem [ref=f93e263]:
+              - link "Archive" [ref=f93e264] [cursor=pointer]:
+                - /url: /en/data/archive/
+            - listitem [ref=f93e265]:
+              - link "REST API" [ref=f93e266] [cursor=pointer]:
+                - /url: /en/data/api/
+            - listitem [ref=f93e267]:
+              - link "MCP and AI agents" [ref=f93e268] [cursor=pointer]:
+                - /url: /en/data/mcp/
+            - listitem [ref=f93e269]:
+              - link "API documentation" [ref=f93e270] [cursor=pointer]:
+                - /url: /en/data/api/docs/
+            - listitem [ref=f93e271]:
+              - link "FAQ" [ref=f93e272] [cursor=pointer]:
+                - /url: /en/faq/
+        - generic [ref=f93e273]:
+          - generic [ref=f93e274]: Community
+          - list [ref=f93e275]:
+            - listitem [ref=f93e276]:
+              - link "The network" [ref=f93e277] [cursor=pointer]:
+                - /url: /en/network/
+            - listitem [ref=f93e278]:
+              - link "Become a feeder" [ref=f93e279] [cursor=pointer]:
+                - /url: /en/community/feeder/
+            - listitem [ref=f93e280]:
+              - link "Is my data arriving?" [ref=f93e281] [cursor=pointer]:
+                - /url: /en/community/feeder-status/
+            - listitem [ref=f93e282]:
+              - link "How MLAT works" [ref=f93e283] [cursor=pointer]:
+                - /url: /en/community/mlat/
+            - listitem [ref=f93e284]:
+              - link "Research" [ref=f93e285] [cursor=pointer]:
+                - /url: /en/research/
+        - generic [ref=f93e286]:
+          - generic [ref=f93e287]: Project
+          - list [ref=f93e288]:
+            - listitem [ref=f93e289]:
+              - link "About" [ref=f93e290] [cursor=pointer]:
+                - /url: /en/about/
+            - listitem [ref=f93e291]:
+              - link "Contact us" [ref=f93e292] [cursor=pointer]:
+                - /url: /en/contact/
+            - listitem [ref=f93e293]:
+              - link "Service status" [ref=f93e294] [cursor=pointer]:
+                - /url: /en/status/
+            - listitem [ref=f93e295]:
+              - link "GitHub ↗" [ref=f93e296] [cursor=pointer]:
+                - /url: https://github.com/flyitalyadsb
+      - generic [ref=f93e297]:
+        - paragraph [ref=f93e298]:
+          - text: © 2026 FlyItalyADSB · Data license
+          - link "CC BY-SA 4.0" [ref=f93e299] [cursor=pointer]:
+            - /url: https://creativecommons.org/licenses/by-sa/4.0/
+        - paragraph [ref=f93e300]:
+          - text: Service provided by Nesso Labs S.r.l. · VAT IT04754860981 ·
+          - link "Terms" [ref=f93e301] [cursor=pointer]:
+            - /url: /en/terms/
+          - text: ·
+          - link "Privacy" [ref=f93e302] [cursor=pointer]:
+            - /url: /en/privacy/

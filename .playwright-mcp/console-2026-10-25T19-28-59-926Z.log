@@ -1,0 +1,3 @@
+[    1213ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://www.adsb.lol/favicon.ico:0
+[    4215ms] [WARNING] The resource https://www.adsb.lol/static/fonts/b612-regular.woff2?v=a96e47fe was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.adsb.lol/docs/open-data/api/:0
+[    4215ms] [WARNING] The resource https://www.adsb.lol/static/fonts/b612-bold.woff2?v=95f39db1 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.adsb.lol/docs/open-data/api/:0

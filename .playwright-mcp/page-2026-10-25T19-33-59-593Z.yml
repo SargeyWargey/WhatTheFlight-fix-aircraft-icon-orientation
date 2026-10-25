@@ -1,0 +1,216 @@
+- generic [ref=f59e1]:
+  - dialog "Welcome to Flightradar24 Consent Management" [ref=f59e4]:
+    - document [active] [ref=f59e5]:
+      - heading "Flightradar24" [level=1] [ref=f59e7]
+      - generic [ref=f59e8]:
+        - paragraph [ref=f59e10]:
+          - text: We collect some sensitive and not sensitive personal data like your ip address or the browser's cookies and we share or sell it to third parties. This also helps us in keeping our service operative, improving our products and delivering personalized ads. You can choose to opt-out from the share and from the sale of the data by using the options below. Please visit our
+          - link "Privacy Policy" [ref=f59e11] [cursor=pointer]:
+            - /url: https://www.flightradar24.com/privacy-policy
+          - text: for more information about your rights.
+        - paragraph [ref=f59e13]:
+          - heading "We and our partners process data for the following purposes:" [level=2] [ref=f59e14]
+          - generic [ref=f59e15]: Advertising, Analytics, Functional, Marketing, Use my personal information for targeted advertising
+        - button "View our 57 partners" [ref=f59e16] [cursor=pointer]
+      - generic [ref=f59e17]:
+        - button "Do not share or sell my personal information" [ref=f59e18] [cursor=pointer]
+        - button "Agree and close" [ref=f59e19] [cursor=pointer]
+  - generic [ref=f59e22]:
+    - navigation [ref=f59e23]:
+      - generic [ref=f59e25]:
+        - generic:
+          - link [ref=f59e27] [cursor=pointer]:
+            - /url: https://fr24api.flightradar24.com/
+          - generic [ref=f59e37] [cursor=pointer]:
+            - link "Go to" [ref=f59e38]:
+              - /url: https://www.flightradar24.com
+            - button "Create account" [ref=f59e41]
+            - generic [ref=f59e42]: Log in
+        - generic [ref=f59e45]:
+          - link "Overview" [ref=f59e46] [cursor=pointer]:
+            - /url: https://fr24api.flightradar24.com/
+          - link "Subscription & credits" [ref=f59e47] [cursor=pointer]:
+            - /url: https://fr24api.flightradar24.com/subscriptions-and-credits
+          - link "Documentation" [ref=f59e48] [cursor=pointer]:
+            - /url: /docs/getting-started
+    - generic [ref=f59e49]:
+      - generic [ref=f59e50] [cursor=pointer]: Back to top
+      - generic [ref=f59e55] [cursor=pointer]: Help
+    - generic [ref=f59e61]:
+      - generic [ref=f59e62]:
+        - generic [ref=f59e63]:
+          - heading "Documentation" [level=2] [ref=f59e64]
+          - list [ref=f59e65]:
+            - listitem [ref=f59e66]:
+              - link "Getting started" [ref=f59e67] [cursor=pointer]:
+                - /url: /docs/getting-started
+            - listitem [ref=f59e69]:
+              - link "Authentication" [ref=f59e70] [cursor=pointer]:
+                - /url: /docs/authentication
+            - listitem [ref=f59e72]:
+              - link "Endpoints" [ref=f59e73] [cursor=pointer]:
+                - /url: /docs/endpoints
+              - list [ref=f59e75]:
+                - listitem [ref=f59e76]:
+                  - link "Overview" [ref=f59e77] [cursor=pointer]:
+                    - /url: /docs/endpoints/overview
+                - listitem [ref=f59e79]:
+                  - link "Flight Summary - What is it and how to use it?" [ref=f59e80] [cursor=pointer]:
+                    - /url: /docs/endpoints/flight-summary
+                - listitem [ref=f59e82]:
+                  - link "Historic Flight Positions - Batch-Query" [ref=f59e83] [cursor=pointer]:
+                    - /url: /docs/endpoints/flight-positions-batch-query
+                - listitem [ref=f59e85]:
+                  - link "Flight Positions - Historical Availability and Resolution" [ref=f59e86] [cursor=pointer]:
+                    - /url: /docs/endpoints/flight-positions-resolution
+            - listitem [ref=f59e88]:
+              - link "Sandbox Environment" [ref=f59e89] [cursor=pointer]:
+                - /url: /docs/sandbox-environment
+            - listitem [ref=f59e91]:
+              - link "FAQ" [ref=f59e92] [cursor=pointer]:
+                - /url: /docs/faq
+            - listitem [ref=f59e94]:
+              - link "MCP Server" [ref=f59e95] [cursor=pointer]:
+                - /url: /docs/mcp-server
+            - listitem [ref=f59e97]:
+              - link "SDK" [ref=f59e98] [cursor=pointer]:
+                - /url: /docs/sdk
+              - list [ref=f59e100]:
+                - listitem [ref=f59e101]:
+                  - link "Python SDK (fr24sdk) – Quick Start" [ref=f59e102] [cursor=pointer]:
+                    - /url: /docs/sdk/python
+                - listitem [ref=f59e104]:
+                  - link "JavaScript SDK (fr24sdk) – Quick Start" [ref=f59e105] [cursor=pointer]:
+                    - /url: /docs/sdk/js
+            - listitem [ref=f59e107]:
+              - link "Storage Rules" [ref=f59e108] [cursor=pointer]:
+                - /url: /docs/storage-rules
+            - listitem [ref=f59e110]:
+              - link "Credit Overview" [ref=f59e111] [cursor=pointer]:
+                - /url: /docs/credit-overview
+            - listitem [ref=f59e113]:
+              - link "Examples and use cases" [ref=f59e114] [cursor=pointer]:
+                - /url: /docs/examples-and-use-cases
+              - list [ref=f59e116]:
+                - listitem [ref=f59e117]:
+                  - 'link "Use case: Triggering alerts when a flight enters a Circular Area" [ref=f59e118] [cursor=pointer]':
+                    - /url: /docs/examples-and-use-cases/use-case-triggering-alerts-when-a-flight-enters-a-circular-area
+                - listitem [ref=f59e120]:
+                  - 'link "Use case: Calculating the farthest flight arriving at ESSA" [ref=f59e121] [cursor=pointer]':
+                    - /url: /docs/examples-and-use-cases/use-case-calculating-calculating-the-farthest-flight
+        - link "Go to" [ref=f59e124] [cursor=pointer]:
+          - /url: https://www.flightradar24.com
+      - generic [ref=f59e141]:
+        - heading "Storage Rules" [level=1] [ref=f59e142]
+        - generic [ref=f59e143]:
+          - generic [ref=f59e145]:
+            - paragraph [ref=f59e146]:
+              - text: This document outlines the storage rules for data retrieved from the Flightradar24 API endpoints. It specifies how long users can store the raw data received via the API to ensure compliance with Flightradar24's terms and conditions. For more legal information, please refer to
+              - link "Flightradar24 Terms & Conditions" [ref=f59e147] [cursor=pointer]:
+                - /url: https://www.flightradar24.com/terms-and-conditions
+              - text: .
+            - heading "Storage rules" [level=2] [ref=f59e148]
+            - paragraph [ref=f59e149]:
+              - text: "All endpoints have the same storage duration rule:"
+              - strong [ref=f59e150]: All data accumulated from the FR24 API should not be stored for more than 30 days from the date it was first received. After this period, all stored data must be permanently deleted.
+            - heading "Example implementations" [level=2] [ref=f59e151]
+            - heading "Local storage with cleanup script" [level=3] [ref=f59e152]
+            - paragraph [ref=f59e153]: Here is a comprehensive Python code example that covers all endpoints and enforces the storage rules by deleting the cached data after the specified storage duration.
+            - code [ref=f59e154]:
+              - text: "import os import time import json import requests # Define storage duration in seconds (30 days) STORAGE_DURATION = 30 * 24 * 60 * 60 # Helper function to make requests def make_request(url, headers): response = requests.get(url, headers=headers) response.raise_for_status() return response.json() # Wrapper to enforce storage rules def enforce_storage_rules(endpoint_func): @wraps(endpoint_func) def wrapper(*args, **kwargs): data = endpoint_func(*args, **kwargs) endpoint_name = endpoint_func.__name__.replace('get_', '') save_data_to_file(endpoint_name, data) clean_up_old_files() return data return wrapper # Function to save data to file with timestamp def save_data_to_file(endpoint, data): timestamp = int(time.time()) filename ="
+              - generic [ref=f59e155]:
+                - text: f"
+                - generic [ref=f59e156]: "{endpoint}"
+                - text: _
+                - generic [ref=f59e157]: "{timestamp}"
+                - text: .json"
+              - text: "with open(filename, 'w') as f: json.dump(data, f) # Function to clean up old data files def clean_up_old_files(): current_time = time.time() for filename in os.listdir(): if filename.endswith('.json'): file_time = int(filename.split('_')[-1].split('.')[0]) if current_time - file_time > STORAGE_DURATION: os.remove(filename) print("
+              - generic [ref=f59e158]:
+                - text: "f\"Deleted old file:"
+                - generic [ref=f59e159]: "{filename}"
+                - text: "\""
+              - text: ") # Example function to get and store live flight positions full @enforce_storage_rules def get_live_flight_positions_full(bounds, token): url ="
+              - generic [ref=f59e160]:
+                - text: f"https://fr24api.flightradar24.com/api/live/flight-positions/full?bounds=
+                - generic [ref=f59e161]: "{bounds}"
+                - text: "\""
+              - text: "headers = {\"Authorization\":"
+              - generic [ref=f59e162]:
+                - text: f"Bearer
+                - generic [ref=f59e163]: "{token}"
+                - text: "\""
+              - text: ", \"Accept\": \"application/json\", \"Accept-Version\": \"v1\"} return make_request(url, headers) # Main code to demonstrate usage if __name__ == \"__main__\": token = \"your_api_token_here\" bounds = \"50.682,46.218,14.422,22.243\" # Fetch and store live flight positions full live_flights_full = get_live_flight_positions_full(bounds, token) print(\"Live Flights Full:\", live_flights_full)"
+            - generic [ref=f59e164] [cursor=pointer]: Show all
+            - list [ref=f59e170]:
+              - listitem [ref=f59e171]:
+                - strong [ref=f59e172]: Storage duration
+                - text: ": Defined as 30 days in seconds."
+              - listitem [ref=f59e173]:
+                - strong [ref=f59e174]: Helper functions
+                - text: ": Functions to make requests, save data to files, and clean up old files."
+              - listitem [ref=f59e175]:
+                - strong [ref=f59e176]: Wrapper function
+                - text: ":"
+                - code [ref=f59e177]: enforce_storage_rules
+                - text: is a decorator that wraps each endpoint function to enforce storage rules by saving data and cleaning up old files.
+              - listitem [ref=f59e178]:
+                - strong [ref=f59e179]: Endpoint functions
+                - text: ": Functions for each API endpoint, wrapped with the"
+                - code [ref=f59e180]: enforce_storage_rules
+                - text: decorator to automatically handle storage rules.
+              - listitem [ref=f59e181]:
+                - strong [ref=f59e182]: Main code
+                - text: ": Demonstrates the usage of these functions, fetching data from various endpoints, and storing them while ensuring compliance with the storage rules. This script ensures the data is not stored longer than 30 days, aligning with the FR24 API storage rules."
+            - heading "Firestore storage with TTL" [level=3] [ref=f59e183]
+            - paragraph [ref=f59e184]: Firestore provides built-in support for TTL (Time-To-Live) to automatically delete data after a specified duration.
+            - list [ref=f59e185]:
+              - listitem [ref=f59e186]:
+                - strong [ref=f59e187]: Set up Firebase Project
+                - text: ":"
+                - list [ref=f59e188]:
+                  - listitem [ref=f59e189]: Go to the Firebase Console.
+                  - listitem [ref=f59e190]: Create a new project or select an existing project.
+                  - listitem [ref=f59e191]: Navigate to Firestore Database and create a database in production mode or test mode.
+              - listitem [ref=f59e192]:
+                - strong [ref=f59e193]: Install Firebase Admin SDK
+                - text: ":"
+              - listitem [ref=f59e194]:
+                - strong [ref=f59e195]: Download Firebase Admin SDK Key
+                - text: ":"
+                - list [ref=f59e196]:
+                  - listitem [ref=f59e197]: In the Firebase Console, go to Project Settings > Service Accounts.
+                  - listitem [ref=f59e198]: Click on "Generate new private key" and save the JSON file.
+            - code [ref=f59e199]:
+              - text: "import json import requests import firebase_admin from firebase_admin import credentials, firestore from functools import wraps from datetime import datetime, timedelta # Define storage duration in days (30 days) STORAGE_DURATION_DAYS = 30 # Initialize firebase admin SDK cred = credentials.Certificate(\"path/to/your/firebase-adminsdk-key.json\") firebase_admin.initialize_app(cred) db = firestore.client() # Helper function to make requests def make_request(url, headers): response = requests.get(url, headers=headers) response.raise_for_status() return response.json() # Wrapper to enforce storage rules def enforce_storage_rules(endpoint_func): @wraps(endpoint_func) def wrapper(*args, **kwargs): data = endpoint_func(*args, **kwargs) endpoint_name = endpoint_func.__name__.replace('get_', '') save_data_to_firestore(endpoint_name, data) return data return wrapper # Function to save data to Firestore with TTL def save_data_to_firestore(collection_name, data): timestamp = datetime.utcnow() ttl_timestamp = timestamp + timedelta(days=STORAGE_DURATION_DAYS) db.collection(collection_name).add({ 'data': data, 'created_at': timestamp, 'ttl': ttl_timestamp }) print("
+              - generic [ref=f59e200]:
+                - text: f"Saved data to
+                - generic [ref=f59e201]: "{collection_name}"
+                - text: with TTL"
+              - text: ") # Example function to get and store live flight positions full @enforce_storage_rules def get_live_flight_positions_full(bounds, token): url ="
+              - generic [ref=f59e202]:
+                - text: f"https://fr24api.flightradar24.com/api/live/flight-positions/full?bounds=
+                - generic [ref=f59e203]: "{bounds}"
+                - text: "\""
+              - text: "headers = {\"Authorization\":"
+              - generic [ref=f59e204]:
+                - text: f"Bearer
+                - generic [ref=f59e205]: "{token}"
+                - text: "\""
+              - text: ", \"Accept\": \"application/json\", \"Accept-Version\": \"v1\"} return make_request(url, headers) # Main code to demonstrate usage if __name__ == \"__main__\": token = \"your_api_token_here\" bounds = \"50.682,46.218,14.422,22.243\" # Fetch and store live flight positions full live_flights_full = get_live_flight_positions_full(bounds, token) print(\"Live Flights Full:\", live_flights_full)"
+            - generic [ref=f59e206] [cursor=pointer]: Show all
+            - paragraph [ref=f59e212]:
+              - text: Link to firebase documentation
+              - link "Firestore documentation" [ref=f59e213] [cursor=pointer]:
+                - /url: https://firebase.google.com/docs/firestore
+            - heading "Summary" [level=3] [ref=f59e214]
+            - paragraph [ref=f59e215]: "This document provides two methods for implementing the storage rules:"
+            - list [ref=f59e216]:
+              - listitem [ref=f59e217]:
+                - strong [ref=f59e218]: Local storage
+                - text: ": Requires running a script daily to clean up old data."
+              - listitem [ref=f59e219]:
+                - strong [ref=f59e220]: Firestore storage
+                - text: ": Uses Firestore's built-in TTL feature to automatically manage data deletion. Both methods ensure compliance with the data storage limit as specified in the storage rules."
+          - generic [ref=f59e222]:
+            - heading "Content" [level=5] [ref=f59e223]
+            - list

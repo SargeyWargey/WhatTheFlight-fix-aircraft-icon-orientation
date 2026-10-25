@@ -1191,6 +1191,7 @@
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/WhatTheFlightWatch-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "What The Flight?";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "What The Flight? uses your location to show the aircraft flying over you.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Point & Find uses your Watch's motion sensors to tell which way your arm is pointing, so it can guide you to an aircraft.";
@@ -1224,6 +1225,7 @@
 				DEVELOPMENT_TEAM = RBX6TT8HQV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/WhatTheFlightWatch-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "What The Flight?";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "What The Flight? uses your location to show the aircraft flying over you.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Point & Find uses your Watch's motion sensors to tell which way your arm is pointing, so it can guide you to an aircraft.";

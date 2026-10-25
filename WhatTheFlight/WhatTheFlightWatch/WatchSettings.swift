@@ -95,7 +95,7 @@ extension WristPointing.AimStyle {
     var symbol: String { self == .point ? "hand.point.up.left.fill" : "scope" }
     var summary: String {
         switch self {
-        case .point: return "Arm out, finger at the plane. The screen turns to face you, but watchOS may dim it."
+        case .point: return "Arm out, finger at the plane. The screen turns to face you, but watchOS may dim it; the call-out and the lock's tap still reach you."
         case .aim: return "Hold your Watch as if reading it and aim its top edge: turn your body, tilt your wrist. Stays bright."
         }
     }

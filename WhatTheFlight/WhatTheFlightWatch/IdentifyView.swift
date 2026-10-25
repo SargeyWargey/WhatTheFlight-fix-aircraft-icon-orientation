@@ -11,6 +11,11 @@
 //  is highlighted on the strip and outlined on the height gauge, so you can raise or lower
 //  your arm while you're still swinging round.
 //
+//  Pointing arm-out, watchOS judges the wrist down: the screen dims and the app goes
+//  inactive. The sensors and the feed keep running (see `WatchRootView.isTracking`), the
+//  speech session is set up on open while the app is still active, the lock also goes out
+//  as a wrist-tap notification, and the dimmed screen draws the name large.
+//
 
 import SwiftUI
 import WatchKit
@@ -27,9 +32,12 @@ struct IdentifyView: View {
     @LazyState private var speaker = IdentifySpeaker()
     @State private var candidates: [WristPointing.Candidate] = []
     @State private var leadID: String?
-    @State private var lastSpoken: (id: String, at: Date)?
+    /// The last aircraft named, so a wobble off and back on doesn't repeat the tap and call-out.
+    @State private var lastNamed: (id: String, at: Date)?
     @State private var crown = 0
     @FocusState private var crownFocused: Bool
+    /// Always-On, wrist judged down: bigger name, no readout.
+    @Environment(\.isLuminanceReduced) private var isDimmed
 
     /// Everything you could plausibly be pointing at.
     private var visible: [RadarContact] {
@@ -102,8 +110,10 @@ struct IdentifyView: View {
                              isFacing: leadGuidance?.isFacing == true, isOnTarget: tracker.isLocked)
                     .frame(height: 26)
                     .clearOfClock(metrics)
-                PointingReadout(arm: armDirection, target: leadDirection, mode: pointer.mode)
-                    .clearOfClock(metrics)
+                if !isDimmed {
+                    PointingReadout(arm: armDirection, target: leadDirection, mode: pointer.mode)
+                        .clearOfClock(metrics)
+                }
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 10)
@@ -117,10 +127,15 @@ struct IdentifyView: View {
             pointer.configure(style: watchSettings.aimStyle, flipped: watchSettings.flipPointing, location: location)
             pointer.start()
             crownFocused = true
+            // Set up now, while the app is active: pointing arm-out, the wrist counts as down
+            // by the time there's something to say, and an inactive app can't start audio.
+            if watchSettings.speakIdentification { speaker.prepare() }
+            if watchSettings.aimStyle == .point { WristTapNotification.requestPermissionIfNeeded() }
         }
         .onDisappear {
             pointer.stop()
             speaker.stop()
+            WristTapNotification.clear()
         }
         .task { await track() }
     }
@@ -165,7 +180,7 @@ struct IdentifyView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                 Text(f.displayIdentifier)
-                    .font(.mono(26, .heavy))
+                    .font(.mono(isDimmed ? 34 : 26, .heavy))
                     .foregroundStyle(Palette.ink)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
@@ -179,7 +194,7 @@ struct IdentifyView: View {
                     .foregroundStyle(Palette.value)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                if !others.isEmpty {
+                if !others.isEmpty, !isDimmed {
                     Text("Also here: \(others.prefix(2).joined(separator: ", ")) · turn crown")
                         .font(.mono(8))
                         .foregroundStyle(Palette.caption)
@@ -188,7 +203,7 @@ struct IdentifyView: View {
                 }
             }
             .multilineTextAlignment(.center)
-            .opacity(tracker.isLocked ? 1 : 0.55)
+            .opacity(tracker.isLocked ? 1 : isDimmed ? 0.8 : 0.55)
         }
         .buttonStyle(.plain)
         .accessibilityHint("Shows details")
@@ -205,8 +220,8 @@ struct IdentifyView: View {
     private func prompt(symbol: String, title: String, text: String) -> some View {
         VStack(spacing: 4) {
             Image(systemName: symbol).font(.system(size: 26, weight: .light)).foregroundStyle(Palette.ink)
-            Text(title).font(.mono(13, .bold)).foregroundStyle(Palette.ink)
-            Text(text).font(.mono(9)).foregroundStyle(Palette.caption).multilineTextAlignment(.center)
+            Text(title).font(.mono(isDimmed ? 16 : 13, .bold)).foregroundStyle(Palette.ink)
+            Text(text).font(.mono(isDimmed ? 11 : 9)).foregroundStyle(Palette.caption).multilineTextAlignment(.center)
         }
     }
 
@@ -232,11 +247,17 @@ struct IdentifyView: View {
             WatchHaptics.play(.click, enabled: settings.hapticsEnabled)
         case .named(let id):
             WatchHaptics.play(.success, enabled: settings.hapticsEnabled)
-            guard watchSettings.speakIdentification, let contact = model.contact(id: id) else { return }
+            guard let contact = model.contact(id: id) else { return }
             // Don't repeat the same aircraft every time the arm wobbles off and back on.
-            if let lastSpoken, lastSpoken.id == id, Date().timeIntervalSince(lastSpoken.at) < 10 { return }
-            lastSpoken = (id, Date())
-            speaker.say(SpokenTraffic.identification(for: contact))
+            if let lastNamed, lastNamed.id == id, Date().timeIntervalSince(lastNamed.at) < 10 { return }
+            lastNamed = (id, Date())
+            // Arm out, the wrist counts as down and the tap above may go unplayed: a
+            // notification always reaches the wrist, and carries the aircraft for the long-look.
+            if settings.hapticsEnabled, WKApplication.shared().applicationState != .active {
+                WristTapNotification.post(title: "That's \(contact.flight.displayIdentifier)",
+                                          body: SpokenTraffic.identification(for: contact), contact: contact)
+            }
+            if watchSettings.speakIdentification { speaker.say(SpokenTraffic.identification(for: contact)) }
         case .lost:
             tracker.preferredID = nil
         }

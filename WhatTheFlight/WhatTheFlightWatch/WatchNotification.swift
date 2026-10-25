@@ -112,3 +112,54 @@ struct BearingDial: View {
         .accessibilityLabel("Look \(GeoMath.cardinal(bearing))")
     }
 }
+
+// MARK: - Wrist tap while the wrist is "down"
+
+/// A tap the wrist can feel while watchOS judges it lowered. Pointing arm-out, the Watch
+/// treats the wrist as down: the screen dims, the scene goes inactive, and
+/// `WKInterfaceDevice.play` is only honoured for an active app. A local notification always
+/// reaches the wrist, and this one carries the aircraft, so raising the wrist shows the same
+/// long-look as a traffic alert. Identify and Find post one on lock when the app isn't active.
+enum WristTapNotification {
+    /// One identifier: each tap replaces the last rather than piling up in Notification Center.
+    static let identifier = "wtf.wristTap"
+    /// userInfo marker: the app delegate lets these through with their sound (the tap).
+    static let key = "wristTap"
+
+    /// Asked the first time Identify or Find opens in Point style; Aim keeps the app active.
+    static func requestPermissionIfNeeded() {
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            guard settings.authorizationStatus == .notDetermined else { return }
+            center.requestAuthorization(options: [.alert, .sound]) { _, error in
+                if let error { Log.alerts.error("Notification permission: \(error.localizedDescription, privacy: .public)") }
+            }
+        }
+    }
+
+    static func post(title: String, body: String, contact: RadarContact) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        content.categoryIdentifier = TrafficNotification.category
+        content.interruptionLevel = .timeSensitive
+        var info: [String: Any] = [TrafficNotification.flightIDKey: contact.id, key: true]
+        if let data = try? JSONEncoder().encode(SnapshotFlight(contact)) {
+            info[TrafficNotification.flightKey] = String(decoding: data, as: UTF8.self)
+        }
+        content.userInfo = info
+        let center = UNUserNotificationCenter.current()
+        center.removeDeliveredNotifications(withIdentifiers: [identifier])
+        center.add(UNNotificationRequest(identifier: identifier, content: content, trigger: nil)) { error in
+            if let error { Log.alerts.error("Couldn't tap the wrist: \(error.localizedDescription, privacy: .public)") }
+        }
+    }
+
+    /// Back on screen: the tap has done its job.
+    static func clear() {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [identifier])
+        center.removeDeliveredNotifications(withIdentifiers: [identifier])
+    }
+}

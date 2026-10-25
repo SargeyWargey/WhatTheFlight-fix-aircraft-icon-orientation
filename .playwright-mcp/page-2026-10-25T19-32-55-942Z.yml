@@ -1,0 +1,268 @@
+- generic [ref=f43e1]:
+  - dialog "Welcome to Flightradar24 Consent Management" [ref=f43e4]:
+    - document [active] [ref=f43e5]:
+      - heading "Flightradar24" [level=1] [ref=f43e7]
+      - generic [ref=f43e8]:
+        - paragraph [ref=f43e10]:
+          - text: We collect some sensitive and not sensitive personal data like your ip address or the browser's cookies and we share or sell it to third parties. This also helps us in keeping our service operative, improving our products and delivering personalized ads. You can choose to opt-out from the share and from the sale of the data by using the options below. Please visit our
+          - link "Privacy Policy" [ref=f43e11] [cursor=pointer]:
+            - /url: https://www.flightradar24.com/privacy-policy
+          - text: for more information about your rights.
+        - paragraph [ref=f43e13]:
+          - heading "We and our partners process data for the following purposes:" [level=2] [ref=f43e14]
+          - generic [ref=f43e15]: Advertising, Analytics, Functional, Marketing, Use my personal information for targeted advertising
+        - button "View our 57 partners" [ref=f43e16] [cursor=pointer]
+      - generic [ref=f43e17]:
+        - button "Do not share or sell my personal information" [ref=f43e18] [cursor=pointer]
+        - button "Agree and close" [ref=f43e19] [cursor=pointer]
+  - generic [ref=f43e22]:
+    - navigation [ref=f43e23]:
+      - generic [ref=f43e25]:
+        - generic:
+          - link [ref=f43e27] [cursor=pointer]:
+            - /url: https://fr24api.flightradar24.com/
+          - generic [ref=f43e37] [cursor=pointer]:
+            - link "Go to" [ref=f43e38]:
+              - /url: https://www.flightradar24.com
+            - button "Create account" [ref=f43e41]
+            - generic [ref=f43e42]: Log in
+        - generic [ref=f43e45]:
+          - link "Overview" [ref=f43e46] [cursor=pointer]:
+            - /url: https://fr24api.flightradar24.com/
+          - link "Subscription & credits" [ref=f43e47] [cursor=pointer]:
+            - /url: https://fr24api.flightradar24.com/subscriptions-and-credits
+          - link "Documentation" [ref=f43e48] [cursor=pointer]:
+            - /url: /docs/getting-started
+    - generic [ref=f43e49]:
+      - generic [ref=f43e50] [cursor=pointer]: Back to top
+      - generic [ref=f43e55] [cursor=pointer]: Help
+    - generic [ref=f43e59]:
+      - generic [ref=f43e61]:
+        - generic [ref=f43e63]:
+          - generic [ref=f43e64]:
+            - generic [ref=f43e65]: Double Credits Deal - Get double the monthly credits
+            - generic [ref=f43e66]:
+              - text: "** Purchase, upgrade, or renew any Flightradar24 API plan by 23:59 UTC on December 31, 2026, and we’ll automatically double your monthly subscription credits for all billing cycles starting on or before that date. Standard credit levels resume after the promotional period. No promo code required."
+              - link "Terms" [ref=f43e67] [cursor=pointer]:
+                - /url: /double-credits-deal-terms
+              - text: apply.
+          - heading "API subscriptions & credits" [level=1] [ref=f43e68]
+          - paragraph [ref=f43e69]: Access detailed live and historic data points via a range of API options.
+        - generic [ref=f43e70]:
+          - generic [ref=f43e71]:
+            - generic [ref=f43e72]:
+              - generic [ref=f43e75]:
+                - heading "Explorer" [level=2] [ref=f43e81]
+                - heading "$9.00/month*" [level=3] [ref=f43e82]
+                - button "Start subscription" [ref=f43e84] [cursor=pointer]
+                - paragraph [ref=f43e86]: No commitment. Cancel anytime.
+              - generic [ref=f43e88]:
+                - heading "Essential" [level=2] [ref=f43e97]
+                - heading "$90.00/month*" [level=3] [ref=f43e98]
+                - button "Start subscription" [ref=f43e100] [cursor=pointer]
+                - paragraph [ref=f43e102]: No commitment. Cancel anytime.
+              - generic [ref=f43e104]:
+                - paragraph [ref=f43e106]: Ideal for commercial use
+                - heading "Advanced" [level=2] [ref=f43e117]
+                - heading "$900.00/month*" [level=3] [ref=f43e118]
+                - button "Start subscription" [ref=f43e120] [cursor=pointer]
+                - paragraph [ref=f43e122]: No commitment. Cancel anytime.
+            - generic [ref=f43e123]:
+              - generic [ref=f43e124]:
+                - generic [ref=f43e125]:
+                  - generic [ref=f43e126]:
+                    - generic [ref=f43e127]: General
+                    - generic [ref=f43e129] [cursor=pointer]: Monthly credits**
+                    - generic [ref=f43e135] [cursor=pointer]: Response limit
+                    - generic [ref=f43e141] [cursor=pointer]: Request rate limit
+                    - generic [ref=f43e147] [cursor=pointer]: Historic availability
+                  - generic [ref=f43e153]:
+                    - generic [ref=f43e154]: Static endpoints
+                    - generic [ref=f43e156] [cursor=pointer]: Airports light
+                    - generic [ref=f43e162] [cursor=pointer]: Airports full
+                    - generic [ref=f43e168] [cursor=pointer]: Airlines light
+                  - generic [ref=f43e174]:
+                    - generic [ref=f43e175]: Live endpoints
+                    - generic [ref=f43e177] [cursor=pointer]: Live flight positions light
+                    - generic [ref=f43e183] [cursor=pointer]: Live flight positions full
+                    - generic [ref=f43e189] [cursor=pointer]: Live flight positions count
+                  - generic [ref=f43e195]:
+                    - generic [ref=f43e196]: Historic endpoints
+                    - generic [ref=f43e198] [cursor=pointer]: Historic flight events light
+                    - generic [ref=f43e204] [cursor=pointer]: Historic flight events full
+                    - generic [ref=f43e210] [cursor=pointer]: Historic flight positions light
+                    - generic [ref=f43e216] [cursor=pointer]: Historic flight positions full
+                    - generic [ref=f43e222] [cursor=pointer]: Historic flight positions count
+                  - generic [ref=f43e228]:
+                    - generic [ref=f43e229]: Summary endpoints
+                    - generic [ref=f43e231] [cursor=pointer]: Flight summary light
+                    - generic [ref=f43e237] [cursor=pointer]: Flight summary full
+                    - generic [ref=f43e243] [cursor=pointer]: Flight summary count
+                  - generic [ref=f43e249]:
+                    - generic [ref=f43e250]: Tracks endpoints
+                    - generic [ref=f43e252] [cursor=pointer]: Flights tracks
+                  - generic [ref=f43e258]:
+                    - generic [ref=f43e259]: Reports
+                    - generic [ref=f43e261] [cursor=pointer]: Usage
+                - generic [ref=f43e268]:
+                  - generic [ref=f43e269] [cursor=pointer]: 30,000 60,000
+                  - generic [ref=f43e275] [cursor=pointer]: "20"
+                  - generic [ref=f43e279] [cursor=pointer]: "10"
+                  - generic [ref=f43e283] [cursor=pointer]: 30 days
+                  - generic [ref=f43e287] [cursor=pointer]
+                  - generic [ref=f43e294] [cursor=pointer]
+                  - generic [ref=f43e302] [cursor=pointer]
+                  - generic [ref=f43e309] [cursor=pointer]
+                  - generic [ref=f43e316] [cursor=pointer]
+                  - generic [ref=f43e323] [cursor=pointer]
+                  - generic [ref=f43e331] [cursor=pointer]
+                  - generic [ref=f43e338] [cursor=pointer]
+                  - generic [ref=f43e345] [cursor=pointer]
+                  - generic [ref=f43e352] [cursor=pointer]
+                  - generic [ref=f43e359] [cursor=pointer]
+                  - generic [ref=f43e367] [cursor=pointer]
+                  - generic [ref=f43e374] [cursor=pointer]
+                  - generic [ref=f43e381] [cursor=pointer]
+                  - generic [ref=f43e389] [cursor=pointer]
+                  - generic [ref=f43e396] [cursor=pointer]
+                - generic [ref=f43e403]:
+                  - generic [ref=f43e404] [cursor=pointer]: 333,000 666,000
+                  - generic [ref=f43e410] [cursor=pointer]: "300"
+                  - generic [ref=f43e414] [cursor=pointer]: "30"
+                  - generic [ref=f43e418] [cursor=pointer]: 2 years
+                  - generic [ref=f43e422] [cursor=pointer]
+                  - generic [ref=f43e429] [cursor=pointer]
+                  - generic [ref=f43e436] [cursor=pointer]
+                  - generic [ref=f43e443] [cursor=pointer]
+                  - generic [ref=f43e450] [cursor=pointer]
+                  - generic [ref=f43e457] [cursor=pointer]
+                  - generic [ref=f43e464] [cursor=pointer]
+                  - generic [ref=f43e471] [cursor=pointer]
+                  - generic [ref=f43e478] [cursor=pointer]
+                  - generic [ref=f43e485] [cursor=pointer]
+                  - generic [ref=f43e492] [cursor=pointer]
+                  - generic [ref=f43e499] [cursor=pointer]
+                  - generic [ref=f43e506] [cursor=pointer]
+                  - generic [ref=f43e513] [cursor=pointer]
+                  - generic [ref=f43e520] [cursor=pointer]
+                  - generic [ref=f43e527] [cursor=pointer]
+                - generic [ref=f43e534]:
+                  - generic [ref=f43e535] [cursor=pointer]: 4,050,000 8,100,000
+                  - generic [ref=f43e541] [cursor=pointer]: Unlimited
+                  - generic [ref=f43e545] [cursor=pointer]: "200"
+                  - generic [ref=f43e549] [cursor=pointer]: All available
+                  - generic [ref=f43e553] [cursor=pointer]
+                  - generic [ref=f43e560] [cursor=pointer]
+                  - generic [ref=f43e567] [cursor=pointer]
+                  - generic [ref=f43e574] [cursor=pointer]
+                  - generic [ref=f43e581] [cursor=pointer]
+                  - generic [ref=f43e588] [cursor=pointer]
+                  - generic [ref=f43e595] [cursor=pointer]
+                  - generic [ref=f43e602] [cursor=pointer]
+                  - generic [ref=f43e609] [cursor=pointer]
+                  - generic [ref=f43e616] [cursor=pointer]
+                  - generic [ref=f43e623] [cursor=pointer]
+                  - generic [ref=f43e630] [cursor=pointer]
+                  - generic [ref=f43e637] [cursor=pointer]
+                  - generic [ref=f43e644] [cursor=pointer]
+                  - generic [ref=f43e651] [cursor=pointer]
+                  - generic [ref=f43e658] [cursor=pointer]
+              - generic [ref=f43e666]:
+                - text: "*All prices in US dollars. Sales tax/VAT added to prices where applicable. Actual price will be shown during checkout. A"
+                - link "Flightradar24" [ref=f43e667] [cursor=pointer]:
+                  - /url: https://www.flightradar24.com
+                - text: account is needed to start a subscription. Learn more on how pricing works
+                - link "here." [ref=f43e668] [cursor=pointer]:
+                  - /url: /docs/credit-overview
+          - generic [ref=f43e672]:
+            - text: Do you have different Flightradar24 data needs?
+            - link "Contact the business team" [ref=f43e673] [cursor=pointer]:
+              - /url: https://fr24api.flightradar24.com/contact-us
+          - generic [ref=f43e675]:
+            - heading "Credits" [level=2] [ref=f43e676]
+            - paragraph [ref=f43e677]: "There are two types of credits: subscription credits that are included in your monthly subscription plan and top-up credits that you can purchase separately. An active subscription is required to purchase top-up credits. For top-up credits that you can purchase in addition to your monthly allocation, there is a sliding scale discount applied based on the number of credits purchased. An active subscription is required to use any credits."
+            - heading "Top-up credits pricing examples" [level=3] [ref=f43e678]
+            - paragraph [ref=f43e679]: Top-up credit packages are based on purchase costs. Higher costs include purchase discounts.
+            - paragraph [ref=f43e681]: Use the slider below to see the different top-up packages and their resulting credits. You can also input specific values in the input fields to see the closest available package.
+            - generic [ref=f43e687] [cursor=pointer]:
+              - generic [ref=f43e688]:
+                - generic [ref=f43e689]: "9"
+                - generic [ref=f43e691]: "60"
+                - generic [ref=f43e694]: "120"
+                - generic [ref=f43e697]: "180"
+                - generic [ref=f43e700]: "300"
+                - generic [ref=f43e703]: "420"
+                - generic [ref=f43e706]: "540"
+                - generic [ref=f43e709]: "660"
+                - generic [ref=f43e712]: "780"
+                - generic [ref=f43e715]: "900"
+                - generic [ref=f43e718]: "990"
+                - generic [ref=f43e721]: +
+              - slider [ref=f43e723]
+            - generic [ref=f43e725]:
+              - generic [ref=f43e727]:
+                - textbox "Cost (USD)" [ref=f43e728]: "9"
+                - generic: Cost (USD)
+              - generic [ref=f43e730]:
+                - textbox "Total credits" [ref=f43e731]: 30,000
+                - generic: Total credits
+              - generic [ref=f43e737]: Cost per 1,000 credits (USD)0.3
+              - generic [ref=f43e744]: Discount applied–
+            - paragraph [ref=f43e752]:
+              - text: Did you know you can automatically top up your credits when the balance falls below a threshold? You can activate this option on your
+              - link "Account page" [ref=f43e755] [cursor=pointer]:
+                - /url: https://fr24api.flightradar24.com/account
+              - text: in the Credits Overview section.
+            - link "Subscribe" [ref=f43e758] [cursor=pointer]:
+              - /url: ""
+            - paragraph [ref=f43e760]: An active subscription is required to purchase credits.
+            - heading "How credits work" [level=3] [ref=f43e761]
+            - paragraph [ref=f43e762]: Each month on your renewal date, any unused subscription credits expire and your balance is replaced with a new bundle of subscription credits for the upcoming month. Subscription credits do not roll over between billing periods. All credits can be used in the same way, and are deducted per request.
+            - paragraph [ref=f43e763]: Credits are spent when you use the endpoint to retrieve data. A full list of the costs per use can be found in the documentation and is summarized in the list of features above.
+            - link "Go to documentation" [ref=f43e765] [cursor=pointer]:
+              - /url: /docs/credit-overview
+          - generic [ref=f43e767]:
+            - heading "The most competitive flight-tracking API product on the market" [level=2] [ref=f43e775]
+            - generic [ref=f43e776]:
+              - generic [ref=f43e777]: Best data quality
+              - generic [ref=f43e778]: Lowest price vs competitors
+              - generic [ref=f43e779]: Comprehensive worldwide coverage
+              - generic [ref=f43e780]: Industry-leading engineering
+              - generic [ref=f43e781]: Priority customer service
+              - generic [ref=f43e782]: Trustworthy infrastructure
+            - link "Compare tiers" [ref=f43e784] [cursor=pointer]:
+              - /url: ""
+        - heading "Flightradar24 is trusted by the leading companies in aviation" [level=2] [ref=f43e786]
+        - generic [ref=f43e788]:
+          - heading "Frequently asked questions" [level=4] [ref=f43e789]
+          - generic [ref=f43e790]:
+            - heading "Can the API be used for commercial purposes?" [level=3] [ref=f43e794] [cursor=pointer]
+            - heading "Can I test the API before purchasing a subscription?" [level=3] [ref=f43e802] [cursor=pointer]
+            - heading "Do I need a subscription to use the API?" [level=3] [ref=f43e810] [cursor=pointer]
+            - heading "Do I need a premium subscription to access the API?" [level=3] [ref=f43e818] [cursor=pointer]
+            - heading "Can I get access to the API with a premium subscription?" [level=3] [ref=f43e826] [cursor=pointer]
+            - heading "What happens if I use all of my credits?" [level=3] [ref=f43e834] [cursor=pointer]
+            - heading "How can I monitor my API usage?" [level=3] [ref=f43e842] [cursor=pointer]
+            - heading "Are there any usage limits for the API?" [level=3] [ref=f43e850] [cursor=pointer]
+            - heading "What payment methods are accepted?" [level=3] [ref=f43e858] [cursor=pointer]
+            - heading "How do I cancel my subscription?" [level=3] [ref=f43e866] [cursor=pointer]
+      - contentinfo [ref=f43e871]:
+        - paragraph [ref=f43e872]: © 2026 Flightradar24 AB
+        - link "All Systems Operational" [ref=f43e873] [cursor=pointer]:
+          - /url: https://fr24api.statuspage.io/
+        - list [ref=f43e876]:
+          - listitem [ref=f43e877]:
+            - link "Contact us" [ref=f43e878] [cursor=pointer]:
+              - /url: https://fr24api.flightradar24.com/contact-us
+          - listitem [ref=f43e879]:
+            - link "Careers" [ref=f43e880] [cursor=pointer]:
+              - /url: https://careers.flightradar24.com/
+          - listitem [ref=f43e881]:
+            - link "Privacy" [ref=f43e882] [cursor=pointer]:
+              - /url: https://www.flightradar24.com/privacy-policy
+          - listitem [ref=f43e883]:
+            - link "Terms" [ref=f43e884] [cursor=pointer]:
+              - /url: https://www.flightradar24.com/terms-of-service
+          - listitem [ref=f43e885]:
+            - link "Manage Consent" [ref=f43e886] [cursor=pointer]:
+              - /url: javascript:Didomi.preferences.show()

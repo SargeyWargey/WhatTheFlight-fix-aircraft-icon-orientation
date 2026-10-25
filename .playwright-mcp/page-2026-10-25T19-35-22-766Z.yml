@@ -1,0 +1,242 @@
+- generic [active] [ref=f80e1]:
+  - link "Skip to content" [ref=f80e2] [cursor=pointer]:
+    - /url: "#main"
+  - navigation "Main" [ref=f80e3]:
+    - generic [ref=f80e4]:
+      - link "FlyItalyADSB" [ref=f80e5] [cursor=pointer]:
+        - /url: /en/
+      - generic [ref=f80e7]:
+        - link "Map ↗" [ref=f80e8] [cursor=pointer]:
+          - /url: https://mappa.flyitalyadsb.com
+        - link "Airports" [ref=f80e9] [cursor=pointer]:
+          - /url: /en/airports/
+        - link "Aircraft" [ref=f80e10] [cursor=pointer]:
+          - /url: /en/aircraft/
+        - link "Data" [ref=f80e12] [cursor=pointer]:
+          - /url: /en/data/
+        - link "Network" [ref=f80e16] [cursor=pointer]:
+          - /url: /en/network/
+        - link "Research" [ref=f80e20] [cursor=pointer]:
+          - /url: /en/research/
+        - link "About" [ref=f80e24] [cursor=pointer]:
+          - /url: /en/about/
+        - 'link "Status : Service status" [ref=f80e27] [cursor=pointer]':
+          - /url: /en/status/
+          - text: Status
+          - generic [ref=f80e29]: ": Service status"
+        - link "API & MCP" [ref=f80e30] [cursor=pointer]:
+          - /url: /en/data/api/
+        - link "Italiano" [ref=f80e31] [cursor=pointer]:
+          - /url: /dati/api/docs/uso-commerciale/
+          - text: IT
+  - main [ref=f80e32]:
+    - generic [ref=f80e33]:
+      - complementary [ref=f80e34]:
+        - navigation "Documentation" [ref=f80e35]:
+          - link "Documentation" [ref=f80e36] [cursor=pointer]:
+            - /url: /en/data/api/docs/
+          - list [ref=f80e37]:
+            - listitem [ref=f80e38]:
+              - link "Quickstart" [ref=f80e39] [cursor=pointer]:
+                - /url: /en/data/api/docs/quickstart/
+            - listitem [ref=f80e40]:
+              - link "Authentication" [ref=f80e41] [cursor=pointer]:
+                - /url: /en/data/api/docs/authentication/
+            - listitem [ref=f80e42]:
+              - link "Endpoints" [ref=f80e43] [cursor=pointer]:
+                - /url: /en/data/api/docs/endpoints/
+            - listitem [ref=f80e44]:
+              - link "Fields and units" [ref=f80e45] [cursor=pointer]:
+                - /url: /en/data/api/docs/fields/
+            - listitem [ref=f80e46]:
+              - link "Limits and errors" [ref=f80e47] [cursor=pointer]:
+                - /url: /en/data/api/docs/limits-and-errors/
+            - listitem [ref=f80e48]:
+              - link "History" [ref=f80e49] [cursor=pointer]:
+                - /url: /en/data/api/docs/history/
+            - listitem [ref=f80e50]:
+              - link "Alerts and notable traffic" [ref=f80e51] [cursor=pointer]:
+                - /url: /en/data/api/docs/alerts/
+            - listitem [ref=f80e52]:
+              - link "MCP server" [ref=f80e53] [cursor=pointer]:
+                - /url: /en/data/api/docs/mcp/
+            - listitem [ref=f80e54]:
+              - link "Commercial use" [ref=f80e55] [cursor=pointer]:
+                - /url: /en/data/api/docs/commercial-use/
+            - listitem [ref=f80e56]:
+              - link "Changelog" [ref=f80e57] [cursor=pointer]:
+                - /url: /en/data/api/docs/changelog/
+          - generic [ref=f80e58]:
+            - link "REST API" [ref=f80e59] [cursor=pointer]:
+              - /url: /en/data/api/
+            - link "FAQ" [ref=f80e60] [cursor=pointer]:
+              - /url: /en/faq/
+            - link "OpenAPI" [ref=f80e61] [cursor=pointer]:
+              - /url: /openapi.json
+      - article [ref=f80e62]:
+        - generic [ref=f80e63]:
+          - link "Documentation" [ref=f80e64] [cursor=pointer]:
+            - /url: /en/data/api/docs/
+          - text: /
+        - heading "Commercial use" [level=1] [ref=f80e65]
+        - paragraph [ref=f80e66]: "The FlyItalyADSB API in apps and devices you sell: one key per product, caching on your server, the right plan, CC BY-SA 4.0 attribution, enterprise terms."
+        - paragraph [ref=f80e67]:
+          - text: Updated
+          - time [ref=f80e68]: 22 October 2026
+        - navigation "On this page" [ref=f80e69]:
+          - list [ref=f80e71]:
+            - listitem [ref=f80e72]:
+              - link "Apps and devices" [ref=f80e73] [cursor=pointer]:
+                - /url: "#apps-and-devices"
+            - listitem [ref=f80e74]:
+              - link "Sizing the plan" [ref=f80e75] [cursor=pointer]:
+                - /url: "#sizing-the-plan"
+            - listitem [ref=f80e76]:
+              - link "Attribution and licence" [ref=f80e77] [cursor=pointer]:
+                - /url: "#attribution-and-licence"
+            - listitem [ref=f80e78]:
+              - link "When you need an agreement" [ref=f80e79] [cursor=pointer]:
+                - /url: "#when-you-need-an-agreement"
+            - listitem [ref=f80e80]:
+              - link "The feeder perk" [ref=f80e81] [cursor=pointer]:
+                - /url: "#the-feeder-perk"
+        - generic [ref=f80e82]:
+          - paragraph [ref=f80e83]:
+            - text: Commercial use is allowed on
+            - strong [ref=f80e84]: every plan, Free included
+            - text: ", within the plan’s limits. That covers apps and devices you sell too, with no separate agreement: the"
+            - link "terms" [ref=f80e85] [cursor=pointer]:
+              - /url: /en/terms/
+            - text: apply.
+          - heading "Apps and devices" [level=2] [ref=f80e86]
+          - list [ref=f80e87]:
+            - listitem [ref=f80e88]:
+              - strong [ref=f80e89]: One key per product
+              - text: ", not one per device or per customer. Requests from all devices count together on that key, from any IP."
+            - listitem [ref=f80e90]:
+              - strong [ref=f80e91]: A server of your own with a cache
+              - text: "that serves only your devices is fine: it isn’t redistribution, and it lowers your request count."
+            - listitem [ref=f80e92]: A key inside an app or firmware can be extracted. If that worries you, use it only from your server.
+          - heading "Sizing the plan" [level=2] [ref=f80e93]
+          - paragraph [ref=f80e94]: "Multiply one device’s requests by the number of devices. For example, 10 devices asking 12 times a minute, day and night, make 120 requests a minute and over 5 million a month: the Pro plan. A single device at 12 requests a minute already goes past the Free plan’s 300,000 a month."
+          - list [ref=f80e95]:
+            - listitem [ref=f80e96]: Asking every 15 seconds instead of every 5 cuts usage by three.
+            - listitem [ref=f80e97]: With a cache on your server, many devices in the same area cost as much as one.
+          - paragraph [ref=f80e98]:
+            - text: The plans are on
+            - link "REST API" [ref=f80e99] [cursor=pointer]:
+              - /url: /en/data/api/#piani
+            - text: . The key you already have moves to the new plan without changing.
+          - heading "Attribution and licence" [level=2] [ref=f80e100]
+          - paragraph [ref=f80e101]:
+            - text: The data is
+            - link "CC BY-SA 4.0" [ref=f80e102] [cursor=pointer]:
+              - /url: https://creativecommons.org/licenses/by-sa/4.0/
+            - text: ". Credit FlyItalyADSB with a link to flyitalyadsb.com where users see it: in the app, on the device or in the manual, on the product page. For example:"
+          - blockquote [ref=f80e103]:
+            - paragraph [ref=f80e104]: "Flight data: FlyItalyADSB (flyitalyadsb.com), CC BY-SA 4.0"
+          - paragraph [ref=f80e105]: Works derived from the data that you publish go under the same licence.
+          - heading "When you need an agreement" [level=2] [ref=f80e106]
+          - paragraph [ref=f80e107]: "An enterprise agreement is only needed for:"
+          - list [ref=f80e108]:
+            - listitem [ref=f80e109]: reselling the data as an API or feed for other people’s products;
+            - listitem [ref=f80e110]: an SLA;
+            - listitem [ref=f80e111]: volumes above the Business plan.
+          - paragraph [ref=f80e112]:
+            - text: Write to
+            - link "admin@flyitalyadsb.com" [ref=f80e113] [cursor=pointer]:
+              - /url: mailto:admin@flyitalyadsb.com
+            - text: .
+          - heading "The feeder perk" [level=2] [ref=f80e114]
+          - paragraph [ref=f80e115]:
+            - text: If you feed the network with a receiver, your Free keys get the Pro plan’s limits for free, but
+            - strong [ref=f80e116]: for non-commercial use only
+            - text: ": it doesn’t cover products you sell. See"
+            - link "Become a feeder" [ref=f80e117] [cursor=pointer]:
+              - /url: /en/community/feeder/
+            - text: .
+        - navigation [ref=f80e118]:
+          - link "← Previous MCP server" [ref=f80e119] [cursor=pointer]:
+            - /url: /en/data/api/docs/mcp/
+            - text: ← PreviousMCP server
+          - link "Next → Changelog" [ref=f80e120] [cursor=pointer]:
+            - /url: /en/data/api/docs/changelog/
+            - text: Next →Changelog
+  - contentinfo [ref=f80e121]:
+    - generic [ref=f80e122]:
+      - generic [ref=f80e123]:
+        - generic [ref=f80e124]:
+          - generic [ref=f80e125]: FlyItalyADSB
+          - paragraph [ref=f80e127]: Open ADS-B data, global network born in Italy, our own MLAT. A community network.
+        - generic [ref=f80e128]:
+          - generic [ref=f80e129]: Data
+          - list [ref=f80e130]:
+            - listitem [ref=f80e131]:
+              - link "About our data" [ref=f80e132] [cursor=pointer]:
+                - /url: /en/data/
+            - listitem [ref=f80e133]:
+              - link "Airports" [ref=f80e134] [cursor=pointer]:
+                - /url: /en/airports/
+            - listitem [ref=f80e135]:
+              - link "Aircraft types" [ref=f80e136] [cursor=pointer]:
+                - /url: /en/aircraft/
+            - listitem [ref=f80e137]:
+              - link "Archive" [ref=f80e138] [cursor=pointer]:
+                - /url: /en/data/archive/
+            - listitem [ref=f80e139]:
+              - link "REST API" [ref=f80e140] [cursor=pointer]:
+                - /url: /en/data/api/
+            - listitem [ref=f80e141]:
+              - link "MCP and AI agents" [ref=f80e142] [cursor=pointer]:
+                - /url: /en/data/mcp/
+            - listitem [ref=f80e143]:
+              - link "API documentation" [ref=f80e144] [cursor=pointer]:
+                - /url: /en/data/api/docs/
+            - listitem [ref=f80e145]:
+              - link "FAQ" [ref=f80e146] [cursor=pointer]:
+                - /url: /en/faq/
+        - generic [ref=f80e147]:
+          - generic [ref=f80e148]: Community
+          - list [ref=f80e149]:
+            - listitem [ref=f80e150]:
+              - link "The network" [ref=f80e151] [cursor=pointer]:
+                - /url: /en/network/
+            - listitem [ref=f80e152]:
+              - link "Become a feeder" [ref=f80e153] [cursor=pointer]:
+                - /url: /en/community/feeder/
+            - listitem [ref=f80e154]:
+              - link "Is my data arriving?" [ref=f80e155] [cursor=pointer]:
+                - /url: /en/community/feeder-status/
+            - listitem [ref=f80e156]:
+              - link "How MLAT works" [ref=f80e157] [cursor=pointer]:
+                - /url: /en/community/mlat/
+            - listitem [ref=f80e158]:
+              - link "Research" [ref=f80e159] [cursor=pointer]:
+                - /url: /en/research/
+        - generic [ref=f80e160]:
+          - generic [ref=f80e161]: Project
+          - list [ref=f80e162]:
+            - listitem [ref=f80e163]:
+              - link "About" [ref=f80e164] [cursor=pointer]:
+                - /url: /en/about/
+            - listitem [ref=f80e165]:
+              - link "Contact us" [ref=f80e166] [cursor=pointer]:
+                - /url: /en/contact/
+            - listitem [ref=f80e167]:
+              - link "Service status" [ref=f80e168] [cursor=pointer]:
+                - /url: /en/status/
+            - listitem [ref=f80e169]:
+              - link "GitHub ↗" [ref=f80e170] [cursor=pointer]:
+                - /url: https://github.com/flyitalyadsb
+      - generic [ref=f80e171]:
+        - paragraph [ref=f80e172]:
+          - text: © 2026 FlyItalyADSB · Data license
+          - link "CC BY-SA 4.0" [ref=f80e173] [cursor=pointer]:
+            - /url: https://creativecommons.org/licenses/by-sa/4.0/
+        - paragraph [ref=f80e174]:
+          - text: Service provided by Nesso Labs S.r.l. · VAT IT04754860981 ·
+          - link "Terms" [ref=f80e175] [cursor=pointer]:
+            - /url: /en/terms/
+          - text: ·
+          - link "Privacy" [ref=f80e176] [cursor=pointer]:
+            - /url: /en/privacy/

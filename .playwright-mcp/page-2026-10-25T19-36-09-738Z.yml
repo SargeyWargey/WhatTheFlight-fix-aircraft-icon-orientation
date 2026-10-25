@@ -1,0 +1,38 @@
+- generic [ref=f87e2]:
+  - alert [ref=f87e3]: adsb.fi - Home of the Flight Tracking Community
+  - generic [ref=f87e4]:
+    - generic [ref=f87e8]:
+      - heading "adsb.fi" [level=1] [ref=f87e10]
+      - generic [ref=f87e11]:
+        - link "Map" [ref=f87e12] [cursor=pointer]:
+          - /url: https://globe.adsb.fi
+        - link "Discord" [ref=f87e17] [cursor=pointer]:
+          - /url: https://discord.gg/mzRugsPSEF
+        - link "Feeding" [ref=f87e22] [cursor=pointer]:
+          - /url: https://github.com/adsbfi/adsb-fi-scripts
+        - link "Network" [ref=f87e27] [cursor=pointer]:
+          - /url: /network
+      - generic [ref=f87e32]: adsb.fi is a community-driven flight tracker, with over 7000 feeders around the world. We provide open and unfiltered access to worldwide air traffic data.
+    - generic [ref=f87e33]:
+      - generic [ref=f87e34]: You are not feeding data
+      - generic [ref=f87e40]:
+        - link "Privacy" [ref=f87e41] [cursor=pointer]:
+          - /url: /privacy
+        - link "Contact" [ref=f87e42] [cursor=pointer]:
+          - /url: mailto:contact@adsb.fi
+        - link "Open Data" [ref=f87e43] [cursor=pointer]:
+          - /url: https://github.com/adsbfi/opendata/blob/main/README.md
+    - generic [ref=f87e44]:
+      - generic "Close" [ref=f87e46]
+      - generic [ref=f87e50]:
+        - heading "You are not feeding data" [level=3] [ref=f87e51]
+        - text: You can help to increase the coverage by setting up a feeder. To build one you need a Raspberry Pi,
+        - link "an SDR" [ref=f87e52] [cursor=pointer]:
+          - /url: https://www.amazon.com/RTL-SDR-Blog-RTL2832U-Software-Defined/dp/B0129EBDS2
+        - text: ","
+        - link "an antenna" [ref=f87e53] [cursor=pointer]:
+          - /url: https://vinnant.sk/store/product/col10905-su
+        - text: ", and the"
+        - link "feeder client" [ref=f87e54] [cursor=pointer]:
+          - /url: https://github.com/adsbfi/adsb-fi-scripts
+        - text: . Every feeder helps!

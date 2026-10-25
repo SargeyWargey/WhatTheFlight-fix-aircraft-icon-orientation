@@ -1,0 +1,331 @@
+- generic [active] [ref=f66e1]:
+  - generic [ref=f66e3]:
+    - link "Skip to main content" [ref=f66e4] [cursor=pointer]:
+      - /url: "#main-terms-content"
+    - generic [ref=f66e5]:
+      - generic:
+        - generic:
+          - link [ref=f66e7] [cursor=pointer]:
+            - /url: https://www.flightradar24.com
+            - img "Flightradar24 - Flight Tracker" [ref=f66e8]
+          - generic [ref=f66e9]:
+            - generic [ref=f66e10]:
+              - time [ref=f66e11]: 19:34
+              - generic [ref=f66e12]: UTC
+            - searchbox "Find flights, airports and more" [ref=f66e15]
+            - button "Log in" [ref=f66e21] [cursor=pointer]
+          - button "Open menu" [ref=f66e27] [cursor=pointer]
+    - generic [ref=f66e30]:
+      - navigation "Breadcrumb" [ref=f66e32]:
+        - list [ref=f66e33]:
+          - listitem [ref=f66e34]:
+            - link "Flight tracker map" [ref=f66e35] [cursor=pointer]:
+              - /url: https://www.flightradar24.com
+          - listitem [ref=f66e36]:
+            - link "About" [ref=f66e39] [cursor=pointer]:
+              - /url: https://www.flightradar24.com/about
+          - listitem [ref=f66e40]:
+            - link "Terms of service" [ref=f66e43] [cursor=pointer]:
+              - /url: https://www.flightradar24.com/terms-of-service
+      - main [ref=f66e44]:
+        - article [ref=f66e45]:
+          - generic [ref=f66e46]:
+            - complementary [ref=f66e47]:
+              - navigation "Terms of Service" [ref=f66e48]:
+                - heading "Content" [level=3] [ref=f66e49]
+                - list [ref=f66e50]:
+                  - listitem [ref=f66e51] [cursor=pointer]:
+                    - link "1. Terms" [ref=f66e53]:
+                      - /url: "#1Terms"
+                  - listitem [ref=f66e54] [cursor=pointer]:
+                    - link "2. Rights to use" [ref=f66e55]:
+                      - /url: "#2RightsToUse"
+                  - listitem [ref=f66e56] [cursor=pointer]:
+                    - link "3. Registration process and" [ref=f66e57]:
+                      - /url: "#3RegistrationProcessAndUserAccountSecurity"
+                  - listitem [ref=f66e58] [cursor=pointer]:
+                    - link "4. Basic (free) Services" [ref=f66e59]:
+                      - /url: "#4BasicFreeServices"
+                  - listitem [ref=f66e60] [cursor=pointer]:
+                    - link "5. Premium Services" [ref=f66e61]:
+                      - /url: "#5PremiumServices"
+                  - listitem [ref=f66e62] [cursor=pointer]:
+                    - link "6. FR24 API" [ref=f66e63]:
+                      - /url: "#6Fr24Api"
+                  - listitem [ref=f66e64] [cursor=pointer]:
+                    - link "7. Fees and Payment" [ref=f66e65]:
+                      - /url: "#7FeesAndPayment"
+                  - listitem [ref=f66e66] [cursor=pointer]:
+                    - link "8. Unauthorised Use/No Interference" [ref=f66e67]:
+                      - /url: "#8UnauthorisedUseNoInterference"
+                  - listitem [ref=f66e68] [cursor=pointer]:
+                    - link "9. Third Party Services" [ref=f66e69]:
+                      - /url: "#9ThirdPartyServices"
+                  - listitem [ref=f66e70] [cursor=pointer]:
+                    - link "10. Intellectual Property Rights" [ref=f66e71]:
+                      - /url: "#10IntellectualPropertyRights"
+                  - listitem [ref=f66e72] [cursor=pointer]:
+                    - link "11. Data Collection and" [ref=f66e73]:
+                      - /url: "#11DataCollectionAndTransmission"
+                  - listitem [ref=f66e74] [cursor=pointer]:
+                    - link "12. User Material" [ref=f66e75]:
+                      - /url: "#12UserMaterial"
+                  - listitem [ref=f66e76] [cursor=pointer]:
+                    - link "13. Support" [ref=f66e77]:
+                      - /url: "#13Support"
+                  - listitem [ref=f66e78] [cursor=pointer]:
+                    - link "14. No warranties" [ref=f66e79]:
+                      - /url: "#14NoWarranties"
+                  - listitem [ref=f66e80] [cursor=pointer]:
+                    - link "15. Limitation of liability" [ref=f66e81]:
+                      - /url: "#15LimitationOfLiabilityAndIndemnity"
+                  - listitem [ref=f66e82] [cursor=pointer]:
+                    - link "16. Changes to the" [ref=f66e83]:
+                      - /url: "#16ChangesToTheServicesAndTerms"
+                  - listitem [ref=f66e84] [cursor=pointer]:
+                    - link "17. Governing Law and" [ref=f66e85]:
+                      - /url: "#17GoverningLawAndDisputes"
+            - generic [ref=f66e86]:
+              - heading "Terms of Service" [level=1] [ref=f66e87]
+              - paragraph [ref=f66e88]: "Last updated: June 23rd 2026"
+              - generic [ref=f66e89]:
+                - generic [ref=f66e91]:
+                  - heading "1. Terms" [level=2] [ref=f66e92]
+                  - paragraph [ref=f66e93]:
+                    - text: 1.1 Flightradar24 AB (hereinafter "
+                    - strong [ref=f66e94]: Flightradar24
+                    - text: "\", \""
+                    - strong [ref=f66e95]: we
+                    - text: "\", \""
+                    - strong [ref=f66e96]: us
+                    - text: "\", or \""
+                    - strong [ref=f66e97]: our
+                    - text: "\"), registration no. 556895-1213, having its registered address at Brunnsgatan 13, 111 38 Stockholm, Sweden, provides real-time flight tracking of air traffic throughout the world, accessible by using our website, currently www.flightradar24.com (the \""
+                    - strong [ref=f66e98]: Website
+                    - text: "\"), our mobile applications (the \""
+                    - strong [ref=f66e99]: Apps
+                    - text: "\"), Premium Services and the Flightradar24 API (the \""
+                    - strong [ref=f66e100]: FR24 API
+                    - text: "\"), (as further defined below) or other information provided as part of Flightradar24’s services (collectively the \""
+                    - strong [ref=f66e101]: Services
+                    - text: "\"). Purchasers of the Service are referred to as \""
+                    - strong [ref=f66e102]: you
+                    - text: "\" or the \""
+                    - strong [ref=f66e103]: User
+                    - text: "\"."
+                  - paragraph [ref=f66e104]: 1.2 These Terms of Service (the "Terms") set forth the legally binding terms and conditions governing any use of the Services provided by Flightradar24. By using the Services, you acknowledge your understanding of, and agreement to, these Terms, which also incorporate our Privacy Policy. Any use of the Services is subject to these Terms.
+                  - paragraph [ref=f66e105]: 1.3 Please read these Terms carefully before using the Services. If you do not agree to these Terms, you do not have the right to use the Services.
+                - generic [ref=f66e107]:
+                  - heading "2. Rights to use" [level=2] [ref=f66e108]
+                  - paragraph [ref=f66e109]: 2.1 Subject to your compliance with these Terms, we grant you a non-exclusive, non-transferable limited right to access and use the Services. Unless otherwise stated in these Terms, specifically Clause 5.3 and 6.3, this right is granted only for personal, non-commercial use.
+                  - paragraph [ref=f66e110]: 2.2 Nothing in these Terms shall be interpreted as a transfer of title to the Services.
+                  - paragraph [ref=f66e111]: 2.3 With the exception of the FR24 API, you may only access the Services via a human-operated web browser or mobile application, and not with any program, collection agent, or “robot” for any purpose, including the purpose of automated retrieval, display of content or “scraping” of data or information.
+                  - paragraph [ref=f66e112]: 2.4 Within the FR24 API, you can temporarily cache or store retrieved data for a limited time as documented per endpoint within the API Portal, after which you must delete the cached values.
+                  - paragraph [ref=f66e113]: 2.5 This right to access and use the Services shall automatically terminate if you violate any provision of these Terms. Upon the termination of this right to use the Services, you must destroy any downloaded information accessed via the Services, whether in electronic or printed format.
+                - generic [ref=f66e115]:
+                  - heading "3. Registration process and User Account Security" [level=2] [ref=f66e116]
+                  - paragraph [ref=f66e117]: 3.1 Users of the Services can register an account with Flightradar24 to use and access additional functionality of the Services. Full descriptions of the content of each Service can be found on our Website.
+                  - paragraph [ref=f66e118]: 3.2 If you are a physical person, you must be over 18 years of age to register an account for the Services.
+                  - paragraph [ref=f66e119]: 3.3 During registration, you will be asked to provide your email address and password. Alternatively, you can use certain single sign-on services provided by third parties. For some subscription levels, you are asked to provide a company name and may also have to provide a business address and VAT number.
+                  - paragraph [ref=f66e120]:
+                    - text: 3.4 You are responsible for providing accurate and correct registration information and we assume no liability for any error, inaccuracy, or omission in such information or in the Service resulting from any information provided by you. By becoming a registered user of our Services, you will also be prompted to give your consent to our processing of your personal data in accordance with our
+                    - link "Privacy Policy" [ref=f66e121] [cursor=pointer]:
+                      - /url: https://www.flightradar24.com/privacy-policy
+                    - text: .
+                  - paragraph [ref=f66e122]: 3.5 You are personally and solely responsible for all activities that occur using your unique account subscription credentials and assume full responsibility for your use of the Services. You are responsible for maintaining the confidentiality of your password and you should ensure that you exit properly from your account at the end of each session. You agree to notify Flightradar24 immediately if you suspect any unauthorised use of your account or access to your password or account. You may not disguise the origin of your connection to the Services, or provide false or inaccurate information to Flightradar24. You shall not misrepresent yourself, your identity, or your affiliations in connection with the use of the Services. This includes not falsely claiming any endorsement or partnership with Flightradar24.
+                  - paragraph [ref=f66e123]:
+                    - code [ref=f66e124]: 3.6 Other than as explicitly permitted directly by a representative of Flightradar24, it is strictly prohibited to resell, sublicense, lease or otherwise commercially redistribute service account subscriptions, access credentials, and in the case of the FR24 API, API tokens.
+                  - paragraph [ref=f66e125]: 3.7 If you wish to deactivate your account, write to us via our Contact Us page.
+                - generic [ref=f66e127]:
+                  - heading "4. Basic (free) Services" [level=2] [ref=f66e128]
+                  - paragraph [ref=f66e129]: 4.1 Certain Website and App related Services from Flightradar24 are offered free of charge. These are referred to as the "Basic (free) Service".
+                - generic [ref=f66e131]:
+                  - heading "5. Premium Services" [level=2] [ref=f66e132]
+                  - heading "5.1 Premium Services levels" [level=3] [ref=f66e133]
+                  - paragraph [ref=f66e134]: 5.1.1 The Premium Services include subscriptions to our Website and Apps. Users of the Premium Services are required to register an account.
+                  - paragraph [ref=f66e135]:
+                    - text: "5.1.2 The Premium Services are divided into three subscription levels: \""
+                    - strong [ref=f66e136]: Silver
+                    - text: "\", \""
+                    - strong [ref=f66e137]: Gold
+                    - text: "\" and \""
+                    - strong [ref=f66e138]: Business
+                    - text: "\". Each subscription level grants access to different features, functionalities, performance and priority of support for the Premium Services as documented on the Website, or as separately agreed between the parties."
+                  - heading "5.2 Subscription Term and Termination" [level=3] [ref=f66e139]
+                  - paragraph [ref=f66e140]: 5.2.1 Premium Services are entered into for a subscription period as specified on the Website, or, for such period as separately agreed between the parties. All account subscriptions are automatically extended by an additional subscription period until you or Flightradar24 terminates the subscription. Please see your relevant account page for more information about your Premium Service subscription.
+                  - paragraph [ref=f66e141]: 5.2.2 By purchasing the Premium Service as a consumer, you expressly consent to the commencement and fulfilment of the Premium Service by Flightradar24 and acknowledge that there is no right of withdrawal for the Premium Service.
+                  - paragraph [ref=f66e142]: 5.2.3 You may at any time terminate your Premium Service subscription before the start of the additional subscription period, via your relevant account page. No subscription fees paid in advance for the relevant period will be repaid, but you will have the right to continue to use the Services until the end of that period.
+                  - paragraph [ref=f66e143]: 5.2.4 Premium Service subscriptions can be terminated by Flightradar24 at any time if any use in violation of these Terms is detected or suspected.
+                  - paragraph [ref=f66e144]: 5.2.5 If any amount owed by the User to Flightradar24 under these Terms or under any other agreement between the User and Flightradar24 remains unpaid after the applicable due date and after any required notice period, unless such amount is subject to a bona fide dispute raised by the User in writing, including reasonable details of the basis for the dispute, Flightradar24 may, without liability and in addition to any other rights or remedies available to it, suspend or restrict access to any or all Services, user accounts, subscriptions, API access, products, or services provided by Flightradar24 until all outstanding amounts have been paid in full.
+                  - heading "5.3 Commercial Use" [level=3] [ref=f66e145]
+                  - paragraph [ref=f66e146]:
+                    - text: 5.3.1 Within the Premium Services, the Business level subscription is the only subscription whereby a user is allowed to use the Paid Services in relation to any commercial use or for any commercial purposes including use within any commercial or governmental organisation or for any public display (commercial or non-commercial). Therefore, if you intend to make any commercial use or any use of the Premium Services within a professional or public environment, you must subscribe to our Business level subscription, whereby the right to use granted in clause 2.1 will, further to what is set out therein, also give you a right to use the Premium Services for commercial purposes. Flightradar24 reserves the right to temporarily suspend "
+                    - strong [ref=f66e147]: Silver
+                    - text: "\" and \""
+                    - strong [ref=f66e148]: Gold
+                    - text: "\" Premium Service accounts where commercial use is suspected or detected."
+                - generic [ref=f66e150]:
+                  - heading "6. FR24 API" [level=2] [ref=f66e151]
+                  - heading "6.1 FR24 API levels" [level=3] [ref=f66e152]
+                  - paragraph [ref=f66e153]:
+                    - text: "6.1.1 The FR24 API is also divided into three subscription levels: \""
+                    - strong [ref=f66e154]: Explorer
+                    - text: "\", \""
+                    - strong [ref=f66e155]: Essential
+                    - text: "\" and \""
+                    - strong [ref=f66e156]: Advanced
+                    - text: "\"."
+                  - heading "6.2 Subscription Term and Termination" [level=3] [ref=f66e157]
+                  - paragraph [ref=f66e158]: 6.2.1 FR24 Subscriptions are entered into for a subscription period as specified on the Website, or, for such period as separately agreed between the parties. All account subscriptions are automatically extended by an additional subscription period until you or Flightradar24 terminates the subscription. Please see your relevant account page for more information about your FR24 API subscription.
+                  - paragraph [ref=f66e159]: 6.2.2 By purchasing the FR24 API as a consumer, you expressly consent to the commencement and fulfilment of the FR24 API by Flightradar24 and acknowledge that there is no right of withdrawal for the FR24 API.
+                  - paragraph [ref=f66e160]: 6.2.3 You may at any time terminate your FR24 API subscription before the start of the additional subscription period, via your relevant account page. No subscription fees paid in advance for the relevant period will be repaid, but you will have the right to continue to use the Services until the end of that period.
+                  - paragraph [ref=f66e161]: 6.2.4 FR24 API subscriptions can be terminated by Flightradar24 at any time if any use in violation of these Terms is detected or suspected.
+                  - heading "6.3 Commercial Use" [level=3] [ref=f66e162]
+                  - paragraph [ref=f66e163]: 6.3.1 Commercial use and the creation of derivative works from data sourced via the FR24 API is permitted at each subscription level in line with the limitation specified below, and in conjunction with these Terms and any other legal notices as documented within the FR24 API Portal, including but not limited to specified caching restrictions.
+                  - list [ref=f66e164]:
+                    - listitem [ref=f66e165]: "Data Resale and Manipulation You are prohibited from reselling, transferring, redistributing, lending, leasing, sublicensing or manipulating raw data accessed via the FR24 API. This includes, but is not limited to:"
+                    - list [ref=f66e166]:
+                      - listitem [ref=f66e167]: Selling or transferring enriched datasets which contain raw FR24 data.
+                      - listitem [ref=f66e168]: Manipulating, modifying, or obfuscating any FR24 API data in an attempt to materially change the raw, original content and integrity of the data, or mask the origins of the data sourced from the FR24 API.
+                      - listitem [ref=f66e169]: Using the FR24 API to supplement or backfill any other near-time or real-time flight data sourced from an alternative data provider for any commercial or non-commercial use.
+                    - listitem [ref=f66e170]: "Competitive harm and misrepresentation You are prohibited from using the data accessed via the FR24 API to competitively harm Flightradar24, which includes but is not limited to:"
+                    - list [ref=f66e171]:
+                      - listitem [ref=f66e172]: Identifying market trends to leverage against our business.
+                      - listitem [ref=f66e173]: Developing competing services or products based on the information or insights gathered from our data.
+                      - listitem [ref=f66e174]: Removing any Flightradar24 or third-party names, trademarks, copyright notices or other proprietary rights notices.
+                    - listitem [ref=f66e175]: "Unauthorised Data Storage You are prohibited from storing the data accessed via the FR24 API beyond the storage restrictions specified in our API documentation. This includes, but is not limited to:"
+                    - list [ref=f66e176]:
+                      - listitem [ref=f66e177]: Creating persistent local copies of the data.
+                      - listitem [ref=f66e178]: Storing data on external servers or cloud services not affiliated with the storage rules.
+                    - listitem [ref=f66e179]: "Flight-Critical or Flight Decision-Making Applications You are explicitly prohibited from using the data accessed via the FR24 API for any flight-critical or safety-critical decisions. This includes, but is not limited to:"
+                    - list [ref=f66e180]:
+                      - listitem [ref=f66e181]: Systems that support or make critical or navigation-based decisions related to air traffic control, flight planning, or flight operations.
+                      - listitem [ref=f66e182]: Any use in software or systems that directly impact the safety, operation, or management of aircraft in flight.
+                  - paragraph [ref=f66e183]: 6.3.2 Notwithstanding the above, the User is entitled to enrich and create derivative data set from the data for commercial purposes, subject to such enrichment and creation will be done by the User by adding significant value to the data and/or the data itself not being the main selling point.
+                - generic [ref=f66e185]:
+                  - heading "7. Fees and Payment" [level=2] [ref=f66e186]
+                  - heading "7.1 Basic (free) Services" [level=3] [ref=f66e187]
+                  - paragraph [ref=f66e188]: 7.1.1 No fees will be charged for the Basic (free) Services.
+                  - 'heading "7.2 Premium Services: Silver, Gold, and Business Subscriptions" [level=3] [ref=f66e189]'
+                  - paragraph [ref=f66e190]: 7.2.1 Premium Services can be purchased on the Website, or through so-called in-app purchases in some of our Apps.
+                  - paragraph [ref=f66e191]: 7.2.2 Premium Services shall be paid in advance in accordance with the price list applicable from time to time which is available on the Website or Apps. Applicable VAT is presented at the time of purchase depending on your location and classification as a private individual or a commercial entity. You may affect payment of the fee through any of the means of payment offered by us on the Website or in one of our Apps.
+                  - paragraph [ref=f66e192]: 7.2.3 If any payment is not made by the due date, your Premium Service subscription will automatically terminate at the end of your active Subscription Period. You are responsible for providing accurate and up-to-date billing information. Failure to provide accurate billing information may result in the suspension or termination of your subscription.
+                  - 'heading "7.3 FR24 API: Subscriptions and API Credits" [level=3] [ref=f66e193]'
+                  - paragraph [ref=f66e194]: 7.3.1 Subscriptions to the FR24 API are available in accordance with the price list applicable from time to time which is available on the Website.
+                  - paragraph [ref=f66e195]: 7.3.2 Full usage of the FR24 API is subject to the User’s holding of credits which are used for each call to an endpoint (“API Credits”). The API Credits can be purchased within the API Portal on the Website. API Credits have a limited validity, as specified in the User’s FR24 API Account. Unused credits will expire at the end of their validity period and will not be refunded or carried over. Users have the option to set automatic top-ups of their API Credit accounts, to their chosen amount and up to the overall limit set by Flightradar24. Flightradar24 reserves the right to change this overall credit top-up limit from time to time. Users are solely responsible for ensuring that this functionality is enabled or disabled as required for their use. Flightradar24 will not be held accountable for any automatic top-ups that occur where such functionality has been set by the User and will not refund such amounts.
+                  - paragraph [ref=f66e196]: 7.3.3 The use of API Credits is dependent on the User having an active FR24 API subscription. Should an FR24 API Subscription payment not be made by the due date, the subscription will enter into a grace period of 3 days, during which Flightradar24 will attempt to authorise the payment. If the payment is not received by the end of the 3-day period, the subscription will be considered inactive, and the User will not be able to use any API Credits until the subscription is reactivated. Should an FR24 API User account be terminated, any remaining API Credits will become unusable and will not be refunded.
+                  - heading "7.4 Changes to the Fees" [level=3] [ref=f66e197]
+                  - paragraph [ref=f66e198]: 7.4.1 Flightradar24 may change the prices for the Premium Services and the FR24 API from time to time and will notify you of any such price changes and the timing thereof through information posted on our Website at least thirty (30) days before such change taking place. Any price change communicated will be applicable for the following subscription period.
+                  - paragraph [ref=f66e199]: 7.4.2 As permitted by law, you accept the new price by continuing to use the Premium Services and the FR24 API after the price change takes effect. If you do not agree with the price changes, you have the right to reject the change by terminating the Premium Services or FR24 API prior to the price change going into effect. Please therefore make sure you read any such notification of price changes carefully.
+                - generic [ref=f66e201]:
+                  - heading "8. Unauthorised Use/No Interference" [level=2] [ref=f66e202]
+                  - paragraph [ref=f66e203]: "8.1 You agree that you will not use or attempt to use any method, device, software, or routine to harm others or interfere with functioning of the Services or use and/or monitor any information in or related to the Services for any unauthorised purpose. Specifically, each user, whether authorised or unauthorised, agrees that it will not (and will not permit any of its employees, agents, and any other third party to) do any of the following:"
+                  - list [ref=f66e204]:
+                    - listitem [ref=f66e205]: Use the Services or any information data or content contained therein to provide, link, or otherwise make available, any information on the Services that is unlawful, threatening, abusive, harassing, torturous, defamatory, vulgar, obscene, libelous, invasive of another’s privacy, hateful, harmful to minors or racially, ethnically or otherwise objectionable.
+                    - listitem [ref=f66e206]: Impersonate any person or entity, or otherwise misrepresent your affiliation.
+                    - listitem [ref=f66e207]: Manipulate, forge, or otherwise modify information or identifiers in a manner that may hide or disguise the origin of any information.
+                    - listitem [ref=f66e208]: Modify, reverse engineer, reverse assemble, decompile, or hack into any of the software applications or related tools or utilities used by the Services.
+                    - listitem [ref=f66e209]: Alter or delete information not provided by you, or interfere with the operation of the Services including, but not limited to, by distribution of unsolicited advertising or mail messages or propagation of worms, viruses, and the like.
+                    - listitem [ref=f66e210]: Use the Services for anything that may materially damage the reputation of Flightradar24.
+                  - paragraph [ref=f66e211]: 8.2 By using the Services, you affirm that all commercial products, published material, or other use of the information content that is otherwise made publicly or commercially available, if any, shall clearly reference and credit Flightradar24.
+                  - paragraph [ref=f66e212]: 8.3 You also agree not to permit any other user of the Services to access, view, download, or reproduce any available information or material for any use not permitted by us. Flightradar24 reserves the right to monitor usage patterns and enforce compliance with the specified usage limits and limitations, for the purpose of analysis, auditing, and improving the Services. Unauthorised attempts to bypass or circumvent these limits or limitations are strictly prohibited and failure to adhere may result in revoked or blocked access to the Services. Users must not engage in any activity that may disrupt or interfere with the functioning of the FR24 API or any of Flightradar24's systems.
+                  - paragraph [ref=f66e213]: 8.4 Should you become aware of any unauthorised or unlawful activities related to the usage of the FR24 API or violation of these Terms, you are encouraged to report such information to Flightradar24 via our website as soon as you become aware of such unauthorised or unlawful activities or violations.
+                - generic [ref=f66e215]:
+                  - heading "9. Third Party Services" [level=2] [ref=f66e216]
+                  - paragraph [ref=f66e217]:
+                    - text: 9.1 The Services are integrated with certain third-party applications, websites, and services ("
+                    - strong [ref=f66e218]: Third Party Services
+                    - text: "\") to make available content, products, and/or services to you. These Third Party Services may have their own terms and conditions of use and privacy policies and your use of these Third Party Services will be governed by and subject to such terms and conditions and privacy policies. You understand and agree that Flightradar24 does not endorse and is not responsible or liable for the behaviour, features, or content of any Third Party Services or any transaction you may enter into with the provider of any such Third Party Services."
+                - generic [ref=f66e220]:
+                  - heading "10. Intellectual Property Rights" [level=2] [ref=f66e221]
+                  - paragraph [ref=f66e222]: 10.1 Ownership and all intellectual property rights in the Services or any information within the Services, including but not limited to software, code, documentation, patents, design rights, copyrights, trademarks, trade secrets and proprietary know-how, shall be owned by and vested in us, or our licensors and nothing in these Terms shall be interpreted as a transfer of such rights from us to you.
+                  - paragraph [ref=f66e223]: 10.2 Usage of the Services does not grant you any rights to transfer, sublicense, resell, or assign the Service, its content, intellectual property rights, or any related rights to any third party. Usage of the Services is not intended to, and neither shall be deemed to, establish any partnership or joint venture between Flightradar24 and any third party.
+                  - paragraph [ref=f66e224]: 10.3 You shall not engage in any activities that infringe upon the intellectual property rights of Flightradar24 or its licensors, including but not limited to reverse engineering, decompilation, disassembling, or any unauthorised copying, modification, or ‘scraping’ of the Services. You may not remove or alter any proprietary rights notices on the Services or the media by which the Services are made available, regarding patents, copyright, trademarks, or other intellectual property rights. Specifically, the "Flightradar24" trademark and all trademarks appearing on the Services are property of us or our licensors and are protected by applicable laws. Use of these trademarks is by all means prohibited.
+                  - paragraph [ref=f66e225]:
+                    - text: 10.4 Flightradar24 welcomes and encourages Users to provide suggestions, feedback, or other ideas regarding the performance or content of the Services ("
+                    - strong [ref=f66e226]: Feedback
+                    - text: "\"). By doing so, you grant Flightradar24 a worldwide, perpetual, irrevocable, royalty-free license to use, reproduce, modify, adapt, publish, translate, distribute, and display such Feedback for any purpose without obligation or compensation to you."
+                - generic [ref=f66e228]:
+                  - heading "11. Data Collection and Transmission" [level=2] [ref=f66e229]
+                  - paragraph [ref=f66e230]:
+                    - text: 11.1 Any User may apply to participate in providing data to Flightradar24. Any User interested in participating may file an application by following the steps on
+                    - link "Apply for a Receiver" [ref=f66e231] [cursor=pointer]:
+                      - /url: https://www.flightradar24.com/apply-for-receiver
+                    - text: . If you already own a receiver you can simply follow the steps on
+                    - link "Share your data" [ref=f66e232] [cursor=pointer]:
+                      - /url: https://www.flightradar24.com/share-your-data
+                    - text: .
+                  - paragraph [ref=f66e233]: 11.2 Installation of an ADS‑B receiver and all relevant equipment, data collection, and transmission to our server is offered by users voluntarily and without compensation. Users are free to participate in the network of receiving stations by installing an ADS‑B receiver, collecting data, and sending it to us. Users are free to stop sending this data whenever they wish.
+                  - paragraph [ref=f66e234]: 11.3 The transmission of data to us must be done in real time. It is strictly forbidden to send any delayed or modified or manipulated or fabricated data, except where explicitly agreed otherwise in writing, as this would give an erroneous and misleading picture about the current positions of aircraft.
+                  - paragraph [ref=f66e235]: 11.4 Users who provide us with data automatically rendered from aircraft transponders grant us a royalty-free, worldwide, perpetual, irrevocable, non-exclusive right and license to use for any purpose, reproduce, modify, adapt, publish, display, translate, and distribute the data (in whole or in part) and/or to incorporate it in other works in any form, media or technology now known or hereafter developed.
+                  - paragraph [ref=f66e236]: 11.5 In some cases, we may provide you with the necessary equipment, so that you can install an ADS‑B receiver and send data to us. In that case, you may be asked to sign an agreement with certain additional conditions.
+                - generic [ref=f66e238]:
+                  - heading "12. User Material" [level=2] [ref=f66e239]
+                  - paragraph [ref=f66e240]: 12.1 Flightradar24 may allow registered Users to post a wide range of material on our website such as, for example, photos, discussions, and comments on flights or the Service (hereinafter the "Material"). By posting Material on the Website, you consent to make the Material and your registered username available to the public and other users.
+                  - paragraph [ref=f66e241]: "12.2 The Material may not:"
+                  - list [ref=f66e242]:
+                    - listitem [ref=f66e243]: Contain content that is protected by copyright, trademark law, or other intellectual property rights without the express consent of the right holder.
+                    - listitem [ref=f66e244]: Market any product, service, or company.
+                    - listitem [ref=f66e245]: Identify any individual person without that person's express consent (for example by name, address, image, or video) or
+                    - listitem [ref=f66e246]: Be offensive, disturbing, harassing, obscene, pornographic, discriminatory, or in any other manner unsuitable or illegal.
+                  - paragraph [ref=f66e247]: 12.3 You are responsible for any damage suffered by Flightradar24 as a consequence of the Material being made available in violation of these Terms.
+                  - paragraph [ref=f66e248]: 12.4 You consent to our reviewing of the content of your Material and acknowledge that we may remove any Material at our discretion.
+                  - paragraph [ref=f66e249]: 12.5 You are aware and understand that statements and opinions presented in the Material are those of other users and not those of Flightradar24. Flightradar24 does not support or endorse such statements and opinions, and such statements and opinions may be incorrect or misleading.
+                  - paragraph [ref=f66e250]: 12.6 You grant us the right to edit, copy, display, publish, and distribute any information or Material made available on the Services by you.
+                - generic [ref=f66e252]:
+                  - heading "13. Support" [level=2] [ref=f66e253]
+                  - paragraph [ref=f66e254]:
+                    - text: 13.1 All Support inquiries are to be directed to the Flightradar24
+                    - link "support page" [ref=f66e255] [cursor=pointer]:
+                      - /url: https://www.flightradar24.com/contact-us
+                    - text: ". Support is provided to Users to a commercially reasonable extent and is prioritised in accordance with Premium Service level and age of enquiry. Unless otherwise provided for, support will be offered during Flightradar24’s ordinary business hours Monday to Friday excluding Swedish holidays, between 9 am and 5 pm CET. For reasons of clarity, Flightradar24 will not be able to assist with Support relating to:"
+                  - list [ref=f66e256]:
+                    - listitem [ref=f66e257]: Problems caused by the User not using the Services in accordance with Flightradar24’s instructions, documentation, or by other acts of negligence on the part of the User;
+                    - listitem [ref=f66e258]: Problems caused by changes or interference made by the User within the Flightradar24 Services carried out without Flightradar24’s consent;
+                    - listitem [ref=f66e259]: Technical integration of content accessed via the Services into third-party systems or commercial products; or
+                    - listitem [ref=f66e260]: Problems caused by viruses or other malware that are of no association with Flightradar24.
+                - generic [ref=f66e262]:
+                  - heading "14. No warranties" [level=2] [ref=f66e263]
+                  - paragraph [ref=f66e264]: 14.1 The Services and the content therein are provided "as is" and "as available". We make no warranties, expressed or implied, and hereby disclaim any warranty, including without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights. Further, we do not warrant or make any representations concerning the accuracy, likely results, completeness, security, or reliability of the use of the information accessible through the Services and other services or otherwise relating to such information or on any sites linked to the Services.
+                  - paragraph [ref=f66e265]: 14.2 We offer no guarantee that the pages, services, functions, choices and information provided in association with the Services will be provided without interruption or errors or that any mistakes or errors will be corrected. We do not guarantee that the Services or the methods through which they become available to users do not contain viruses or other harmful components, although we make every effort to ensure it.
+                  - paragraph [ref=f66e266]: 14.3 The Services and the information therein may include technical, typographical, or photographic errors. We do not warrant that any of the information within the Services is accurate, complete, or current. We may make changes to the information contained within the Services at any time without notice. We do not, however, make any commitment to update the information.
+                  - paragraph [ref=f66e267]: 14.4 We cannot guarantee the security of any transfer of information made via the Services. We do not assume any liability for the information contained within the Services. The Services may contain links to third-party websites which are not under our control. We are not responsible for the contents of, nor do we endorse, any third-party sites that are linked to the Services. We have not reviewed content on sites other than those owned by Flightradar24 and are not responsible for such content. We expressly disclaim responsibility for all representations made or implied in relation to products, publications, or sites not owned by us.
+                  - paragraph [ref=f66e268]: 14.5 Your ability to access and use the Services requires and is dependent on products and services provided to you by third parties, such as internet service providers. You are solely responsible for paying any fees charged for your access to and use of any third-party products and services. Flightradar24 does not accept or assume any responsibility or liability for any unavailability of or interruptions or other failures in the Services caused by any third-party products or services nor does Flightradar24 accept or assume any responsibility or liability for any unavailability of or interruptions or other failures in any third-party products and services caused by the Services or for your breach of the terms of your agreement with any third party as a result of your use of the Services.
+                  - paragraph [ref=f66e269]:
+                    - code [ref=f66e270]: 14.6 By accessing or otherwise using the services, you confirm your understanding that the provided information on aircraft position and identity, in particular, originate directly from the aircraft, which transmit this information through public radio frequencies, according to the ‘Automatic Dependent Surveillance-Broadcast’ (ADS‑B). The information collected and published may contain errors, due to the intrinsic limitations of radio communications (e.g. limited coverage, interference, attenuation, special weather conditions etc.), due to erroneous configuration of the ADS‑B devices on board, due to negligent data entry by aircraft crew, due to erroneous position received by the aircraft GPS and due to other factors beyond the control of Flightradar24. Data is provided for informational purposes only and is not related by any means to the safety of navigation. Consequently, we cannot provide any type of guarantee and are neither responsible for the correctness, validity, thoroughness and accuracy of that information published, nor for the suitability of their usage for purposes other than for information only.
+                - generic [ref=f66e272]:
+                  - heading "15. Limitation of liability and Indemnity" [level=2] [ref=f66e273]
+                  - paragraph [ref=f66e274]: 15.1 Unless caused by our gross negligence or intent, we shall in no event be liable for any losses or damages, whether direct or indirect (including, without limitation, damages for loss of data or profit, or due to business interruption,) arising out of the Services or the use, failure to use, or inability to access or use the information contained within the Services, even if we have been notified of the possibility of such damage.
+                  - paragraph [ref=f66e275]: 15.2 You agree to indemnify and hold Flightradar24 and its affiliates, officers, directors, and employees harmless from any claims, losses, liabilities, expenses, or damages, including legal fees, arising out of your use of the Services in violation of these Terms, or any breach of applicable laws or regulations.
+                  - paragraph [ref=f66e276]: 15.3 Except as expressly set out in these Terms, all warranties, representations, terms, conditions, or undertakings whether implied by statute, custom, trade usage, course of dealing, or otherwise (including any implied warranty, representation, term, condition, or undertaking of satisfactory quality or fitness for a particular purpose) are, to the fullest extent permitted by law, hereby excluded.
+                - generic [ref=f66e278]:
+                  - heading "16. Changes to the Services and Terms" [level=2] [ref=f66e279]
+                  - paragraph [ref=f66e280]: 16.1 We may, in our sole and absolute discretion, from time to time make additions to, deletions from, modifications to, or change the format and features of, the Services and the Terms. You acknowledge that we may be obliged to alter, modify, or reduce the extent of the Services due to mandatory law or decisions by competent governmental authorities. If such restrictions apply to the Service in a way that may affect or impair the Premium Services or the FR24 API, Flightradar24 shall bear no responsibility and shall not be obliged to perform any full or partial refund of any payments made by you for any Premium Services.
+                  - paragraph [ref=f66e281]: 16.2 We will notify you of any material changes of the Terms and the timing thereof through information posted on our Website and blog at least thirty (30) days before such change taking place. If you do not agree to such changes you have the right to reject the change by terminating your use of the Services before such changes enter into effect.
+                - generic [ref=f66e283]:
+                  - heading "17. Governing Law and disputes" [level=2] [ref=f66e284]
+                  - paragraph [ref=f66e285]: 17.1 Any claim relating to the Services shall be governed by the laws of Sweden without regard to its conflict of law provisions.
+                  - paragraph [ref=f66e286]: 17.2 All disputes arising out of or in connection with the present Agreement shall be finally settled by the district courts of Sweden.
+        - navigation "Footer" [ref=f66e287]:
+          - generic [ref=f66e288]: © 2026 Flightradar24 AB
+          - list [ref=f66e289]:
+            - listitem [ref=f66e290]:
+              - link "Contact us" [ref=f66e291] [cursor=pointer]:
+                - /url: https://www.flightradar24.com/contact-us
+            - listitem [ref=f66e292]:
+              - link "FAQ" [ref=f66e293] [cursor=pointer]:
+                - /url: https://support.fr24.com/
+            - listitem [ref=f66e294]:
+              - link "Careers" [ref=f66e295] [cursor=pointer]:
+                - /url: https://careers.flightradar24.com/
+            - listitem [ref=f66e296]:
+              - link "Privacy policy" [ref=f66e297] [cursor=pointer]:
+                - /url: https://www.flightradar24.com/privacy-policy
+            - listitem [ref=f66e298]:
+              - link "Terms of service" [ref=f66e299] [cursor=pointer]:
+                - /url: https://www.flightradar24.com/terms-of-service
+            - listitem [ref=f66e300]:
+              - button "Manage consent" [ref=f66e301] [cursor=pointer]
+  - generic:
+    - list
+    - list

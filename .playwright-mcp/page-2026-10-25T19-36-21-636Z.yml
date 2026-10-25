@@ -1,0 +1,125 @@
+- generic [active] [ref=f90e1]:
+  - region "Cookie Consent Prompt" [ref=f90e2]:
+    - generic [ref=f90e4]:
+      - generic [ref=f90e5]:
+        - text: We use essential cookies to make our site work. With your consent, we may also use non-essential cookies to improve user experience, personalize advertisements, and analyze web traffic. For these reasons, we may share your site usage data with our advertising and analytics partners. By clicking “Accept,” you agree to our website's cookie use as described in our
+        - button "Cookie Policy" [ref=f90e6] [cursor=pointer]
+        - text: and
+        - button "Privacy Policy" [ref=f90e7] [cursor=pointer]
+        - text: . You can change your cookie settings at any time by clicking “
+        - button "Preferences" [ref=f90e8] [cursor=pointer]
+        - text: .”
+      - generic [ref=f90e9]:
+        - button "Preferences" [ref=f90e10] [cursor=pointer]
+        - button "Decline" [ref=f90e11] [cursor=pointer]
+        - button "Accept" [ref=f90e12] [cursor=pointer]
+  - generic [ref=f90e13]:
+    - navigation [ref=f90e14]:
+      - generic [ref=f90e15]:
+        - link [ref=f90e16] [cursor=pointer]:
+          - /url: /
+          - img "airplanes.live logo" [ref=f90e17]
+        - list [ref=f90e19]:
+          - listitem [ref=f90e20]:
+            - link "Home" [ref=f90e21] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=f90e22]:
+            - button "Get Started" [ref=f90e23] [cursor=pointer]
+          - listitem [ref=f90e24]:
+            - button "Tracking" [ref=f90e25] [cursor=pointer]
+          - listitem [ref=f90e26]:
+            - link "Store" [ref=f90e27] [cursor=pointer]:
+              - /url: https://store.airplanes.live
+          - listitem [ref=f90e28]:
+            - button "Data" [ref=f90e29] [cursor=pointer]
+          - listitem [ref=f90e30]:
+            - button "About" [ref=f90e31] [cursor=pointer]
+    - region [ref=f90e32]:
+      - generic [ref=f90e33]:
+        - 'heading "Airplanes.live Live Flight Tracker: Unfiltered ADS-B and MLAT" [level=1] [ref=f90e34]':
+          - generic [ref=f90e35]: Airplanes.live
+          - generic [ref=f90e36]: "Live Flight Tracker: Unfiltered ADS-B and MLAT"
+        - paragraph [ref=f90e37]: See every aircraft, including the ones other sites hide.
+        - search [ref=f90e38]:
+          - generic [ref=f90e39]: Search airports, airlines, aircraft types, callsigns, or hex codes
+          - combobox "Search airports, airlines, aircraft types, callsigns, or hex codes" [ref=f90e41]
+          - button "Search" [ref=f90e42] [cursor=pointer]
+        - status [ref=f90e43]
+    - region [ref=f90e44]:
+      - generic [ref=f90e45]:
+        - heading "The live map, right now" [level=2] [ref=f90e46]
+        - paragraph [ref=f90e47]: Every aircraft we receive, unfiltered and unobfuscated. That includes the military and special-interest traffic other trackers hide.
+        - paragraph [ref=f90e48]:
+          - link "Open the full live map" [ref=f90e49] [cursor=pointer]:
+            - /url: https://globe.airplanes.live
+    - region [ref=f90e50]:
+      - generic [ref=f90e51]:
+        - heading "What is Airplanes.live?" [level=2] [ref=f90e52]
+        - generic [ref=f90e53]:
+          - paragraph [ref=f90e54]: Airplanes.live is a community-run ADS-B aggregator. Receivers built and hosted by enthusiasts pick up ADS-B (Automatic Dependent Surveillance-Broadcast) and MLAT (Multilateration) signals from the aircraft overhead, and the combined feed shows what is flying in your area right now. Enthusiasts, researchers and journalists can use that data however they like.
+          - paragraph [ref=f90e55]:
+            - text: Airplanes.live will never filter or obfuscate aircraft data. Every
+            - link "feeder" [ref=f90e56] [cursor=pointer]:
+              - /url: /get-started/
+            - text: gets the unfiltered MLAT results back.
+          - paragraph [ref=f90e57]: Whether you're a plane spotter or simply curious about the skies above, the map shows the traffic as the receivers actually heard it.
+          - paragraph [ref=f90e58]: "Airplanes.live is free to use: follow global air traffic, watch the military aircraft that many flight radar sites filter out, and track any plane in real time on the live map."
+        - paragraph [ref=f90e59]:
+          - link "Track military aircraft →" [ref=f90e60] [cursor=pointer]:
+            - /url: /military/
+    - region [ref=f90e61]:
+      - generic [ref=f90e62]:
+        - heading "Ready to see the whole sky?" [level=2] [ref=f90e63]
+        - paragraph [ref=f90e64]: Open the map, add a receiver to the network, or come talk aircraft with the community.
+        - generic [ref=f90e65]:
+          - link "Start Feeding" [ref=f90e66] [cursor=pointer]:
+            - /url: /get-started/
+          - link "Get the Hardware" [ref=f90e67] [cursor=pointer]:
+            - /url: /hardware/
+          - link "Join the Discord" [ref=f90e68] [cursor=pointer]:
+            - /url: https://discord.gg/adsb
+    - contentinfo [ref=f90e69]:
+      - navigation "Site sections" [ref=f90e70]:
+        - list [ref=f90e71]:
+          - listitem [ref=f90e72]:
+            - link "Airports" [ref=f90e73] [cursor=pointer]:
+              - /url: /live/airport/
+          - listitem [ref=f90e74]:
+            - link "Airlines" [ref=f90e75] [cursor=pointer]:
+              - /url: /live/airline/
+          - listitem [ref=f90e76]:
+            - link "Aircraft Types" [ref=f90e77] [cursor=pointer]:
+              - /url: /live/aircrafttype/
+          - listitem [ref=f90e78]:
+            - link "What Is ADS-B?" [ref=f90e79] [cursor=pointer]:
+              - /url: /what-is-ads-b/
+          - listitem [ref=f90e80]:
+            - link "Start Feeding" [ref=f90e81] [cursor=pointer]:
+              - /url: /get-started/
+          - listitem [ref=f90e82]:
+            - link "FAQ" [ref=f90e83] [cursor=pointer]:
+              - /url: /faq/
+          - listitem [ref=f90e84]:
+            - link "Live Map" [ref=f90e85] [cursor=pointer]:
+              - /url: https://globe.airplanes.live
+      - generic [ref=f90e86]:
+        - generic [ref=f90e87]:
+          - link "Privacy" [ref=f90e88] [cursor=pointer]:
+            - /url: /privacy-policy/
+          - text: "|"
+          - link "Terms of Use" [ref=f90e89] [cursor=pointer]:
+            - /url: /terms-of-use/
+          - text: "|"
+          - link "Consent Preferences" [ref=f90e90] [cursor=pointer]:
+            - /url: "#"
+          - text: "| Copyright 2023-2026 airplanes.live"
+        - generic [ref=f90e91]:
+          - link [ref=f90e92] [cursor=pointer]:
+            - /url: https://twitter.com/live_airplanes
+            - img "airplanes.live on X (Twitter)" [ref=f90e93]
+          - link [ref=f90e94] [cursor=pointer]:
+            - /url: https://discord.gg/adsb
+            - img "Join the airplanes.live Discord" [ref=f90e95]
+          - link "airplanes.live on GitHub" [ref=f90e96] [cursor=pointer]:
+            - /url: https://github.com/airplanes-live
+            - generic [aria-hidden] [ref=f90e97]: 
