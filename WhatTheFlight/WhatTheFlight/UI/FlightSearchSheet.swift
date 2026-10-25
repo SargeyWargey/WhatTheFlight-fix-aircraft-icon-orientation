@@ -14,7 +14,6 @@ import SwiftUI
 struct FlightSearchSheet: View {
     let model: RadarModel
     let heading: Double
-    var openLogbook: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -70,12 +69,7 @@ struct FlightSearchSheet: View {
             .navigationTitle("Aircraft")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                if let openLogbook {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("Logbook", systemImage: "book.closed", action: openLogbook)
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button("Done") { dismiss() }.monoScaled(15, .semibold)
                 }
             }

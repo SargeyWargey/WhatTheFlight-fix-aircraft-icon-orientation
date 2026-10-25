@@ -4,7 +4,9 @@
 //
 //  Owns the Watch's state and wires location, the iPhone link and the wrist (scene phase)
 //  into the same `RadarModel` the iPhone and Apple TV use. The top level is three vertical
-//  pages: Settings above the radar, the Nearby list below it.
+//  pages: Settings above the radar, the Nearby list below it. Nothing here reads the
+//  contacts, which change every second: only the radar (and the settings page's count
+//  label) should redraw for that, not all three pages.
 //
 
 import SwiftUI
@@ -58,12 +60,12 @@ struct WatchRootView: View {
         NavigationStack(path: $path) {
             TabView(selection: $page) {
                 WatchSettingsView(settings: settings, watchSettings: watchSettings, location: location, link: link,
-                                  nearbyCount: model.contacts.count, open: { path.append($0) }, close: backToRadar,
+                                  model: model, open: { path.append($0) }, close: backToRadar,
                                   showTour: { showTour = true })
                     .tag(Page.settings)
                 WatchRadarView(model: model, settings: settings, watchSettings: watchSettings, location: location,
-                               centerState: centerState, isActive: page == .radar && path.isEmpty,
-                               open: { path.append($0) }, retry: centerAction,
+                               isActive: page == .radar && path.isEmpty,
+                               open: { path.append($0) },
                                showNearby: { withAnimation { page = .nearby } })
                     .tag(Page.radar)
                 WatchNearbyList(model: model, settings: settings, location: location, watchSettings: watchSettings,
@@ -152,6 +154,7 @@ struct WatchRootView: View {
                 location.stop()
             }
         }
+        .onChange(of: locationPrecision, initial: true) { _, precision in location.precision = precision }
         .task(id: isDimmedRadar) {
             // The clock keeps the icons moving, once a minute.
             guard isDimmedRadar else { return }
@@ -212,6 +215,13 @@ struct WatchRootView: View {
     /// The Always-On radar: dimmed, not pointing.
     private var isDimmedRadar: Bool { scenePhase == .inactive && !isPointing }
 
+    /// Pointing at the sky wants the best fix the Watch has; the radar is happy with a
+    /// hundred metres; watching from the iPhone's spot needs only a rough one.
+    private var locationPrecision: WatchLocationService.Precision {
+        if watchSettings.locationSource == .phone, watchSettings.phoneObserver != nil { return .coarse }
+        return isPointing ? .pointing : .radar
+    }
+
     /// What `syncObserver` publishes, as one value to watch.
     private var observerKey: ObserverKey {
         ObserverKey(latitude: observerCoordinate?.latitude, longitude: observerCoordinate?.longitude, placeName: placeName)
@@ -237,21 +247,6 @@ struct WatchRootView: View {
         }
     }
 
-    private var centerState: WatchCenterState.Kind? {
-        if model.observer == nil {
-            if watchSettings.locationSource == .phone && watchSettings.phoneObserver == nil {
-                return .noPhoneSpot
-            }
-            return location.isAuthorized ? .scanning : .needsLocation(denied: location.isDenied)
-        }
-        if model.focusedContact != nil { return nil }
-        switch model.status {
-        case .error(let message) where !model.hasLoadedOnce: return .error(message)
-        case .idle, .loading: return .scanning
-        default: return model.hasLoadedOnce ? .clearSkies(radius: settings.radiusMiles) : .scanning
-        }
-    }
-
     private func finishTour(thenIdentify: Bool) {
         watchSettings.hasSeenTour = true
         showTour = false
@@ -268,16 +263,6 @@ struct WatchRootView: View {
     private func backToRadar() {
         withAnimation { page = .radar }
     }
-
-    private func centerAction() {
-        switch centerState {
-        case .needsLocation: location.requestPermission()
-        case .noPhoneSpot: watchSettings.locationSource = .here
-        case .error: model.refreshNow()
-        default: break
-        }
-    }
-
 
     /// Pins follow you between devices through iCloud (`PinSync`).
     private func startPinSync() {

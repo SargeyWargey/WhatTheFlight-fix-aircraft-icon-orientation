@@ -207,6 +207,10 @@ private struct DisplaySettingsPage: View {
                 Toggle("Compass bezel", isOn: $settings.showCompassBezel)
                 Toggle("Radar sweep", isOn: $settings.radarSweep)
                 Toggle("Aircraft photos", isOn: $settings.showPhotos)
+                Toggle(isOn: $settings.cardPhotos) {
+                    InfoLabel("Photos on flight cards", info: "The aircraft's photo under its details on the radar and beside them on the map card, whenever Planespotters has one. Sky View always shows it.")
+                }
+                .disabled(!settings.showPhotos)
             } header: {
                 SettingsHeader("Radar face")
             }

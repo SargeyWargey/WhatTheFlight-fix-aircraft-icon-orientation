@@ -47,7 +47,7 @@ struct TrafficMap: View {
         var showsFringe = true
         /// Age bands, newest first; anything older isn't drawn.
         var trailBands = TrafficMapGeometry.trailBands
-        var trailWidth: CGFloat = 3      // before `scale`
+        var trailWidth: CGFloat = 1.5    // before `scale`; iPhone / iPad (the TV sets its own)
         var ringOpacity: Double = 1      // TV: fainter, so more of the map shows
         /// The paper wash over the standard map; imagery gets 0.2 less.
         var washOpacity: Double = 0.45

@@ -872,7 +872,7 @@ private struct LockedCard: View {
     var body: some View {
         let f = contact.flight
         Button(action: onTap) {
-            HStack(spacing: 12) {
+            HStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text(f.operatorInfo.compact)
@@ -909,15 +909,14 @@ private struct LockedCard: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
                 }
-                .padding(.leading, 8)
-                .padding(.vertical, 8)
+                .padding(8)
                 Spacer(minLength: 0)
                 // As tall as the text beside it and about as wide as a Planespotters photo
                 // (3:2) at that height, so the whole aircraft shows, nose to tail. Inset as far
                 // from the card's edge as its corners are rounded less, so the curves run parallel.
-                SkyThumbnail(registration: f.registration, hex: f.hex, silhouette: contact.profile.silhouette, showsPhoto: showsPhoto)
-                    .frame(width: 142)
-                    .frame(maxHeight: .infinity)
+                if showsPhoto {
+                    AircraftPhotoTile(registration: f.registration, hex: f.hex, width: 142, gap: 4)
+                }
             }
             .fixedSize(horizontal: false, vertical: true)
             .foregroundStyle(.white)
@@ -926,60 +925,6 @@ private struct LockedCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityHint("Shows flight details")
-    }
-}
-
-/// The locked aircraft's Planespotters photo with its credit, on a tile that shows the radar
-/// silhouette until the photo arrives, or when there isn't one, so the card never changes size.
-private struct SkyThumbnail: View {
-    let registration: String?
-    let hex: String?
-    let silhouette: AircraftSilhouette
-    let showsPhoto: Bool
-
-    @State private var photo: AircraftPhoto?
-
-    var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
-        Color.white.opacity(0.08)
-            .overlay {
-                AircraftGlyph(silhouette: silhouette, size: 44, spinsRotor: false)
-                    .foregroundStyle(.white.opacity(0.5))
-            }
-            .overlay {
-                if let photo {
-                    ProviderPhoto(photo: photo, contentMode: .fit) { Color.clear }
-                        .transition(.opacity)
-                }
-            }
-            // On the tile, not the photo: a filled photo overhangs the tile's edges.
-            .overlay(alignment: .bottom) {
-                if let photo { credit(photo).transition(.opacity) }
-            }
-            .clipShape(shape)
-            .overlay(shape.strokeBorder(.white.opacity(0.2), lineWidth: 0.5))
-            .accessibilityHidden(true)
-            .task(id: showsPhoto ? registration ?? hex : nil) {
-                photo = nil
-                guard showsPhoto, registration != nil || hex != nil else { return }
-                let found = await AircraftPhotoProvider.shared.photo(registration: registration, hex: hex)
-                guard !Task.isCancelled else { return }
-                withAnimation(.smooth) { photo = found }
-            }
-    }
-
-    /// Planespotters asks for the photographer's name wherever a photo is shown.
-    private func credit(_ photo: AircraftPhoto) -> some View {
-        Text("© \(photo.photographer ?? "Planespotters.net")")
-            .font(.mono(8, .semibold))
-            .foregroundStyle(.white.opacity(0.9))
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
-            .padding(.horizontal, 7)
-            .padding(.top, 10)
-            .padding(.bottom, 5)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(LinearGradient(colors: [.clear, .black.opacity(0.6)], startPoint: .top, endPoint: .bottom))
     }
 }
 

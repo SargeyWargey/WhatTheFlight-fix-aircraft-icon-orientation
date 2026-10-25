@@ -14,7 +14,7 @@ struct WatchSettingsView: View {
     @Bindable var watchSettings: WatchSettings
     let location: WatchLocationService
     let link: WatchPhoneLink
-    let nearbyCount: Int
+    let model: RadarModel
     let open: (WatchRootView.Screen) -> Void
     /// Back to the radar. The radar is also below the end of the list.
     let close: () -> Void
@@ -31,10 +31,7 @@ struct WatchSettingsView: View {
                     HStack {
                         Label("Nearby aircraft", systemImage: "list.bullet")
                         Spacer()
-                        Text("\(nearbyCount)")
-                            .font(.mono(14, .bold))
-                            .monospacedDigit()
-                            .foregroundStyle(Palette.caption)
+                        WatchNearbyCount(model: model)
                     }
                 }
             } footer: {
@@ -146,6 +143,19 @@ struct WatchSettingsView: View {
     private var northUpBinding: Binding<Bool> {
         Binding(get: { watchSettings.northUp || !location.headingAvailable },
                 set: { watchSettings.northUp = $0 })
+    }
+}
+
+/// The count in a view of its own: the contacts change every second, and only this label
+/// should redraw for that, not the settings list around it.
+private struct WatchNearbyCount: View {
+    let model: RadarModel
+
+    var body: some View {
+        Text("\(model.contacts.count)")
+            .font(.mono(14, .bold))
+            .monospacedDigit()
+            .foregroundStyle(Palette.caption)
     }
 }
 

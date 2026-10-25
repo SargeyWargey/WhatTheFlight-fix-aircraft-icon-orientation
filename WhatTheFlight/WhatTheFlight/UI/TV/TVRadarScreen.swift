@@ -61,11 +61,15 @@ struct TVRadarScreen: View {
     @State private var isSettled = false
     /// The dock's own width, so it can shrink to fit beside the map.
     @State private var dockWidth: CGFloat = 0
+    /// The hero's unscaled height, so a tall one (a photo, a notable badge) shrinks to fit.
+    @State private var heroHeight: CGFloat = 0
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let scale: CGFloat = 1.7
     private static let heroScale: CGFloat = 1.55
+    /// The room the hero has in the radar's centre, clear of the icons on the edge.
+    private static let heroRoom: CGFloat = 640
     /// Split view: the radar's share of the screen's width; the map takes the rest.
     private static let splitRadarShare: CGFloat = 0.6
 
@@ -253,12 +257,15 @@ struct TVRadarScreen: View {
                     .frame(width: width * 0.8)
                     .transition(.opacity)
             } else if let contact = model.focusedContact {
+                let scale = heroHeight > 0 ? min(Self.heroScale, Self.heroRoom / heroHeight) : Self.heroScale
                 heroButton(contact) {
-                    FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading, wideStats: true, detailScale: 1.4)
+                    FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading, wideStats: true, detailScale: 1.4,
+                               photo: settings.showsCardPhotos ? .bottom : .none)
                         .id(contact.id)
-                        .frame(width: width / Self.heroScale)
-                        .scaleEffect(Self.heroScale)
-                        .frame(width: width, height: 640)
+                        .frame(width: width / scale)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { heroHeight = $0 }
+                        .scaleEffect(scale)
+                        .frame(width: width, height: Self.heroRoom)
                         .transition(.opacity)
                 }
             }
@@ -282,7 +289,8 @@ struct TVRadarScreen: View {
                     // contents cross-fade. (A new card per aircraft started at zero height, so
                     // it collapsed and sprang back on every step.)
                     TVScaledContent(width: TVMapLayout.cardWidth, scale: 1.35) {
-                        FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading, wideStats: true, detailScale: 0.9)
+                        FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading, wideStats: true, detailScale: 0.9,
+                                   photo: settings.showsCardPhotos ? .beside : .none)
                             .id(contact.id)
                             .transition(.opacity)
                     }

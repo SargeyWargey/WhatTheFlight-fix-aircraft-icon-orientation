@@ -10,6 +10,12 @@
 //  The inner screen turns with the phone like an iPad's (iOS doesn't ask the app which
 //  orientations it supports there), and it is mounted a quarter turn round from the phone's
 //  body. `bodyInterfaceOrientation` undoes that for anything that measures from the body.
+//  The cover screen turns too, all but upside down (`RadarAppDelegate`).
+//
+//  In landscape the Duo uses iOS 27.1's vertical bar: the status bar stands on end at the top
+//  of a strip down one side of the screen (the safe area's inset on that side), and bars move
+//  into the strip below it. `verticalBar` says which side, and where the status bar ends, so
+//  `RadarRootView` can stand the control bar in the strip the same way.
 //
 
 #if os(iOS)
@@ -26,9 +32,28 @@ final class FoldMonitor {
     private(set) var division: CGRect?
     /// This phone folds (its hinge has reported), whichever screen the app is on now.
     private(set) var isFoldable = false
+    /// The system's vertical bar, while this screen has one (the Duo in landscape).
+    private(set) var verticalBar: VerticalBar?
+
+    /// `isFoldable` for `RadarAppDelegate`, which has no monitor to ask.
+    private(set) static var phoneFolds = false
+
+    struct VerticalBar: Equatable {
+        /// The side of the screen the strip runs down.
+        let edge: HorizontalEdge
+        /// The bottom of the status bar at the top of the strip, in window coordinates: bar
+        /// items start just below it. nil if the system doesn't report one.
+        let statusBarBottom: CGFloat?
+    }
 
     /// On the inner screen, which has the fold (open flat or half open).
     var isOnInnerScreen: Bool { division != nil }
+
+    /// Which ways the interface turns with the phone: every way on the inner screen, all but
+    /// upside down on a Duo's cover screen, portrait on other iPhones.
+    var interfaceOrientations: UIInterfaceOrientationMask {
+        isOnInnerScreen ? .all : isFoldable ? .allButUpsideDown : .portrait
+    }
 
     /// The hinge has reported once: until then changes land at once, so a Duo launched half
     /// open starts split instead of animating into it.
@@ -44,9 +69,10 @@ final class FoldMonitor {
 
     static let settleDelay: Duration = .milliseconds(350)
 
-    fileprivate func report(hinge: HingeStatus?, division: CGRect?) {
+    fileprivate func report(hinge: HingeStatus?, division: CGRect?, verticalBar: VerticalBar?) {
         if hinge != nil, !isFoldable { isFoldable = true }
         if division != self.division { self.division = division }
+        if verticalBar != self.verticalBar { self.verticalBar = verticalBar }
         var next = FoldLayout.posture(hinge: hinge, division: division)
         #if DEBUG
         if let forced {
@@ -54,6 +80,7 @@ final class FoldMonitor {
             next = forced
         }
         #endif
+        if isFoldable { Self.phoneFolds = true }
         settle(on: next)
         if hinge != nil { isSettled = true }
     }
@@ -87,8 +114,8 @@ final class FoldMonitor {
     }
 }
 
-/// Reads the hinge and the fold strip. Put it behind the root view, full screen
-/// (`.ignoresSafeArea()`).
+/// Reads the hinge, the fold strip and the vertical bar. Put it behind the root view, full
+/// screen (`.ignoresSafeArea()`).
 struct FoldSensor: UIViewRepresentable {
     let monitor: FoldMonitor
 
@@ -110,6 +137,9 @@ struct FoldSensor: UIViewRepresentable {
                     hinge = update.hinge.map { HingeStatus($0.status) }
                     report()
                 })
+                registerForTraitChanges(UITraitCollection.systemTraitsAffectingVerticalBarEdge) { (self: SensorView, _: UITraitCollection) in
+                    self.report()
+                }
             }
         }
 
@@ -127,8 +157,14 @@ struct FoldSensor: UIViewRepresentable {
         }
 
         private func report() {
-            guard window != nil else { return }
-            monitor.report(hinge: hinge, division: foldDivision.map { convert($0, to: nil) })
+            guard let window else { return }
+            let folded = FoldMonitor.phoneFolds
+            monitor.report(hinge: hinge, division: foldDivision.map { convert($0, to: nil) },
+                           verticalBar: window.verticalBar)
+            // A Duo's cover screen may turn to landscape now: have UIKit ask again.
+            if !folded, FoldMonitor.phoneFolds {
+                window.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+            }
         }
     }
 }
@@ -139,6 +175,27 @@ extension UIView {
     var foldDivision: CGRect? {
         guard #available(iOS 27.1, *) else { return nil }
         return reservedRegions(kind: .division, options: .includeInactive).first?.frame
+    }
+}
+
+extension UIWindow {
+    /// The system's vertical bar on this screen, if it has one. The status bar is the active
+    /// occlusion at the top of the strip: 84 × 120 pt on the Duo's inner screen.
+    var verticalBar: FoldMonitor.VerticalBar? {
+        guard #available(iOS 27.1, *) else { return nil }
+        let edge: HorizontalEdge
+        switch traitCollection.verticalBarEdge {
+        case .leading: edge = .leading
+        case .trailing: edge = .trailing
+        default: return nil
+        }
+        let onRight = (edge == .trailing) == (effectiveUserInterfaceLayoutDirection == .leftToRight)
+        let statusBarBottom = reservedRegions(kind: .occlusion)
+            .map(\.frame)
+            .filter { $0.minY <= bounds.minY + 1 && (onRight ? $0.maxX >= bounds.maxX - 1 : $0.minX <= bounds.minX + 1) }
+            .map(\.maxY)
+            .max()
+        return FoldMonitor.VerticalBar(edge: edge, statusBarBottom: statusBarBottom)
     }
 }
 

@@ -18,11 +18,9 @@ struct WatchRadarView: View {
     let settings: RadarSettings
     let watchSettings: WatchSettings
     let location: WatchLocationService
-    let centerState: WatchCenterState.Kind?
     /// The radar is the visible page; the crown goes back to it.
     let isActive: Bool
     let open: (WatchRootView.Screen) -> Void
-    let retry: () -> Void
     /// Turns to the Nearby page below the radar.
     let showNearby: () -> Void
 
@@ -44,6 +42,34 @@ struct WatchRadarView: View {
         model.focus.focusedID == nil || model.focus.focusedID == model.contacts.first?.id
     }
 
+    /// What the centre shows when no aircraft owns it. Worked out here rather than in the
+    /// root view: it reads the contacts, which change every second, and only the radar
+    /// should redraw for that.
+    private var centerState: WatchCenterState.Kind? {
+        if model.observer == nil {
+            if watchSettings.locationSource == .phone && watchSettings.phoneObserver == nil {
+                return .noPhoneSpot
+            }
+            return location.isAuthorized ? .scanning : .needsLocation(denied: location.isDenied)
+        }
+        if model.focusedContact != nil { return nil }
+        if let staleFor {
+            if case .error(let message) = model.status { return .error(message) }
+            return .error("Nothing from the feed for \(RadarFormat.countdown(staleFor)).")
+        }
+        switch model.status {
+        case .error(let message) where !model.hasLoadedOnce: return .error(message)
+        case .idle, .loading: return .scanning
+        default: return model.hasLoadedOnce ? .clearSkies(radius: settings.radiusMiles) : .scanning
+        }
+    }
+
+    /// How long the feed has been quiet, when the screen should say so. Not in Always-On:
+    /// the model is paused on purpose there, and a poll follows the wrist coming up.
+    private var staleFor: TimeInterval? {
+        model.isStale && !isLuminanceReduced ? model.sinceLastUpdate : nil
+    }
+
     var body: some View {
         GeometryReader { geo in
             let layout = WatchRadarLayout(size: geo.size)
@@ -59,14 +85,15 @@ struct WatchRadarView: View {
                     if let contact = model.focusedContact {
                         WatchFlightHero(contact: contact, isPinned: model.focus.isPinned, isCompact: layout.isCompact,
                                         showNearest: !isOnNearest && !isLuminanceReduced,
-                                        onNearest: backToNearest)
+                                        onNearest: backToNearest,
+                                        staleFor: staleFor, onRetry: { model.refreshNow() })
                             .onTapGesture { open(.detail(contact.id)) }
                             .onLongPressGesture(minimumDuration: 0.5) {
                                 model.togglePin()
                                 WatchHaptics.play(.click, enabled: settings.hapticsEnabled)
                             }
                     } else if let centerState {
-                        WatchCenterState(kind: centerState, action: retry)
+                        WatchCenterState(kind: centerState, action: centerAction)
                     }
                     // At accessibility text sizes the edge icons are hidden: say what else is
                     // there, and go to the list.
@@ -212,6 +239,15 @@ struct WatchRadarView: View {
         withAnimation(.snappy) { model.focusNearest() }
         WatchHaptics.play(.click, enabled: settings.hapticsEnabled)
     }
+
+    private func centerAction() {
+        switch centerState {
+        case .needsLocation: location.requestPermission()
+        case .noPhoneSpot: watchSettings.locationSource = .here
+        case .error: model.refreshNow()
+        default: break
+        }
+    }
 }
 
 // MARK: - Layout
@@ -263,6 +299,10 @@ struct WatchFlightHero: View {
     let isCompact: Bool
     let showNearest: Bool
     let onNearest: () -> Void
+    /// Set while the feed is quiet: the approach chip gives way to "No signal", which
+    /// retries on tap.
+    var staleFor: TimeInterval? = nil
+    var onRetry: () -> Void = {}
 
     private var flight: Flight { contact.flight }
 
@@ -319,8 +359,13 @@ struct WatchFlightHero: View {
                     .font(.mono(10))
                     .foregroundStyle(Palette.caption)
             }
-            WatchApproachChip(contact: contact)
-                .padding(.top, 3)
+            if let staleFor {
+                WatchStaleChip(since: staleFor, retry: onRetry)
+                    .padding(.top, 3)
+            } else {
+                WatchApproachChip(contact: contact)
+                    .padding(.top, 3)
+            }
             if showNearest {
                 Button(action: onNearest) {
                     Label("Nearest", systemImage: "arrow.uturn.backward")
@@ -354,7 +399,9 @@ struct WatchFlightHero: View {
         }
         parts.append("\(RadarFormat.miles(contact.distanceMiles)) miles \(GeoMath.cardinal(contact.bearing))")
         parts.append("\(RadarFormat.wholeNumber(contact.altitudeFeet)) feet")
-        if contact.isApproaching, contact.closestApproach.secondsFromNow < 3600 {
+        if let staleFor {
+            parts.append("no signal for \(RadarFormat.countdown(staleFor))")
+        } else if contact.isApproaching, contact.closestApproach.secondsFromNow < 3600 {
             parts.append("closest pass in \(RadarFormat.countdown(contact.closestApproach.secondsFromNow))")
         }
         return parts.joined(separator: ", ")
@@ -366,6 +413,7 @@ struct WatchApproachChip: View {
     let contact: RadarContact
     @State private var glow = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isLuminanceReduced) private var isLuminanceReduced
 
     var body: some View {
         Group {
@@ -378,10 +426,7 @@ struct WatchApproachChip: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
                 .background(Palette.signal.opacity(0.16), in: Capsule())
-                .onAppear {
-                    guard !reduceMotion else { return }
-                    withAnimation(.easeInOut(duration: 0.7).repeatForever()) { glow = true }
-                }
+                .onChange(of: [reduceMotion, isLuminanceReduced], initial: true) { _, _ in startGlow() }
             } else if contact.isApproaching, contact.closestApproach.secondsFromNow < 3600 {
                 HStack(spacing: 3) {
                     Image(systemName: "scope").font(.system(size: 8, weight: .bold))
@@ -399,6 +444,39 @@ struct WatchApproachChip: View {
                     .foregroundStyle(Palette.caption)
             }
         }
+    }
+
+    /// Stops while the wrist is down (Always-On): a repeating animation would otherwise
+    /// keep running on the dimmed screen.
+    private func startGlow() {
+        glow = false
+        guard !reduceMotion, !isLuminanceReduced else { return }
+        withAnimation(.easeInOut(duration: 0.7).repeatForever()) { glow = true }
+    }
+}
+
+/// The feed has gone quiet (`RadarModel.isStale`): what's on screen is dead-reckoned from
+/// its last word, and the countdown would be a guess. Shows how long, and retries on tap.
+struct WatchStaleChip: View {
+    let since: TimeInterval
+    let retry: () -> Void
+
+    var body: some View {
+        Button(action: retry) {
+            HStack(spacing: 3) {
+                Image(systemName: "antenna.radiowaves.left.and.right.slash").font(.system(size: 8, weight: .bold))
+                Text("NO SIGNAL · \(RadarFormat.countdown(since))")
+                    .font(.mono(10, .semibold))
+                    .monospacedDigit()
+            }
+            .foregroundStyle(Palette.warning)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(Palette.warning.opacity(0.16), in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("No signal for \(RadarFormat.countdown(since))")
+        .accessibilityHint("Retries the feed")
     }
 }
 

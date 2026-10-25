@@ -131,6 +131,15 @@ final class WristPointingTests: XCTestCase {
         XCTAssertNil(WristPointing.clickInterval(forError: 5))
     }
 
+    func testRedrawsOnlyOnceTheArmHasMovedEnough() {
+        let east = SkyProjector.direction(azimuth: 90, elevation: 20)
+        let tremor = SkyProjector.direction(azimuth: 90.2, elevation: 20.1)
+        let swing = SkyProjector.direction(azimuth: 91, elevation: 20)
+        XCTAssertFalse(WristPointing.moved(from: east, to: tremor, byAtLeast: WristPointing.redrawDegrees))
+        XCTAssertTrue(WristPointing.moved(from: east, to: swing, byAtLeast: WristPointing.redrawDegrees))
+        XCTAssertFalse(WristPointing.moved(from: east, to: east, byAtLeast: WristPointing.redrawDegrees))
+    }
+
     func testTargetSitsAboveTheHorizonAtTheAircraftsBearing() {
         let contact = RadarContact(flight: TestTraffic.flight("a", miles: 2, bearing: 135), observer: TestTraffic.observer, at: Date())
         let dir = WristPointing.direction(of: WristPointing.target(for: contact))

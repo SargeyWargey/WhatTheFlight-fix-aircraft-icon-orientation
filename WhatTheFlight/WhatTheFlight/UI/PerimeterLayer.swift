@@ -95,6 +95,8 @@ struct AircraftBlip: View {
 
     @State private var pulse = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Apple Watch, wrist down: nothing should keep animating on the dimmed screen.
+    @Environment(\.isLuminanceReduced) private var isLuminanceReduced
 
     var body: some View {
         let tags = profile.notable.map(\.tag)
@@ -138,12 +140,12 @@ struct AircraftBlip: View {
         .animation(.snappy, value: isPinned)
         .frame(width: 44 * scale, height: 44 * scale)
         .contentShape(Circle())
-        .onChange(of: [isFocused, isAnnounced], initial: true) { _, _ in startPulse() }
+        .onChange(of: [isFocused, isAnnounced, isLuminanceReduced], initial: true) { _, _ in startPulse() }
     }
 
     private func startPulse() {
         pulse = false
-        guard isFocused || isAnnounced, !reduceMotion else { return }
+        guard isFocused || isAnnounced, !reduceMotion, !isLuminanceReduced else { return }
         withAnimation(.easeOut(duration: isAnnounced ? 1.1 : 1.6).repeatForever(autoreverses: false)) {
             pulse = true
         }

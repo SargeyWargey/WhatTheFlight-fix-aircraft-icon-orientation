@@ -122,6 +122,38 @@ final class RadarModelTests: XCTestCase {
         XCTAssertEqual(model.contacts.first?.bearing ?? 0, 200, accuracy: 0.5)
     }
 
+    func testStaleWhenTheFeedFailsOrGoesQuiet() async {
+        feed.flights = [TestTraffic.flight("a", miles: 2)]
+        XCTAssertFalse(model.isStale) // nothing loaded yet: nothing to be stale
+        await model.pollOnce()
+        XCTAssertFalse(model.isStale)
+        XCTAssertEqual(model.sinceLastUpdate, 0, accuracy: 1)
+
+        model.advanceClock(to: Date().addingTimeInterval(RadarModel.staleAfter + 1))
+        XCTAssertTrue(model.isStale)
+        XCTAssertGreaterThan(model.sinceLastUpdate, RadarModel.staleAfter)
+        XCTAssertEqual(model.contacts.map(\.id), ["a"]) // still shown, dead-reckoned
+
+        feed.error = FeedError.rateLimited
+        await model.pollOnce()
+        XCTAssertTrue(model.isStale) // a failed poll says so at once
+        feed.error = nil
+        await model.pollOnce()
+        XCTAssertFalse(model.isStale)
+    }
+
+    func testRestartGetsAGraceBeforeCountingAsStale() async {
+        feed.flights = [TestTraffic.flight("a", miles: 2)]
+        await model.pollOnce()
+        model.advanceClock(to: Date().addingTimeInterval(RadarModel.staleAfter + 1))
+        XCTAssertTrue(model.isStale)
+        // Wrist raised: the model restarts and a poll is on its way.
+        model.start()
+        model.advanceClock(to: Date().addingTimeInterval(10))
+        XCTAssertFalse(model.isStale)
+        model.stop()
+    }
+
     func testLogsLiveTrafficWithWhereItPassed() async {
         let book = Logbook(fileURL: nil)
         model.logbook = book

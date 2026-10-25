@@ -44,6 +44,9 @@ final class RadarModel {
     /// Bumped whenever the trails change (once per feed, not per tick), so views that draw
     /// them rebuild only then.
     private(set) var trailVersion = 0
+    /// When `start()` last ran. A restart (wrist raised, app brought back) gets `staleAfter`
+    /// before the feed counts as quiet, since a poll is on its way.
+    private(set) var resumedAt = Date.distantPast
 
     // MARK: Dependencies
 
@@ -75,6 +78,9 @@ final class RadarModel {
     #endif
     /// Worldwide lookups for far-away pins are a separate request, so they run less often.
     static let pinLookupInterval: TimeInterval = 20
+    /// The feed counts as quiet after this long without an answer: longer than any normal
+    /// poll gap (60 s in an empty sky), shorter than the 90 s dead-reckoning cap.
+    static let staleAfter: TimeInterval = 75
 
     /// Query at least this far out whatever the radius (Apple Watch's Identify looks 15 mi).
     @ObservationIgnored var queryRadiusFloor: Double = 0
@@ -124,6 +130,20 @@ final class RadarModel {
 
     var isDemo: Bool { settings.demoTraffic }
 
+    /// The last fetch failed, or none has landed for `staleAfter`: what's on screen is
+    /// dead-reckoned from the feed's last word. Never before the first load.
+    var isStale: Bool {
+        guard hasLoadedOnce else { return false }
+        if case .error = status { return true }
+        let since = max(lastUpdated ?? .distantPast, resumedAt)
+        return now.timeIntervalSince(since) > Self.staleAfter
+    }
+
+    /// How long since the feed last answered, by the dead-reckoning clock.
+    var sinceLastUpdate: TimeInterval {
+        max(0, lastUpdated.map { now.timeIntervalSince($0) } ?? 0)
+    }
+
     /// Aircraft the user pinned, oldest first.
     var pins: [PinnedAircraft] { settings.pinnedAircraft }
 
@@ -165,6 +185,7 @@ final class RadarModel {
     func start() {
         guard !isRunning else { return }
         isRunning = true
+        resumedAt = Date()
         startPolling()
         startTicking()
     }

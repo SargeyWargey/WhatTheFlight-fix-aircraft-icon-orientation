@@ -151,6 +151,18 @@ enum WristPointing {
         let t = min(1, (degrees - lockDegrees) / (120 - lockDegrees))
         return 0.12 + t * (1.1 - 0.12)
     }
+
+    // MARK: Redraw gating
+
+    /// The sensors report at 30 Hz; the screen only needs to hear about the arm once it has
+    /// moved this far (degrees) from what it last drew.
+    static let redrawDegrees = 0.5
+
+    /// Whether `next` is at least `degrees` away from `shown`.
+    static func moved(from shown: SIMD3<Double>, to next: SIMD3<Double>, byAtLeast degrees: Double) -> Bool {
+        let cosine = max(-1, min(1, simd_dot(simd_normalize(shown), simd_normalize(next))))
+        return acos(cosine).degrees >= degrees
+    }
 }
 
 // MARK: - Identify

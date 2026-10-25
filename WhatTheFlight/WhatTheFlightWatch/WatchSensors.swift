@@ -30,12 +30,23 @@ final class WatchLocationService: NSObject {
 
     @ObservationIgnored private let manager = CLLocationManager()
 
+    /// How good a fix the radar needs. The radar can't show better than a hundred metres at
+    /// its radius, so the GPS needn't run flat out; pointing at the sky wants the best the
+    /// Watch has; and watching from the iPhone's spot needs only a rough fix, kept so Core
+    /// Location can turn the compass's magnetic north into true.
+    enum Precision: Equatable {
+        case coarse, radar, pointing
+    }
+
+    var precision: Precision = .radar {
+        didSet { if precision != oldValue { applyPrecision() } }
+    }
+
     override init() {
         authorization = manager.authorizationStatus
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
-        manager.distanceFilter = 40
+        applyPrecision()
         manager.headingFilter = 2
     }
 
@@ -55,6 +66,21 @@ final class WatchLocationService: NSObject {
     func stop() {
         manager.stopUpdatingLocation()
         manager.stopUpdatingHeading()
+    }
+
+    /// Takes effect at once, mid-update too.
+    private func applyPrecision() {
+        switch precision {
+        case .coarse:
+            manager.desiredAccuracy = kCLLocationAccuracyThreeKilometers
+            manager.distanceFilter = 1000
+        case .radar:
+            manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+            manager.distanceFilter = 150
+        case .pointing:
+            manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+            manager.distanceFilter = 20
+        }
     }
 }
 
@@ -140,6 +166,9 @@ final class WristPointer {
     @ObservationIgnored private var axesAreRows = true
     @ObservationIgnored private var conventionChecked = false
     @ObservationIgnored private var gravity: SIMD3<Double>?
+    /// The low-pass state at the sensor rate; `pointing` follows it only once it has moved
+    /// enough to show.
+    @ObservationIgnored private var smoothed: SIMD3<Double>?
     /// A new screen turn has to hold for a moment before the screen follows it.
     @ObservationIgnored private var pendingTurn: (turn: WristPointing.ScreenTurn, since: Date)?
     /// When the compass-only fallback last had no heading to work with.
@@ -195,6 +224,7 @@ final class WristPointer {
     func stop() {
         motion.stopDeviceMotionUpdates()
         pointing = nil
+        smoothed = nil
         gravity = nil
         pendingTurn = nil
     }
@@ -229,6 +259,7 @@ final class WristPointer {
                 axesAreRows = rowsWin
                 conventionChecked = true
                 pointing = nil
+                smoothed = nil
             }
             var p = style == .point
                 ? WristPointing.pointing(rows: rows, axesAreRows: axesAreRows, axisSign: axisSign)
@@ -252,9 +283,13 @@ final class WristPointer {
         case .unavailable:
             return
         }
-        // Low-pass so the arrow doesn't shimmer with every tremor.
-        guard let current = pointing else { pointing = target; return }
-        pointing = simd_normalize(current + (target - current) * 0.3)
+        // Low-pass so the arrow doesn't shimmer with every tremor, at the sensor rate. The
+        // views hear about it only once it has moved enough to show: at 30 Hz every sample
+        // would otherwise redraw Identify's and Find's strips, gauges and labels.
+        let next = smoothed.map { simd_normalize($0 + (target - $0) * 0.3) } ?? target
+        smoothed = next
+        if let shown = pointing, !WristPointing.moved(from: shown, to: next, byAtLeast: WristPointing.redrawDegrees) { return }
+        pointing = next
     }
 }
 

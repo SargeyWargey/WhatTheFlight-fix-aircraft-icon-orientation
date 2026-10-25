@@ -21,6 +21,18 @@ struct FlightHero: View {
     /// A short radar (the iPhone Duo's standing half in tabletop): no type line or approach
     /// chip, so the rest stays full size.
     var compact = false
+    /// Where the aircraft's Planespotters photo goes, if anywhere. It only appears once there's
+    /// a photo to show.
+    var photo: PhotoPlacement = .none
+
+    enum PhotoPlacement {
+        case none
+        /// Under everything else, the stats and approach included (the radar's centre).
+        case bottom
+        /// Beside the flight number and route, the stats running full width underneath (the
+        /// map card, whose single row of stats needs the room).
+        case beside
+    }
 
     private var flight: Flight { contact.flight }
 
@@ -32,6 +44,42 @@ struct FlightHero: View {
                     .transition(.scale.combined(with: .opacity))
             }
 
+            if photo == .beside {
+                HStack(spacing: 0) {
+                    identity
+                        .frame(maxWidth: .infinity)
+                    AircraftPhotoTile(registration: flight.registration, hex: flight.hex, width: 120, height: 80, gap: 12)
+                }
+            } else {
+                identity
+            }
+
+            if !compact {
+                typeLine
+                    .padding(.top, 12)
+            }
+
+            stats
+                .padding(.top, compact ? 18 : 26)
+
+            if !compact {
+                ApproachChip(contact: contact, scale: detailScale)
+                    .padding(.top, 18)
+            }
+
+            if photo == .bottom {
+                // A little bigger with the TV's larger details (150 × 100 on a phone, 180 × 120 on TV).
+                let size = min(detailScale, 1.2)
+                AircraftPhotoTile(registration: flight.registration, hex: flight.hex, width: 150 * size, height: 100 * size,
+                                  gap: 18 * size, edge: .top, outline: Palette.ink.opacity(0.15))
+            }
+        }
+        .multilineTextAlignment(.center)
+    }
+
+    /// Who's flying, the flight number and the route.
+    private var identity: some View {
+        VStack(spacing: 0) {
             operatorLine
                 .padding(.bottom, 4)
 
@@ -47,21 +95,7 @@ struct FlightHero: View {
                 RouteLine(flight: flight)
                     .padding(.top, 2)
             }
-
-            if !compact {
-                typeLine
-                    .padding(.top, 12)
-            }
-
-            stats
-                .padding(.top, compact ? 18 : 26)
-
-            if !compact {
-                ApproachChip(contact: contact, scale: detailScale)
-                    .padding(.top, 18)
-            }
         }
-        .multilineTextAlignment(.center)
     }
 
     @ViewBuilder

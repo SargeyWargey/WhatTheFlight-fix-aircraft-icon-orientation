@@ -23,10 +23,11 @@ final class RadarLocationService: NSObject {
     private(set) var headingAccuracy: Double?
     let headingAvailable = CLLocationManager.headingAvailable()
 
-    /// The iPhone Duo's inner screen turns with the phone like an iPad's, so the compass
-    /// follows the phone there too. Set from `FoldMonitor.isOnInnerScreen`.
-    @ObservationIgnored var interfaceTurnsWithDevice = false {
-        didSet { if interfaceTurnsWithDevice != oldValue { syncHeadingOrientation() } }
+    /// The ways the interface turns with the phone, so the compass can follow it: the iPhone
+    /// Duo's inner screen every way, like an iPad, and its cover screen all but upside down.
+    /// Set from `FoldMonitor.interfaceOrientations`; iPad always turns every way.
+    @ObservationIgnored var interfaceOrientations: UIInterfaceOrientationMask = .portrait {
+        didSet { if interfaceOrientations != oldValue { syncHeadingOrientation() } }
     }
 
     @ObservationIgnored private let manager = CLLocationManager()
@@ -105,18 +106,20 @@ final class RadarLocationService: NSObject {
     }
 
     /// The compass is relative to the top of the *interface*, so keep Core Location in sync
-    /// on iPad and the iPhone Duo's inner screen, which rotate. Other iPhones are portrait-only.
+    /// on iPad and the iPhone Duo, which rotate. Other iPhones are portrait-only.
     private func syncHeadingOrientation() {
-        guard UIDevice.current.userInterfaceIdiom == .pad || interfaceTurnsWithDevice else {
+        let turns: UIInterfaceOrientationMask = UIDevice.current.userInterfaceIdiom == .pad ? .all : interfaceOrientations
+        guard turns != .portrait else {
             manager.headingOrientation = .portrait
             return
         }
+        // A device turned left puts the interface in landscape right, and the other way round.
         switch UIDevice.current.orientation {
         case .portrait: manager.headingOrientation = .portrait
-        case .portraitUpsideDown: manager.headingOrientation = .portraitUpsideDown
-        case .landscapeLeft: manager.headingOrientation = .landscapeLeft
-        case .landscapeRight: manager.headingOrientation = .landscapeRight
-        default: break // face up / down: keep the last interface orientation
+        case .portraitUpsideDown where turns.contains(.portraitUpsideDown): manager.headingOrientation = .portraitUpsideDown
+        case .landscapeLeft where turns.contains(.landscapeRight): manager.headingOrientation = .landscapeLeft
+        case .landscapeRight where turns.contains(.landscapeLeft): manager.headingOrientation = .landscapeRight
+        default: break // face up / down, or a way the interface doesn't turn: keep the last one
         }
     }
 

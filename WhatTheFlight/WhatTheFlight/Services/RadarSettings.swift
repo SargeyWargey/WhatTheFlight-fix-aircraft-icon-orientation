@@ -155,6 +155,11 @@ final class RadarSettings {
     var showCompassBezel: Bool { didSet { save(showCompassBezel, .showCompassBezel) } }
     var radarSweep: Bool { didSet { save(radarSweep, .radarSweep) } }
     var showPhotos: Bool { didSet { save(showPhotos, .showPhotos) } }
+    /// The aircraft's photo on the radar's centre and the map card. Off unless turned on;
+    /// Sky View's card shows it whenever Aircraft photos is on.
+    var cardPhotos: Bool { didSet { save(cardPhotos, .cardPhotos) } }
+    /// Card photos on, and Planespotters photos on at all.
+    var showsCardPhotos: Bool { showPhotos && cardPhotos }
     var hapticsEnabled: Bool { didSet { save(hapticsEnabled, .haptics) } }
     var keepScreenAwake: Bool { didSet { save(keepScreenAwake, .keepAwake) } }
     var demoTraffic: Bool { didSet { save(demoTraffic, .demoTraffic) } }
@@ -243,6 +248,7 @@ final class RadarSettings {
         showCompassBezel = value(.showCompassBezel, true)
         radarSweep = value(.radarSweep, true)
         showPhotos = value(.showPhotos, true)
+        cardPhotos = value(.cardPhotos, false)
         hapticsEnabled = value(.haptics, true)
         keepScreenAwake = value(.keepAwake, false)
         demoTraffic = value(.demoTraffic, false)
@@ -304,6 +310,7 @@ final class RadarSettings {
         showCompassBezel = true
         radarSweep = true
         showPhotos = true
+        cardPhotos = false
         hapticsEnabled = true
         keepScreenAwake = false
         demoTraffic = false
@@ -329,7 +336,7 @@ final class RadarSettings {
     private enum Key: String {
         case radius, refresh, locationMode, customLatitude, customLongitude, appearance
         // `showTopography` is only read, to carry an old "off" over to `topography`.
-        case showHelicopters, showTopography, topography, topographyMotion, showCompassBezel, radarSweep, showPhotos
+        case showHelicopters, showTopography, topography, topographyMotion, showCompassBezel, radarSweep, showPhotos, cardPhotos
         case haptics, keepAwake, demoTraffic, hasSeenWelcome, customPlaceName, tvFacing
         case overheadAlerts, overheadAlertMiles, overheadAlertLead, notableAlerts, spokenAlerts, keepLogbook, raiseToSkyView
         case mapView, mapScreen, tvView, mapNorthUp, mapRadius, mapType, skySaveToPhotos, pinnedAircraft

@@ -508,6 +508,10 @@ struct TVRadarSettingsView: View {
         TVToggleRow(title: "Compass bezel", symbol: "location.north.line.fill", isOn: $settings.showCompassBezel)
         TVToggleRow(title: "Radar sweep", symbol: "dot.radiowaves.right", isOn: $settings.radarSweep)
         TVToggleRow(title: "Aircraft photos", symbol: "photo.fill", isOn: $settings.showPhotos)
+        if settings.showPhotos {
+            TVToggleRow(title: "Photos on flight cards", subtitle: "The aircraft's photo on the radar and the map card, whenever Planespotters has one",
+                        symbol: "photo.on.rectangle", isOn: $settings.cardPhotos)
+        }
 
         TVSectionHeader(title: "Map")
         TVToggleRow(title: "Map view", subtitle: "A live map of every aircraft around you, beside the radar or full screen",

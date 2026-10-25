@@ -176,7 +176,7 @@ The watchOS 10+ pattern: a **vertical page stack** turned with the Digital Crown
 - **Tap the hero** opens details.
 - **Tap a perimeter icon** focuses it, as on iPhone.
 
-**Empty / error states:** "Clear skies within 10 mi" with the radar sweep; "Waiting for GPS…"; feed errors reuse `FeedError` copy plus a Retry button. Status is a small coloured dot (live / loading / error) in the corner.
+**Empty / error states:** "Clear skies within 10 mi" with the radar sweep; "Waiting for GPS…"; feed errors reuse `FeedError` copy plus a Retry button. After the first load a quiet feed (`RadarModel.isStale`: a failed poll, or nothing for 75 s, with the same grace after every restart) turns the hero's approach chip into **NO SIGNAL · 1:32**, which retries on tap, and an empty radar shows No signal + Retry; the detail page's chip does the same. Never in Always-On, where the model is paused on purpose.
 
 **Always-On (wrist down):** when `isLuminanceReduced` is true, stop polling and the sweep. Redraw once a minute (`TimelineView(.everyMinute)`) with dead-reckoned positions, at reduced brightness: identifier, distance and icons only. Polling resumes on wrist raise.
 
@@ -273,7 +273,7 @@ All haptics are gated by the existing `hapticsEnabled` setting.
 ### 6.1 Where the Watch watches from
 
 `wtf.watch.locationSource`:
-- **Here** (default): Watch GPS via `WatchLocationService`, `kCLAccuracyNearestTenMeters`, distance filter 40 m, started only while the app is in the foreground.
+- **Here** (default): Watch GPS via `WatchLocationService`, started only while the app is in the foreground. Its precision follows what's on screen (`WatchLocationService.Precision`, set by `WatchRootView`): a hundred metres with a 150 m filter for the radar, which can't show finer at its radius; ten metres while Identify or Find is open; and a rough three-kilometre fix in **iPhone's spot** mode, kept only so Core Location can turn the compass's magnetic north into true.
 - **iPhone's spot**: the observer the iPhone last sent (custom place or the iPhone's GPS), with its place name shown under the radar. Handy for "what's over my house?" from work.
 
 The Watch app writes whichever observer it uses into its own `SharedRadarStore`, so the complications follow.

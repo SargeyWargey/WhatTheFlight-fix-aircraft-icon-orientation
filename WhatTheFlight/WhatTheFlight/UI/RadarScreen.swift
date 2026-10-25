@@ -8,6 +8,8 @@
 //  view on and no map pane beside it, Map swaps the radar for the live map and a card for the
 //  focused flight; the bar stays put, so getting around works the same on both. Demo traffic
 //  (a solid DEMO count) and a custom spot each get a tag just above the bar.
+//  On the iPhone Duo in landscape the buttons move to the system's vertical bar strip down
+//  the side of the screen instead (`RadarRootView`), and the radar takes the full height.
 //
 //  Gestures (radar)
 //    swipe →   back to the nearest aircraft      tap centre   flight details
@@ -31,6 +33,9 @@ struct RadarScreen: View {
     let centerState: () -> CenterStateView.Kind?
     /// Map view on with no map pane beside the radar: the bar offers Map / Radar.
     let offersMap: Bool
+    /// Off while `RadarRootView` stands the bar in the vertical bar strip instead (the iPhone
+    /// Duo in landscape).
+    var showsBar = true
     /// "Up" on the map: the compass in steps (`RadarRootView.mapHeading`).
     let mapHeading: Double?
     let actions: Actions
@@ -70,7 +75,8 @@ struct RadarScreen: View {
 
     var body: some View {
         GeometryReader { geo in
-            let chrome = RadarChrome(size: geo.size, safeBottom: geo.safeAreaInsets.bottom, tagsHeight: tagsHeight)
+            let chrome = RadarChrome(size: geo.size, safeBottom: geo.safeAreaInsets.bottom, tagsHeight: tagsHeight,
+                                     barHeight: showsBar ? RadarControlBar.height : 0)
             let layout = RadarLayout(size: chrome.radarSize)
             let showsMap = showsMap
 
@@ -93,13 +99,15 @@ struct RadarScreen: View {
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tagsHeight = $0 }
                     .position(x: geo.size.width / 2, y: chrome.tagsMidY)
 
-                RadarControlBar(model: model, offersMap: offersMap, showsMap: showsMap,
-                                onToggleMap: actions.toggleMap, onSkyView: actions.openSkyView,
-                                onSearch: actions.openSearchFullHeight,
-                                onLogbook: actions.openLogbook, onSettings: actions.openSettings)
-                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { barWidth = $0 }
-                    .scaleEffect(barWidth > 0 ? min(1, (geo.size.width - 16) / barWidth) : 1)
-                    .position(x: geo.size.width / 2, y: chrome.barMidY)
+                if showsBar {
+                    RadarControlBar(model: model, offersMap: offersMap, showsMap: showsMap,
+                                    onToggleMap: actions.toggleMap, onSkyView: actions.openSkyView,
+                                    onSearch: actions.openSearchFullHeight,
+                                    onLogbook: actions.openLogbook, onSettings: actions.openSettings)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { barWidth = $0 }
+                        .scaleEffect(barWidth > 0 ? min(1, (geo.size.width - 16) / barWidth) : 1)
+                        .position(x: geo.size.width / 2, y: chrome.barMidY)
+                }
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .animation(.smooth(duration: 0.35), value: showsMap)
@@ -138,7 +146,8 @@ struct RadarScreen: View {
                     .animation(reduceMotion ? nil : .interactiveSpring(response: 0.45, dampingFraction: 0.86), value: heading)
             }
 
-            center(wideStats: layout.prefersWideStats, compact: layout.prefersCompactHero)
+            center(wideStats: layout.prefersWideStats, compact: layout.prefersCompactHero,
+                   photo: settings.showsCardPhotos && !layout.prefersCompactHero ? .bottom : .none)
                 .frame(width: layout.heroWidth / heroScale)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { heroHeight = $0 }
                 .scaleEffect(heroScale)
@@ -187,7 +196,7 @@ struct RadarScreen: View {
     /// the map keeps the screen.
     private var mapCard: some View {
         let shape = RoundedRectangle(cornerRadius: 28, style: .continuous)
-        return center(wideStats: true, compact: true)
+        return center(wideStats: true, compact: true, photo: settings.showsCardPhotos ? .beside : .none)
             .padding(.horizontal, 14)
             .padding(.vertical, 16)
             .frame(maxWidth: .infinity)
@@ -199,7 +208,7 @@ struct RadarScreen: View {
     // MARK: Centre
 
     @ViewBuilder
-    private func center(wideStats: Bool, compact: Bool) -> some View {
+    private func center(wideStats: Bool, compact: Bool, photo: FlightHero.PhotoPlacement) -> some View {
         let centerState = centerState()
         ZStack {
             if let centerState {
@@ -207,7 +216,7 @@ struct RadarScreen: View {
                     .transition(.opacity)
             } else if let contact = model.focusedContact {
                 FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading,
-                           wideStats: wideStats, compact: compact)
+                           wideStats: wideStats, compact: compact, photo: photo)
                     .id(contact.id)
                     // A scale-in here could get stuck part-way and leave the hero off-centre.
                     .transition(.opacity)
@@ -282,15 +291,17 @@ struct RadarChrome {
     /// From the top of the safe area down to just above the tags (or the bar).
     let radarSize: CGSize
 
-    init(size: CGSize, safeBottom: CGFloat, tagsHeight: CGFloat) {
+    /// `barHeight` 0: no bar along the bottom (it stands in the vertical bar strip), so the
+    /// tags take its place and the radar runs down to them, or to the safe area's bottom.
+    init(size: CGSize, safeBottom: CGFloat, tagsHeight: CGFloat, barHeight: CGFloat = RadarControlBar.height) {
         // As far off the screen's bottom edge as a tab bar: clear of the home indicator when
         // there is one, a small margin when there isn't (a Home button, the Duo's standing half).
         let barBottom = size.height + safeBottom - (safeBottom >= 20 ? 22 : 10)
-        let barTop = barBottom - RadarControlBar.height
-        barMidY = barBottom - RadarControlBar.height / 2
-        let tagsBottom = barTop - 6
+        let barTop = barBottom - barHeight
+        barMidY = barBottom - barHeight / 2
+        let tagsBottom = barHeight > 0 ? barTop - 6 : barBottom
         tagsMidY = tagsBottom - tagsHeight / 2
-        let radarBottom = tagsHeight > 0 ? tagsBottom - tagsHeight - 2 : barTop - 4
+        let radarBottom = tagsHeight > 0 ? tagsBottom - tagsHeight - 2 : barHeight > 0 ? barTop - 4 : size.height
         radarSize = CGSize(width: size.width, height: max(0, radarBottom))
     }
 }
@@ -300,11 +311,18 @@ struct RadarChrome {
 /// View opens the camera. Then the live dot and the aircraft count (Aircraft search), the
 /// logbook and settings. Demo traffic turns the count into a solid ink "DEMO 12", so nobody
 /// mistakes simulated aircraft for the real sky.
+///
+/// With a `rail`, the iPhone Duo in landscape: the same buttons in the system's vertical bar
+/// strip, laid out the way the system lays out its own bar there (Safari's, say). The ways of
+/// looking are round glass buttons just under the status bar; the count, the logbook and
+/// settings are grouped in a capsule at the bottom. Symbols without captions: VoiceOver and
+/// the large content viewer still name them. The caller gives it the strip's height.
 struct RadarControlBar: View {
     let model: RadarModel
     /// Map view on, with no map pane beside the radar.
     let offersMap: Bool
     let showsMap: Bool
+    var rail: Rail?
     let onToggleMap: () -> Void
     let onSkyView: () -> Void
     let onSearch: () -> Void
@@ -313,58 +331,113 @@ struct RadarControlBar: View {
 
     static let height: CGFloat = 56
 
-    var body: some View {
-        HStack(spacing: 0) {
-            if offersMap {
-                BarButton(title: showsMap ? "Radar" : "Map", action: onToggleMap) {
-                    Image(systemName: showsMap ? "scope" : "map.fill")
-                }
-                .disabled(model.observer == nil)
-                .accessibilityLabel(showsMap ? "Radar" : "Map")
-                .accessibilityHint(showsMap ? "Shows the radar instead of the map" : "Shows a live map of the traffic instead of the radar")
-                .accessibilityIdentifier("mapButton")
-            }
+    /// The rail's sizes, scaled from the strip as the system scales its own vertical bar: a
+    /// seventh of the strip between the content and the buttons, four sevenths of button and
+    /// two sevenths to the screen's edge (12 + 48 + 24 pt of the inner screen's 84).
+    struct Rail: Equatable {
+        /// A round button's diameter, and the group's width.
+        let button: CGFloat
 
-            BarButton(title: "Sky View", action: onSkyView) {
-                Image(systemName: "camera.viewfinder")
-            }
-            .accessibilityLabel("Sky View")
-            .accessibilityHint("Opens the camera with every aircraft labeled where it is in the sky")
-            .accessibilityIdentifier("skyViewButton")
-
-            Rectangle()
-                .fill(Palette.faint.opacity(0.5))
-                .frame(width: 1, height: 26)
-                .padding(.horizontal, 2)
-                .accessibilityHidden(true)
-
-            // The badge carries the label: "12 aircraft in range".
-            BarButton(title: "Aircraft", isHighlighted: model.isDemo, action: onSearch) {
-                StatusBadge(model: model, highlightsDemo: true, drawsCapsule: false)
-            }
-            .accessibilityHint("Search aircraft")
-            .accessibilityIdentifier("aircraftButton")
-
-            BarButton(title: "Logbook", action: onLogbook) {
-                Image(systemName: "book.closed.fill")
-            }
-            .accessibilityLabel("Logbook")
-            .accessibilityIdentifier("logbookButton")
-
-            BarButton(title: "Settings", action: onSettings) {
-                Image(systemName: "gearshape.fill")
-            }
-            .accessibilityLabel("Settings")
-            .accessibilityIdentifier("settingsButton")
+        init(strip: CGFloat) {
+            button = strip > 0 ? (strip * 4 / 7).rounded() : 48
         }
-        .padding(.horizontal, 5)
-        .frame(height: Self.height)
-        .glassSurface(in: Capsule())
-        .fixedSize()
+
+        /// To the screen's side edge, and to its bottom, which gets a touch more.
+        var edgeMargin: CGFloat { button / 2 }
+        var bottomMargin: CGFloat { button / 2 + 3 }
+        /// Between the round buttons at the top.
+        var spacing: CGFloat { (button / 5).rounded() }
+        /// Between the buttons in the group, and at its ends.
+        var groupSpacing: CGFloat { (button / 24).rounded() }
+        var symbolSize: CGFloat { (button * 0.4).rounded() }
+    }
+
+    var body: some View {
+        if let rail {
+            VStack(spacing: 0) {
+                VStack(spacing: rail.spacing) {
+                    if offersMap {
+                        mapButton.glassSurface(in: Circle(), interactive: true)
+                    }
+                    skyViewButton.glassSurface(in: Circle(), interactive: true)
+                }
+                Spacer(minLength: rail.spacing)
+                VStack(spacing: rail.groupSpacing) {
+                    aircraftButton
+                    logbookButton
+                    settingsButton
+                }
+                .padding(.vertical, rail.groupSpacing)
+                .glassSurface(in: Capsule())
+            }
+            .environment(\.barRail, rail)
+        } else {
+            HStack(spacing: 0) {
+                if offersMap { mapButton }
+                skyViewButton
+                Rectangle()
+                    .fill(Palette.faint.opacity(0.5))
+                    .frame(width: 1, height: 26)
+                    .padding(.horizontal, 2)
+                    .accessibilityHidden(true)
+                aircraftButton
+                logbookButton
+                settingsButton
+            }
+            .padding(.horizontal, 5)
+            .frame(height: Self.height)
+            .glassSurface(in: Capsule())
+            .fixedSize()
+        }
+    }
+
+    private var mapButton: some View {
+        BarButton(title: showsMap ? "Radar" : "Map", action: onToggleMap) {
+            Image(systemName: showsMap ? "scope" : "map.fill")
+        }
+        .disabled(model.observer == nil)
+        .accessibilityLabel(showsMap ? "Radar" : "Map")
+        .accessibilityHint(showsMap ? "Shows the radar instead of the map" : "Shows a live map of the traffic instead of the radar")
+        .accessibilityIdentifier("mapButton")
+    }
+
+    private var skyViewButton: some View {
+        BarButton(title: "Sky View", action: onSkyView) {
+            Image(systemName: "camera.viewfinder")
+        }
+        .accessibilityLabel("Sky View")
+        .accessibilityHint("Opens the camera with every aircraft labeled where it is in the sky")
+        .accessibilityIdentifier("skyViewButton")
+    }
+
+    // The badge carries the label: "12 aircraft in range".
+    private var aircraftButton: some View {
+        BarButton(title: "Aircraft", isHighlighted: model.isDemo, action: onSearch) {
+            StatusBadge(model: model, highlightsDemo: true, drawsCapsule: false, stacked: rail != nil)
+        }
+        .accessibilityHint("Search aircraft")
+        .accessibilityIdentifier("aircraftButton")
+    }
+
+    private var logbookButton: some View {
+        BarButton(title: "Logbook", action: onLogbook) {
+            Image(systemName: "book.closed.fill")
+        }
+        .accessibilityLabel("Logbook")
+        .accessibilityIdentifier("logbookButton")
+    }
+
+    private var settingsButton: some View {
+        BarButton(title: "Settings", action: onSettings) {
+            Image(systemName: "gearshape.fill")
+        }
+        .accessibilityLabel("Settings")
+        .accessibilityIdentifier("settingsButton")
     }
 }
 
-/// One button on the bar: a symbol (or the live count) over a small mono caption.
+/// One button on the bar: a symbol (or the live count) over a small mono caption; on the
+/// rail, the symbol alone, in a square the size of a round button.
 private struct BarButton<Icon: View>: View {
     let title: String
     /// Demo traffic: a solid ink lozenge behind the count, paper type on it.
@@ -373,24 +446,27 @@ private struct BarButton<Icon: View>: View {
     @ViewBuilder let icon: Icon
 
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.barRail) private var rail
 
     var body: some View {
         Button(action: action) {
             VStack(spacing: 3) {
                 icon
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: rail?.symbolSize ?? 17, weight: .semibold))
                     .foregroundStyle(isHighlighted ? Palette.paper : Palette.ink)
-                    .frame(height: 22)
-                Text(title)
-                    .font(.mono(9, .bold))
-                    .tracking(0.9)
-                    .textCase(.uppercase)
-                    .foregroundStyle(isHighlighted ? Palette.paper.opacity(0.85) : Palette.caption)
-                    .accessibilityHidden(true)
+                    .frame(height: rail == nil ? 22 : nil)
+                if rail == nil {
+                    Text(title)
+                        .font(.mono(9, .bold))
+                        .tracking(0.9)
+                        .textCase(.uppercase)
+                        .foregroundStyle(isHighlighted ? Palette.paper.opacity(0.85) : Palette.caption)
+                        .accessibilityHidden(true)
+                }
             }
-            .padding(.horizontal, 7)
-            .frame(minWidth: 60)
-            .frame(height: RadarControlBar.height - 10)
+            .padding(.horizontal, rail == nil ? 7 : 0)
+            .frame(minWidth: rail == nil ? 60 : nil)
+            .frame(width: rail?.button, height: rail?.button ?? RadarControlBar.height - 10)
             .background {
                 Capsule()
                     .fill(Palette.ink)
@@ -401,7 +477,16 @@ private struct BarButton<Icon: View>: View {
             .opacity(isEnabled ? 1 : 0.4)
         }
         .buttonStyle(.plain)
+        .accessibilityShowsLargeContentViewer {
+            icon
+            Text(title)
+        }
     }
+}
+
+private extension EnvironmentValues {
+    /// The iPhone Duo's rail, for the buttons on it; nil along the bottom.
+    @Entry var barRail: RadarControlBar.Rail? = nil
 }
 #endif
 
@@ -464,6 +549,8 @@ struct StatusBadge: View {
     var highlightsDemo = false
     /// Off when it sits inside something that draws its own background (`RadarControlBar`).
     var drawsCapsule = true
+    /// The iPhone Duo's rail: the dot (and "DEMO") over the count, to fit its narrow buttons.
+    var stacked = false
     @State private var blink = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -504,22 +591,51 @@ struct StatusBadge: View {
     }
 
     private var content: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(color)
-                .frame(width: 7, height: 7)
-                .opacity(blink ? 0.35 : 1)
-            if isHighlightedDemo {
-                Text("DEMO")
-                    .font(.mono(13, .heavy))
-                    .tracking(1.2)
+        Group {
+            if stacked {
+                VStack(spacing: 3) {
+                    // A narrow button (the Duo's cover screen) keeps just the dot: the solid
+                    // ink behind the count and the demo tag still say it's simulated.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 3) {
+                            dot
+                            if isHighlightedDemo {
+                                Text("DEMO")
+                                    .font(.mono(8, .heavy))
+                                    .tracking(0.6)
+                            }
+                        }
+                        dot
+                    }
+                    count
+                }
+            } else {
+                HStack(spacing: 6) {
+                    dot
+                    if isHighlightedDemo {
+                        Text("DEMO")
+                            .font(.mono(13, .heavy))
+                            .tracking(1.2)
+                    }
+                    count
+                }
             }
-            Text(model.isDemo && !highlightsDemo ? "DEMO \(model.contacts.count)" : "\(model.contacts.count)")
-                .font(.mono(13, .bold))
-                .contentTransition(.numericText(value: Double(model.contacts.count)))
-                .animation(.snappy, value: model.contacts.count)
         }
         .foregroundStyle(isHighlightedDemo ? Palette.paper : Palette.value)
+    }
+
+    private var dot: some View {
+        Circle()
+            .fill(color)
+            .frame(width: 7, height: 7)
+            .opacity(blink ? 0.35 : 1)
+    }
+
+    private var count: some View {
+        Text(model.isDemo && !highlightsDemo ? "DEMO \(model.contacts.count)" : "\(model.contacts.count)")
+            .font(.mono(13, .bold))
+            .contentTransition(.numericText(value: Double(model.contacts.count)))
+            .animation(.snappy, value: model.contacts.count)
     }
 
     private var accessibilityText: String {

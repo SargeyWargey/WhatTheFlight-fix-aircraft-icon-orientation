@@ -70,37 +70,35 @@ struct RadarRootView: View {
     var body: some View {
         GeometryReader { geo in
             let panes = panes(in: geo)
-            PaneLayout(frames: panes.frames) {
-                RadarScreen(
-                    model: model,
-                    settings: settings,
-                    location: location,
-                    centerState: { centerState },
-                    // Beside a map pane the radar has no use for the bar's Map button.
-                    offersMap: settings.mapView && panes.map == nil,
-                    mapHeading: mapHeading,
-                    actions: .init(
-                        openSettings: { sheet = .settings },
-                        openLogbook: { sheet = .logbook },
-                        openDetail: { sheet = .detail($0) },
-                        // Even with an empty sky: search reaches the whole world.
-                        openSearchFullHeight: { openSearch(detent: .large) },
-                        toggleMap: { settings.mapScreen.toggle() },
-                        openSkyView: { sky = SkyRequest() },
-                        openSpotPicker: { sheet = .pickSpot },
-                        centerPrimary: centerPrimary,
-                        centerSecondary: { sheet = .pickSpot }
+            // Beside a map pane the radar has no use for the bar's Map button.
+            let offersMap = settings.mapView && panes.map == nil
+            let rail = fold.verticalBar
+            ZStack {
+                PaneLayout(frames: panes.frames) {
+                    RadarScreen(
+                        model: model,
+                        settings: settings,
+                        location: location,
+                        centerState: { centerState },
+                        offersMap: offersMap,
+                        showsBar: rail == nil,
+                        mapHeading: mapHeading,
+                        actions: screenActions
                     )
-                )
 
-                if let gutter = panes.gutter {
-                    FoldGutter(axis: gutter.width < gutter.height ? .vertical : .horizontal)
-                        .ignoresSafeArea()
+                    if let gutter = panes.gutter {
+                        FoldGutter(axis: gutter.width < gutter.height ? .vertical : .horizontal)
+                            .ignoresSafeArea()
+                    }
+
+                    if panes.map != nil, let observer = model.observer {
+                        RadarMapPane(model: model, settings: settings, observer: observer, mapHeading: mapHeading)
+                            .transition(.move(edge: panes.mapEdge).combined(with: .opacity))
+                    }
                 }
 
-                if panes.map != nil, let observer = model.observer {
-                    RadarMapPane(model: model, settings: settings, observer: observer, mapHeading: mapHeading)
-                        .transition(.move(edge: panes.mapEdge).combined(with: .opacity))
+                if let rail {
+                    controlRail(rail, offersMap: offersMap, geo: geo)
                 }
             }
         }
@@ -180,7 +178,7 @@ struct RadarRootView: View {
         .onChange(of: listensForRaise, initial: true) { _, listening in
             if listening { raise.start() } else { raise.stop() }
         }
-        .onChange(of: fold.isOnInnerScreen, initial: true) { _, inner in location.interfaceTurnsWithDevice = inner }
+        .onChange(of: fold.interfaceOrientations, initial: true) { _, turns in location.interfaceOrientations = turns }
         .onChange(of: model.lastUpdated) { _, _ in widgets.publish(model: model, settings: settings, placeName: placeName) }
         .onChange(of: model.hasLoadedOnce) { _, loaded in
             if loaded, let route = deferredRoute {
@@ -250,10 +248,7 @@ struct RadarRootView: View {
             }
             .presentationDragIndicator(.visible)
         case .search:
-            FlightSearchSheet(model: model, heading: location.heading ?? 0) {
-                self.sheet = nil
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { self.sheet = .logbook }
-            }
+            FlightSearchSheet(model: model, heading: location.heading ?? 0)
                 .presentationDetents([.medium, .large], selection: $searchDetent)
                 .presentationDragIndicator(.visible)
         case .detail(let id):
@@ -297,6 +292,46 @@ struct RadarRootView: View {
                     }
             }
         }
+    }
+
+    private var screenActions: RadarScreen.Actions {
+        .init(
+            openSettings: { sheet = .settings },
+            openLogbook: { sheet = .logbook },
+            openDetail: { sheet = .detail($0) },
+            // Even with an empty sky: search reaches the whole world.
+            openSearchFullHeight: { openSearch(detent: .large) },
+            toggleMap: { settings.mapScreen.toggle() },
+            openSkyView: { sky = SkyRequest() },
+            openSpotPicker: { sheet = .pickSpot },
+            centerPrimary: centerPrimary,
+            centerSecondary: { sheet = .pickSpot }
+        )
+    }
+
+    // MARK: Rail
+
+    /// iPhone Duo in landscape: the bar's buttons in the system's vertical bar strip, the way
+    /// the system lays out its own bar there: round buttons from just under the status bar,
+    /// a group at the bottom, sized from the strip's width. The strip is the safe area's inset
+    /// on that side, so the radar and the map pane already keep out of it. Over the whole
+    /// screen, so it stays at the far edge with the map pane beside the radar (held as a book).
+    private func controlRail(_ bar: FoldMonitor.VerticalBar, offersMap: Bool, geo: GeometryProxy) -> some View {
+        let insets = geo.safeAreaInsets
+        let rail = RadarControlBar.Rail(strip: bar.edge == .leading ? insets.leading : insets.trailing)
+        let actions = screenActions
+        return RadarControlBar(model: model, offersMap: offersMap,
+                               showsMap: offersMap && settings.mapScreen && model.observer != nil,
+                               rail: rail,
+                               onToggleMap: actions.toggleMap, onSkyView: actions.openSkyView,
+                               onSearch: actions.openSearchFullHeight,
+                               onLogbook: actions.openLogbook, onSettings: actions.openSettings)
+            .padding(.top, bar.statusBarBottom ?? insets.top + rail.spacing)
+            .padding(.bottom, rail.bottomMargin)
+            .padding(bar.edge == .leading ? .leading : .trailing, rail.edgeMargin)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: bar.edge == .leading ? .leading : .trailing)
+            .ignoresSafeArea()
+            .transition(.opacity)
     }
 
     // MARK: Map pane
@@ -655,9 +690,11 @@ final class WidgetPublisher {
     }
 }
 
-/// iPhone stays in portrait — the radar is a compass, and a compass doesn't rotate. iOS
-/// doesn't ask on the iPhone Duo's inner screen, which turns with the phone like an iPad's
-/// (book and tabletop need both ways round); its cover screen stays portrait.
+/// iPhone stays in portrait — the radar is a compass, and a compass doesn't rotate. The
+/// iPhone Duo turns: iOS doesn't ask on its inner screen, which turns with the phone like an
+/// iPad's (book and tabletop need both ways round), and its cover screen turns to landscape
+/// too, where the bar stands in the system's vertical bar strip. The compass follows both
+/// (`RadarLocationService.interfaceOrientations`).
 final class RadarAppDelegate: NSObject, UIApplicationDelegate {
     private let notifications = AlertNotificationDelegate()
 
@@ -668,7 +705,8 @@ final class RadarAppDelegate: NSObject, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
-        UIDevice.current.userInterfaceIdiom == .phone ? .portrait : .all
+        guard UIDevice.current.userInterfaceIdiom == .phone else { return .all }
+        return FoldMonitor.phoneFolds ? .allButUpsideDown : .portrait
     }
 }
 /// Runs `action` when `value()` changes. The value is read in this empty view's own body,
@@ -689,7 +727,8 @@ private struct ChangeObserver<Value: Equatable>: View {
 /// The live map of the model's traffic: the iPad's and the iPhone Duo's pane beside the radar,
 /// and the map the bar swaps in for the radar (`RadarScreen`). Its own view, so per-tick
 /// traffic redraws the map rather than whatever holds it. It runs to the screen's edges on
-/// its own, after noting its safe area, so MapKit's compass stays out of the status bar.
+/// its own, after noting its safe area, so MapKit's compass stays out of the status bar and
+/// the recentre button out of the iPhone Duo's vertical bar strip.
 struct RadarMapPane: View {
     let model: RadarModel
     let settings: RadarSettings
@@ -712,8 +751,11 @@ struct RadarMapPane: View {
                 trailVersion: model.trailVersion,
                 headingUp: settings.mapNorthUp ? nil : mapHeading,
                 // Only a pane at the top of the screen has the status bar over it (not the
-                // Duo's half lying on the table).
-                options: .init(interactive: true, cardInset: cardInset, topInset: geo.safeAreaInsets.top),
+                // Duo's half lying on the table). The card's width counts from the safe area's
+                // trailing edge, the vertical bar strip being outside it.
+                options: .init(interactive: true,
+                               cardInset: CGSize(width: cardInset.width + geo.safeAreaInsets.trailing, height: cardInset.height),
+                               topInset: geo.safeAreaInsets.top),
                 onTap: { id in withAnimation(.snappy) { model.focus(on: id) } }
             )
             .ignoresSafeArea()

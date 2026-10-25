@@ -151,7 +151,11 @@ struct WatchFlightDetail: View {
                 Spacer()
                 stat("Look", GeoMath.cardinal(contact.bearing)) { EmptyView() }
             }
-            WatchApproachChip(contact: contact)
+            if model.isStale {
+                WatchStaleChip(since: model.sinceLastUpdate, retry: { model.refreshNow() })
+            } else {
+                WatchApproachChip(contact: contact)
+            }
         }
     }
 
