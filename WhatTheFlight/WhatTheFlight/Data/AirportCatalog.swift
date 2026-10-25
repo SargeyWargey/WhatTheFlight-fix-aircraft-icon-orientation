@@ -23,6 +23,32 @@ struct Airport: Hashable, Sendable {
         guard let latitude, let longitude else { return nil }
         return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
+
+    var continent: Continent? { countryCode.flatMap(Continent.of) }
+}
+
+/// The six inhabited continents, as the UN groups countries (Turkey and Cyprus in Asia,
+/// Russia in Europe).
+enum Continent: String, CaseIterable, Sendable {
+    case africa, asia, europe, northAmerica, southAmerica, oceania
+
+    static func of(countryCode code: String) -> Continent? { byCountry[code.uppercased()] }
+
+    private static let byCountry: [String: Continent] = {
+        let members: [Continent: String] = [
+            .africa: "DZ AO BJ BW BF BI CV CM CF TD KM CG CD CI DJ EG GQ ER SZ ET GA GM GH GN GW KE LS LR LY MG MW ML MR MU YT MA MZ NA NE NG RE RW SH ST SN SC SL SO ZA SS SD TZ TG TN UG EH ZM ZW",
+            .asia: "AF AM AZ BH BD BT BN KH CN CY GE HK IN ID IR IQ IL JO JP KZ KW KG LA LB MO MY MV MN MM NP KP OM PK PS PH QA SA SG KR LK SY TW TJ TH TL TR TM AE UZ VN YE IO",
+            .europe: "AD AL AT AX BA BE BG BY CH CZ DE DK EE ES FI FO FR GB GG GI GR HR HU IE IM IS IT JE LI LT LU LV MC MD ME MK MT NL NO PL PT RO RS RU SE SI SJ SK SM UA VA XK",
+            .northAmerica: "AG AI AW BB BL BM BQ BS BZ CA CR CU CW DM DO GD GL GP GT HN HT JM KN KY LC MF MQ MS MX NI PA PM PR SV SX TC TT US VC VG VI",
+            .southAmerica: "AR BO BR CL CO EC FK GF GY PE PY SR UY VE",
+            .oceania: "AS AU CK FJ FM GU KI MH MP NC NF NR NU NZ PF PG PN PW SB TK TO TV UM VU WF WS",
+        ]
+        var result: [String: Continent] = [:]
+        for (continent, codes) in members {
+            for code in codes.split(separator: " ") { result[String(code)] = continent }
+        }
+        return result
+    }()
 }
 
 enum AirportCatalog {
@@ -33,14 +59,33 @@ enum AirportCatalog {
     /// The closest known airport, if one is within `withinMiles` ("on the ground at ATL").
     static func nearest(to coordinate: CLLocationCoordinate2D, withinMiles: Double) -> Airport? {
         var best: (airport: Airport, miles: Double)?
-        for airport in table.values {
-            guard let c = airport.coordinate,
-                  abs(c.latitude - coordinate.latitude) < 1, abs(c.longitude - coordinate.longitude) < 1.5 else { continue }
-            let miles = GeoMath.distanceMiles(from: coordinate, to: c)
-            if miles <= withinMiles, miles < (best?.miles ?? .infinity) { best = (airport, miles) }
+        let latCell = Int(coordinate.latitude.rounded(.down)), lonCell = Int(coordinate.longitude.rounded(.down))
+        for dLat in -1...1 {
+            for dLon in -2...2 {
+                for airport in grid[cell(latCell + dLat, lonCell + dLon)] ?? [] {
+                    guard let c = airport.coordinate,
+                          abs(c.latitude - coordinate.latitude) < 1, abs(c.longitude - coordinate.longitude) < 1.5 else { continue }
+                    let miles = GeoMath.distanceMiles(from: coordinate, to: c)
+                    if miles <= withinMiles, miles < (best?.miles ?? .infinity) { best = (airport, miles) }
+                }
+            }
         }
         return best?.airport
     }
+
+    /// Airports by whole degree of latitude and longitude, so `nearest` looks at a few dozen
+    /// instead of all of them (the logbook's Fence Spotter badge asks for every place you've
+    /// watched from).
+    private static let grid: [Int: [Airport]] = {
+        var result: [Int: [Airport]] = [:]
+        for airport in table.values {
+            guard let lat = airport.latitude, let lon = airport.longitude else { continue }
+            result[cell(Int(lat.rounded(.down)), Int(lon.rounded(.down))), default: []].append(airport)
+        }
+        return result
+    }()
+
+    private static func cell(_ lat: Int, _ lon: Int) -> Int { (lat + 90) * 1_000 + lon + 180 }
 
     private static let table: [String: Airport] = {
         var result: [String: Airport] = [:]

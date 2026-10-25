@@ -155,6 +155,22 @@ final class SpotPhotoLogbookTests: XCTestCase {
                   framePoint: CGPoint(x: 0.5, y: 0.4), visuallyLocked: true, pixelWidth: 1200, pixelHeight: 1600)
     }
 
+    func testPhotoBadges() {
+        let book = Logbook(fileURL: nil, device: .iPhone)
+        let near = contact("near", miles: 0.6), far = contact("far", miles: 8)
+        var low = photo(of: near, id: "p1")
+        low.altitudeFeet = 2_000
+        book.addPhoto(low, imageData: Data([1]), contact: near)
+        book.addPhoto(photo(of: far, id: "p2"), imageData: Data([2]), contact: far)
+        let all = Dictionary(uniqueKeysWithValues: Achievement.all(for: book.sightings).map { ($0.id, $0) })
+        XCTAssertEqual(all["shutterbug"]?.progress, 2)
+        XCTAssertEqual(all["shutterbug"]?.group, .skyView)
+        XCTAssertEqual(all["closeup"]?.progress, 1, "within a mile and below 3,000 ft")
+        XCTAssertEqual(all["closeup"]?.unlockedBy?.id, "near")
+        XCTAssertEqual(all["paparazzi"]?.progress, 1, "two 737-800s are one type")
+        XCTAssertEqual(all["rareshot"]?.progress, 0)
+    }
+
     func testPhotographingAnAircraftOutsideTheRadiusLogsIt() {
         let book = Logbook(fileURL: nil, device: .iPhone)
         let c = contact("far", miles: 40)

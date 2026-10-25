@@ -2,22 +2,30 @@
 //  LogbookStatsTab.swift
 //  WhatTheFlight
 //
-//  The numbers behind the logbook on iPhone and iPad: activity by day and month, when your
-//  sky is busiest (hour and weekday), which way aircraft fly over you, how high they pass,
-//  every record, what you see most (aircraft, airlines, types, routes, airports, countries),
-//  where you watch from and which devices log. Two columns on iPad.
+//  The numbers behind the logbook on iPhone and iPad, in two halves. "Your sky" is one spot
+//  you watch from (where you are once its charts are ready, else home; a menu picks another,
+//  or all places): which way aircraft fly over it, when it's busiest (hour and weekday) and
+//  how high they pass, each shown once `LogbookSky.minimum` aircraft back it up.
+//  "Everywhere" counts every sighting: activity by day and month, records, what you see most
+//  (aircraft, airlines, types, routes, airports, countries), where you watch from and which
+//  devices log. Two columns on iPad.
 //
 
 #if os(iOS)
 import SwiftUI
+import CoreLocation
 
 struct LogbookStatsTab: View {
     let ctx: LogbookContext
 
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.radarObserver) private var observer
+    /// Whose sky the charts show; nil until one's picked (then where you are, or home).
+    @State private var scope: LogbookSkyScope?
 
     var body: some View {
         let digest = ctx.logbook.digest
+        let choice = digest.sky(scope ?? LogbookSkyScope.initial(in: digest), near: observer)
         ScrollView {
             if ctx.logbook.isEmpty {
                 ContentUnavailableView("No stats yet", systemImage: "chart.bar.xaxis",
@@ -25,30 +33,46 @@ struct LogbookStatsTab: View {
                     .padding(.top, 80)
             } else if sizeClass == .regular {
                 VStack(spacing: 22) {
+                    StatsSkyHeader(digest: digest, choice: choice, here: digest.spot(near: observer), scope: $scope)
+                    if choice.sky.isFillingIn {
+                        StatsSkyFillingCard(choice: choice)
+                    } else {
+                        StatsDirectionsCard(sky: choice.sky, wide: true)
+                        HStack(alignment: .top, spacing: 20) {
+                            StatsWhenCard(sky: choice.sky)
+                            StatsAltitudeCard(sky: choice.sky)
+                        }
+                        .fixedSize(horizontal: false, vertical: true)
+                    }
+                    StatsEverywhereHeader(digest: digest)
+                        .padding(.top, 14)
                     StatsSummaryRow(digest: digest)
-                    StatsDirectionsCard(digest: digest, wide: true)
                     HStack(alignment: .top, spacing: 20) {
                         VStack(spacing: 22) {
                             StatsActivityCard(digest: digest)
-                            StatsWhenCard(digest: digest)
                             StatsRecordsCard(digest: digest)
                         }
                         VStack(spacing: 22) {
-                            StatsAltitudeCard(digest: digest)
                             StatsMostSeenCard(digest: digest)
                             StatsPlacesCard(digest: digest)
                         }
                     }
                 }
                 .padding(24)
-                .frame(maxWidth: 1100)
             } else {
                 VStack(spacing: 22) {
+                    StatsSkyHeader(digest: digest, choice: choice, here: digest.spot(near: observer), scope: $scope)
+                    if choice.sky.isFillingIn {
+                        StatsSkyFillingCard(choice: choice)
+                    } else {
+                        StatsDirectionsCard(sky: choice.sky)
+                        StatsWhenCard(sky: choice.sky)
+                        StatsAltitudeCard(sky: choice.sky)
+                    }
+                    StatsEverywhereHeader(digest: digest)
+                        .padding(.top, 14)
                     StatsSummaryRow(digest: digest)
-                    StatsDirectionsCard(digest: digest)
                     StatsActivityCard(digest: digest)
-                    StatsWhenCard(digest: digest)
-                    StatsAltitudeCard(digest: digest)
                     StatsRecordsCard(digest: digest)
                     StatsMostSeenCard(digest: digest)
                     StatsPlacesCard(digest: digest)
@@ -58,6 +82,95 @@ struct LogbookStatsTab: View {
         }
         .frame(maxWidth: .infinity)
         .background(LogbookBackdrop())
+    }
+}
+
+/// "Your sky · Atlanta, GA": whose sky the charts below describe, with a menu of every spot
+/// you've watched from (and all of them together) once there's more than one.
+private struct StatsSkyHeader: View {
+    let digest: LogbookDigest
+    let choice: LogbookSkyChoice
+    /// The spot you're at now.
+    let here: LogbookSpot?
+    @Binding var scope: LogbookSkyScope?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            LogbookHeader("Your sky")
+            if digest.spots.count > 1 {
+                Menu {
+                    Picker("Place", selection: Binding(get: { choice.scope }, set: { scope = $0 })) {
+                        ForEach(digest.spots) { spot in
+                            Label(spot.name, systemImage: spot.id == here?.id ? "location.fill" : "mappin")
+                                .tag(LogbookSkyScope.spot(spot.id))
+                        }
+                        Label("All places", systemImage: "globe.americas")
+                            .tag(LogbookSkyScope.everywhere)
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        title
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Palette.ink)
+                    }
+                }
+                .accessibilityLabel("Your sky: \(choice.title)")
+                .accessibilityHint("Choose another place")
+            } else {
+                title
+            }
+            Text(choice.detail(here: here, places: digest.spots.count))
+                .monoScaled(11)
+                .foregroundStyle(Palette.caption)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var title: some View {
+        Text(choice.title)
+            .monoScaled(22, .heavy)
+            .foregroundStyle(Palette.ink)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+    }
+}
+
+/// Heads the half of the tab that counts every sighting, wherever it was.
+private struct StatsEverywhereHeader: View {
+    let digest: LogbookDigest
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            LogbookHeader("Everywhere")
+            Text("Your collection")
+                .monoScaled(22, .heavy)
+                .foregroundStyle(Palette.ink)
+            Text(digest.spots.count > 1
+                 ? "\(RadarFormat.wholeNumber(digest.stats.total)) aircraft from \(digest.spots.count) places"
+                 : "\(RadarFormat.wholeNumber(digest.stats.total)) aircraft")
+                .monoScaled(11)
+                .foregroundStyle(Palette.caption)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// A spot with too few aircraft for any chart yet: how far along it is.
+private struct StatsSkyFillingCard: View {
+    let choice: LogbookSkyChoice
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            LogbookHeader("Filling in")
+            LogbookSkyProgress(count: choice.sky.count)
+            Text("Which way they fly, when the sky is busiest and how high they pass appear once \(LogbookSky.minimum) aircraft are logged\(choice.spot == nil ? "" : " around \(choice.title)"): enough to show this sky's pattern, not just one afternoon.")
+                .monoScaled(11)
+                .foregroundStyle(Palette.caption)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .logbookCard()
     }
 }
 
@@ -106,47 +219,74 @@ private struct StatsActivityCard: View {
 
 /// When your sky is busiest: by hour of the day and by weekday.
 private struct StatsWhenCard: View {
-    let digest: LogbookDigest
+    let sky: LogbookSky
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             LogbookHeader(title: "When your sky is busiest") {
-                if let hour = digest.busiestHourOfDay {
+                if sky.showsTimes, let hour = sky.busiestHourOfDay {
                     Text(LogbookFormat.hourRange(hour)).foregroundStyle(Palette.value)
                 }
             }
-            LogbookHourlyChart(counts: digest.hourly, highlight: digest.busiestHourOfDay, height: 120)
-            Divider()
-            HStack {
-                Text("By day of the week").monoScaled(11, .semibold).foregroundStyle(Palette.caption)
-                Spacer()
-                if let max = digest.weekdays.max(), max > 0, let i = digest.weekdays.firstIndex(of: max) {
-                    Text("Busiest on \(Calendar.current.weekdaySymbols[i])s").monoScaled(11, .bold).foregroundStyle(Palette.value)
+            if sky.showsTimes {
+                LogbookHourlyChart(counts: sky.hourly, highlight: sky.busiestHourOfDay, height: 120)
+                Divider()
+                HStack {
+                    Text("By day of the week").monoScaled(11, .semibold).foregroundStyle(Palette.caption)
+                    Spacer()
+                    if let i = sky.busiestWeekday {
+                        Text("Busiest on \(Calendar.current.weekdaySymbols[i])s").monoScaled(11, .bold).foregroundStyle(Palette.value)
+                    }
                 }
+                LogbookWeekdayChart(counts: sky.weekdays, height: 100)
+            } else {
+                StatsChartPending(count: sky.count)
             }
-            LogbookWeekdayChart(counts: digest.weekdays, height: 100)
         }
+        .frame(maxHeight: .infinity, alignment: .top)
         .logbookCard()
+    }
+}
+
+/// A chart that needs more aircraft (old sightings can lack a heading or an altitude, so one
+/// chart can be ready before another).
+private struct StatsChartPending: View {
+    let count: Int
+    var noun = "aircraft"
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            LogbookSkyProgress(count: count, noun: noun)
+            Text("Appears at \(LogbookSky.minimum), enough to show a pattern.")
+                .monoScaled(10)
+                .foregroundStyle(Palette.caption)
+        }
     }
 }
 
 /// Which way aircraft fly over you: a big compass rose of their headings at the closest
 /// pass, the main direction and the top three. Leads the Stats tab.
 private struct StatsDirectionsCard: View {
-    let digest: LogbookDigest
+    let sky: LogbookSky
     /// Rose and numbers side by side (iPad).
     var wide = false
 
     var body: some View {
-        if digest.headings.contains(where: { $0 > 0 }) {
+        if !sky.showsHeadings {
+            VStack(alignment: .leading, spacing: 12) {
+                LogbookHeader("Which way they fly")
+                StatsChartPending(count: sky.headed, noun: "with a heading")
+            }
+            .logbookCard()
+        } else {
             VStack(alignment: .leading, spacing: 14) {
                 LogbookHeader("Which way they fly")
                 let layout = wide ? AnyLayout(HStackLayout(alignment: .center, spacing: 36)) : AnyLayout(VStackLayout(alignment: .leading, spacing: 18))
                 layout {
-                    LogbookHeadingRose(sectors: digest.headings, size: wide ? 320 : 290, scale: 1.35)
+                    LogbookHeadingRose(sectors: sky.headings, size: wide ? 320 : 290, scale: 1.35)
                         .frame(maxWidth: wide ? nil : .infinity)
                     VStack(alignment: .leading, spacing: 14) {
-                        if let main = digest.mainHeading {
+                        if let main = sky.mainHeading {
                             HStack(alignment: .firstTextBaseline, spacing: 10) {
                                 Text("\(Int((main.share * 100).rounded()))%")
                                     .monoScaled(44, .heavy)
@@ -157,7 +297,7 @@ private struct StatsDirectionsCard: View {
                             }
                         }
                         HStack(spacing: 8) {
-                            ForEach(digest.topHeadings(), id: \.sector) { entry in
+                            ForEach(sky.topHeadings(), id: \.sector) { entry in
                                 VStack(spacing: 2) {
                                     Text(LogbookFormat.sectorNames[entry.sector])
                                         .monoScaled(18, .heavy)
@@ -186,19 +326,22 @@ private struct StatsDirectionsCard: View {
 
 /// How high aircraft were at their closest pass.
 private struct StatsAltitudeCard: View {
-    let digest: LogbookDigest
+    let sky: LogbookSky
 
     var body: some View {
-        if digest.altitudes.contains(where: { $0 > 0 }) {
-            VStack(alignment: .leading, spacing: 12) {
-                LogbookHeader("How high they pass")
-                LogbookAltitudeChart(bins: digest.altitudes, height: 190)
+        VStack(alignment: .leading, spacing: 12) {
+            LogbookHeader("How high they pass")
+            if sky.showsAltitudes {
+                LogbookAltitudeChart(bins: sky.altitudes, height: 190)
                 Text("Altitude at the closest pass, in feet.")
                     .monoScaled(10)
                     .foregroundStyle(Palette.caption)
+            } else {
+                StatsChartPending(count: sky.withAltitude, noun: "in the air")
             }
-            .logbookCard()
         }
+        .frame(maxHeight: .infinity, alignment: .top)
+        .logbookCard()
     }
 }
 

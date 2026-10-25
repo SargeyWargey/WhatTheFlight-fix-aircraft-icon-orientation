@@ -211,25 +211,29 @@ private struct DisplaySettingsPage: View {
                 SettingsHeader("Radar face")
             }
 
-            // The map pane is for iPad and the folding iPhone Duo: other iPhones keep the radar face.
-            if UIDevice.current.userInterfaceIdiom == .pad || isFoldable {
-                Section {
-                    Toggle("Map view", isOn: $settings.mapView)
-                    if settings.mapView {
-                        Toggle("Map north up", isOn: $settings.mapNorthUp)
-                    }
-                } header: {
-                    SettingsHeader("Map")
-                } footer: {
-                    if isFoldable {
-                        Text("Map view: half open like a book or standing like a laptop, shows the radar on one side of the fold and a live map on the other.")
-                    } else {
-                        Text("Map view: in landscape, shows a live map beside the radar.")
-                    }
+            Section {
+                Toggle("Map view", isOn: $settings.mapView)
+                if settings.mapView {
+                    Toggle("Map north up", isOn: $settings.mapNorthUp)
                 }
+            } header: {
+                SettingsHeader("Map")
+            } footer: {
+                Text(mapFooter)
             }
         }
         .settingsPage("Display")
+    }
+
+    private var mapFooter: String {
+        let button = "Map view adds a Map button to the bar at the bottom of the radar, for a live map of the traffic in its place."
+        if isFoldable {
+            return button + " Half open like a book or standing like a laptop, the radar goes on one side of the fold and the map on the other."
+        }
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            return button + " In landscape the map sits beside the radar instead."
+        }
+        return button
     }
 
     private var topographySummary: String {
@@ -438,6 +442,8 @@ private struct LogbookSettingsPage: View {
     let logbook: Logbook
     let openLogbook: () -> Void
 
+    @State private var confirmClear = false
+
     var body: some View {
         Form {
             Section {
@@ -461,6 +467,19 @@ private struct LogbookSettingsPage: View {
             } header: {
                 SettingsHeader("Logging")
             }
+
+            Section {
+                Button("Clear Logbook", systemImage: "trash", role: .destructive) { confirmClear = true }
+                    .tint(.red)
+                    .disabled(logbook.isEmpty)
+            } footer: {
+                Text("Removes every sighting, photo and badge, on all your devices if the logbook syncs with iCloud.")
+            }
+        }
+        .confirmationDialog("Clear the whole logbook?", isPresented: $confirmClear, titleVisibility: .visible) {
+            Button("Clear Logbook", role: .destructive) { logbook.clear() }
+        } message: {
+            Text("Every sighting, photo and badge will be removed, on all your devices if the logbook syncs with iCloud.")
         }
         .settingsPage("Logbook")
     }

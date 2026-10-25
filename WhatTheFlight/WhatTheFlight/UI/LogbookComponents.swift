@@ -73,10 +73,25 @@ enum LogbookTab: String, Hashable, CaseIterable {
     }
 }
 
+extension LogbookSkyScope {
+    /// DEBUG: `-wtf.debugSkyScope <place>|all` opens the Stats tab on a spot (by the start of
+    /// its name, "denver") or on all places.
+    static func initial(in digest: LogbookDigest) -> LogbookSkyScope? {
+        #if DEBUG
+        guard let raw = UserDefaults.standard.string(forKey: "wtf.debugSkyScope")?.lowercased() else { return nil }
+        if raw == "all" { return .everywhere }
+        return digest.spots.first { $0.name.lowercased().hasPrefix(raw) }.map { .spot($0.id) }
+        #else
+        return nil
+        #endif
+    }
+}
+
 // MARK: - Badges
 
 /// A badge: its symbol inside a progress ring, greyed out until unlocked, with a dot per
-/// level for badges that have them.
+/// level for badges that have them. A badge with every level earned gets a filled disc and a
+/// second, outer ring, so the rare top levels stand out.
 struct AchievementBadge: View {
     let achievement: Achievement
     var scale: CGFloat = 1
@@ -84,8 +99,12 @@ struct AchievementBadge: View {
 
     var body: some View {
         let a = achievement
+        let isTopLevel = a.hasLevels && a.isMaxed
         VStack(spacing: 6 * scale) {
             ZStack {
+                if isTopLevel {
+                    Circle().fill(Palette.notable.opacity(0.16))
+                }
                 Circle()
                     .stroke(Palette.ink.opacity(0.12), lineWidth: 4 * scale)
                 Circle()
@@ -97,6 +116,14 @@ struct AchievementBadge: View {
                     .foregroundStyle(a.isUnlocked ? Palette.notable : Palette.faint)
             }
             .frame(width: 54 * scale, height: 54 * scale)
+            // Drawn outside the ring's frame, so it doesn't move anything.
+            .overlay {
+                if isTopLevel {
+                    Circle()
+                        .stroke(Palette.notable, lineWidth: 1.5 * scale)
+                        .padding(-5 * scale)
+                }
+            }
             if showsTitle {
                 Text(a.title)
                     .monoScaled(10 * scale, .bold)
@@ -117,7 +144,7 @@ struct AchievementBadge: View {
         if a.hasLevels {
             TierDots(earned: a.level, total: a.tiers.count, scale: scale)
         } else if !a.isUnlocked && a.target > 1 {
-            Text("\(RadarFormat.wholeNumber(min(a.progress, a.target)))/\(RadarFormat.wholeNumber(a.target))")
+            Text(a.progressLabel ?? "\(RadarFormat.wholeNumber(min(a.progress, a.target)))/\(RadarFormat.wholeNumber(a.target))")
                 .monoScaled(9 * scale)
                 .foregroundStyle(Palette.faint)
         }
@@ -126,9 +153,9 @@ struct AchievementBadge: View {
     static func accessibilityText(_ a: Achievement) -> String {
         let state: String
         if a.hasLevels {
-            state = a.isMaxed ? "every level unlocked" : "level \(a.level) of \(a.tiers.count), \(a.progress) of \(a.target) for the next"
+            state = a.isMaxed ? "every level unlocked" : "level \(a.level) of \(a.tiers.count), " + (a.progressLabel ?? "\(a.progress) of \(a.target) for the next")
         } else {
-            state = a.isUnlocked ? "unlocked" : "\(a.progress) of \(a.target)"
+            state = a.isUnlocked ? "unlocked" : a.progressLabel ?? "\(a.progress) of \(a.target)"
         }
         return "\(a.title), \(state). \(a.detail)"
     }
@@ -164,7 +191,7 @@ struct AchievementProgress: View {
             HStack {
                 Text(a.levelText ?? "Progress").monoScaled(11 * scale, .semibold).textCase(.uppercase).foregroundStyle(Palette.caption)
                 Spacer()
-                Text(a.isMaxed && a.hasLevels ? "Every level" : "\(RadarFormat.wholeNumber(min(a.progress, a.target))) of \(RadarFormat.wholeNumber(a.target))")
+                Text(a.isMaxed && a.hasLevels ? "Every level" : a.progressText)
                     .monoScaled(13 * scale, .bold)
                     .foregroundStyle(a.isUnlocked ? Palette.notable : Palette.ink)
             }
@@ -185,7 +212,9 @@ struct AchievementProgress: View {
                     .foregroundStyle(Palette.value)
             }
             if !a.isMaxed {
-                Text("\(RadarFormat.wholeNumber(a.remaining)) to go\(a.hasLevels ? " for level \(a.level + 1)" : "")")
+                Text(a.tierLabels != nil
+                     ? "\(a.level == 0 ? "Unlocks at" : "Next level:") \(a.targetLabel)"
+                     : "\(RadarFormat.wholeNumber(a.remaining)) to go\(a.hasLevels ? " for level \(a.level + 1)" : "")")
                     .monoScaled(12 * scale)
                     .foregroundStyle(Palette.caption)
             }
@@ -194,24 +223,38 @@ struct AchievementProgress: View {
     }
 }
 
-/// Each level's target, ticked once reached: "✓ 100  ✓ 500  ✓ 1,000  ○ 5,000".
+/// Each level's target, ticked once reached: "✓ 100  ✓ 1,000  ○ 10K  ○ 100K  ○ 1M". Wraps onto
+/// more lines when the levels don't fit across.
 private struct TierLadder: View {
     let achievement: Achievement
     var scale: CGFloat = 1
 
     var body: some View {
-        HStack(spacing: 14 * scale) {
-            ForEach(Array(achievement.tiers.enumerated()), id: \.offset) { i, target in
-                let done = i < achievement.level
-                HStack(spacing: 4 * scale) {
-                    Image(systemName: done ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 11 * scale, weight: .bold))
-                    Text(RadarFormat.wholeNumber(target))
-                        .monoScaled(11 * scale, done ? .bold : .regular)
-                }
-                .foregroundStyle(done ? Palette.notable : Palette.caption)
-            }
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 14 * scale) { steps }
+            HStack(spacing: 8 * scale) { steps }
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 96 * scale), spacing: 8 * scale, alignment: .leading)],
+                      alignment: .leading, spacing: 6 * scale) { steps }
         }
+    }
+
+    private var steps: some View {
+        ForEach(Array(achievement.tiers.enumerated()), id: \.offset) { i, target in
+            let done = i < achievement.level
+            HStack(spacing: 4 * scale) {
+                Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 11 * scale, weight: .bold))
+                Text(achievement.tierLabels?[i] ?? Self.label(target))
+                    .monoScaled(11 * scale, done ? .bold : .regular)
+                    .fixedSize()
+            }
+            .foregroundStyle(done ? Palette.notable : Palette.caption)
+        }
+    }
+
+    /// "1,000", then "10K", "100K", "1M" so five levels fit across a phone.
+    private static func label(_ n: Int) -> String {
+        n < 10_000 ? RadarFormat.wholeNumber(n) : n.formatted(.number.notation(.compactName))
     }
 }
 
@@ -282,7 +325,8 @@ struct LogbookDayTags: View {
     }
 }
 
-/// An uppercase caption heading, with an optional link or note on the right.
+/// An uppercase heading in the compass's red, so sections stand out over the contours, with
+/// an optional link or note on the right.
 struct LogbookHeader<Trailing: View>: View {
     let title: String
     var scale: CGFloat = 1
@@ -294,7 +338,7 @@ struct LogbookHeader<Trailing: View>: View {
                 .monoScaled(11 * scale, .bold)
                 .tracking(1.4 * scale)
                 .textCase(.uppercase)
-                .foregroundStyle(Palette.caption)
+                .foregroundStyle(Palette.signal)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 8)
             trailing
@@ -569,7 +613,7 @@ struct LogbookAltitudeChart: View {
     var height: CGFloat = 180
 
     var body: some View {
-        let band = LogbookDigest.altitudeBand / 1000
+        let band = LogbookSky.altitudeBand / 1000
         let labels = bins.indices.map { i in i == bins.count - 1 ? "\(i * band)k+ ft" : "\(i * band)–\((i + 1) * band)k" }
         let peak = max(1, bins.max() ?? 1)
         let busiest = bins.max().flatMap { max in max > 0 ? bins.firstIndex(of: max) : nil }
@@ -681,6 +725,38 @@ enum LogbookChartStyle {
     static func peakDescription(_ counts: [Int], name: (Int) -> String) -> String {
         guard let max = counts.max(), max > 0, let i = counts.firstIndex(of: max) else { return "No aircraft yet" }
         return "Most at \(name(i)): \(max)"
+    }
+}
+
+/// How close a sky chart is to having enough aircraft behind it: "38 of 50" and a bar.
+struct LogbookSkyProgress: View {
+    let count: Int
+    /// After "of 50": "aircraft", "with a heading".
+    var noun = "aircraft"
+    var scale: CGFloat = 1
+
+    var body: some View {
+        let fraction = min(1, Double(count) / Double(LogbookSky.minimum))
+        VStack(alignment: .leading, spacing: 8 * scale) {
+            HStack(alignment: .firstTextBaseline, spacing: 6 * scale) {
+                Text(RadarFormat.wholeNumber(count))
+                    .monoScaled(28 * scale, .heavy)
+                    .foregroundStyle(ChartTone.teal.color)
+                Text("of \(LogbookSky.minimum) \(noun)")
+                    .monoScaled(13 * scale, .bold)
+                    .foregroundStyle(Palette.value)
+            }
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Palette.ink.opacity(0.12))
+                    Capsule().fill(ChartTone.teal.color)
+                        .frame(width: max(6 * scale, geo.size.width * fraction))
+                }
+            }
+            .frame(height: 8 * scale)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(count) of \(LogbookSky.minimum) \(noun)")
     }
 }
 

@@ -4,8 +4,8 @@
 //
 //  One airframe's story in your logbook (iPhone and iPad): reached from the "Logbook N"
 //  button on an aircraft's page and from Most Seen. Where it ranks among your regulars, the
-//  all-time numbers, the routes it flew over you, when it tends to come by, your photos of
-//  it and every visit. Also the Sky View photo gallery (the Photos tab).
+//  all-time numbers, its Planespotters photo, the routes it flew over you, when it tends to
+//  come by, your photos of it and every visit. Also the Sky View photo gallery (the Photos tab).
 //
 
 #if os(iOS)
@@ -52,6 +52,7 @@ struct AirframeHistoryView: View {
     var isLive: (String) -> Bool = { _ in false }
 
     @Environment(\.radarObserver) private var observer
+    @Environment(\.showsAircraftPhotos) private var showsPhotos
 
     var body: some View {
         let summary = logbook.summary(airframe: airframe)
@@ -79,6 +80,11 @@ struct AirframeHistoryView: View {
                         Text([latest.typeName ?? latest.typeCode, country].compactMap { $0 }.joined(separator: " · "))
                             .monoScaled(13)
                             .foregroundStyle(Palette.caption)
+                        if showsPhotos {
+                            PhotoCard(registration: latest.registration, hex: latest.hex)
+                                .frame(maxWidth: 520)
+                                .padding(.top, 10)
+                        }
                     }
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)

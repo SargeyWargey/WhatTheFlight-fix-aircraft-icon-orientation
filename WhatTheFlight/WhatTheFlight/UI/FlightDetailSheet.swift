@@ -307,10 +307,22 @@ struct RadarButtonStyle: ButtonStyle {
 
 // MARK: - Photo
 
+/// The airframe's Planespotters photo with its credit: a placeholder while it loads, nothing
+/// if there isn't one. On a flight's details and on the logbook's aircraft pages.
 struct PhotoCard: View {
-    let flight: Flight
+    let registration: String?
+    let hex: String?
     @State private var photo: AircraftPhoto?
     @State private var loaded = false
+
+    init(registration: String?, hex: String?) {
+        self.registration = registration
+        self.hex = hex
+    }
+
+    init(flight: Flight) {
+        self.init(registration: flight.registration, hex: flight.hex)
+    }
 
     var body: some View {
         Group {
@@ -330,6 +342,8 @@ struct PhotoCard: View {
                                 .monoScaled(10)
                                 .foregroundStyle(Palette.caption)
                         }
+                        // Plain, so in a List row only the credit opens the link, not the whole row.
+                        .buttonStyle(.plain)
                     }
                 }
             } else if !loaded {
@@ -339,8 +353,8 @@ struct PhotoCard: View {
                     .overlay(ProgressView())
             }
         }
-        .task(id: flight.registration ?? flight.hex) {
-            photo = await AircraftPhotoProvider.shared.photo(registration: flight.registration, hex: flight.hex)
+        .task(id: registration ?? hex) {
+            photo = await AircraftPhotoProvider.shared.photo(registration: registration, hex: hex)
             withAnimation(.smooth) { loaded = true }
         }
     }

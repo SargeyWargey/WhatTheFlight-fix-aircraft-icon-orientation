@@ -11,6 +11,11 @@
 import SwiftUI
 import UIKit
 
+extension EnvironmentValues {
+    /// The "Aircraft photos" setting, for screens that don't hold the settings (the logbook).
+    @Entry var showsAircraftPhotos = true
+}
+
 struct ProviderPhoto<Placeholder: View>: View {
     let photo: AircraftPhoto
     /// Shown while loading, and if the image can't be fetched.

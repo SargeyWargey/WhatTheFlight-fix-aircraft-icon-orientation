@@ -2,20 +2,24 @@
 //  RadarScreen.swift
 //  WhatTheFlight
 //
-//  The main screen. No cards, no chrome in the way: the focused flight in the middle,
-//  every other aircraft on the edge, a status pill bottom-left (tap the count: Aircraft
-//  search; tap the book: the logbook) and settings bottom-right. Demo traffic (a solid DEMO
-//  pill) and a custom spot each get a tag along the bottom.
+//  The main screen. No cards on the radar: the focused flight in the middle, every other
+//  aircraft on the edge, and a floating glass bar along the bottom (`RadarControlBar`): Map /
+//  Radar, Sky View, the aircraft count (Aircraft search), the logbook and settings. With Map
+//  view on and no map pane beside it, Map swaps the radar for the live map and a card for the
+//  focused flight; the bar stays put, so getting around works the same on both. Demo traffic
+//  (a solid DEMO count) and a custom spot each get a tag just above the bar.
 //
-//  Gestures
+//  Gestures (radar)
 //    swipe →   back to the nearest aircraft      tap centre   flight details
 //    swipe ←   next aircraft farther out         hold centre  pin / unpin
 //    swipe ↓   logbook                           tap an icon  focus it
 //    swipe ↑   settings                          hold an icon details
+//  On the map drags pan it, so the card takes the sideways swipes; tap a glyph to focus it.
 //
 
 #if os(iOS) || os(tvOS)
 import SwiftUI
+import CoreLocation
 
 #if os(iOS)
 struct RadarScreen: View {
@@ -25,15 +29,23 @@ struct RadarScreen: View {
     /// Read in this view's body, so the per-tick traffic it depends on redraws the radar
     /// screen only, not the root view and whatever sheet it's presenting.
     let centerState: () -> CenterStateView.Kind?
+    /// Map view on with no map pane beside the radar: the bar offers Map / Radar.
+    let offersMap: Bool
+    /// "Up" on the map: the compass in steps (`RadarRootView.mapHeading`).
+    let mapHeading: Double?
     let actions: Actions
 
     struct Actions {
         var openSettings: () -> Void
-        /// Swipe down, or the book on the status pill.
+        /// Swipe down, or Logbook on the bar.
         var openLogbook: () -> Void
         var openDetail: (String) -> Void
-        /// The count on the status pill: Aircraft search, full height.
+        /// The count on the bar: Aircraft search, full height.
         var openSearchFullHeight: () -> Void
+        /// Map / Radar on the bar.
+        var toggleMap: () -> Void
+        /// Sky View on the bar (lifting the phone opens it too).
+        var openSkyView: () -> Void
         var openSpotPicker: () -> Void
         var centerPrimary: () -> Void
         var centerSecondary: () -> Void
@@ -41,80 +53,56 @@ struct RadarScreen: View {
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var statusWidth: CGFloat = 52
     @State private var confirmLiveTraffic = false
     /// The hero's height before scaling, so it can shrink to fit a short radar.
     @State private var heroHeight: CGFloat = 0
-    /// The demo / custom-spot tags along the bottom (0 = none showing).
+    /// The demo / custom-spot tags above the bar (0 = none showing).
     @State private var tagsHeight: CGFloat = 0
-    /// Without a home-indicator strip the tags sit this far up from the bottom, inside the bezel.
-    private static let tagsLift: CGFloat = 46
+    /// The focused flight's card on the map, so the map keeps its ring clear of it.
+    @State private var cardHeight: CGFloat = 0
+    /// The bar's natural width, so it can shrink to fit a narrow window (iPad Split View).
+    @State private var barWidth: CGFloat = 0
 
     private var heading: Double { location.heading ?? 0 }
 
+    /// The map in place of the radar. It needs a spot to centre on.
+    private var showsMap: Bool { offersMap && settings.mapScreen && model.observer != nil }
+
     var body: some View {
         GeometryReader { geo in
-            let layout = RadarLayout(size: geo.size)
-            let obstacles = layout.obstacles(statusWidth: statusWidth)
-            let placements = PerimeterPlanner.plan(contacts: model.perimeterContacts, heading: heading, track: layout.iconTrack, obstacles: obstacles)
+            let chrome = RadarChrome(size: geo.size, safeBottom: geo.safeAreaInsets.bottom, tagsHeight: tagsHeight)
+            let layout = RadarLayout(size: chrome.radarSize)
+            let showsMap = showsMap
 
             ZStack {
-                if settings.showCompassBezel {
-                    CompassBezel(track: layout.bezelTrack, heading: heading)
-                        .animation(reduceMotion ? nil : .interactiveSpring(response: 0.45, dampingFraction: 0.86), value: heading)
+                if showsMap, let observer = model.observer {
+                    mapView(observer: observer, chrome: chrome, geo: geo)
+                        .transition(.opacity)
+                } else {
+                    radarFace(layout)
+                        .frame(width: chrome.radarSize.width, height: chrome.radarSize.height)
+                        .position(x: chrome.radarSize.width / 2, y: chrome.radarSize.height / 2)
+                        .transition(.opacity)
                 }
-
-                // Tags inside the bezel (no home-indicator strip, e.g. the iPhone Duo's standing
-                // half in tabletop) push the hero up out of their way.
-                let tagsInside = geo.safeAreaInsets.bottom < 20 && tagsHeight > 0
-                let bottomRoom = tagsInside ? max(layout.heroClearance, Self.tagsLift + tagsHeight + 8) : layout.heroClearance
-                let heroScale = layout.heroScale(fitting: heroHeight, room: geo.size.height - layout.heroClearance - bottomRoom)
-                center(layout)
-                    .frame(width: layout.heroWidth / heroScale)
-                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { heroHeight = $0 }
-                    .scaleEffect(heroScale)
-                    .position(x: geo.size.width / 2, y: (layout.heroClearance + geo.size.height - bottomRoom) / 2)
-
-                PerimeterLayer(
-                    placements: placements,
-                    focusedID: model.focus.focusedID,
-                    pinnedIDs: model.pinnedIDs,
-                    radiusMiles: settings.radiusMiles,
-                    onTap: { contact in
-                        withAnimation(.snappy) { model.focus(on: contact.id) }
-                    },
-                    onLongPress: { contact in actions.openDetail(contact.id) }
-                )
-
-                RadarStatusPill(model: model, onSearch: actions.openSearchFullHeight, onLogbook: actions.openLogbook)
-                .fixedSize()
-                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { statusWidth = $0 }
-                // Pinned by its left edge so a wider badge grows into the screen, not off it.
-                .frame(width: geo.size.width / 2, alignment: .leading)
-                .position(x: layout.statusLeading + geo.size.width / 4, y: layout.statusPoint.y)
-
-                SettingsButton(action: actions.openSettings)
-                    .position(layout.gearPoint)
 
                 NoticeBanner(model: model)
                     .frame(width: layout.heroWidth + 40)
                     .position(x: geo.size.width / 2, y: layout.noticeY)
+
+                tags
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tagsHeight = $0 }
+                    .position(x: geo.size.width / 2, y: chrome.tagsMidY)
+
+                RadarControlBar(model: model, offersMap: offersMap, showsMap: showsMap,
+                                onToggleMap: actions.toggleMap, onSkyView: actions.openSkyView,
+                                onSearch: actions.openSearchFullHeight,
+                                onLogbook: actions.openLogbook, onSettings: actions.openSettings)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { barWidth = $0 }
+                    .scaleEffect(barWidth > 0 ? min(1, (geo.size.width - 16) / barWidth) : 1)
+                    .position(x: geo.size.width / 2, y: chrome.barMidY)
             }
             .frame(width: geo.size.width, height: geo.size.height)
-            .overlay(alignment: .bottom) {
-                VStack(spacing: 0) {
-                    if model.isDemo {
-                        DemoTrafficTag { confirmLiveTraffic = true }
-                    }
-                    if settings.locationMode == .custom {
-                        CustomSpotTag(name: settings.customPlaceName ?? settings.customCoordinate?.shortDescription,
-                                      action: actions.openSpotPicker)
-                    }
-                }
-                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tagsHeight = $0 }
-                // In the home-indicator strip when there is one, else just above the bezel.
-                .offset(y: geo.safeAreaInsets.bottom >= 20 ? geo.safeAreaInsets.bottom - 6 : -Self.tagsLift)
-            }
+            .animation(.smooth(duration: 0.35), value: showsMap)
         }
         .confirmationDialog("Demo traffic", isPresented: $confirmLiveTraffic, titleVisibility: .visible) {
             Button("Switch to Live Traffic") { settings.demoTraffic = false }
@@ -122,24 +110,96 @@ struct RadarScreen: View {
             Text("These aircraft are simulated, not what's really overhead, and they aren't logged.")
         }
         .background {
+            // Kept (still) under the map, so it fades in over the contours rather than a gap.
             RadarBackdrop(
                 showTopography: settings.showTopography,
                 showSweep: settings.radarSweep,
-                isActive: scenePhase == .active,
+                isActive: scenePhase == .active && !showsMap,
                 topographyMotion: settings.topographyMotion
             )
             .ignoresSafeArea()
         }
         .contentShape(Rectangle())
-        .gesture(swipe)
+        .gesture(swipe, isEnabled: !showsMap)
         .sensoryFeedback(.selection, trigger: model.focus.focusedID) { _, _ in settings.hapticsEnabled }
         .sensoryFeedback(.impact(weight: .medium), trigger: model.pins.count) { _, _ in settings.hapticsEnabled }
+    }
+
+    // MARK: Radar
+
+    /// The compass bezel, the hero and the icons on the edge, laid out in the screen above the
+    /// bar.
+    private func radarFace(_ layout: RadarLayout) -> some View {
+        let placements = PerimeterPlanner.plan(contacts: model.perimeterContacts, heading: heading, track: layout.iconTrack, obstacles: [])
+        let heroScale = layout.heroScale(fitting: heroHeight, room: layout.size.height - 2 * layout.heroClearance)
+        return ZStack {
+            if settings.showCompassBezel {
+                CompassBezel(track: layout.bezelTrack, heading: heading)
+                    .animation(reduceMotion ? nil : .interactiveSpring(response: 0.45, dampingFraction: 0.86), value: heading)
+            }
+
+            center(wideStats: layout.prefersWideStats, compact: layout.prefersCompactHero)
+                .frame(width: layout.heroWidth / heroScale)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { heroHeight = $0 }
+                .scaleEffect(heroScale)
+                .position(x: layout.size.width / 2, y: layout.size.height / 2)
+
+            PerimeterLayer(
+                placements: placements,
+                focusedID: model.focus.focusedID,
+                pinnedIDs: model.pinnedIDs,
+                radiusMiles: settings.radiusMiles,
+                onTap: { contact in
+                    withAnimation(.snappy) { model.focus(on: contact.id) }
+                },
+                onLongPress: { contact in actions.openDetail(contact.id) }
+            )
+        }
+    }
+
+    // MARK: Map
+
+    /// The live map under everything and the focused flight's card above the bar: across the
+    /// bottom on a phone, bottom-right on a wide screen (the iPhone Duo open flat).
+    private func mapView(observer: CLLocationCoordinate2D, chrome: RadarChrome, geo: GeometryProxy) -> some View {
+        let size = geo.size
+        let beside = size.width > size.height * 1.15
+        let cardWidth = beside ? min(400, size.width * 0.42) : min(520, size.width - 24)
+        let cardBottom = chrome.radarSize.height
+        // The map runs under the home indicator, so its insets count from the screen's edge.
+        let screenBottom = size.height + geo.safeAreaInsets.bottom
+        let inset = beside
+            ? CGSize(width: cardWidth + 24, height: screenBottom - cardBottom)
+            : CGSize(width: 0, height: screenBottom - cardBottom + cardHeight)
+        return ZStack(alignment: beside ? .bottomTrailing : .bottom) {
+            RadarMapPane(model: model, settings: settings, observer: observer, mapHeading: mapHeading, cardInset: inset)
+
+            mapCard
+                .frame(width: cardWidth)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardHeight = $0 }
+                .padding(.trailing, beside ? 12 : 0)
+                .padding(.bottom, size.height - cardBottom)
+        }
+        .frame(width: size.width, height: size.height)
+    }
+
+    /// The hero on glass, kept short (one row of stats, no type line or approach chip) so
+    /// the map keeps the screen.
+    private var mapCard: some View {
+        let shape = RoundedRectangle(cornerRadius: 28, style: .continuous)
+        return center(wideStats: true, compact: true)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity)
+            .glassSurface(in: shape)
+            .contentShape(shape)
+            .gesture(cardSwipe)
     }
 
     // MARK: Centre
 
     @ViewBuilder
-    private func center(_ layout: RadarLayout) -> some View {
+    private func center(wideStats: Bool, compact: Bool) -> some View {
         let centerState = centerState()
         ZStack {
             if let centerState {
@@ -147,7 +207,7 @@ struct RadarScreen: View {
                     .transition(.opacity)
             } else if let contact = model.focusedContact {
                 FlightHero(contact: contact, isPinned: model.focus.isPinned, heading: heading,
-                           wideStats: layout.prefersWideStats, compact: layout.prefersCompactHero)
+                           wideStats: wideStats, compact: compact)
                     .id(contact.id)
                     // A scale-in here could get stuck part-way and leave the hero off-centre.
                     .transition(.opacity)
@@ -164,73 +224,183 @@ struct RadarScreen: View {
         .animation(.smooth(duration: 0.35), value: centerState)
     }
 
+    /// Demo traffic and a custom spot, one line each, just above the bar.
+    private var tags: some View {
+        VStack(spacing: 0) {
+            if model.isDemo {
+                DemoTrafficTag { confirmLiveTraffic = true }
+            }
+            if settings.locationMode == .custom {
+                CustomSpotTag(name: settings.customPlaceName ?? settings.customCoordinate?.shortDescription,
+                              action: actions.openSpotPicker)
+            }
+        }
+    }
+
     // MARK: Gestures
 
     private var swipe: some Gesture {
         DragGesture(minimumDistance: 28)
             .onEnded { value in
                 let dx = value.translation.width, dy = value.translation.height
-                let threshold: CGFloat = 60
                 if abs(dx) > abs(dy) {
-                    if dx > threshold {
-                        withAnimation(.snappy) { model.focusNearest() }
-                    } else if dx < -threshold {
-                        withAnimation(.snappy) { model.focusNext() }
-                    }
-                } else if dy > threshold {
+                    step(dx)
+                } else if dy > Self.swipeThreshold {
                     actions.openLogbook()
-                } else if dy < -threshold {
+                } else if dy < -Self.swipeThreshold {
                     actions.openSettings()
                 }
             }
     }
-}
-#endif
 
-#if os(iOS)
-/// The bottom-left pill on iPhone and iPad: the aircraft count (tap: Aircraft search) and a
-/// book (tap: the logbook), one capsule so the radar keeps a single control in that corner.
-struct RadarStatusPill: View {
+    /// On the map drags pan it: the card takes the sideways swipes instead.
+    private var cardSwipe: some Gesture {
+        DragGesture(minimumDistance: 28)
+            .onEnded { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                step(value.translation.width)
+            }
+    }
+
+    private static let swipeThreshold: CGFloat = 60
+
+    /// Right: back to the nearest. Left: the next one farther out.
+    private func step(_ dx: CGFloat) {
+        if dx > Self.swipeThreshold {
+            withAnimation(.snappy) { model.focusNearest() }
+        } else if dx < -Self.swipeThreshold {
+            withAnimation(.snappy) { model.focusNext() }
+        }
+    }
+}
+
+/// Where the bar and the tags go, and the room left above them for the radar, in the
+/// screen's safe-area coordinates. The bar dips into the home-indicator strip like a tab bar.
+struct RadarChrome {
+    let barMidY: CGFloat
+    let tagsMidY: CGFloat
+    /// From the top of the safe area down to just above the tags (or the bar).
+    let radarSize: CGSize
+
+    init(size: CGSize, safeBottom: CGFloat, tagsHeight: CGFloat) {
+        // As far off the screen's bottom edge as a tab bar: clear of the home indicator when
+        // there is one, a small margin when there isn't (a Home button, the Duo's standing half).
+        let barBottom = size.height + safeBottom - (safeBottom >= 20 ? 22 : 10)
+        let barTop = barBottom - RadarControlBar.height
+        barMidY = barBottom - RadarControlBar.height / 2
+        let tagsBottom = barTop - 6
+        tagsMidY = tagsBottom - tagsHeight / 2
+        let radarBottom = tagsHeight > 0 ? tagsBottom - tagsHeight - 2 : barTop - 4
+        radarSize = CGSize(width: size.width, height: max(0, radarBottom))
+    }
+}
+
+/// iPhone / iPad: the floating glass bar along the bottom. First the ways of looking: Map /
+/// Radar swaps the view in place (named for where it goes, like the TV's view button) and Sky
+/// View opens the camera. Then the live dot and the aircraft count (Aircraft search), the
+/// logbook and settings. Demo traffic turns the count into a solid ink "DEMO 12", so nobody
+/// mistakes simulated aircraft for the real sky.
+struct RadarControlBar: View {
     let model: RadarModel
+    /// Map view on, with no map pane beside the radar.
+    let offersMap: Bool
+    let showsMap: Bool
+    let onToggleMap: () -> Void
+    let onSkyView: () -> Void
     let onSearch: () -> Void
     let onLogbook: () -> Void
+    let onSettings: () -> Void
+
+    static let height: CGFloat = 56
 
     var body: some View {
-        let demo = model.isDemo
         HStack(spacing: 0) {
-            Button(action: onSearch) {
-                StatusBadge(model: model, highlightsDemo: true, drawsCapsule: false)
-                    .padding(.leading, 11)
-                    .padding(.trailing, 9)
-                    .frame(height: 32)
-                    .contentShape(Rectangle())
+            if offersMap {
+                BarButton(title: showsMap ? "Radar" : "Map", action: onToggleMap) {
+                    Image(systemName: showsMap ? "scope" : "map.fill")
+                }
+                .disabled(model.observer == nil)
+                .accessibilityLabel(showsMap ? "Radar" : "Map")
+                .accessibilityHint(showsMap ? "Shows the radar instead of the map" : "Shows a live map of the traffic instead of the radar")
+                .accessibilityIdentifier("mapButton")
             }
-            .buttonStyle(.plain)
-            .accessibilityHint("Search aircraft")
+
+            BarButton(title: "Sky View", action: onSkyView) {
+                Image(systemName: "camera.viewfinder")
+            }
+            .accessibilityLabel("Sky View")
+            .accessibilityHint("Opens the camera with every aircraft labeled where it is in the sky")
+            .accessibilityIdentifier("skyViewButton")
 
             Rectangle()
-                .fill((demo ? Palette.paper : Palette.value).opacity(0.25))
-                .frame(width: 1, height: 16)
+                .fill(Palette.faint.opacity(0.5))
+                .frame(width: 1, height: 26)
+                .padding(.horizontal, 2)
                 .accessibilityHidden(true)
 
-            Button(action: onLogbook) {
-                Image(systemName: "book.closed.fill")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(demo ? Palette.paper : Palette.ink)
-                    .frame(width: 38, height: 32)
-                    .contentShape(Rectangle())
+            // The badge carries the label: "12 aircraft in range".
+            BarButton(title: "Aircraft", isHighlighted: model.isDemo, action: onSearch) {
+                StatusBadge(model: model, highlightsDemo: true, drawsCapsule: false)
             }
-            .buttonStyle(.plain)
+            .accessibilityHint("Search aircraft")
+            .accessibilityIdentifier("aircraftButton")
+
+            BarButton(title: "Logbook", action: onLogbook) {
+                Image(systemName: "book.closed.fill")
+            }
             .accessibilityLabel("Logbook")
             .accessibilityIdentifier("logbookButton")
+
+            BarButton(title: "Settings", action: onSettings) {
+                Image(systemName: "gearshape.fill")
+            }
+            .accessibilityLabel("Settings")
+            .accessibilityIdentifier("settingsButton")
         }
-        .background {
-            Capsule()
-                .fill(Palette.ink)
-                .shadow(color: Palette.ink.opacity(0.45), radius: 8)
-                .opacity(demo ? 1 : 0)
-        }
+        .padding(.horizontal, 5)
+        .frame(height: Self.height)
         .glassSurface(in: Capsule())
+        .fixedSize()
+    }
+}
+
+/// One button on the bar: a symbol (or the live count) over a small mono caption.
+private struct BarButton<Icon: View>: View {
+    let title: String
+    /// Demo traffic: a solid ink lozenge behind the count, paper type on it.
+    var isHighlighted = false
+    let action: () -> Void
+    @ViewBuilder let icon: Icon
+
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 3) {
+                icon
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(isHighlighted ? Palette.paper : Palette.ink)
+                    .frame(height: 22)
+                Text(title)
+                    .font(.mono(9, .bold))
+                    .tracking(0.9)
+                    .textCase(.uppercase)
+                    .foregroundStyle(isHighlighted ? Palette.paper.opacity(0.85) : Palette.caption)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, 7)
+            .frame(minWidth: 60)
+            .frame(height: RadarControlBar.height - 10)
+            .background {
+                Capsule()
+                    .fill(Palette.ink)
+                    .shadow(color: Palette.ink.opacity(0.45), radius: 6)
+                    .opacity(isHighlighted ? 1 : 0)
+            }
+            .contentShape(Capsule())
+            .opacity(isEnabled ? 1 : 0.4)
+        }
+        .buttonStyle(.plain)
     }
 }
 #endif
@@ -280,54 +450,19 @@ struct RadarLayout {
     /// the approach chip rather than shrink everything.
     var prefersCompactHero: Bool { size.height < 420 * scale }
 
-    var gearPoint: CGPoint { iconTrack.point(at: iconTrack.arcLength(of: .bottomRight)) }
+    /// Apple TV: where the status badge sits, bottom-left.
     var statusPoint: CGPoint { iconTrack.point(at: iconTrack.arcLength(of: .bottomLeft)) }
-    /// iPhone / iPad: the status badge's left edge, mirroring the gear's right edge. The badge
-    /// grows rightward from here ("DEMO 12" is twice as wide as "12"), so it never runs off.
-    var statusLeading: CGFloat { statusPoint.x - 22 * scale }
     var noticeY: CGFloat { 84 * scale }
-
-    /// The gear, and the status badge as far along the bottom edge as it actually reaches.
-    func obstacles(statusWidth: CGFloat) -> [PerimeterTrack.Obstacle] {
-        let corner = iconTrack.arcLength(of: .bottomLeft)
-        let halfCorner = CGFloat.pi / 4 * iconTrack.cornerRadius
-        let curveEnds = iconTrack.rect.minX + iconTrack.cornerRadius
-        // Up the left side the badge never reaches past the corner; along the bottom
-        // (lower arc length) it reaches its right end plus room for an icon.
-        let up = 38 * scale
-        let along = max(up, halfCorner + statusLeading + statusWidth + 14 * scale - curveEnds)
-        return [
-            .init(s: iconTrack.arcLength(of: .bottomRight), halfWidth: 26 * scale),
-            .init(s: corner + (up - along) / 2, halfWidth: (up + along) / 2),
-        ]
-    }
 }
 
 // MARK: - Chrome
-
-struct SettingsButton: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: "gearshape.fill")
-                .font(.system(size: 19, weight: .semibold))
-                .foregroundStyle(Palette.caption)
-                .frame(width: 44, height: 44)
-                .glassSurface(in: Circle(), interactive: true)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Settings")
-        .accessibilityIdentifier("settingsButton")
-    }
-}
 
 struct StatusBadge: View {
     let model: RadarModel
     /// iPhone / iPad: demo traffic turns the badge into a solid ink pill so nobody mistakes
     /// simulated aircraft for the real sky. The TV keeps the plain glass badge.
     var highlightsDemo = false
-    /// Off when it sits inside a bigger pill that draws the capsule (`RadarStatusPill`).
+    /// Off when it sits inside something that draws its own background (`RadarControlBar`).
     var drawsCapsule = true
     @State private var blink = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -425,7 +560,7 @@ struct DemoTrafficTag: View {
     }
 }
 
-/// A one-line note along the bottom of the radar, clear of the badge and the gear.
+/// A one-line note along the bottom of the radar, just above the bar.
 private struct BottomTag: View {
     let symbol: String
     let text: String
@@ -450,7 +585,7 @@ private struct BottomTag: View {
             .paperHalo()
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 60)
+        .padding(.horizontal, 20)
     }
 }
 

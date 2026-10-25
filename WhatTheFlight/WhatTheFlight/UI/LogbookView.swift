@@ -3,9 +3,10 @@
 //  WhatTheFlight
 //
 //  The logbook on iPhone and iPad: five tabs (Overview, Sightings, Stats, Badges, Photos).
-//  The tab bar sits at the bottom on iPhone and turns into a sidebar on iPad. Every tab has
-//  its own navigation stack; pages push by `LogbookRoute`, so a day, a badge or an aircraft
-//  opens the same way from anywhere. All the numbers come from `Logbook.digest`.
+//  The tab bar sits at the bottom on iPhone and floats along the top on iPad (no sidebar, so
+//  the pages get the whole width). Every tab has its own navigation stack; pages push by
+//  `LogbookRoute`, so a day, a badge or an aircraft opens the same way from anywhere. All the
+//  numbers come from `Logbook.digest`.
 //
 
 #if os(iOS)
@@ -46,7 +47,6 @@ struct LogbookView: View {
     var onDone: (() -> Void)?
 
     @State private var tab = LogbookTab.initial
-    @State private var confirmClear = false
 
     var body: some View {
         let ctx = LogbookContext(logbook: logbook, onTrack: onTrack, isLive: isLive, showTab: { tab = $0 })
@@ -67,18 +67,8 @@ struct LogbookView: View {
                 stack(.photos, ctx) { SpotPhotoGallery(logbook: logbook) }
             }
         }
-        .tabViewStyle(.sidebarAdaptable)
-        .tabViewSidebarHeader {
-            Text("Logbook")
-                .font(.mono(24, .heavy))
-                .foregroundStyle(Palette.ink)
-        }
+        .tabViewStyle(.tabBarOnly)
         .tint(Palette.ink)
-        .confirmationDialog("Clear the whole logbook?", isPresented: $confirmClear, titleVisibility: .visible) {
-            Button("Clear Logbook", role: .destructive) { logbook.clear() }
-        } message: {
-            Text("Every sighting, photo and badge will be removed, on all your devices if the logbook syncs with iCloud.")
-        }
     }
 
     private func stack<Content: View>(_ tab: LogbookTab, _ ctx: LogbookContext, @ViewBuilder _ content: () -> Content) -> some View {
@@ -88,17 +78,6 @@ struct LogbookView: View {
                     if let onDone {
                         ToolbarItem(placement: .topBarLeading) {
                             Button("Done", action: onDone).font(.mono(15, .semibold))
-                        }
-                    }
-                    if tab == .overview {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Menu {
-                                Button("Clear Logbook", systemImage: "trash", role: .destructive) { confirmClear = true }
-                                    .disabled(logbook.isEmpty)
-                            } label: {
-                                Image(systemName: "ellipsis.circle")
-                            }
-                            .accessibilityLabel("More")
                         }
                     }
                 }
@@ -199,7 +178,6 @@ struct LogbookOverview: View {
                     }
                 }
                 .padding(24)
-                .frame(maxWidth: 1100)
             } else {
                 VStack(spacing: 22) {
                     LogbookTodayCard(recap: digest.today, digest: digest, ctx: ctx)
@@ -442,7 +420,7 @@ struct NextUpRow: View {
                         TierDots(earned: a.level, total: a.tiers.count)
                     }
                     Spacer()
-                    Text("\(RadarFormat.wholeNumber(min(a.progress, a.target))) / \(RadarFormat.wholeNumber(a.target))")
+                    Text(a.progressLabel ?? "\(RadarFormat.wholeNumber(min(a.progress, a.target))) / \(RadarFormat.wholeNumber(a.target))")
                         .monoScaled(12, .bold).foregroundStyle(a.isMaxed ? Palette.notable : Palette.ink)
                 }
                 GeometryReader { geo in

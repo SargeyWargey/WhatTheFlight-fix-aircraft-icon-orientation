@@ -53,9 +53,9 @@ struct TourPage: Identifiable {
         TourPage(art: .details, eyebrow: "Details", title: "Tap the center for the full story",
                  body: "A photo, the airline and aircraft type, where it's from and where it's going, how far along the route it is, and a map. If you've seen that exact plane before, it says so."),
         TourPage(art: .sky, eyebrow: "Sky View", title: "Point your phone at the sky",
-                 body: "Point your phone at the sky and the camera opens with every aircraft labeled where it really is. Line one up in the circle to lock on; lower the phone to go back. \"Find in the Sky\" on a flight's details points you right to it."),
+                 body: "Point your phone at the sky, or tap Sky View at the bottom of the radar, and the camera opens with every aircraft labeled where it really is. Line one up in the circle to lock on; lower the phone to go back. \"Find in the Sky\" on a flight's details points you right to it."),
         TourPage(art: .logbook, eyebrow: "Logbook", title: "Every plane gets logged",
-                 body: "Anything that comes inside your radius goes in your logbook: totals, records like closest and fastest, and badges to earn. Swipe down on the radar, or tap the book on the badge bottom left."),
+                 body: "Anything that comes inside your radius goes in your logbook: totals, records like closest and fastest, and badges to earn. Tap Logbook at the bottom of the screen, or swipe down on the radar."),
         TourPage(art: .ready, eyebrow: "One last thing", title: "Let's find some planes",
                  body: "What The Flight? uses your location to ask for the aircraft around you. Indoors, or just looking around? Try demo traffic — you can switch it off in Settings."),
     ]

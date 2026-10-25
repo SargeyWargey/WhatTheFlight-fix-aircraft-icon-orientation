@@ -4,7 +4,8 @@
 //
 //  The ambient map: every aircraft inside the radius on a muted MapKit map, with fading
 //  trails, the radius ring, the airports traffic is using right now and the observer. The
-//  Apple TV shows it full screen (`TVMapStack`); iPad shows it beside the radar in landscape.
+//  Apple TV shows it full screen (`TVMapStack`); iPad shows it beside the radar in landscape,
+//  and iPhone and iPad swap it in for the radar from the bar's Map button (`RadarScreen`).
 //  The pieces it shares with the flight detail map (ring, observer dot, projected path,
 //  airport pin) live here too.
 //
@@ -52,7 +53,10 @@ struct TrafficMap: View {
         var washOpacity: Double = 0.45
         var mapType: RadarSettings.MapType = .standard
         var placeName: String? = nil     // "You · Atlanta"
-        var cardInset: CGSize = .zero    // TV: keep the ring clear of the hero card
+        var cardInset: CGSize = .zero    // TV, iPhone: keep the ring clear of the hero card
+        /// Running under the status bar: its height, so the compass (and the ring) sit below
+        /// the clock and battery rather than behind them.
+        var topInset: CGFloat = 0
     }
 
     @State private var camera: MapCameraPosition = .automatic
@@ -200,6 +204,7 @@ struct TrafficMap: View {
         .mapStyle(mapStyle)
         // Imagery is dark whatever the appearance: draw labels and the wash for night.
         .environment(\.colorScheme, isImagery ? .dark : colorScheme)
+        .safeAreaPadding(.top, options.topInset)
         .safeAreaPadding(.trailing, options.cardInset.width)
         .safeAreaPadding(.bottom, options.cardInset.height)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size in
@@ -232,6 +237,9 @@ struct TrafficMap: View {
             if options.interactive {
                 RecenterButton { reframe(animated: true) }
                     .padding(16)
+                    // iPhone's map: above the hero card and the bar.
+                    .padding(.trailing, options.cardInset.width)
+                    .padding(.bottom, options.cardInset.height)
             }
         }
         .disabled(!options.interactive)

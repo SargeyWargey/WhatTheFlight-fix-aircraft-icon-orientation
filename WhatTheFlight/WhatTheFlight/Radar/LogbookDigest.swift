@@ -5,8 +5,9 @@
 //  Everything the logbook screens show, worked out in one pass whenever the logbook changes
 //  (`Logbook.digest` caches it): today, the headline numbers, records, every day and month,
 //  what you've seen most (aircraft, airlines, types, routes, airports, countries, places),
-//  the chart data (by hour, weekday, heading, altitude) and streaks. The iPhone, iPad and
-//  Apple TV screens only lay it out, so they always agree.
+//  the sky charts (by hour, weekday, heading, altitude) for everywhere and for each spot you
+//  watch from (`LogbookSky.swift`), and streaks. The iPhone, iPad and Apple TV screens only
+//  lay it out, so they always agree.
 //
 
 import Foundation
@@ -248,14 +249,10 @@ struct LogbookDigest: Sendable {
     let days: [LogbookDay]
     let rankings: [LogbookRanking: [LogbookRank]]
     let places: [LogbookRank]
-    /// Aircraft first seen in each hour of the day, midnight first.
-    let hourly: [Int]
-    /// Aircraft per weekday, Sunday first (`Calendar` weekday 1).
-    let weekdays: [Int]
-    /// Tracks at the closest pass in 16 compass sectors, north first.
-    let headings: [Int]
-    /// Altitude at the closest pass in 5,000 ft bands; the last is 40,000 ft and up.
-    let altitudes: [Int]
+    /// The sky charts, every sighting together.
+    let sky: LogbookSky
+    /// Where you've watched from, each with its own sky, most sightings first.
+    let spots: [LogbookSpot]
     let devices: [(device: LogDevice, count: Int)]
     let streak: LogbookStreak
     let busiestDay: LogbookDay?
@@ -266,9 +263,6 @@ struct LogbookDigest: Sendable {
     let countryCount: Int
     let builtAt: Date
 
-    static let altitudeBand = 5_000
-    static let altitudeBands = 9
-
     init(_ sightings: [Sighting], now: Date = Date(), calendar: Calendar = .current) {
         builtAt = now
         stats = LogbookStats(sightings, now: now, calendar: calendar)
@@ -276,11 +270,9 @@ struct LogbookDigest: Sendable {
         achievements = Achievement.all(for: sightings, calendar: calendar)
         records = Self.records(sightings)
 
-        // Each sighting's day, hour and weekday, in one pass.
+        // Each sighting's day, in one pass.
         var clock = DayClock(calendar)
         let dayOf = sightings.map { clock.day(of: $0.firstSeen) }
-        let hourOf = sightings.map { clock.hour(of: $0.firstSeen) }
-        let weekdayOf = sightings.map { clock.weekday(of: $0.firstSeen) }
 
         // First of each type, walking oldest first; the first day doesn't count.
         let firstDay = dayOf.first
@@ -313,26 +305,13 @@ struct LogbookDigest: Sendable {
         countryCount = rankings[.countries]?.count ?? 0
         photoCount = sightings.reduce(0) { $0 + $1.spotPhotos.count }
 
-        var hourly = Array(repeating: 0, count: 24)
-        var weekdays = Array(repeating: 0, count: 7)
-        var headings = Array(repeating: 0, count: 16)
-        var altitudes = Array(repeating: 0, count: Self.altitudeBands)
+        sky = LogbookSky(sightings, calendar: calendar)
+        spots = LogbookSpot.spots(sightings, calendar: calendar)
+
         var deviceCounts: [LogDevice: Int] = [:]
-        for (i, s) in sightings.enumerated() {
-            hourly[hourOf[i]] += 1
-            weekdays[(weekdayOf[i] - 1) % 7] += 1
-            if let track = s.trackAtClosest {
-                headings[Int(((GeoMath.normalize(track) + 11.25) / 22.5).rounded(.down)) % 16] += 1
-            }
-            if s.altitudeAtClosestFeet > 0 {
-                altitudes[min(Self.altitudeBands - 1, s.altitudeAtClosestFeet / Self.altitudeBand)] += 1
-            }
+        for s in sightings {
             for d in s.loggedOn { deviceCounts[d, default: 0] += 1 }
         }
-        self.hourly = hourly
-        self.weekdays = weekdays
-        self.headings = headings
-        self.altitudes = altitudes
         devices = deviceCounts.sorted { $0.key < $1.key }.map { (device: $0.key, count: $0.value) }
 
         streak = LogbookMath.streak(sightings, now: now, calendar: calendar)
@@ -395,9 +374,10 @@ struct LogbookDigest: Sendable {
         all.filter { filter.matches($0, firstOfType: firstOfType) }
     }
 
-    /// Locked badges and unfinished levels closest to done, most nearly there first.
+    /// Locked badges and unfinished levels closest to done, most nearly there first. Records
+    /// (highest, fastest, closest) never count: beating one is luck.
     func nextUp(_ limit: Int = 3) -> [Achievement] {
-        Array(achievements.filter { !$0.isMaxed && $0.progress > 0 }
+        Array(achievements.filter { !$0.isMaxed && $0.progress > 0 && !$0.isRecord }
             .sorted { ($0.fraction, -$0.remaining) > ($1.fraction, -$1.remaining) }
             .prefix(limit))
     }
@@ -417,29 +397,6 @@ struct LogbookDigest: Sendable {
     func regularRank(airframe: String?) -> Int? {
         guard let airframe, let list = rankings[.aircraft] else { return nil }
         return list.firstIndex { $0.id == airframe }.map { $0 + 1 }
-    }
-
-    /// The busiest hour of the day, all time.
-    var busiestHourOfDay: Int? {
-        guard let max = hourly.max(), max > 0 else { return nil }
-        return hourly.firstIndex(of: max)
-    }
-
-    /// The busiest compass sectors (0 = N, 4 = E…) and their shares, busiest first.
-    func topHeadings(_ limit: Int = 3) -> [(sector: Int, share: Double)] {
-        let total = headings.reduce(0, +)
-        guard total > 0 else { return [] }
-        return headings.enumerated().filter { $0.element > 0 }
-            .sorted { $0.element > $1.element }
-            .prefix(limit)
-            .map { (sector: $0.offset, share: Double($0.element) / Double(total)) }
-    }
-
-    /// The compass sector most aircraft were heading, and its share.
-    var mainHeading: (degrees: Double, share: Double)? {
-        let total = headings.reduce(0, +)
-        guard total > 0, let max = headings.max(), let i = headings.firstIndex(of: max) else { return nil }
-        return (Double(i) * 22.5, Double(max) / Double(total))
     }
 
     // MARK: Building

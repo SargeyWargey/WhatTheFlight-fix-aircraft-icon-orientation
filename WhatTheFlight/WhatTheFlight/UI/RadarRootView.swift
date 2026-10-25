@@ -27,14 +27,14 @@ struct RadarRootView: View {
     @State private var deferredRoute: AppRouter.Route?
     /// `-wtf.debugLargeSheet YES` opens the detail and search sheets full height (screenshots).
     @State private var detailDetent: PresentationDetent = UserDefaults.standard.bool(forKey: "wtf.debugLargeSheet") ? .large : .medium
-    /// Search opens half height from a swipe, full height from the status badge.
+    /// Search opens full height from the bar's aircraft count.
     @State private var searchDetent: PresentationDetent = UserDefaults.standard.bool(forKey: "wtf.debugLargeSheet") ? .large : .medium
 
     private let router = AppRouter.shared
     private let skyWatch = SkyWatch.shared
     private let watchLink = PhoneWatchLink.shared
 
-    /// iPad and iPhone Duo: the direction the map pane turns to, following the compass in steps.
+    /// The direction the map turns to (the pane, or the bar's map), following the compass in steps.
     @State private var mapHeading: Double?
     /// iPhone Duo: half open, the radar and the map get half the screen each.
     @LazyState private var fold = FoldMonitor()
@@ -76,12 +76,17 @@ struct RadarRootView: View {
                     settings: settings,
                     location: location,
                     centerState: { centerState },
+                    // Beside a map pane the radar has no use for the bar's Map button.
+                    offersMap: settings.mapView && panes.map == nil,
+                    mapHeading: mapHeading,
                     actions: .init(
                         openSettings: { sheet = .settings },
                         openLogbook: { sheet = .logbook },
                         openDetail: { sheet = .detail($0) },
                         // Even with an empty sky: search reaches the whole world.
                         openSearchFullHeight: { openSearch(detent: .large) },
+                        toggleMap: { settings.mapScreen.toggle() },
+                        openSkyView: { sky = SkyRequest() },
                         openSpotPicker: { sheet = .pickSpot },
                         centerPrimary: centerPrimary,
                         centerSecondary: { sheet = .pickSpot }
@@ -95,8 +100,7 @@ struct RadarRootView: View {
 
                 if panes.map != nil, let observer = model.observer {
                     RadarMapPane(model: model, settings: settings, observer: observer, mapHeading: mapHeading)
-                        .ignoresSafeArea()
-                    .transition(.move(edge: panes.mapEdge).combined(with: .opacity))
+                        .transition(.move(edge: panes.mapEdge).combined(with: .opacity))
                 }
             }
         }
@@ -114,12 +118,14 @@ struct RadarRootView: View {
                 .environment(\.radarObserver, model.observer)
                 .environment(\.topographyStyle, settings.topography)
                 .environment(\.isFoldable, fold.isFoldable)
+                .environment(\.showsAircraftPhotos, settings.showPhotos)
         }
-        // With room for its sidebar (iPad, the Duo's inner screen) the logbook fills the screen.
+        // At regular width (iPad, the Duo's inner screen) the logbook fills the screen.
         .fullScreenCover(isPresented: logbookCover) {
             LogbookView(logbook: logbook, onTrack: track, isLive: { model.contact(id: $0) != nil }) { self.sheet = nil }
                 .environment(\.radarObserver, model.observer)
                 .environment(\.topographyStyle, settings.topography)
+                .environment(\.showsAircraftPhotos, settings.showPhotos)
         }
         .fullScreenCover(item: $sky) { request in
             SkyView(model: model, settings: settings, location: location, request: request,
@@ -213,7 +219,7 @@ struct RadarRootView: View {
 
     // MARK: Sheets
 
-    /// The logbook gets the whole screen when there's room for its sidebar.
+    /// The logbook gets the whole screen at regular width.
     private var logbookFillsScreen: Bool { horizontalSizeClass == .regular }
 
     private var sheetBinding: Binding<Sheet?> {
@@ -225,7 +231,7 @@ struct RadarRootView: View {
     }
 
     /// Aircraft search: aircraft nearby, a worldwide search and a Logbook button (the
-    /// logbook itself opens from the pill's book or a swipe down).
+    /// logbook itself opens from the bar or a swipe down).
     private func openSearch(detent: PresentationDetent) {
         searchDetent = detent
         sheet = .search
@@ -309,7 +315,7 @@ struct RadarRootView: View {
 
     /// With Map view on: iPhone Duo half open, a half each side of the fold (radar on the left
     /// page or the standing half); iPad in landscape at full width, the map beside a
-    /// square-ish radar. Otherwise the radar alone.
+    /// square-ish radar. Otherwise the radar alone, and the bar's Map button swaps the map in.
     private func panes(in geo: GeometryProxy) -> Panes {
         let size = geo.size
         let whole = CGRect(origin: .zero, size: size)
@@ -330,7 +336,7 @@ struct RadarRootView: View {
                          mapEdge: split.posture == .tabletop ? .bottom : .trailing)
         }
 
-        // iPad only: portrait, Split View and iPhone keep the radar alone.
+        // iPad only: portrait, Split View and iPhone keep one view at a time.
         if UIDevice.current.userInterfaceIdiom == .pad, horizontalSizeClass == .regular, size.width > size.height {
             return Panes(radar: CGRect(x: 0, y: 0, width: size.height, height: size.height),
                          map: CGRect(x: size.height, y: 0, width: size.width - size.height, height: size.height))
@@ -680,29 +686,38 @@ private struct ChangeObserver<Value: Equatable>: View {
     }
 }
 
-/// The iPad's and the iPhone Duo's map pane. Its own view, so per-tick traffic redraws the
-/// map rather than the whole root.
-private struct RadarMapPane: View {
+/// The live map of the model's traffic: the iPad's and the iPhone Duo's pane beside the radar,
+/// and the map the bar swaps in for the radar (`RadarScreen`). Its own view, so per-tick
+/// traffic redraws the map rather than whatever holds it. It runs to the screen's edges on
+/// its own, after noting its safe area, so MapKit's compass stays out of the status bar.
+struct RadarMapPane: View {
     let model: RadarModel
     let settings: RadarSettings
     let observer: CLLocationCoordinate2D
     let mapHeading: Double?
+    /// Keeps the ring and the recentre button clear of the hero card and the bar.
+    var cardInset: CGSize = .zero
 
     var body: some View {
-        TrafficMap(
-            observer: observer,
-            radiusMiles: settings.radiusMiles,
-            contacts: model.contacts,
-            fringe: model.outsideContacts,
-            focused: model.focusedContact,
-            isPinned: model.focus.isPinned,
-            pinnedIDs: model.pinnedIDs,
-            trail: model.trail(for:),
-            trailVersion: model.trailVersion,
-            headingUp: settings.mapNorthUp ? nil : mapHeading,
-            options: .init(interactive: true),
-            onTap: { id in withAnimation(.snappy) { model.focus(on: id) } }
-        )
+        GeometryReader { geo in
+            TrafficMap(
+                observer: observer,
+                radiusMiles: settings.radiusMiles,
+                contacts: model.contacts,
+                fringe: model.outsideContacts,
+                focused: model.focusedContact,
+                isPinned: model.focus.isPinned,
+                pinnedIDs: model.pinnedIDs,
+                trail: model.trail(for:),
+                trailVersion: model.trailVersion,
+                headingUp: settings.mapNorthUp ? nil : mapHeading,
+                // Only a pane at the top of the screen has the status bar over it (not the
+                // Duo's half lying on the table).
+                options: .init(interactive: true, cardInset: cardInset, topInset: geo.safeAreaInsets.top),
+                onTap: { id in withAnimation(.snappy) { model.focus(on: id) } }
+            )
+            .ignoresSafeArea()
+        }
     }
 }
 #endif

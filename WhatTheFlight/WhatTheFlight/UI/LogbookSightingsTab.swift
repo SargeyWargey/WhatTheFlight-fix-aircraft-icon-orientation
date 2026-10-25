@@ -521,6 +521,7 @@ struct SightingDetailView: View {
     var isLive = false
 
     @Environment(\.radarObserver) private var observer
+    @Environment(\.showsAircraftPhotos) private var showsPhotos
 
     var body: some View {
         // The live copy, so photos added or deleted show straight away.
@@ -563,6 +564,11 @@ struct SightingDetailView: View {
                             }
                         }
                         .padding(.top, 4)
+                    }
+                    if showsPhotos, s.airframe != nil {
+                        PhotoCard(registration: s.registration, hex: s.hex)
+                            .frame(maxWidth: 520)
+                            .padding(.top, 10)
                     }
                 }
                 .frame(maxWidth: .infinity)

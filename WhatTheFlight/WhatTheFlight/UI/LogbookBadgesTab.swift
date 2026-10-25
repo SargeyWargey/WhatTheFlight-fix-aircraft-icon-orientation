@@ -42,7 +42,9 @@ struct LogbookBadgesTab: View {
                 if !recent.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
                         LogbookHeader("Recently unlocked")
-                        HStack(spacing: 8) {
+                        // Top-aligned, equal-height cards: a title that wraps grows downward
+                        // and the rings stay level.
+                        HStack(alignment: .top, spacing: 8) {
                             ForEach(recent) { a in
                                 NavigationLink(value: LogbookRoute.badge(a.id)) {
                                     VStack(spacing: 6) {
@@ -53,13 +55,14 @@ struct LogbookBadgesTab: View {
                                                 .foregroundStyle(Palette.caption)
                                         }
                                     }
-                                    .frame(maxWidth: .infinity)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                                     .padding(.vertical, 12)
                                     .background(Palette.paperShade.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
+                        .fixedSize(horizontal: false, vertical: true)
                     }
                 }
 
@@ -69,11 +72,13 @@ struct LogbookBadgesTab: View {
                         LogbookHeader(title: group.title) {
                             Text("\(badges.filter(\.isUnlocked).count) of \(badges.count)").foregroundStyle(Palette.caption)
                         }
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: columns), spacing: 16) {
+                        // Top-aligned so a title that wraps grows downward and the rings in a
+                        // row stay level.
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6, alignment: .top), count: columns), spacing: 16) {
                             ForEach(badges) { a in
                                 NavigationLink(value: LogbookRoute.badge(a.id)) {
                                     AchievementBadge(achievement: a)
-                                        .frame(maxWidth: .infinity)
+                                        .frame(maxWidth: .infinity, alignment: .top)
                                 }
                                 .buttonStyle(.plain)
                             }

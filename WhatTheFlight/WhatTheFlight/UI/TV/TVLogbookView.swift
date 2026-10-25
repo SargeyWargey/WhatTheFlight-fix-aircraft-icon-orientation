@@ -19,7 +19,6 @@ struct TVLogbookActions {
     var badge: (Achievement) -> Void
     var airframe: (String) -> Void
     var showTab: (LogbookTab) -> Void
-    var clear: () -> Void
 }
 
 struct TVLogbookView: View {
@@ -30,7 +29,6 @@ struct TVLogbookView: View {
     let onPick: (String) -> Void
 
     @State private var tab = LogbookTab.initial
-    @State private var confirmClear = false
     @State private var shownBadge: Achievement?
     @State private var shownBrowse: TVSightingBrowse?
     @State private var shownAirframe: String?
@@ -40,8 +38,7 @@ struct TVLogbookView: View {
             open: { shownBrowse = $0 },
             badge: { shownBadge = $0 },
             airframe: { shownAirframe = $0 },
-            showTab: { tab = $0 },
-            clear: { confirmClear = true })
+            showTab: { tab = $0 })
         let ctx = TVLogbookContext(logbook: logbook, showPhotos: showPhotos, isLive: isLive, actions: actions)
         TabView(selection: $tab) {
             Tab(LogbookTab.overview.title, systemImage: LogbookTab.overview.symbol, value: LogbookTab.overview) {
@@ -83,10 +80,6 @@ struct TVLogbookView: View {
             }
         }
         #endif
-        .confirmationDialog("Clear the whole logbook?", isPresented: $confirmClear) {
-            Button("Clear Logbook", role: .destructive) { logbook.clear() }
-            Button("Cancel", role: .cancel) {}
-        }
         .fullScreenCover(item: $shownBadge) { badge in
             TVAchievementDetailView(achievement: badge, showTopography: showTopography, isLive: isLive) { sighting in
                 shownBadge = nil

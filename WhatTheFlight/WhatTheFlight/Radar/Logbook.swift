@@ -85,6 +85,9 @@ struct Sighting: Codable, Identifiable, Hashable, Sendable {
     var trackAtClosest: Double?
     var observerLatitude: Double?
     var observerLongitude: Double?
+    /// The time zone it was logged in ("Europe/London"), so hour charts read local time where
+    /// you were. Missing on sightings logged before it was recorded.
+    var timeZone: String?
     /// Devices that logged it. Missing on sightings logged before devices were recorded.
     var devices: [LogDevice]?
     /// Sky View photos of it. Read them through `spotPhotos`.
@@ -136,6 +139,7 @@ struct Sighting: Codable, Identifiable, Hashable, Sendable {
             m.placeName = other.placeName ?? placeName
         }
         m.placeName = m.placeName ?? other.placeName
+        m.timeZone = timeZone ?? other.timeZone
         m.callsign = callsign ?? other.callsign
         m.registration = registration ?? other.registration
         m.hex = hex ?? other.hex
@@ -185,7 +189,7 @@ final class Logbook {
     /// Past this many sightings a changed logbook rebuilds its digest off the main thread
     /// (around 85 ms for 10,000 in a release build) while screens keep the previous one.
     nonisolated static let backgroundDigestThreshold = 2_000
-    /// Badge levels already announced ("spotter#3"), so a new one is only called out once.
+    /// Badge levels already announced ("spotter@1000"), so a new one is only called out once.
     @ObservationIgnored private var announcedLevels: Set<String>?
     @ObservationIgnored private var lastBadgeCheck = Date.distantPast
     /// A badge (or a new level of one) was just earned by something on the radar.
@@ -306,6 +310,7 @@ final class Logbook {
                 )
                 s.noteClosest(contact, observer: observer)
                 s.devices = device.map { [$0] }
+                s.timeZone = TimeZone.current.identifier
                 sightings.append(s)
                 added = true
                 index[f.id] = sightings.count - 1
@@ -322,7 +327,9 @@ final class Logbook {
 
     // MARK: Badges
 
-    private static let announcedKey = "wtf.announcedBadgeLevels"
+    nonisolated static let announcedKey = "wtf.announcedBadges"
+    /// Levels by position ("spotter#3"), which a changed ladder would misread.
+    private static let legacyAnnouncedKey = "wtf.announcedBadgeLevels"
 
     /// Calls `onBadgeUnlocked` for badges and levels earned since the last check, at most every
     /// 20 seconds. The first check on a device with an existing logbook only notes what's
@@ -332,7 +339,8 @@ final class Logbook {
         lastBadgeCheck = date
         // Reuse the screens' digest when it's current; otherwise just the badges.
         let achievements = digestCache.flatMap { $0.revision == revision ? $0.digest.achievements : nil } ?? Achievement.all(for: sightings)
-        let earned = Set(achievements.flatMap { a in (0..<a.level).map { "\(a.id)#\($0 + 1)" } })
+        // Each level by what it takes, so moving a badge's levels never re-announces or hides one.
+        let earned = Set(achievements.flatMap { a in a.tiers.prefix(a.level).map { "\(a.id)@\($0)" } })
         let stored = UserDefaults.standard.stringArray(forKey: Self.announcedKey)
         let isBaseline = announcedLevels == nil && stored == nil && sightings.count > 1
         let known = announcedLevels ?? Set(stored ?? [])
@@ -340,8 +348,9 @@ final class Logbook {
         announcedLevels = known.union(fresh)
         guard !fresh.isEmpty else { return }
         UserDefaults.standard.set(known.union(fresh).sorted(), forKey: Self.announcedKey)
+        UserDefaults.standard.removeObject(forKey: Self.legacyAnnouncedKey)
         guard !isBaseline else { return }
-        let newIDs = Set(fresh.map { String($0.split(separator: "#")[0]) })
+        let newIDs = Set(fresh.map { String($0.split(separator: "@")[0]) })
         for a in achievements where newIDs.contains(a.id) { onBadgeUnlocked?(a) }
     }
 

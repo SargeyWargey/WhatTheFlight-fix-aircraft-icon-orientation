@@ -28,6 +28,9 @@ Goals
 
 Non-goals (do not build these)
 - No map on the iPhone's main screen. The iPhone keeps the radar face (see `Working Spec.md`).
+  *As built (later): the radar face is still the default, but a floating bar along the bottom
+  (`RadarControlBar`: Map / Radar, Aircraft, Logbook, Settings) swaps in the same interactive
+  map with a hero card, on iPhone and wherever the iPad has no map pane (`wtf.mapScreen`).*
 - No change to the Apple Watch.
 - No camera drift, flyover, 3D or pitched map. Ambient means still.
 - No new data sources. Everything comes from `RadarModel`, `AirportCatalog` and MapKit.

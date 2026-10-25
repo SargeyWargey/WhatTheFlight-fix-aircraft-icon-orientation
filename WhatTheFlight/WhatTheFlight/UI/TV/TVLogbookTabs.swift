@@ -4,13 +4,15 @@
 //
 //  The Apple TV logbook's five tabs. Overview: today, the numbers, the last two weeks and
 //  shelves of highlights, records, badges and regulars. Sightings: days (this week) and
-//  months on the left, that period's aircraft on the right, with quick filters. Stats: the
-//  charts and every ranking. Badges: next up, then every badge by group. Photos: every Sky
-//  View photo. Charts are focusable cards so the remote can scroll to them.
+//  months on the left, that period's aircraft on the right, with quick filters. Stats: "Your
+//  sky" (the charts for one spot you watch from, chips to pick another) then "Everywhere"
+//  (activity, records and every ranking). Badges: next up, then every badge by group.
+//  Photos: every Sky View photo. Charts are focusable cards so the remote can scroll to them.
 //
 
 #if os(tvOS)
 import SwiftUI
+import CoreLocation
 
 struct TVLogbookContext {
     let logbook: Logbook
@@ -180,11 +182,6 @@ struct TVLogbookOverview: View {
                     records(digest)
                     badges(digest)
                     regulars(digest)
-
-                    TVSectionHeader(title: "Start over")
-                    TVValueRow(title: "Clear Logbook", subtitle: "Remove every sighting and badge on this Apple TV", value: "", symbol: "trash",
-                               action: ctx.actions.clear)
-                        .focusSection()
                 }
             }
             .padding(.horizontal, 100)
@@ -334,12 +331,15 @@ private struct TVBadgeCard: View {
             AchievementBadge(achievement: a, scale: 1.7, showsTitle: false)
             Text(a.title).font(.mono(24, .heavy)).foregroundStyle(Palette.value).lineLimit(1).minimumScaleFactor(0.7)
             if a.hasLevels { TierDots(earned: a.level, total: a.tiers.count, scale: 2) }
-            Text(a.isMaxed ? "Done" : "\(RadarFormat.wholeNumber(min(a.progress, a.target))) of \(RadarFormat.wholeNumber(a.target))")
+            Text(a.isMaxed ? "Done" : a.progressText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
                 .font(.mono(20, .semibold))
                 .foregroundStyle(Palette.caption)
         }
         .padding(22)
-        .frame(width: 280, height: 270)
+        // Top-aligned: cards with and without level dots keep their rings level.
+        .frame(width: 280, height: 270, alignment: .top)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(AchievementBadge.accessibilityText(a))
     }
@@ -535,8 +535,15 @@ private struct TVPeriodDetail: View {
 struct TVLogbookStats: View {
     let ctx: TVLogbookContext
 
+    @Environment(\.radarObserver) private var observer
+    /// Whose sky the charts show; nil until one's picked (then the TV's own spot once its
+    /// charts are ready, else the busiest).
+    @State private var scope: LogbookSkyScope?
+
     var body: some View {
         let digest = ctx.logbook.digest
+        let choice = digest.sky(scope ?? LogbookSkyScope.initial(in: digest), near: observer)
+        let sky = choice.sky
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 34) {
                 if ctx.logbook.isEmpty {
@@ -545,8 +552,40 @@ struct TVLogbookStats: View {
                         .foregroundStyle(Palette.caption)
                         .padding(.top, 80)
                 } else {
+                    skyHeader(digest, choice)
+                    if sky.isFillingIn {
+                        TVChartCard(title: "Filling in") {
+                            pending(count: sky.count, text: "Which way they fly, when the sky is busiest and how high they pass appear once \(LogbookSky.minimum) aircraft are logged\(choice.spot == nil ? "" : " around \(choice.title)"): enough to show this sky's pattern, not just one afternoon.")
+                        }
+                    } else {
+                        directions(sky)
+                        HStack(alignment: .top, spacing: 30) {
+                            TVChartCard(title: "By hour", detail: sky.showsTimes ? sky.busiestHourOfDay.map { "Busiest \(LogbookFormat.hourRange($0))" } : nil) {
+                                if sky.showsTimes {
+                                    LogbookHourlyChart(counts: sky.hourly, highlight: sky.busiestHourOfDay, scale: 2, height: 120)
+                                } else {
+                                    pending(count: sky.count)
+                                }
+                            }
+                            TVChartCard(title: "By weekday", detail: sky.showsTimes ? sky.busiestWeekday.map { "\(Calendar.current.weekdaySymbols[$0])s" } : nil) {
+                                if sky.showsTimes {
+                                    LogbookWeekdayChart(counts: sky.weekdays, scale: 2, height: 120)
+                                } else {
+                                    pending(count: sky.count)
+                                }
+                            }
+                            .frame(width: 520)
+                        }
+                        TVChartCard(title: "How high they pass", detail: sky.showsAltitudes ? "Altitude at the closest pass" : nil) {
+                            if sky.showsAltitudes {
+                                LogbookAltitudeChart(bins: sky.altitudes, scale: 2, height: 160)
+                            } else {
+                                pending(count: sky.withAltitude, noun: "in the air")
+                            }
+                        }
+                    }
+                    everywhereHeader(digest)
                     summary(digest)
-                    directions(digest)
                     HStack(alignment: .top, spacing: 30) {
                         TVChartCard(title: "Last 30 days") {
                             LogbookActivityChart(points: digest.recentDays(30), scale: 2, height: 110)
@@ -555,18 +594,6 @@ struct TVLogbookStats: View {
                             LogbookActivityChart(points: digest.monthlyCounts().map { (day: $0.month, count: $0.count) }, unit: .month, scale: 2, height: 110)
                         }
                         .frame(width: 560)
-                    }
-                    HStack(alignment: .top, spacing: 30) {
-                        TVChartCard(title: "By hour", detail: digest.busiestHourOfDay.map { "Busiest \(LogbookFormat.hourRange($0))" }) {
-                            LogbookHourlyChart(counts: digest.hourly, highlight: digest.busiestHourOfDay, scale: 2, height: 120)
-                        }
-                        TVChartCard(title: "By weekday") {
-                            LogbookWeekdayChart(counts: digest.weekdays, scale: 2, height: 120)
-                        }
-                        .frame(width: 520)
-                    }
-                    TVChartCard(title: "How high they pass", detail: "Altitude at the closest pass") {
-                        LogbookAltitudeChart(bins: digest.altitudes, scale: 2, height: 160)
                     }
                     records(digest)
                     ForEach([[LogbookRanking.aircraft, .airlines, .types], [.routes, .airports, .countries]], id: \.self) { row in
@@ -582,16 +609,92 @@ struct TVLogbookStats: View {
         }
     }
 
-    /// The big one: a compass rose of where aircraft head over you, the main direction and
-    /// the top three, right under the summary.
+    /// "Your sky · Atlanta, GA", how many aircraft, and a chip per spot (plus all places) once
+    /// there's more than one.
+    private func skyHeader(_ digest: LogbookDigest, _ choice: LogbookSkyChoice) -> some View {
+        let here = digest.spot(near: observer)
+        return VStack(alignment: .leading, spacing: 8) {
+            TVSectionHeader(title: "Your sky")
+            Text(choice.title)
+                .font(.mono(48, .heavy))
+                .foregroundStyle(Palette.ink)
+                .padding(.leading, 6)
+            Text(choice.detail(here: here, places: digest.spots.count))
+                .font(.mono(22))
+                .foregroundStyle(Palette.caption)
+                .padding(.leading, 6)
+            if digest.spots.count > 1 {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 20) {
+                        ForEach(digest.spots) { spot in
+                            Button {
+                                scope = .spot(spot.id)
+                            } label: {
+                                Label("\(spot.name) · \(RadarFormat.wholeNumber(spot.count))",
+                                      systemImage: spot.id == here?.id ? "location.fill" : "mappin")
+                            }
+                            .buttonStyle(TVChipButtonStyle(isSelected: choice.scope == .spot(spot.id)))
+                        }
+                        Button {
+                            scope = .everywhere
+                        } label: {
+                            Label("All places · \(RadarFormat.wholeNumber(digest.sky.count))", systemImage: "globe.americas")
+                        }
+                        .buttonStyle(TVChipButtonStyle(isSelected: choice.scope == .everywhere))
+                    }
+                    .padding(.vertical, 22)
+                    .padding(.horizontal, 10)
+                }
+                .scrollClipDisabled()
+                .focusSection()
+            }
+        }
+    }
+
+    private func everywhereHeader(_ digest: LogbookDigest) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TVSectionHeader(title: "Everywhere")
+            Text("Your collection")
+                .font(.mono(48, .heavy))
+                .foregroundStyle(Palette.ink)
+                .padding(.leading, 6)
+            Text(digest.spots.count > 1
+                 ? "\(RadarFormat.wholeNumber(digest.stats.total)) aircraft from \(digest.spots.count) places"
+                 : "\(RadarFormat.wholeNumber(digest.stats.total)) aircraft")
+                .font(.mono(22))
+                .foregroundStyle(Palette.caption)
+                .padding(.leading, 6)
+        }
+        .padding(.top, 20)
+    }
+
+    /// A chart still waiting for enough aircraft.
+    private func pending(count: Int, noun: String = "aircraft", text: String? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            LogbookSkyProgress(count: count, noun: noun, scale: 2)
+                .frame(maxWidth: 900, alignment: .leading)
+            Text(text ?? "Appears at \(LogbookSky.minimum), enough to show a pattern.")
+                .font(.mono(22))
+                .foregroundStyle(Palette.caption)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: 1100, alignment: .leading)
+        }
+    }
+
+    /// The big one: a compass rose of where aircraft head over this sky, the main direction
+    /// and the top three, right under the header.
     @ViewBuilder
-    private func directions(_ digest: LogbookDigest) -> some View {
-        if digest.headings.contains(where: { $0 > 0 }) {
+    private func directions(_ sky: LogbookSky) -> some View {
+        if !sky.showsHeadings {
+            TVChartCard(title: "Which way they fly") {
+                pending(count: sky.headed, noun: "with a heading")
+            }
+        } else {
             TVChartCard(title: "Which way they fly") {
                 HStack(alignment: .center, spacing: 80) {
-                    LogbookHeadingRose(sectors: digest.headings, size: 460, scale: 2.4)
+                    LogbookHeadingRose(sectors: sky.headings, size: 460, scale: 2.4)
                     VStack(alignment: .leading, spacing: 28) {
-                        if let main = digest.mainHeading {
+                        if let main = sky.mainHeading {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("\(Int((main.share * 100).rounded()))%")
                                     .font(.mono(110, .heavy))
@@ -602,7 +705,7 @@ struct TVLogbookStats: View {
                             }
                         }
                         HStack(spacing: 18) {
-                            ForEach(digest.topHeadings(), id: \.sector) { entry in
+                            ForEach(sky.topHeadings(), id: \.sector) { entry in
                                 VStack(spacing: 6) {
                                     Text(LogbookFormat.sectorNames[entry.sector])
                                         .font(.mono(40, .heavy))
@@ -712,11 +815,13 @@ struct TVLogbookBadges: View {
                 ForEach(Achievement.Group.allCases, id: \.self) { group in
                     let badges = digest.achievements.filter { $0.group == group }
                     TVSectionHeader(title: "\(group.title) · \(badges.filter(\.isUnlocked).count) of \(badges.count)")
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 24), count: 7), spacing: 28) {
+                    // Top-aligned so the rings in a row stay level when a title wraps.
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 24, alignment: .top), count: 7), spacing: 28) {
                         ForEach(badges) { a in
                             Button { ctx.actions.badge(a) } label: {
                                 AchievementBadge(achievement: a, scale: 1.8)
-                                    .frame(maxWidth: .infinity, minHeight: 230)
+                                    .padding(.top, 28)
+                                    .frame(maxWidth: .infinity, minHeight: 230, alignment: .top)
                             }
                             .buttonStyle(TVCardButtonStyle())
                         }

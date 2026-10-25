@@ -50,6 +50,7 @@ struct TVRadarSettingsView: View {
     @State private var showCoordinates = false
     @State private var confirmReset = false
     @State private var confirmClearLocation = false
+    @State private var confirmClearLogbook = false
 
     init(settings: RadarSettings, model: RadarModel, link: TVLinkReceiver, tvLocation: TVLocationProvider, initialPane: TVSettingsPane,
          showTour: @escaping () -> Void = {}) {
@@ -437,8 +438,19 @@ struct TVRadarSettingsView: View {
         TVToggleRow(title: "Notable aircraft", subtitle: "Emergencies, military, air ambulances and rare types", symbol: "star.fill", isOn: $settings.notableAlerts)
 
         TVSectionHeader(title: "Logbook")
-        TVToggleRow(title: "Keep a logbook", subtitle: "Record every aircraft that comes inside your radius. Kept on this Apple TV only; demo traffic is never logged",
+        TVToggleRow(title: "Keep a logbook", subtitle: "Record every aircraft that comes inside your radius. Syncs with your iPhone and iPad through iCloud; demo traffic is never logged",
                     symbol: "book.closed.fill", isOn: $settings.keepLogbook)
+        if let logbook = model.logbook, !logbook.isEmpty {
+            TVValueRow(title: "Clear Logbook", subtitle: "Remove every sighting, photo and badge", value: "", symbol: "trash", tint: Palette.signal) {
+                confirmClearLogbook = true
+            }
+            .confirmationDialog("Clear the whole logbook?", isPresented: $confirmClearLogbook) {
+                Button("Clear Logbook", role: .destructive) { logbook.clear() }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Every sighting, photo and badge will be removed, on all your devices if the logbook syncs with iCloud.")
+            }
+        }
 
         TVSectionHeader(title: "Traffic")
         TVToggleRow(title: "Demo traffic", subtitle: "Simulated aircraft — great for trying it out", symbol: "sparkles", isOn: $settings.demoTraffic)

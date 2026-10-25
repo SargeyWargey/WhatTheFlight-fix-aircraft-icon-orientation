@@ -181,9 +181,13 @@ final class RadarSettings {
     var raiseToSkyView: Bool { didSet { save(raiseToSkyView, .raiseToSkyView) } }
     /// iPhone: Sky View photos also go to the camera roll at full resolution.
     var skySaveToPhotos: Bool { didSet { save(skySaveToPhotos, .skySaveToPhotos) } }
-    /// The ambient map: the Split and Map views on the TV and a map pane beside the radar on
-    /// iPad in landscape. Off, nothing else changes.
+    /// The ambient map: the Split and Map views on the TV, a map pane beside the radar on iPad
+    /// in landscape and the iPhone Duo half open, and the bar's Map button everywhere else on
+    /// iPhone and iPad. Off, nothing else changes.
     var mapView: Bool { didSet { save(mapView, .mapView) } }
+    /// iPhone / iPad: the live map in place of the radar (the bar's Map / Radar button), when
+    /// there's no map pane beside it. Remembered, like the TV's view.
+    var mapScreen: Bool { didSet { save(mapScreen, .mapScreen) } }
     /// Apple TV: which view is showing. Read it through `effectiveTVView`.
     var tvView: TVView { didSet { save(tvView.rawValue, .tvView) } }
     /// The map turns so "up" is the TV's facing direction, like the radar. On = north up.
@@ -255,6 +259,7 @@ final class RadarSettings {
         raiseToSkyView = value(.raiseToSkyView, true)
         skySaveToPhotos = value(.skySaveToPhotos, true)
         mapView = value(.mapView, true)
+        mapScreen = value(.mapScreen, false)
         tvView = TVView(rawValue: value(.tvView, "radar")) ?? .radar
         mapNorthUp = value(.mapNorthUp, false)
         mapRadiusMiles = optionalDouble(.mapRadius)?.clamped(to: Self.radiusRange)
@@ -312,6 +317,7 @@ final class RadarSettings {
         raiseToSkyView = true
         skySaveToPhotos = true
         mapView = true
+        mapScreen = false
         tvView = .radar
         mapNorthUp = false
         mapRadiusMiles = nil
@@ -326,7 +332,7 @@ final class RadarSettings {
         case showHelicopters, showTopography, topography, topographyMotion, showCompassBezel, radarSweep, showPhotos
         case haptics, keepAwake, demoTraffic, hasSeenWelcome, customPlaceName, tvFacing
         case overheadAlerts, overheadAlertMiles, overheadAlertLead, notableAlerts, spokenAlerts, keepLogbook, raiseToSkyView
-        case mapView, tvView, mapNorthUp, mapRadius, mapType, skySaveToPhotos, pinnedAircraft
+        case mapView, mapScreen, tvView, mapNorthUp, mapRadius, mapType, skySaveToPhotos, pinnedAircraft
         case syncLogbook = "iCloudLogbook"
 
         var name: String { "wtf.\(rawValue)" }

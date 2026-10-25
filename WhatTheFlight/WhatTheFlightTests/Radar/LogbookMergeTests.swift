@@ -20,6 +20,7 @@ final class LogbookMergeTests: XCTestCase {
         book.record([contact("a", miles: 4)], placeName: "Atlanta, GA")
         XCTAssertEqual(book.sightings.first?.loggedOn, [.iPhone])
         XCTAssertEqual(book.sightings.first?.placeName, "Atlanta, GA")
+        XCTAssertEqual(book.sightings.first?.timeZone, TimeZone.current.identifier, "hour charts read local time where it was logged")
     }
 
     func testLocalChangesAreReported() {
