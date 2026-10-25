@@ -18,13 +18,17 @@ extension EnvironmentValues {
 
 struct ProviderPhoto<Placeholder: View>: View {
     let photo: AircraftPhoto
+    /// `.fill` crops to the frame; `.fit` shows the whole photo, with a blurred copy of it
+    /// filling any space left over. Either way the caller clips to its shape.
+    var contentMode: ContentMode = .fill
     /// Shown while loading, and if the image can't be fetched.
     let placeholder: () -> Placeholder
 
     @State private var image: UIImage?
 
-    init(photo: AircraftPhoto, @ViewBuilder placeholder: @escaping () -> Placeholder) {
+    init(photo: AircraftPhoto, contentMode: ContentMode = .fill, @ViewBuilder placeholder: @escaping () -> Placeholder) {
         self.photo = photo
+        self.contentMode = contentMode
         self.placeholder = placeholder
         _image = State(initialValue: ProviderPhotoCache.image(for: photo.imageURL))
     }
@@ -32,10 +36,17 @@ struct ProviderPhoto<Placeholder: View>: View {
     var body: some View {
         ZStack {
             if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .transition(.opacity)
+                if contentMode == .fit {
+                    Color.clear
+                        .overlay { Image(uiImage: image).resizable().scaledToFill().blur(radius: 12) }
+                        .overlay { Image(uiImage: image).resizable().scaledToFit() }
+                        .transition(.opacity)
+                } else {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .transition(.opacity)
+                }
             } else {
                 placeholder()
             }
