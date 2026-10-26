@@ -44,6 +44,7 @@ struct FlightHero: View {
     static let trailingGap: CGFloat = 40
 
     private var flight: Flight { contact.flight }
+    @Environment(\.favoriteAircraft) private var favorites
 
     var body: some View {
         if case .trailing(let width) = photo {
@@ -140,7 +141,15 @@ struct FlightHero: View {
 
     @ViewBuilder
     private var operatorLine: some View {
+        let isFavorite = favorites.contains(flight)
         HStack(spacing: 6) {
+            if isFavorite {
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Palette.favorite)
+                    .transition(.scale.combined(with: .opacity))
+                    .accessibilityLabel("Favorite")
+            }
             if isPinned {
                 Image(systemName: "pin.fill")
                     .font(.system(size: 10, weight: .bold))
@@ -153,6 +162,7 @@ struct FlightHero: View {
                 .minimumScaleFactor(0.7)
         }
         .animation(.snappy, value: isPinned)
+        .animation(.snappy, value: isFavorite)
     }
 
     @ViewBuilder

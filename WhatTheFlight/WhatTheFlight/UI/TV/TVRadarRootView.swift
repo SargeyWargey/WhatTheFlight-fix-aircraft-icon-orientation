@@ -17,6 +17,7 @@ struct TVRadarRootView: View {
     @LazyState private var logbook = Logbook(device: .current)
     @State private var logbookSync: LogbookSync?
     @State private var pinSync: PinSync?
+    @State private var favoriteSync: FavoriteSync?
     @LazyState private var placeNamer = PlaceNamer()
     @LazyState private var link = TVLinkReceiver()
     @LazyState private var tvLocation = TVLocationProvider()
@@ -73,6 +74,7 @@ struct TVRadarRootView: View {
         screen
         .environment(\.radarObserver, model.observer)
         .environment(\.topographyStyle, settings.topography)
+        .environment(\.favoriteAircraft, settings.favoriteSet)
         .onAppear {
             link.onPayload = { apply($0) }
             model.logbook = logbook
@@ -100,6 +102,7 @@ struct TVRadarRootView: View {
                 model.refreshNow()
                 logbookSync?.fetchNow()
                 pinSync?.refresh()
+                favoriteSync?.refresh()
             case .background:
                 model.stop()
                 link.stop()
@@ -170,6 +173,8 @@ struct TVRadarRootView: View {
         .fullScreenCover(item: $presented, onDismiss: presentQueued) { item in
             presentation(item)
                 .environment(\.topographyStyle, settings.topography)
+                .environment(\.favoriteAircraft, settings.favoriteSet)
+                .environment(\.toggleFavorite, FavoriteToggle { [model] in model.toggleFavorite($0) })
         }
     }
 
@@ -388,13 +393,17 @@ struct TVRadarRootView: View {
         model.logPlaceName = name
     }
 
-    /// Pins follow you between devices through iCloud (`PinSync`).
+    /// Pins and favourites follow you between devices through iCloud (`PinSync`,
+    /// `FavoriteSync`).
     private func startPinSync() {
         guard pinSync == nil else { return }
         let sync = PinSync(settings: settings)
         sync.onRemoteChange = { model.pinsDidChangeElsewhere(arrived: $0) }
         sync.start()
         pinSync = sync
+        let favorites = FavoriteSync(settings: settings)
+        favorites.start()
+        favoriteSync = favorites
     }
 
     private func updateLogbookSync() {

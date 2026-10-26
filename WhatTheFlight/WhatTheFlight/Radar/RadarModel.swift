@@ -408,6 +408,59 @@ final class RadarModel {
         refreshNow()
     }
 
+    // MARK: Favourites
+
+    /// iCloud key-value storage holds 1,024 keys in all, shared with pins.
+    static let maxFavorites = 500
+
+    /// Aircraft the user has favourited, oldest first.
+    var favorites: [FavoriteAircraft] { settings.favoriteAircraft }
+
+    func isFavorite(_ flight: Flight) -> Bool { settings.favoriteSet.contains(flight) }
+
+    func toggleFavorite(_ flight: Flight) {
+        if isFavorite(flight) { unfavorite(flight) } else { favorite(flight) }
+    }
+
+    /// From the logbook, where the aircraft may not be flying.
+    func toggleFavorite(_ candidate: FavoriteAircraft) {
+        let existing = settings.favoriteAircraft.filter { $0.matches(candidate) }
+        if !existing.isEmpty {
+            settings.favoriteAircraft.removeAll { $0.matches(candidate) }
+        } else {
+            add(candidate)
+        }
+    }
+
+    func favorite(_ flight: Flight) {
+        guard !isFavorite(flight) else { return }
+        add(FavoriteAircraft(flight, operatorName: profile(for: flight).operatorInfo.compact))
+    }
+
+    func unfavorite(_ flight: Flight) {
+        settings.favoriteAircraft.removeAll { $0.matches(flight) }
+    }
+
+    func unfavorite(_ favorite: FavoriteAircraft) {
+        settings.favoriteAircraft.removeAll { $0.id == favorite.id }
+    }
+
+    private func add(_ favorite: FavoriteAircraft) {
+        guard settings.favoriteAircraft.count < Self.maxFavorites else {
+            post(notice: "\(Self.maxFavorites) favorites max · remove one to add \(favorite.title)", symbol: "heart.slash")
+            return
+        }
+        settings.favoriteAircraft.append(favorite)
+    }
+
+    /// Where a favourite is now, from what the feed has: on the radar or the map, parked, or
+    /// not seen (favourites aren't looked up worldwide; Where Is It Now? does that).
+    func state(of favorite: FavoriteAircraft) -> PinState {
+        if let contact = (contacts + outsideContacts).first(where: { favorite.matches($0.flight) }) { return .visible(contact) }
+        if let parked = (flights + pinnedFlights).first(where: { favorite.matches($0) && $0.isOnGround }) { return .onGround(parked) }
+        return .unseen
+    }
+
     /// A search result: pin it and bring it to the centre. False when it can't be shown
     /// yet (on the ground, say); it stays pinned and appears once it's airborne.
     @discardableResult

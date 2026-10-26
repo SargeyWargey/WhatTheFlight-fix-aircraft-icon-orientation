@@ -784,9 +784,14 @@ struct LogbookRankRow: View {
     let entry: LogbookRank
     let top: Int
     var showsGlyph = false
+    /// The aircraft ranking, whose entries are airframes: favourites in yellow.
+    var marksFavorites = false
     var scale: CGFloat = 1
 
+    @Environment(\.favoriteAircraft) private var favorites
+
     var body: some View {
+        let isFavorite = marksFavorites && favorites.contains(airframe: entry.id)
         HStack(spacing: 10 * scale) {
             Text("\(rank)")
                 .monoScaled(12 * scale, .heavy)
@@ -794,15 +799,20 @@ struct LogbookRankRow: View {
                 .frame(width: 22 * scale, alignment: .leading)
             if showsGlyph {
                 AircraftGlyph(silhouette: entry.latest.silhouette, size: 24 * scale, spinsRotor: false)
-                    .foregroundStyle(entry.latest.tint)
+                    .foregroundStyle(isFavorite ? Palette.favorite : entry.latest.tint)
                     .frame(width: 26 * scale)
             }
             VStack(alignment: .leading, spacing: 4 * scale) {
                 HStack(alignment: .firstTextBaseline, spacing: 6 * scale) {
                     Text(entry.title)
                         .monoScaled(14 * scale, .bold)
-                        .foregroundStyle(Palette.ink)
+                        .foregroundStyle(isFavorite ? Palette.favoriteText : Palette.ink)
                         .lineLimit(1)
+                    if isFavorite {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 10 * scale, weight: .bold))
+                            .foregroundStyle(Palette.favorite)
+                    }
                     if let subtitle = entry.subtitle {
                         Text(subtitle)
                             .monoScaled(11 * scale)
@@ -818,7 +828,7 @@ struct LogbookRankRow: View {
                 .foregroundStyle(Palette.value)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Number \(rank), \(entry.title)\(entry.subtitle.map { ", \($0)" } ?? ""), \(entry.count) times")
+        .accessibilityLabel("Number \(rank), \(entry.title)\(isFavorite ? ", favorite" : "")\(entry.subtitle.map { ", \($0)" } ?? ""), \(entry.count) times")
     }
 }
 #endif

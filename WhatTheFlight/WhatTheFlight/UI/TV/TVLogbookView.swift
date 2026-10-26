@@ -151,6 +151,7 @@ struct TVSightingRow: View {
     /// Narrow column (badge page): no "ON RADAR" label, shorter text.
     var compact = false
     @Environment(\.tvRowFocused) private var focused
+    @Environment(\.favoriteAircraft) private var favorites
 
     /// Time for today's sightings, the date otherwise.
     private var when: String {
@@ -161,16 +162,24 @@ struct TVSightingRow: View {
 
     var body: some View {
         let s = sighting
+        let isFavorite = favorites.contains(s)
         HStack(spacing: 28) {
             AircraftGlyph(silhouette: s.silhouette, size: 52, spinsRotor: false)
-                .foregroundStyle(focused ? .white : (isLive ? Palette.signal : s.tint))
+                .foregroundStyle(focused ? .white : (isFavorite ? Palette.favorite : isLive ? Palette.signal : s.tint))
                 .frame(width: 56)
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 16) {
                     Text(s.displayIdentifier)
                         .font(.mono(30, .bold))
+                        .foregroundStyle(focused ? .white : isFavorite ? Palette.favoriteText : Palette.value)
                         .lineLimit(1)
                         .fixedSize()
+                    if isFavorite {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(focused ? .white : Palette.favorite)
+                            .accessibilityLabel("Favorite")
+                    }
                     if let route = s.routeText {
                         Text(route)
                             .font(.mono(22, .semibold))
@@ -585,18 +594,25 @@ struct TVAirframeHistoryView: View {
     let onTrack: (String) -> Void
 
     @State private var browse: TVSightingBrowse?
+    @Environment(\.favoriteAircraft) private var favorites
 
     var body: some View {
         let summary = logbook.summary(airframe: airframe)
+        let isFavorite = favorites.contains(airframe: airframe)
         ZStack {
             LogbookBackdrop(showTopography: showTopography)
                 .ignoresSafeArea()
             HStack(alignment: .top, spacing: 70) {
                 VStack(alignment: .leading, spacing: 18) {
                     Text("Logbook").radarCaptionTV()
+                    if isFavorite {
+                        FavoriteTag()
+                            .scaleEffect(1.6, anchor: .leading)
+                            .padding(.vertical, 6)
+                    }
                     Text(airframe)
                         .font(.mono(80, .heavy))
-                        .foregroundStyle(Palette.ink)
+                        .foregroundStyle(isFavorite ? Palette.favoriteText : Palette.ink)
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
                     if let latest = summary.latest {

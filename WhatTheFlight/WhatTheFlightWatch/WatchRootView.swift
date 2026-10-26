@@ -35,6 +35,7 @@ struct WatchRootView: View {
     @State private var path: [Screen] = []
     @LazyState private var complications = ComplicationPublisher()
     @State private var pinSync: PinSync?
+    @State private var favoriteSync: FavoriteSync?
     /// First run: the tour, before the location prompt.
     @State private var showTour = false
     /// A route that arrived before the first feed load (e.g. from a complication).
@@ -91,6 +92,7 @@ struct WatchRootView: View {
                 }
             }
         }
+        .environment(\.favoriteAircraft, settings.favoriteSet)
         .fullScreenCover(isPresented: $showTour) {
             WatchTourView(settings: settings, watchSettings: watchSettings,
                           onDone: { finishTour(thenIdentify: false) },
@@ -136,6 +138,7 @@ struct WatchRootView: View {
                 model.start()
                 model.refreshNow()
                 pinSync?.refresh()
+                favoriteSync?.refresh()
             case .background:
                 model.stop()
                 location.stop()
@@ -267,13 +270,17 @@ struct WatchRootView: View {
         withAnimation { page = .radar }
     }
 
-    /// Pins follow you between devices through iCloud (`PinSync`).
+    /// Pins and favourites follow you between devices through iCloud (`PinSync`,
+    /// `FavoriteSync`): favourites show in yellow on the Watch radar too.
     private func startPinSync() {
         guard pinSync == nil else { return }
         let sync = PinSync(settings: settings)
         sync.onRemoteChange = { model.pinsDidChangeElsewhere(arrived: $0) }
         sync.start()
         pinSync = sync
+        let favorites = FavoriteSync(settings: settings)
+        favorites.start()
+        favoriteSync = favorites
     }
     private func syncObserver() {
         let observer = observerCoordinate

@@ -209,6 +209,19 @@ final class RadarSettings {
     }
     /// `PinSync` listens here to send local pin changes to iCloud; gets the old list.
     @ObservationIgnored var onPinnedAircraftChange: ((_ old: [PinnedAircraft]) -> Void)?
+    /// Aircraft called out in yellow wherever they turn up, oldest first. Edit through
+    /// `RadarModel.favorite` / `unfavorite`.
+    var favoriteAircraft: [FavoriteAircraft] {
+        didSet {
+            save(try? JSONEncoder().encode(favoriteAircraft), .favoriteAircraft)
+            favoriteSet = FavoriteSet(favoriteAircraft)
+            onFavoriteAircraftChange?(oldValue)
+        }
+    }
+    /// The favourites as a lookup, kept with the list; views get it as `\.favoriteAircraft`.
+    private(set) var favoriteSet = FavoriteSet()
+    /// `FavoriteSync` listens here to send local changes to iCloud; gets the old list.
+    @ObservationIgnored var onFavoriteAircraftChange: ((_ old: [FavoriteAircraft]) -> Void)?
 
     @ObservationIgnored private let defaults: UserDefaults
 
@@ -269,6 +282,9 @@ final class RadarSettings {
         mapType = MapType(rawValue: value(.mapType, "standard")) ?? .standard
         pinnedAircraft = defaults.data(forKey: Key.pinnedAircraft.name)
             .flatMap { try? JSONDecoder().decode([PinnedAircraft].self, from: $0) } ?? []
+        favoriteAircraft = defaults.data(forKey: Key.favoriteAircraft.name)
+            .flatMap { try? JSONDecoder().decode([FavoriteAircraft].self, from: $0) } ?? []
+        favoriteSet = FavoriteSet(favoriteAircraft)
     }
 
     /// The TV's view, treated as the radar whenever the map is switched off.
@@ -335,7 +351,7 @@ final class RadarSettings {
         case showHelicopters, showTopography, topography, topographyMotion, showCompassBezel, radarSweep, showPhotos, cardPhotos
         case haptics, keepAwake, demoTraffic, hasSeenWelcome, customPlaceName, tvFacing
         case overheadAlerts, overheadAlertMiles, overheadAlertLead, notableAlerts, spokenAlerts, keepLogbook, raiseToSkyView
-        case mapView, mapScreen, tvView, mapNorthUp, mapRadius, mapType, skySaveToPhotos, pinnedAircraft
+        case mapView, mapScreen, tvView, mapNorthUp, mapRadius, mapType, skySaveToPhotos, pinnedAircraft, favoriteAircraft
         case syncLogbook = "iCloudLogbook"
 
         var name: String { "wtf.\(rawValue)" }

@@ -10,6 +10,26 @@
 #if os(iOS) || os(tvOS) || os(watchOS)
 import SwiftUI
 
+extension EnvironmentValues {
+    /// The favourite aircraft, called out in yellow: the radar edge and the map (here, on
+    /// every platform), the hero, search and the logbook. Set at each app's root from
+    /// `RadarSettings.favoriteSet`.
+    @Entry var favoriteAircraft = FavoriteSet()
+    /// Adds or removes a favourite from screens without the radar model (the logbook's
+    /// aircraft and sighting pages). nil hides the button.
+    @Entry var toggleFavorite: FavoriteToggle? = nil
+}
+
+/// `\.toggleFavorite`'s action. Each app has one, always toggling through its radar model, so
+/// any two are equal and handing it down never redraws what reads it.
+struct FavoriteToggle: Equatable {
+    let action: (FavoriteAircraft) -> Void
+
+    func callAsFunction(_ favorite: FavoriteAircraft) { action(favorite) }
+
+    static func == (_: FavoriteToggle, _: FavoriteToggle) -> Bool { true }
+}
+
 struct PerimeterLayer: View {
     let placements: [PerimeterPlacement]
     let focusedID: String?
@@ -23,6 +43,7 @@ struct PerimeterLayer: View {
     let onLongPress: (RadarContact) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.favoriteAircraft) private var favorites
 
     var body: some View {
         ZStack {
@@ -30,6 +51,7 @@ struct PerimeterLayer: View {
                 let isFocused = placement.id == focusedID
                 let isAnnounced = placement.id == announcedID
                 let isPinned = pinnedIDs.contains(placement.id)
+                let isFavorite = favorites.contains(placement.contact.flight)
                 let fade = isPinned ? 1 : 1 - 0.4 * min(1, placement.contact.distanceMiles / max(radiusMiles, 1))
 
                 DistanceLabel(miles: placement.contact.distanceMiles, isFocused: isFocused, isPinned: isPinned,
@@ -45,6 +67,7 @@ struct PerimeterLayer: View {
                     screenTrack: placement.screenTrack,
                     isFocused: isFocused,
                     isAnnounced: isAnnounced,
+                    isFavorite: isFavorite,
                     scale: scale
                 )
                 .opacity(isFocused || isAnnounced ? 1 : fade)
@@ -79,7 +102,8 @@ struct PerimeterLayer: View {
         let motion = contact.isApproaching ? "approaching" : "moving away"
         let badge = contact.profile.notable.first.map { ", \($0.badge.capitalized)" } ?? ""
         let pinned = pinnedIDs.contains(contact.id) ? ", pinned" : ""
-        return "\(contact.flight.displayIdentifier)\(badge)\(pinned), \(RadarFormat.miles(contact.distanceMiles)) miles \(dir), \(motion)"
+        let favorite = favorites.contains(contact.flight) ? ", favorite" : ""
+        return "\(contact.flight.displayIdentifier)\(badge)\(favorite)\(pinned), \(RadarFormat.miles(contact.distanceMiles)) miles \(dir), \(motion)"
     }
 }
 
@@ -89,6 +113,8 @@ struct AircraftBlip: View {
     let isFocused: Bool
     /// Being read out by a spoken alert: a purple pulse in place of the red focus one.
     var isAnnounced = false
+    /// A favourite: the whole icon in yellow, focused or not (the focus keeps its red halo).
+    var isFavorite = false
     var scale: CGFloat = 1
 
     @State private var pulse = false
@@ -102,7 +128,11 @@ struct AircraftBlip: View {
         // so the corner marker shows the next most urgent tag.
         let tint = isAnnounced
             ? Palette.announce
-            : isFocused || tags.first?.isEmergency == true
+            : tags.first?.isEmergency == true
+            ? Palette.signal
+            : isFavorite
+            ? Palette.favorite
+            : isFocused
             ? Palette.signal
             : Palette.blip(isMilitary: tags.contains(.military))
         let halo = isAnnounced ? Palette.announce : Palette.signal

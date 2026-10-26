@@ -86,6 +86,11 @@ struct FlightDetailSheet: View {
         return VStack(spacing: 4) {
             NotableBadgeRow(flight: flight)
                 .padding(.bottom, 4)
+            if model.isFavorite(flight) {
+                FavoriteTag()
+                    .padding(.bottom, 4)
+                    .transition(.scale.combined(with: .opacity))
+            }
             Text(info.title)
                 .radarCaption(scales: true)
             if let subtitle = info.subtitle {
@@ -99,7 +104,7 @@ struct FlightDetailSheet: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
             if flight.hasRoute {
-                RouteLine(flight: flight)
+                DetailRoute(flight: flight)
             }
             if let name = flight.typeName ?? flight.typeCode {
                 Text(name)
@@ -113,6 +118,7 @@ struct FlightDetailSheet: View {
             }
         }
         .padding(.top, 8)
+        .animation(.snappy, value: model.isFavorite(flight))
     }
 
     /// "Logbook  4": every time you've seen this airframe; tap for the full log.
@@ -215,6 +221,7 @@ struct FlightDetailSheet: View {
     private func actions(_ contact: RadarContact) -> some View {
         let isFocused = model.focus.focusedID == contact.id
         let isPinned = model.isPinned(contact.id)
+        let isFavorite = model.isFavorite(contact.flight)
         return VStack(spacing: 10) {
             HStack(spacing: 10) {
                 Button {
@@ -233,12 +240,21 @@ struct FlightDetailSheet: View {
                 }
                 .buttonStyle(RadarButtonStyle(prominent: true))
 
-                ShareLink(item: shareText(contact)) {
-                    Label("Share", systemImage: "square.and.arrow.up")
+                Button {
+                    withAnimation(.snappy) { model.toggleFavorite(contact.flight) }
+                } label: {
+                    Label(isFavorite ? "Unfavorite" : "Favorite", systemImage: isFavorite ? "heart.slash" : "heart")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(RadarButtonStyle(prominent: false))
+                .buttonStyle(FavoriteButtonStyle(isOn: isFavorite))
+                .accessibilityHint(isFavorite ? "Stops calling this aircraft out in yellow"
+                                              : "Calls this aircraft out in yellow on the radar, the map and in your logbook")
             }
+            ShareLink(item: shareText(contact)) {
+                Label("Share", systemImage: "square.and.arrow.up")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(RadarButtonStyle(prominent: false))
             if !model.contacts.contains(where: { $0.id == contact.id }), contact.flight.canLocate {
                 // Out of the radius (or off the feed's query box): look for it anywhere.
                 NavigationLink {
@@ -272,10 +288,16 @@ struct FlightDetailSheet: View {
     private func shareText(_ contact: RadarContact) -> String {
         let f = contact.flight
         var text = "✈️ \(f.displayIdentifier)"
-        if f.hasRoute { text += " \(f.originIATA ?? "") → \(f.destinationIATA ?? "")" }
+        if f.hasRoute { text += " \(Self.place(f.originIATA, f.origin)) → \(Self.place(f.destinationIATA, f.destination))" }
         if let type = f.typeName ?? f.typeCode { text += " · \(type)" }
         text += " — \(RadarFormat.wholeNumber(contact.altitudeFeet)) ft, \(RadarFormat.miles(contact.distanceMiles)) mi away. Spotted with What The Flight?"
         return text
+    }
+
+    /// "Detroit (DTW)", or just the code when the airport isn't known.
+    private static func place(_ code: String?, _ airport: Airport?) -> String {
+        guard let code else { return "" }
+        return airport.map { "\($0.city) (\(code))" } ?? code
     }
 
     private func flightradarURL(_ flight: Flight) -> URL? {
@@ -304,6 +326,85 @@ struct RadarButtonStyle: ButtonStyle {
             .animation(.snappy(duration: 0.2), value: configuration.isPressed)
     }
 }
+
+/// Favourite or not: yellow when it is, like the aircraft on the radar.
+struct FavoriteButtonStyle: ButtonStyle {
+    let isOn: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .monoScaled(14, .bold)
+            .padding(.vertical, 13)
+            .padding(.horizontal, 12)
+            .foregroundStyle(isOn ? Palette.value : Palette.ink)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(isOn ? Palette.favorite.opacity(0.28) : Palette.ink.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(Palette.favorite.opacity(isOn ? 0.8 : 0), lineWidth: 1.5)
+            )
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.snappy(duration: 0.2), value: configuration.isPressed)
+    }
+}
+
+/// "♥ FAVORITE" at the top of a favourite's pages.
+struct FavoriteTag: View {
+    var body: some View {
+        Label("Favorite", systemImage: "heart.fill")
+            .monoScaled(10, .heavy)
+            .textCase(.uppercase)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .foregroundStyle(Palette.favorite)
+            .background(Palette.favorite.opacity(0.16), in: Capsule())
+            .overlay(Capsule().strokeBorder(Palette.favorite.opacity(0.6), lineWidth: 1))
+    }
+}
+
+#if os(iOS)
+/// The route at the top of an aircraft's details: the airport codes with the cities spelled
+/// out underneath, big enough to read and never cut short (the radar's `RouteLine` keeps its
+/// cities small to leave room for everything else).
+private struct DetailRoute: View {
+    let flight: Flight
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            end(code: flight.originIATA, airport: flight.origin)
+            Image(systemName: "arrow.right")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Palette.signal)
+                .padding(.top, 8)
+                .accessibilityHidden(true)
+            end(code: flight.destinationIATA, airport: flight.destination)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("From \(name(flight.originIATA, flight.origin)) to \(name(flight.destinationIATA, flight.destination))")
+    }
+
+    private func end(code: String?, airport: Airport?) -> some View {
+        VStack(spacing: 2) {
+            Text(code ?? "—")
+                .monoScaled(32, .bold)
+                .foregroundStyle(Palette.route)
+                .paperHalo()
+            Text(airport?.city ?? "Unknown airport")
+                .monoScaled(15, .semibold)
+                .foregroundStyle(Palette.value)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: 160)
+    }
+
+    private func name(_ code: String?, _ airport: Airport?) -> String {
+        airport?.city ?? code ?? "unknown"
+    }
+}
+#endif
 
 // MARK: - Photo
 

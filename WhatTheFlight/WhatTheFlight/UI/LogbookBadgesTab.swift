@@ -162,6 +162,8 @@ struct AchievementDetailView: View {
     var onTrack: ((String) -> Void)?
     var isLive: (String) -> Bool = { _ in false }
 
+    @Environment(\.favoriteAircraft) private var favorites
+
     var body: some View {
         let a = achievement
         List {
@@ -208,7 +210,12 @@ struct AchievementDetailView: View {
                     } label: {
                         VStack(alignment: .leading, spacing: 3) {
                             HStack(spacing: 6) {
-                                Text(s.displayIdentifier).monoScaled(15, .bold).foregroundStyle(Palette.ink)
+                                Text(s.displayIdentifier).monoScaled(15, .bold)
+                                    .foregroundStyle(favorites.contains(s) ? Palette.favoriteText : Palette.ink)
+                                if favorites.contains(s) {
+                                    Image(systemName: "heart.fill").font(.system(size: 10, weight: .bold)).foregroundStyle(Palette.favorite)
+                                        .accessibilityLabel("Favorite")
+                                }
                                 if let route = s.routeText {
                                     Text(route).monoScaled(11, .semibold).foregroundStyle(Palette.route)
                                 }

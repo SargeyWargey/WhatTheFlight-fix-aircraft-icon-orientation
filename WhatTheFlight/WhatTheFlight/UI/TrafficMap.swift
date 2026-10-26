@@ -75,6 +75,7 @@ struct TrafficMap: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverOn
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.favoriteAircraft) private var favorites
 
     // MARK: What's drawn
 
@@ -271,7 +272,7 @@ struct TrafficMap: View {
         let isAnnounced = blip.id == announcedID
         // Glyph only: the radar or the hero card beside the map already names the focus.
         AircraftBlip(profile: blip.contact.profile, screenTrack: flight.track - heading, isFocused: isFocused,
-                     isAnnounced: isAnnounced, scale: options.scale)
+                     isAnnounced: isAnnounced, isFavorite: favorites.contains(flight), scale: options.scale)
             .opacity(blip.role == .fringe ? 0.4 : 1)
             .onTapGesture { onTap?(blip.id) }
             .accessibilityElement()

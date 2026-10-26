@@ -1,0 +1,246 @@
+- generic [active] [ref=e1]:
+  - link "Skip to the features" [ref=e2] [cursor=pointer]:
+    - /url: "#radar"
+  - region "A live demo of the radar" [ref=e3]:
+    - img [aria-hidden]:
+      - generic: "N"
+      - generic: E
+      - generic: S
+      - generic: W
+    - generic [ref=e4]:
+      - link "What The Flight? home" [ref=e5] [cursor=pointer]:
+        - /url: ./
+        - generic [ref=e6]: What The Flight?
+      - navigation "Sections" [ref=e7]:
+        - link "iPhone" [ref=e8] [cursor=pointer]:
+          - /url: "#radar"
+        - link "iPad" [ref=e9] [cursor=pointer]:
+          - /url: "#ipad"
+        - link "Watch" [ref=e10] [cursor=pointer]:
+          - /url: "#watch"
+        - link "TV" [ref=e11] [cursor=pointer]:
+          - /url: "#tv"
+        - link "Support" [ref=e12] [cursor=pointer]:
+          - /url: support.html
+      - button "Switch to the day radar" [ref=e13] [cursor=pointer]
+    - generic:
+      - heading "What The Flight? Live radar of the planes overhead" [level=1]
+      - group "Air Canada AC718, Toronto to New York, Airbus A220-300, 3,575 feet, 2 miles southwest":
+        - paragraph: Air Canada
+        - paragraph: AC718
+        - generic:
+          - generic:
+            - generic: YYZ
+            - generic: Toronto
+          - img "to"
+          - generic:
+            - generic: LGA
+            - generic: New York
+        - paragraph:
+          - generic: BCS3
+          - generic: Airbus A220-300
+        - generic:
+          - generic:
+            - term: Altitude
+            - definition:
+              - generic: 3,575
+              - generic: ft
+          - generic:
+            - term: Speed
+            - definition:
+              - generic: "205"
+              - generic: kts
+          - generic:
+            - term: Distance
+            - definition:
+              - generic: "2"
+              - generic: mi
+      - paragraph: Every aircraft in the sky around you, live, on a radar that turns as you turn.
+      - generic:
+        - generic: Coming soon to the App Store
+        - generic: For iPhone, iPad, Apple Watch and Apple TV
+    - group "Aircraft around you":
+      - button "AC718, Air Canada, 2 miles southwest. Bring to the center." [ref=e16] [cursor=pointer]:
+        - generic: "2"
+      - button "N407LH, Liberty Helicopters, 3 miles southeast. Bring to the center." [ref=e19] [cursor=pointer]:
+        - generic: "3"
+      - button "DL5721, Delta Air Lines, 5 miles east. Bring to the center." [ref=e22] [cursor=pointer]:
+        - generic: "5"
+      - button "LH403, Lufthansa, 9 miles north. Bring to the center." [ref=e25] [cursor=pointer]:
+        - generic: "9"
+      - button "UA70, United Airlines, 7 miles west. Bring to the center." [ref=e28] [cursor=pointer]:
+        - generic: "7"
+  - main [ref=e31]:
+    - generic [ref=e33]:
+      - generic [ref=e34]:
+        - paragraph [ref=e35]: iPhone
+        - heading "The nearest plane takes the center." [level=2] [ref=e36]
+        - paragraph [ref=e37]: Flight number, airline, aircraft type, where it’s from and where it’s going, altitude, speed and how far away it is. Every other aircraft sits on the edge of the screen in its real compass direction, nose pointing the way it’s flying.
+        - list [ref=e38]:
+          - listitem [ref=e39]: Turn and the sky turns with you. Icons slide around the edge, so whatever’s at the top is in front of you.
+          - listitem [ref=e40]: Swipe, tap, hold. Swipe for the next one out, tap any plane to bring it in, hold to pin it.
+          - listitem [ref=e41]: Your radius. Anything from 2 to 100 miles.
+          - listitem [ref=e42]: Day and night. Paper and ink by day, a night radar after dark.
+      - generic [ref=e43]:
+        - figure [ref=e44]:
+          - 'img "The radar in dark mode: JetBlue B6819 from Detroit to New York JFK in the center, 2 miles away and closing, with about 26 aircraft around the edge." [ref=e45]'
+        - figure [ref=e46]:
+          - 'img "The radar in light mode: Air Canada AC718 from Toronto to LaGuardia in the center, an Airbus A220-300 at 3,575 feet, with aircraft and mile labels around the edge." [ref=e47]'
+    - generic [ref=e49]:
+      - generic [ref=e50]:
+        - heading "The full story, one tap away." [level=2] [ref=e51]
+        - paragraph [ref=e52]: Tap the center for a photo of that exact aircraft, its route on a map, how far along the flight it is and when it will pass closest to you. If you’ve seen that same plane before, the app remembers.
+      - generic [ref=e53]:
+        - figure "Right now. Where it is, how high, how fast, and the path it’s on." [ref=e54]:
+          - 'img "Flight details for JetBlue B6819: a map of the aircraft east of Manhattan with its path, and tiles for altitude, vertical speed, speed and track." [ref=e56]'
+        - figure "The whole trip. Switch to Full Route to see where it’s been and where it’s headed." [ref=e58]:
+          - img "The full route of JetBlue B6371 from LaGuardia to Fort Lauderdale drawn down the East Coast." [ref=e60]
+        - figure "Anywhere in the world. Search by flight number, callsign or tail number. Pin up to five and they stay on your radar’s edge wherever they are." [ref=e62]:
+          - 'img "Searching for UAL: four United flights in range, seven just outside and more worldwide." [ref=e64]'
+    - generic [ref=e67]:
+      - generic [ref=e68]:
+        - heading "Raise your iPhone to the sky." [level=2] [ref=e69]
+        - paragraph [ref=e70]: Sky View opens the camera and labels the aircraft you can actually see, right where they are. Line one up to lock on, zoom in and take a photo.
+        - paragraph [ref=e71]: Every photo is filed in your logbook as a boarding pass with the flight, the aircraft and the moment you spotted it, ready to share.
+      - article "A Sky View boarding pass for United UA994, Newark to Brussels" [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]: 1×
+          - generic [ref=e76]: What The Flight?
+          - generic: UA994
+        - generic [ref=e82]:
+          - paragraph [ref=e83]:
+            - generic [ref=e84]: Boarding pass
+            - generic [ref=e85]: United Airlines
+          - generic [ref=e86]:
+            - generic [ref=e87]:
+              - generic [ref=e88]: EWR
+              - generic [ref=e89]: Newark
+            - img "to" [ref=e90]
+            - generic [ref=e92]:
+              - generic [ref=e93]: BRU
+              - generic [ref=e94]: Brussels
+          - paragraph [ref=e97]: 15 mi flown · 3,656 to go
+          - generic [ref=e98]:
+            - generic [ref=e99]:
+              - term [ref=e100]: Flight
+              - definition [ref=e101]: UA994
+            - generic [ref=e102]:
+              - term [ref=e103]: Aircraft
+              - definition [ref=e104]: B78X
+            - generic [ref=e105]:
+              - term [ref=e106]: Tail
+              - definition [ref=e107]: N12006
+            - generic [ref=e108]:
+              - term [ref=e109]: Altitude
+              - definition [ref=e110]: 7,200 ft
+            - generic [ref=e111]:
+              - term [ref=e112]: Speed
+              - definition [ref=e113]: 260 kts
+            - generic [ref=e114]:
+              - term [ref=e115]: Distance
+              - definition [ref=e116]: 4 mi
+            - generic [ref=e117]:
+              - term [ref=e118]: Date
+              - definition [ref=e119]: Oct 23, 2026
+            - generic [ref=e120]:
+              - term [ref=e121]: Time
+              - definition [ref=e122]: 17:57
+            - generic [ref=e123]:
+              - term [ref=e124]: Look
+              - definition [ref=e125]: 21° N
+          - paragraph [ref=e126]: Boeing 787-10 Dreamliner
+          - paragraph [ref=e129]:
+            - generic [ref=e130]: Spotted from
+            - text: New York, NY
+    - generic [ref=e132]:
+      - generic [ref=e133]:
+        - heading "Every plane that passes, logged." [level=2] [ref=e134]
+        - paragraph [ref=e135]: "Every aircraft that comes inside your radius goes in your logbook: when and where you saw it, how close it came, and whether it was a first. Dig into the numbers, chase records and earn badges, from First Contact to Queen of the Skies. It all syncs across iPhone, iPad and Apple TV with iCloud."
+      - figure [ref=e137]:
+        - 'img "The logbook on iPad: today’s highlights, including a US Navy trainer and a first Boeing 787-8 Dreamliner, beside totals for aircraft spotted, airframes, types, airlines and countries, the badges closest to unlocking, the last 14 days and the aircraft seen most often." [ref=e138]'
+      - tablist "Logbook pages" [ref=e139]:
+        - tab "Logbook" [selected] [ref=e140] [cursor=pointer]
+        - tab "Stats" [ref=e142] [cursor=pointer]
+        - tab "Achievements" [ref=e144] [cursor=pointer]
+      - paragraph [ref=e146]: Today’s highlights beside your totals, the badges you’re closest to, the last two weeks and the planes you see most.
+    - generic [ref=e148]:
+      - generic [ref=e149]:
+        - heading "A heads-up for the good stuff." [level=2] [ref=e150]
+        - paragraph [ref=e151]: "Get an alert when a plane is about to pass right over you, or when something unusual is around: emergency squawks, military and government flights, air ambulances and rare aircraft. Sky Watch keeps an eye on the sky for up to two hours, with a Live Activity on your Lock Screen."
+      - figure "A Lock Screen with two What The Flight? alerts and the Sky Watch Live Activity" [ref=e152]:
+        - generic [ref=e153]:
+          - paragraph [ref=e155]: Friday, October 23
+          - paragraph [ref=e156]: 9:41
+          - generic [ref=e157]:
+            - generic [ref=e158]:
+              - generic [ref=e159]:
+                - paragraph [ref=e160]: B6819 overhead in 2:05
+                - paragraph [ref=e161]: Airbus A220-300 at 16,475 ft — look E, DTW → JFK.
+              - time [ref=e162]: now
+            - generic [ref=e163]:
+              - generic [ref=e164]:
+                - paragraph [ref=e165]: LH403 is a Boeing 747-8
+                - paragraph [ref=e166]: Boeing 747-8, 4 mi NE at 7,325 ft.
+              - time [ref=e167]: 3m ago
+            - generic [ref=e168]:
+              - paragraph [ref=e169]:
+                - generic [ref=e173]: Sky Watch · Central Park
+                - generic [ref=e174]: 14 in 10 mi
+              - generic [ref=e175]:
+                - generic [ref=e176]:
+                  - paragraph [ref=e177]: Delta Air Lines
+                  - paragraph [ref=e178]: DL5721BOS → LGA
+                - generic [ref=e179]:
+                  - generic [ref=e180]: 1 mi E
+                  - text: 3,575 ft
+              - paragraph [ref=e181]:
+                - generic [ref=e182]: Closest pass in 0:31
+                - generic [ref=e183]: Stop
+    - generic [ref=e185]:
+      - generic [ref=e186]:
+        - paragraph [ref=e187]: iPad
+        - heading "Room for the whole sky." [level=2] [ref=e188]
+        - paragraph [ref=e189]: On iPad the radar fills the screen, by day or by night. Turn it sideways with Map view on and a live map of the traffic sits beside the radar, turning as you turn.
+        - paragraph [ref=e190]: "On a folding iPhone, open it halfway: radar on one side of the fold, map on the other."
+      - figure [ref=e191]:
+        - 'img "The iPad radar at night: Atlas Air 5Y855, a rare Boeing 747-400, descending into JFK, with around 29 aircraft on the edge." [ref=e192]'
+    - generic [ref=e193]:
+      - generic [ref=e195]:
+        - generic [ref=e196]:
+          - paragraph [ref=e197]: Apple Watch
+          - heading "Point at a plane." [level=2] [ref=e198]
+          - paragraph [ref=e199]: A radar on your wrist with its own GPS. Raise your arm toward an aircraft and the Watch tells you what it is, or pick one and let haptics lead you to it. Complications show what’s nearest at a glance.
+        - generic [ref=e200]:
+          - figure "The radar. Turn the Digital Crown for the next plane out." [ref=e201]:
+            - 'img "The Watch radar: Delta DL5721 from Boston to LaGuardia, 3 miles away, with aircraft around the edge." [ref=e203]'
+          - figure "Identify. Point your arm at it and hear what it is." [ref=e205]:
+            - img "Identify naming Lufthansa LH403, a rare Boeing 747-8, 4 miles northeast." [ref=e207]
+          - figure "Find. Clicks and taps on your wrist guide you to the one you picked." [ref=e209]:
+            - 'img "Find guiding toward LH403 with a large arrow: right 32 degrees." [ref=e211]'
+      - generic [ref=e214]:
+        - generic [ref=e215]:
+          - paragraph [ref=e216]: Apple TV
+          - heading "The sky on the big screen." [level=2] [ref=e217]
+          - paragraph [ref=e218]: A radar, a map, or both side by side, with alerts read aloud when something flies over. Send your spot and the way your TV faces from your iPhone in one tap.
+        - figure [ref=e219]:
+          - 'img "Apple TV in Split view: United UA70 from Newark to Amsterdam on the radar, beside a map of New York traffic." [ref=e220]'
+        - tablist "Apple TV views" [ref=e221]:
+          - tab "Split" [selected] [ref=e222] [cursor=pointer]
+          - tab "Radar" [ref=e224] [cursor=pointer]
+          - tab "Map" [ref=e226] [cursor=pointer]
+    - generic [ref=e229]:
+      - heading "No account. No ads." [level=2] [ref=e230]
+      - paragraph [ref=e231]: There’s nothing to sign up for and no tracking. Your logbook stays on your devices and in your own iCloud.
+      - generic [ref=e232]: Coming soon to the App Store
+  - contentinfo [ref=e235]:
+    - generic [ref=e236]:
+      - generic [ref=e237]:
+        - link "What The Flight?" [ref=e238] [cursor=pointer]:
+          - /url: ./
+        - navigation "Footer" [ref=e240]:
+          - link "Support" [ref=e241] [cursor=pointer]:
+            - /url: support.html
+          - link "Privacy" [ref=e242] [cursor=pointer]:
+            - /url: privacy.html
+      - paragraph [ref=e243]: Flight data from Flightradar24. Aircraft photos from Planespotters.net, credited to each photographer. Airline data from OpenFlights (ODbL) and airport data from OurAirports. Coverage depends on each aircraft’s transponder and the receivers near you, so some flights, including many military and private aircraft, may not appear.
+      - paragraph [ref=e244]: What The Flight? is for curiosity, not navigation. © 2026 Josh Sargent.

@@ -493,6 +493,7 @@ struct WatchPerimeterLayer: View {
     let onShowList: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.favoriteAircraft) private var favorites
 
     var body: some View {
         ZStack {
@@ -509,7 +510,7 @@ struct WatchPerimeterLayer: View {
                 }
 
                 AircraftBlip(profile: placement.contact.profile, screenTrack: placement.screenTrack, isFocused: isFocused,
-                             scale: blipScale)
+                             isFavorite: favorites.contains(placement.contact.flight), scale: blipScale)
                     .opacity(isFocused ? 1 : fade)
                     .position(placement.point)
                     .animation(reduceMotion ? nil : .interactiveSpring(response: 0.6, dampingFraction: 0.85), value: placement.point)

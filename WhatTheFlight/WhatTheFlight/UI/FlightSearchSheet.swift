@@ -5,7 +5,9 @@
 //  Every aircraft the radar can see, searchable by flight, airline, type, registration or
 //  airport, plus any aircraft in the world by tail number, flight number or callsign.
 //  Tapping one sends it to the centre of the radar; the pin button follows it wherever it
-//  goes (on the radar edge and the map, with a pin on its icon).
+//  goes (on the radar edge and the map, with a pin on its icon). Favourites come first, live
+//  when they're flying nearby, otherwise a way to find out where they are; swipe any row to
+//  add or remove one.
 //
 
 #if os(iOS)
@@ -30,14 +32,28 @@ struct FlightSearchSheet: View {
 
     var body: some View {
         NavigationStack {
-            // Pinned aircraft are listed once, in their own section.
+            // Favourites, then pins, are listed once, in their own sections.
+            let favorites = model.favorites.filter(matches).map { FavoriteEntry(favorite: $0, state: model.state(of: $0)) }
+            let favoriteIDs = Set(favorites.compactMap(\.liveID))
             let pinnedIDs = model.pinnedIDs
-            let inRange = model.contacts.filter { !pinnedIDs.contains($0.id) && $0.flight.matches(search: query) }
-            let outside = model.outsideContacts.filter { !pinnedIDs.contains($0.id) && $0.flight.matches(search: query) }
-            let pins = model.pins.filter(matches)
-            let known = Set((inRange + outside).map(\.id)).union(pinnedIDs)
+            let listed = pinnedIDs.union(favoriteIDs)
+            let inRange = model.contacts.filter { !listed.contains($0.id) && $0.flight.matches(search: query) }
+            let outside = model.outsideContacts.filter { !listed.contains($0.id) && $0.flight.matches(search: query) }
+            let pins = model.pins.filter { pin in matches(pin) && !favoriteIDs.contains(pin.flightID) }
+            let known = Set((inRange + outside).map(\.id)).union(listed)
             let remote = worldwide.filter { !known.contains($0.id) }
             List {
+                if !favorites.isEmpty {
+                    Section {
+                        ForEach(favorites) { favoriteRow($0.favorite, state: $0.state) }
+                    } header: {
+                        Text("Favorites · \(favorites.count)")
+                    } footer: {
+                        if trimmedQuery.isEmpty {
+                            Text("Favorites show in yellow on the radar, the map and in your logbook. Swipe any aircraft to add or remove one.")
+                        }
+                    }
+                }
                 if !pins.isEmpty {
                     Section {
                         ForEach(pins) { pinRow($0) }
@@ -59,7 +75,7 @@ struct FlightSearchSheet: View {
                         ForEach(outside) { row($0) }
                     }
                 }
-                worldwideSection(remote, hasLocal: !(inRange.isEmpty && outside.isEmpty && pins.isEmpty))
+                worldwideSection(remote, hasLocal: !(inRange.isEmpty && outside.isEmpty && pins.isEmpty && favorites.isEmpty))
             }
             .scrollContentBackground(.hidden)
             .background(Palette.paper.ignoresSafeArea())
@@ -137,6 +153,88 @@ struct FlightSearchSheet: View {
             || trimmedQuery.isEmpty
     }
 
+    /// A favourite and where it is now.
+    private struct FavoriteEntry: Identifiable {
+        let favorite: FavoriteAircraft
+        let state: RadarModel.PinState
+        var id: String { favorite.id }
+        /// On the radar or the map, so it isn't listed again below.
+        var liveID: String? {
+            if case .visible(let contact) = state { return contact.id }
+            return nil
+        }
+    }
+
+    private func matches(_ favorite: FavoriteAircraft) -> Bool {
+        guard !trimmedQuery.isEmpty else { return true }
+        if case .visible(let contact) = model.state(of: favorite), contact.flight.matches(search: query) { return true }
+        let q = trimmedQuery.lowercased()
+        return [favorite.title, favorite.label, favorite.registration, favorite.callsign, favorite.typeName, favorite.operatorName]
+            .contains { $0?.lowercased().contains(q) == true }
+    }
+
+    @ViewBuilder
+    private func favoriteRow(_ favorite: FavoriteAircraft, state: RadarModel.PinState) -> some View {
+        switch state {
+        case .visible(let contact):
+            row(contact)
+        case .onGround(let flight):
+            unseenFavoriteRow(favorite, status: flight.destinationIATA.map { "On the ground · \($0)" } ?? "On the ground")
+        case .unseen:
+            unseenFavoriteRow(favorite, status: "Not nearby")
+        }
+    }
+
+    /// A favourite that isn't on the radar or the map: where it is is one tap away.
+    @ViewBuilder
+    private func unseenFavoriteRow(_ favorite: FavoriteAircraft, status: String) -> some View {
+        let content = HStack(spacing: 14) {
+            AircraftGlyph(silhouette: favorite.silhouette, size: 28, spinsRotor: false)
+                .foregroundStyle(Palette.favorite.opacity(0.6))
+                .frame(width: 30)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(favorite.title)
+                        .monoScaled(17, .bold)
+                        .foregroundStyle(Palette.ink)
+                        .lineLimit(1)
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Palette.favorite)
+                        .accessibilityLabel("Favorite")
+                }
+                Text([favorite.typeName ?? favorite.typeCode, favorite.operatorName].compactMap { $0 }.joined(separator: " · "))
+                    .monoScaled(11)
+                    .foregroundStyle(Palette.caption)
+                    .lineLimit(1)
+                Text(favorite.canLocate ? "\(status) · Where is it now?" : status)
+                    .monoScaled(11, .semibold)
+                    .foregroundStyle(favorite.canLocate ? Palette.route : Palette.caption)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+        }
+        .padding(.vertical, 4)
+        Group {
+            if favorite.canLocate {
+                NavigationLink {
+                    WhereaboutsView(title: favorite.title, registration: favorite.registration, callsign: favorite.callsign,
+                                    observer: model.observer)
+                } label: { content }
+            } else {
+                content
+            }
+        }
+        .listRowBackground(Palette.paperShade.opacity(0.25))
+        .swipeActions(edge: .trailing) {
+            Button(role: .destructive) {
+                withAnimation(.snappy) { model.unfavorite(favorite) }
+            } label: {
+                Label("Unfavorite", systemImage: "heart.slash")
+            }
+        }
+    }
+
     @ViewBuilder
     private func pinRow(_ pin: PinnedAircraft) -> some View {
         switch model.state(of: pin) {
@@ -176,6 +274,7 @@ struct FlightSearchSheet: View {
         let f = contact.flight
         let isFocused = model.focus.focusedID == contact.id
         let isPinned = model.isPinned(contact.id)
+        let isFavorite = model.isFavorite(f)
         return HStack(spacing: 10) {
             Button {
                 open(contact, isRemote: isRemote)
@@ -183,7 +282,7 @@ struct FlightSearchSheet: View {
                 HStack(spacing: 14) {
                     AircraftGlyph(silhouette: contact.profile.silhouette, size: 28, spinsRotor: false)
                         .rotationEffect(.degrees(f.track - heading))
-                        .foregroundStyle(isFocused ? Palette.signal : f.isOnGround ? Palette.faint : Palette.blip(for: contact.profile))
+                        .foregroundStyle(isFavorite ? Palette.favorite : isFocused ? Palette.signal : f.isOnGround ? Palette.faint : Palette.blip(for: contact.profile))
                         .frame(width: 30)
 
                     VStack(alignment: .leading, spacing: 3) {
@@ -200,6 +299,12 @@ struct FlightSearchSheet: View {
                                     .foregroundStyle(Palette.route)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.7)
+                            }
+                            if isFavorite {
+                                Image(systemName: "heart.fill")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(Palette.favorite)
+                                    .accessibilityLabel("Favorite")
                             }
                             if let top = f.notable.first {
                                 Image(systemName: top.tag.symbol)
@@ -241,6 +346,14 @@ struct FlightSearchSheet: View {
         }
         .padding(.vertical, 4)
         .listRowBackground(isFocused ? Palette.signal.opacity(0.08) : Palette.paperShade.opacity(0.25))
+        .swipeActions(edge: .trailing) {
+            Button {
+                withAnimation(.snappy) { model.toggleFavorite(f) }
+            } label: {
+                Label(isFavorite ? "Unfavorite" : "Favorite", systemImage: isFavorite ? "heart.slash" : "heart.fill")
+            }
+            .tint(isFavorite ? Palette.caption : Palette.favorite)
+        }
     }
 
     private func subtitle(for f: Flight, isRemote: Bool) -> String {

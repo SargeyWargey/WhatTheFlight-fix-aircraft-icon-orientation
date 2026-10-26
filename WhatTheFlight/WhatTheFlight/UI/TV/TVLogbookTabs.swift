@@ -99,9 +99,13 @@ private struct TVRankRow: View {
     let entry: LogbookRank
     let top: Int
     var showsGlyph = false
+    /// The aircraft ranking, whose entries are airframes: favourites in yellow.
+    var marksFavorites = false
     @Environment(\.tvRowFocused) private var focused
+    @Environment(\.favoriteAircraft) private var favorites
 
     var body: some View {
+        let isFavorite = marksFavorites && favorites.contains(airframe: entry.id)
         HStack(spacing: 18) {
             Text("\(rank)")
                 .font(.mono(22, .heavy))
@@ -109,10 +113,17 @@ private struct TVRankRow: View {
                 .frame(width: 36, alignment: .leading)
             if showsGlyph {
                 AircraftGlyph(silhouette: entry.latest.silhouette, size: 36, spinsRotor: false)
-                    .foregroundStyle(focused ? .white : entry.latest.tint)
+                    .foregroundStyle(focused ? .white : isFavorite ? Palette.favorite : entry.latest.tint)
             }
             VStack(alignment: .leading, spacing: 6) {
-                Text(entry.title).font(.mono(24, .bold)).lineLimit(1)
+                HStack(spacing: 10) {
+                    Text(entry.title).font(.mono(24, .bold)).lineLimit(1)
+                        .foregroundStyle(focused ? .white : isFavorite ? Palette.favoriteText : Palette.value)
+                    if isFavorite {
+                        Image(systemName: "heart.fill").font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(focused ? .white : Palette.favorite)
+                    }
+                }
                 if let subtitle = entry.subtitle {
                     Text(subtitle).font(.mono(17)).foregroundStyle(focused ? .white.opacity(0.8) : Palette.caption).lineLimit(1)
                 }
@@ -132,14 +143,14 @@ private struct TVRankRow: View {
     }
 }
 
-private func sightingCardContent(_ s: Sighting, reason: String?, reasonColor: Color) -> some View {
+private func sightingCardContent(_ s: Sighting, reason: String?, reasonColor: Color, isFavorite: Bool) -> some View {
     VStack(alignment: .leading, spacing: 10) {
         HStack(spacing: 14) {
             AircraftGlyph(silhouette: s.silhouette, size: 44, spinsRotor: false)
-                .foregroundStyle(s.tint)
+                .foregroundStyle(isFavorite ? Palette.favorite : s.tint)
             Text(s.displayIdentifier)
                 .font(.mono(34, .heavy))
-                .foregroundStyle(Palette.ink)
+                .foregroundStyle(isFavorite ? Palette.favoriteText : Palette.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             Spacer(minLength: 8)
@@ -165,6 +176,8 @@ private func sightingCardContent(_ s: Sighting, reason: String?, reasonColor: Co
 
 struct TVLogbookOverview: View {
     let ctx: TVLogbookContext
+
+    @Environment(\.favoriteAircraft) private var favorites
 
     var body: some View {
         let digest = ctx.logbook.digest
@@ -241,7 +254,7 @@ struct TVLogbookOverview: View {
                     Button {
                         ctx.actions.open(TVSightingBrowse(items.map { .init(sighting: $0.0, label: $0.1) }, start: i))
                     } label: {
-                        sightingCardContent(item.0, reason: item.1, reasonColor: item.2)
+                        sightingCardContent(item.0, reason: item.1, reasonColor: item.2, isFavorite: favorites.contains(item.0))
                     }
                     .buttonStyle(TVCardButtonStyle())
                 }
@@ -301,10 +314,12 @@ struct TVLogbookOverview: View {
                 ForEach(regulars.prefix(8)) { entry in
                     Button { ctx.actions.airframe(entry.id) } label: {
                         HStack(spacing: 20) {
+                            let isFavorite = favorites.contains(airframe: entry.id)
                             AircraftGlyph(silhouette: entry.latest.silhouette, size: 52, spinsRotor: false)
-                                .foregroundStyle(entry.latest.tint)
+                                .foregroundStyle(isFavorite ? Palette.favorite : entry.latest.tint)
                             VStack(alignment: .leading, spacing: 6) {
-                                Text(entry.title).font(.mono(32, .heavy)).foregroundStyle(Palette.ink)
+                                Text(entry.title).font(.mono(32, .heavy))
+                                    .foregroundStyle(isFavorite ? Palette.favoriteText : Palette.ink)
                                 Text(entry.subtitle ?? "").font(.mono(19)).foregroundStyle(Palette.caption).lineLimit(1)
                             }
                             Spacer(minLength: 10)
@@ -776,7 +791,8 @@ struct TVLogbookStats: View {
                         if let first = matches.first { ctx.actions.open(TVSightingBrowse(matches, showing: first)) }
                     }
                 } label: {
-                    TVRankRow(rank: i + 1, entry: entry, top: entries[0].count, showsGlyph: kind == .aircraft)
+                    TVRankRow(rank: i + 1, entry: entry, top: entries[0].count, showsGlyph: kind == .aircraft,
+                              marksFavorites: kind == .aircraft)
                 }
                 .buttonStyle(TVRowButtonStyle())
             }

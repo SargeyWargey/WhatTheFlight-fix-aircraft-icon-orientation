@@ -43,6 +43,27 @@ struct LogbookCountLabel: View {
     }
 }
 
+/// Adds or removes a favourite from the logbook's pages, which may be about an aircraft that
+/// isn't flying. Shown when the app passes `\.toggleFavorite` down (iPhone and iPad).
+struct LogbookFavoriteButton: View {
+    let sighting: Sighting
+
+    @Environment(\.favoriteAircraft) private var favorites
+    @Environment(\.toggleFavorite) private var toggle
+
+    var body: some View {
+        if let toggle {
+            let isFavorite = favorites.contains(sighting)
+            Button {
+                withAnimation(.snappy) { toggle(FavoriteAircraft(sighting)) }
+            } label: {
+                Label(isFavorite ? "Remove from Favorites" : "Add to Favorites", systemImage: isFavorite ? "heart.slash" : "heart.fill")
+            }
+            .tint(isFavorite ? Palette.caption : Palette.favoriteText)
+        }
+    }
+}
+
 /// Every time this airframe came by, newest first, with what it tells you: how often, how
 /// close, when it usually shows up and which routes it flies.
 struct AirframeHistoryView: View {
@@ -53,16 +74,19 @@ struct AirframeHistoryView: View {
 
     @Environment(\.radarObserver) private var observer
     @Environment(\.showsAircraftPhotos) private var showsPhotos
+    @Environment(\.favoriteAircraft) private var favorites
+    @Environment(\.toggleFavorite) private var toggleFavorite
 
     var body: some View {
         let summary = logbook.summary(airframe: airframe)
         let rank = logbook.digest.regularRank(airframe: airframe)
+        let isFavorite = favorites.contains(airframe: airframe)
         List {
             if let latest = summary.latest {
                 Section {
                     VStack(spacing: 6) {
                         AircraftGlyph(silhouette: latest.silhouette, size: 48, spinsRotor: false)
-                            .foregroundStyle(latest.tint)
+                            .foregroundStyle(isFavorite ? Palette.favorite : latest.tint)
                         if let rank {
                             Label(rank == 1 ? "Your #1 regular" : "Your #\(rank) regular", systemImage: "arrow.triangle.2.circlepath")
                                 .monoScaled(10, .heavy)
@@ -72,10 +96,13 @@ struct AirframeHistoryView: View {
                                 .foregroundStyle(Palette.notable)
                                 .background(Palette.notable.opacity(0.14), in: Capsule())
                         }
+                        if isFavorite {
+                            FavoriteTag()
+                        }
                         Text(latest.operatorName).radarCaption(scales: true)
                         Text(airframe)
                             .monoScaled(36, .heavy)
-                            .foregroundStyle(Palette.ink)
+                            .foregroundStyle(isFavorite ? Palette.favoriteText : Palette.ink)
                         let country = summary.registrationCountry.map(RegistrationCountry.countryName(forCode:))
                         Text([latest.typeName ?? latest.typeCode, country].compactMap { $0 }.joined(separator: " · "))
                             .monoScaled(13)
@@ -167,6 +194,12 @@ struct AirframeHistoryView: View {
                         VisitRow(sighting: s, isLive: isLive(s.id))
                     }
                     .listRowBackground(Palette.paperShade.opacity(0.25))
+                }
+            }
+
+            if toggleFavorite != nil, let latest = summary.latest {
+                Section {
+                    LogbookFavoriteButton(sighting: latest)
                 }
             }
 

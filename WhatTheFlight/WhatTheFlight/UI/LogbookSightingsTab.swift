@@ -445,21 +445,29 @@ struct SightingRowLabel: View {
     var showsDate = false
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.favoriteAircraft) private var favorites
 
     var body: some View {
         let s = sighting
+        let isFavorite = favorites.contains(s)
         HStack(spacing: 12) {
             AircraftGlyph(silhouette: s.silhouette, size: 28, spinsRotor: false)
-                .foregroundStyle(isLive ? Palette.signal : s.tint)
+                .foregroundStyle(isFavorite ? Palette.favorite : isLive ? Palette.signal : s.tint)
                 .frame(width: 30)
             VStack(alignment: .leading, spacing: 3) {
                 // At accessibility sizes the route goes under the flight number.
                 (dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout(spacing: 6))) {
                     Text(s.displayIdentifier)
                         .monoScaled(15, .bold)
-                        .foregroundStyle(Palette.ink)
+                        .foregroundStyle(isFavorite ? Palette.favoriteText : Palette.ink)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
+                    if isFavorite {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Palette.favorite)
+                            .accessibilityLabel("Favorite")
+                    }
                     if let route = s.routeText {
                         Text(route)
                             .monoScaled(11, .semibold)
@@ -522,25 +530,31 @@ struct SightingDetailView: View {
 
     @Environment(\.radarObserver) private var observer
     @Environment(\.showsAircraftPhotos) private var showsPhotos
+    @Environment(\.favoriteAircraft) private var favorites
+    @Environment(\.toggleFavorite) private var toggleFavorite
 
     var body: some View {
         // The live copy, so photos added or deleted show straight away.
         let s = logbook.sighting(id: sighting.id) ?? sighting
+        let isFavorite = favorites.contains(s)
         List {
             Section {
                 VStack(spacing: 6) {
                     AircraftGlyph(silhouette: s.silhouette, size: 56, spinsRotor: false)
-                        .foregroundStyle(s.tint)
+                        .foregroundStyle(isFavorite ? Palette.favorite : s.tint)
                         .padding(.bottom, 4)
                     if let tag = s.tags.first {
                         Label(tag.rawValue.capitalized, systemImage: tag.symbol)
                             .monoScaled(11, .heavy)
                             .foregroundStyle(Palette.color(for: tag))
                     }
+                    if isFavorite {
+                        FavoriteTag()
+                    }
                     Text(s.operatorName).radarCaption(scales: true)
                     Text(s.displayIdentifier)
                         .monoScaled(40, .heavy)
-                        .foregroundStyle(Palette.ink)
+                        .foregroundStyle(isFavorite ? Palette.favoriteText : Palette.ink)
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
                     if let route = s.routeText {
@@ -638,6 +652,15 @@ struct SightingDetailView: View {
                     }
                 } footer: {
                     Text("Every time you've seen \(airframe).")
+                }
+            }
+
+            if toggleFavorite != nil, s.airframe != nil || s.callsign != nil {
+                Section {
+                    LogbookFavoriteButton(sighting: s)
+                } footer: {
+                    Text(isFavorite ? "Shows in yellow on the radar, the map and in your logbook."
+                                    : "Favorites show in yellow on the radar, the map and in your logbook, whatever flight they're on.")
                 }
             }
 

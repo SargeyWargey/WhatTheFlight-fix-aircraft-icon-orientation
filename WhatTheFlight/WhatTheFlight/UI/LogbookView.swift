@@ -339,6 +339,8 @@ struct LogbookRecordsStrip: View {
     let records: [LogbookRecord]
     var columns = 0
 
+    @Environment(\.favoriteAircraft) private var favorites
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             LogbookHeader(title: "Records") {
@@ -370,8 +372,14 @@ struct LogbookRecordsStrip: View {
                 }
                 Text(r.value).monoScaled(22, .heavy).foregroundStyle(r.tint)
                     .lineLimit(1).minimumScaleFactor(0.6)
-                Text("\(r.sighting.displayIdentifier) · \(r.sighting.typeName ?? r.sighting.typeCode ?? "Aircraft")")
-                    .monoScaled(11).foregroundStyle(Palette.value).lineLimit(1)
+                let isFavorite = favorites.contains(r.sighting)
+                HStack(spacing: 4) {
+                    Text("\(r.sighting.displayIdentifier) · \(r.sighting.typeName ?? r.sighting.typeCode ?? "Aircraft")")
+                        .monoScaled(11).foregroundStyle(isFavorite ? Palette.favoriteText : Palette.value).lineLimit(1)
+                    if isFavorite {
+                        Image(systemName: "heart.fill").font(.system(size: 8, weight: .bold)).foregroundStyle(Palette.favorite)
+                    }
+                }
             }
             .logbookCard()
         }
@@ -468,7 +476,7 @@ struct LogbookMostSeenCard: View {
                 ForEach(Array(entries.prefix(3).enumerated()), id: \.element.id) { i, entry in
                     if i > 0 { Divider() }
                     NavigationLink(value: LogbookRoute.entry(kind, entry.id)) {
-                        LogbookRankRow(rank: i + 1, entry: entry, top: entries[0].count, showsGlyph: kind == .aircraft)
+                        LogbookRankRow(rank: i + 1, entry: entry, top: entries[0].count, showsGlyph: kind == .aircraft, marksFavorites: kind == .aircraft)
                             .padding(.vertical, 9)
                             .contentShape(Rectangle())
                     }

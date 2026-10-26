@@ -18,6 +18,7 @@ struct RadarRootView: View {
     @LazyState private var logbook = Logbook(device: .current)
     @State private var logbookSync: LogbookSync?
     @State private var pinSync: PinSync?
+    @State private var favoriteSync: FavoriteSync?
     @LazyState private var placeNamer = PlaceNamer()
     @LazyState private var raise = RaiseToSkyDetector()
     @LazyState private var widgets = WidgetPublisher()
@@ -103,6 +104,7 @@ struct RadarRootView: View {
             }
         }
         .environment(\.topographyStyle, settings.topography)
+        .environment(\.favoriteAircraft, settings.favoriteSet)
         .background { FoldSensor(monitor: fold).ignoresSafeArea() }
         // The compass and the 1 Hz clock change many times a minute; watching them here keeps
         // the root (and any sheet over it) from re-evaluating with them.
@@ -117,6 +119,8 @@ struct RadarRootView: View {
                 .environment(\.topographyStyle, settings.topography)
                 .environment(\.isFoldable, fold.isFoldable)
                 .environment(\.showsAircraftPhotos, settings.showPhotos)
+                .environment(\.favoriteAircraft, settings.favoriteSet)
+                .environment(\.toggleFavorite, FavoriteToggle { [model] in model.toggleFavorite($0) })
         }
         // At regular width (iPad, the Duo's inner screen) the logbook fills the screen.
         .fullScreenCover(isPresented: logbookCover) {
@@ -124,6 +128,8 @@ struct RadarRootView: View {
                 .environment(\.radarObserver, model.observer)
                 .environment(\.topographyStyle, settings.topography)
                 .environment(\.showsAircraftPhotos, settings.showPhotos)
+                .environment(\.favoriteAircraft, settings.favoriteSet)
+                .environment(\.toggleFavorite, FavoriteToggle { [model] in model.toggleFavorite($0) })
         }
         .fullScreenCover(item: $sky) { request in
             SkyView(model: model, settings: settings, location: location, request: request,
@@ -163,6 +169,7 @@ struct RadarRootView: View {
                 model.refreshNow()
                 logbookSync?.fetchNow()
                 pinSync?.refresh()
+                favoriteSync?.refresh()
             case .background:
                 logbook.flush()
                 // Sky Watch keeps the radar (and its alerts) running while the phone is locked.
@@ -466,13 +473,17 @@ struct RadarRootView: View {
         model.logPlaceName = name
     }
 
-    /// Pins follow you between devices through iCloud (`PinSync`).
+    /// Pins and favourites follow you between devices through iCloud (`PinSync`,
+    /// `FavoriteSync`).
     private func startPinSync() {
         guard pinSync == nil else { return }
         let sync = PinSync(settings: settings)
         sync.onRemoteChange = { model.pinsDidChangeElsewhere(arrived: $0) }
         sync.start()
         pinSync = sync
+        let favorites = FavoriteSync(settings: settings)
+        favorites.start()
+        favoriteSync = favorites
     }
 
     private func updateLogbookSync() {

@@ -34,6 +34,12 @@ enum Palette {
     static let blip = dynamic(light: 0x2D56B9, dark: 0x72AAFF)
     /// Pinned aircraft: the pin by the flight number and the mile label on the radar edge.
     static let pinned = dynamic(light: 0xD9A200, dark: 0xFFD60A)
+    /// Favourite aircraft, in the pin's yellow: the whole icon on the radar and the map, the
+    /// heart by the flight number, their names in search and the logbook.
+    static var favorite: Color { pinned }
+    /// Favourites' names in lists (search, the logbook, stats): the same yellow at night, a
+    /// deeper gold by day so it still reads on paper.
+    static let favoriteText = dynamic(light: 0xA67C00, dark: 0xFFD60A)
     /// Type-code chip.
     static let chip = dynamic(light: 0x8F8B84, dark: 0x273042)
     static let sweep = dynamic(light: 0x3A33D6, dark: 0x4CF0C0)
