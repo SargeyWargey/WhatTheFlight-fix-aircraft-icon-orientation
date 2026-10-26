@@ -183,6 +183,16 @@ final class TopographyRenderer {
     /// drawn at full resolution): 1920 × 1080 floats on a 4K TV, about 8 MB.
     private static func texelsPerPoint(scale: CGFloat) -> CGFloat { max(1, scale / 2) }
 
+    /// The longest texture side Metal allows everywhere, the simulator included (newer GPUs take
+    /// 16,384). Every screen fits easily; anything bigger is a passing layout, such as a cover's
+    /// first pass squeezing its text into a column thousands of points tall, and is skipped
+    /// (Metal aborts on a texture over the limit).
+    private static let maxTextureSide = 8192
+
+    private static func fits(width: Int, height: Int) -> Bool {
+        width <= maxTextureSide && height <= maxTextureSide
+    }
+
     /// The terrain under a `region`-point view, centred on its middle so it stays put when an
     /// iPad rotates. Full-screen terrains are kept (two at most); small ones are built and dropped.
     private func terrain(style: RadarSettings.TopographyStyle, region: CGSize, texelsPerPt: CGFloat, keep: Bool) -> Terrain? {
@@ -191,6 +201,7 @@ final class TopographyRenderer {
                              height: max(1, Int((region.height * texelsPerPt).rounded(.up))),
                              ptPerTexel: Float(1 / texelsPerPt),
                              origin: SIMD2(Float(-region.width / 2), Float(-region.height / 2)))
+        guard Self.fits(width: key.width, height: key.height) else { return nil }
         if let index = terrains.firstIndex(where: { $0.key == key }) {
             let hit = terrains.remove(at: index)
             terrains.insert(hit, at: 0)
@@ -316,6 +327,7 @@ final class TopographyRenderer {
         guard style != .off, size.width >= 1, size.height >= 1 else { return nil }
         let key = ImageKey(style: style, dark: dark, width: Int((size.width * scale).rounded()),
                            height: Int((size.height * scale).rounded()), zoom: zoom)
+        guard Self.fits(width: key.width, height: key.height) else { return nil }
         if let index = images.firstIndex(where: { $0.key == key }) {
             let hit = images.remove(at: index)
             images.insert(hit, at: 0)

@@ -27,14 +27,14 @@ struct TVOnboardingView: View {
 
     #if DEBUG
     /// `-wtf.debugTourPage 3` opens the tour on that page (screenshots).
-    @State private var page = min(max(UserDefaults.standard.integer(forKey: "wtf.debugTourPage"), 0), TourPage.all.count - 1)
+    @State private var page = min(max(UserDefaults.standard.integer(forKey: "wtf.debugTourPage"), 0), TourPage.pages(for: .tv).count - 1)
     #else
     @State private var page = 0
     #endif
     @State private var forward = true
     @FocusState private var focus: Focus?
 
-    private let pages = TourPage.all
+    private let pages = TourPage.pages(for: .tv)
     private var isLast: Bool { page == pages.count - 1 }
 
     var body: some View {

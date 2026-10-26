@@ -21,6 +21,8 @@ struct TVRadarRootView: View {
     @LazyState private var link = TVLinkReceiver()
     @LazyState private var tvLocation = TVLocationProvider()
     @State private var presented: Presented?
+    /// Goes up once the cover on screen has gone (`present(_:)`).
+    @State private var queued: Presented?
     /// A Top Shelf selection that arrived before the first feed load.
     @State private var pendingFlight: String?
     @State private var lastTopShelfRefresh = Date.distantPast
@@ -165,7 +167,7 @@ struct TVRadarRootView: View {
             )
         )
         .preferredColorScheme(settings.appearance.colorScheme)
-        .fullScreenCover(item: $presented) { item in
+        .fullScreenCover(item: $presented, onDismiss: presentQueued) { item in
             presentation(item)
                 .environment(\.topographyStyle, settings.topography)
         }
@@ -351,10 +353,22 @@ struct TVRadarRootView: View {
         }
     }
 
-    /// Swaps one full-screen cover for another once the first has gone.
+    /// Swaps one full-screen cover for another once the first has gone: tvOS drops a cover
+    /// asked for while the last one is still on its way out (Settings → Take the tour did
+    /// nothing when this waited a fixed half second).
     private func present(_ item: Presented) {
+        guard presented != nil else {
+            presented = item
+            return
+        }
+        queued = item
         presented = nil
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { presented = item }
+    }
+
+    private func presentQueued() {
+        guard let next = queued else { return }
+        queued = nil
+        presented = next
     }
 
     private func syncObserver() {

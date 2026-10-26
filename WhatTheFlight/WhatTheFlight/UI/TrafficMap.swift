@@ -29,7 +29,8 @@ struct TrafficMap: View {
     var isPinned = false
     /// The aircraft a spoken alert is reading out (Apple TV), pulsed in purple.
     var announcedID: String? = nil
-    /// Pinned aircraft: drawn with a pin wherever they are, not just near the ring.
+    /// Pinned aircraft: drawn wherever they are, not just near the ring, with a yellow trail
+    /// (`Palette.pinned`, the pin's colour on the hero) to tell them apart.
     var pinnedIDs: Set<String> = []
     /// `model.trail(for:)`.
     let trail: (String) -> [RadarModel.TrailPoint]
@@ -99,6 +100,7 @@ struct TrafficMap: View {
         let id: String
         let coordinates: [CLLocationCoordinate2D]
         let opacity: Double
+        let isPinned: Bool
     }
 
     private var blips: [Blip] {
@@ -119,6 +121,11 @@ struct TrafficMap: View {
     }
 
     private var heading: Double { headingUp ?? 0 }
+
+    /// Yellow reads less strongly than the blue on a pale map, so a pinned trail is wider.
+    private func trailWidth(pinned: Bool) -> CGFloat {
+        options.trailWidth * options.scale * (pinned ? 1.5 : 1)
+    }
 
     /// A box well beyond anything the camera can show around what it's framing (home, or a
     /// far-away pinned aircraft it's following).
@@ -160,8 +167,8 @@ struct TrafficMap: View {
 
             ForEach(trails) { segment in
                 MapPolyline(coordinates: segment.coordinates)
-                    .stroke(ink.route(segment.opacity),
-                            style: StrokeStyle(lineWidth: options.trailWidth * options.scale, lineCap: .round, lineJoin: .round))
+                    .stroke(segment.isPinned ? ink.pinned(segment.opacity) : ink.route(segment.opacity),
+                            style: StrokeStyle(lineWidth: trailWidth(pinned: segment.isPinned), lineCap: .round, lineJoin: .round))
                     .mapOverlayLevel(level: .aboveLabels)
             }
             // From the last reported position up to where the aircraft is now, as bright as the
@@ -169,9 +176,11 @@ struct TrafficMap: View {
             ForEach(blips) { blip in
                 if let last = trail(blip.id).last {
                     let newest = options.trailBands.first?.opacity ?? 0.9
+                    let opacity = blip.role == .fringe ? newest * 0.4 : newest
+                    let isPinned = pinnedIDs.contains(blip.id)
                     MapPolyline(coordinates: [last.coordinate, blip.contact.coordinate])
-                        .stroke(ink.route(blip.role == .fringe ? newest * 0.4 : newest),
-                                style: StrokeStyle(lineWidth: options.trailWidth * options.scale, lineCap: .round))
+                        .stroke(isPinned ? ink.pinned(opacity) : ink.route(opacity),
+                                style: StrokeStyle(lineWidth: trailWidth(pinned: isPinned), lineCap: .round))
                         .mapOverlayLevel(level: .aboveLabels)
                 }
             }
@@ -235,7 +244,7 @@ struct TrafficMap: View {
         .onChange(of: positionKey) { _, _ in keepPinnedAircraftInView() }
         // A set: the order changes whenever two aircraft swap places by distance, and a
         // rebuild replaces every trail on the map.
-        .onChange(of: TrailKey(version: trailVersion, ids: Set(blips.map(\.id))), initial: true) { _, _ in
+        .onChange(of: TrailKey(version: trailVersion, ids: Set(blips.map(\.id)), pinnedIDs: pinnedIDs), initial: true) { _, _ in
             rebuildTrails()
         }
         .overlay(alignment: .bottomTrailing) {
@@ -279,12 +288,16 @@ struct TrafficMap: View {
     /// Runs once per feed (and when the set of aircraft changes), not on every tick.
     private func rebuildTrails() {
         let now = Date()
-        trails = blips.flatMap { blip in
+        let all = blips.flatMap { blip in
             let fade = blip.role == .fringe ? 0.4 : 1
+            let isPinned = pinnedIDs.contains(blip.id)
             return TrafficMapGeometry.segments(trail(blip.id), now: now, bands: options.trailBands).enumerated().map { index, segment in
-                TrailSegment(id: "\(blip.id)-\(index)", coordinates: segment.coordinates, opacity: segment.opacity * fade)
+                TrailSegment(id: "\(blip.id)-\(index)", coordinates: segment.coordinates, opacity: segment.opacity * fade,
+                             isPinned: isPinned)
             }
         }
+        // Pinned trails last, so other traffic never crosses over the yellow.
+        trails = all.filter { !$0.isPinned } + all.filter(\.isPinned)
         rebuildAirports()
     }
 
@@ -366,16 +379,18 @@ struct TrafficMap: View {
     private struct TrailKey: Equatable {
         let version: Int
         let ids: Set<String>
+        /// Pinning or unpinning recolours a trail straight away, not at the next feed.
+        let pinnedIDs: Set<String>
     }
 }
 
-/// Fixed colours for what `TrafficMap` draws into the map: the wash, rings, trails and the
-/// projected path. MapKit turns an overlay's SwiftUI colour into a UIColor every time it
+/// Fixed colours for what `TrafficMap` draws into the map: the wash, rings, trails (yellow
+/// for pinned aircraft) and the projected path. MapKit turns an overlay's SwiftUI colour into a UIColor every time it
 /// touches the overlay's renderer, and an adaptive colour (all of `Palette`) is then resolved
 /// through SwiftUI on every touch, a large share of each update on a busy map. Resolved once
 /// for the appearance, they're plain RGB.
 struct MapInk {
-    private let routeColor, inkColor, paperColor, signalColor: UIColor
+    private let routeColor, inkColor, paperColor, signalColor, pinnedColor: UIColor
 
     init(_ scheme: ColorScheme) {
         let traits = UITraitCollection(userInterfaceStyle: scheme == .dark ? .dark : .light)
@@ -384,12 +399,14 @@ struct MapInk {
         inkColor = fixed(Palette.ink)
         paperColor = fixed(Palette.paper)
         signalColor = fixed(Palette.signal)
+        pinnedColor = fixed(Palette.pinned)
     }
 
     func route(_ opacity: Double) -> Color { Color(uiColor: routeColor.withAlphaComponent(opacity)) }
     func ink(_ opacity: Double) -> Color { Color(uiColor: inkColor.withAlphaComponent(opacity)) }
     func paper(_ opacity: Double) -> Color { Color(uiColor: paperColor.withAlphaComponent(opacity)) }
     func signal(_ opacity: Double) -> Color { Color(uiColor: signalColor.withAlphaComponent(opacity)) }
+    func pinned(_ opacity: Double) -> Color { Color(uiColor: pinnedColor.withAlphaComponent(opacity)) }
 }
 
 // MARK: - Shared map pieces

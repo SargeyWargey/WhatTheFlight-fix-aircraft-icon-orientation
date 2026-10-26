@@ -101,3 +101,6 @@ secrets.py
 *.local
 # The website lives in its own repository (SargeyWargey/whattheflight)
 Website/
+
+## Claude Code
+.claude/state/
