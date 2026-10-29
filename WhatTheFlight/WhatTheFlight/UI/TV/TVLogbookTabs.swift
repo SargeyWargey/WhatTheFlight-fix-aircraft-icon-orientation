@@ -7,7 +7,8 @@
 //  months on the left, that period's aircraft on the right, with quick filters. Stats: "Your
 //  sky" (the charts for one spot you watch from, chips to pick another) then "Everywhere"
 //  (activity, records and every ranking). Badges: next up, then every badge by group.
-//  Photos: every Sky View photo. Charts are focusable cards so the remote can scroll to them.
+//  Photos: every Sky View photo. Charts are focusable cards so the remote can scroll to them,
+//  and a click opens a chart full screen (`TVSkyExplorers.swift`, `TVExplorableCard.swift`).
 //
 
 #if os(tvOS)
@@ -53,13 +54,7 @@ private struct TVChartCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             if title != nil || detail != nil {
-                HStack(alignment: .firstTextBaseline) {
-                    if let title { Text(title).radarCaptionTV() }
-                    Spacer()
-                    if let detail {
-                        Text(detail).font(.mono(22, .bold)).foregroundStyle(Palette.value)
-                    }
-                }
+                TVChartCardHeader(title: title ?? "", detail: detail)
             }
             content
         }
@@ -181,6 +176,7 @@ struct TVLogbookOverview: View {
     /// This year and this month, for the "In the sky" shelf.
     @State private var recaps: [(period: LogbookRecap.Period, total: Int)] = []
     @State private var shownRecap: LogbookRecap.Period?
+    @State private var exploringActivity = false
 
     var body: some View {
         let digest = ctx.logbook.digest
@@ -287,10 +283,17 @@ struct TVLogbookOverview: View {
         }
     }
 
+    /// A click opens it full screen: ◀ ▶ through the days, a click for that day's aircraft.
     private func activity(_ digest: LogbookDigest) -> some View {
-        TVChartCard(title: "Last 14 days",
-                    detail: "\(digest.streak.current)-day streak · best \(digest.streak.best)\(digest.busiestDay.map { " · best day \($0.count)" } ?? "")") {
-            LogbookActivityChart(points: digest.recentDays(14), scale: 2, height: 90)
+        let points = digest.recentDays(14)
+        return TVExplorableCard(isExploring: $exploringActivity) {
+            VStack(alignment: .leading, spacing: 18) {
+                TVChartCardHeader(title: "Last 14 days",
+                                  detail: "\(digest.streak.current)-day streak · best \(digest.streak.best)\(digest.busiestDay.map { " · best day \($0.count)" } ?? "")")
+                LogbookActivityChart(points: points, scale: 2, height: 90)
+            }
+        } explorer: {
+            TVActivityExplorer(title: "Last 14 days", points: points, ctx: ctx, page: "Overview")
         }
         .padding(.top, 10)
     }
@@ -607,8 +610,14 @@ struct TVLogbookStats: View {
     /// Whose sky the charts show; nil until one's picked (then the TV's own spot once its
     /// charts are ready, else the busiest).
     @State private var scope: LogbookSkyScope?
-    /// "Which way they fly" open full screen.
-    @State private var exploringHeadings = false
+    /// The chart open full screen (the route web and altitude vs speed keep their own).
+    @State private var exploring: ExploredChart?
+
+    private enum ExploredChart { case headings, hours, weekdays, altitudes, days, months }
+
+    private func isExploring(_ chart: ExploredChart) -> Binding<Bool> {
+        Binding(get: { exploring == chart }, set: { exploring = $0 ? chart : nil })
+    }
 
     var body: some View {
         let digest = ctx.logbook.digest
@@ -629,50 +638,48 @@ struct TVLogbookStats: View {
                         }
                     } else {
                         // Which way they fly beside the route web, altitude vs speed under them; a
-                        // click opens any of them full screen.
+                        // click opens any chart full screen.
                         HStack(alignment: .top, spacing: 30) {
-                            directions(sky)
+                            directions(choice)
                             routeWeb(sky)
                         }
                         .fixedSize(horizontal: false, vertical: true)
                         .focusSection()
                         altitudeSpeed(sky)
                         HStack(alignment: .top, spacing: 30) {
-                            TVChartCard(title: "By hour", detail: sky.showsTimes ? sky.busiestHourOfDay.map { "Busiest \(LogbookFormat.hourRange($0))" } : nil) {
-                                if sky.showsTimes {
-                                    LogbookHourlyChart(counts: sky.hourly, highlight: sky.busiestHourOfDay, scale: 2, height: 120)
-                                } else {
-                                    pending(count: sky.count)
-                                }
-                            }
-                            TVChartCard(title: "By weekday", detail: sky.showsTimes ? sky.busiestWeekday.map { "\(Calendar.current.weekdaySymbols[$0])s" } : nil) {
-                                if sky.showsTimes {
-                                    LogbookWeekdayChart(counts: sky.weekdays, scale: 2, height: 120)
-                                } else {
-                                    pending(count: sky.count)
-                                }
-                            }
-                            .frame(width: 520)
+                            hours(choice)
+                            weekdays(choice)
+                                .frame(width: 520)
                         }
-                        TVChartCard(title: "How high they pass", detail: sky.showsAltitudes ? "Altitude at the closest pass" : nil) {
-                            if sky.showsAltitudes {
-                                LogbookAltitudeChart(bins: sky.altitudes, scale: 2, height: 160)
-                            } else {
-                                pending(count: sky.withAltitude, noun: "in the air")
-                            }
-                        }
+                        .fixedSize(horizontal: false, vertical: true)
+                        .focusSection()
+                        altitudes(choice)
                     }
                     everywhereHeader(digest)
                     summary(digest)
                     HStack(alignment: .top, spacing: 30) {
-                        TVChartCard(title: "Last 30 days") {
-                            LogbookActivityChart(points: digest.recentDays(30), scale: 2, height: 110)
+                        let days = digest.recentDays(30)
+                        let months = digest.monthlyCounts().map { (day: $0.month, count: $0.count) }
+                        TVExplorableCard(isExploring: isExploring(.days)) {
+                            VStack(alignment: .leading, spacing: 18) {
+                                TVChartCardHeader(title: "Last 30 days")
+                                LogbookActivityChart(points: days, scale: 2, height: 110)
+                            }
+                        } explorer: {
+                            TVActivityExplorer(title: "Last 30 days", points: days, ctx: ctx)
                         }
-                        TVChartCard(title: "By month") {
-                            LogbookActivityChart(points: digest.monthlyCounts().map { (day: $0.month, count: $0.count) }, unit: .month, scale: 2, height: 110)
+                        TVExplorableCard(isExploring: isExploring(.months)) {
+                            VStack(alignment: .leading, spacing: 18) {
+                                TVChartCardHeader(title: "By month")
+                                LogbookActivityChart(points: months, unit: .month, scale: 2, height: 110)
+                            }
+                        } explorer: {
+                            TVActivityExplorer(title: "By month", points: months, unit: .month, ctx: ctx)
                         }
                         .frame(width: 560)
                     }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .focusSection()
                     records(digest)
                     ForEach([[LogbookRanking.aircraft, .airlines, .types], [.routes, .airports, .countries]], id: \.self) { row in
                         HStack(alignment: .top, spacing: 30) {
@@ -789,15 +796,17 @@ struct TVLogbookStats: View {
     }
 
     /// A compass rose of where aircraft head over this sky and the main direction, beside the
-    /// route web. A click opens it full screen with the top three and what the lean means.
+    /// route web. A click opens it full screen: ◀ ▶ go round the petals, the panel says who
+    /// flies each way, a click lists them.
     @ViewBuilder
-    private func directions(_ sky: LogbookSky) -> some View {
+    private func directions(_ choice: LogbookSkyChoice) -> some View {
+        let sky = choice.sky
         if !sky.showsHeadings {
             TVChartCard(title: "Which way they fly") {
                 pending(count: sky.headed, noun: "with a heading")
             }
         } else {
-            TVExplorableCard(isExploring: $exploringHeadings) {
+            TVExplorableCard(isExploring: isExploring(.headings)) {
                 VStack(alignment: .leading, spacing: 18) {
                     Text("Which way they fly").radarCaptionTV()
                     HStack(alignment: .center, spacing: 40) {
@@ -813,67 +822,71 @@ struct TVLogbookStats: View {
                                         .foregroundStyle(Palette.value)
                                 }
                             }
-                            Text("Click to see it full screen.")
+                            Text("Click to explore it direction by direction.")
                                 .font(.mono(20))
                                 .foregroundStyle(Palette.caption)
                         }
                     }
                 }
             } explorer: {
-                TVChartExplorer(title: "Which way they fly", detail: "\(RadarFormat.wholeNumber(sky.headed)) aircraft",
-                                hint: "Back to return to Stats", move: { _ in }, select: {},
-                                spoken: { headingsSummary(sky) }) {
-                    headingsDetail(sky)
-                }
+                TVSkySliceExplorer(start: .heading(sky.mainSector ?? 0), choice: choice, ctx: ctx)
             }
         }
     }
 
-    /// "38% heading southwest; then northeast, west": what VoiceOver says full screen.
-    private func headingsSummary(_ sky: LogbookSky) -> String {
-        let main = sky.mainHeading.map { "\(Int(($0.share * 100).rounded()))% heading \(LogbookFormat.direction($0.degrees))" } ?? ""
-        let others = sky.topHeadings().map { LogbookFormat.sectorNames[$0.sector] }.joined(separator: ", ")
-        return others.isEmpty ? main : "\(main); top headings \(others)"
+    /// Aircraft by hour of the day; a click opens it full screen, hour by hour.
+    @ViewBuilder
+    private func hours(_ choice: LogbookSkyChoice) -> some View {
+        let sky = choice.sky
+        let detail = sky.busiestHourOfDay.map { "Busiest \(LogbookFormat.hourRange($0))" }
+        if sky.showsTimes {
+            TVExplorableCard(isExploring: isExploring(.hours)) {
+                VStack(alignment: .leading, spacing: 18) {
+                    TVChartCardHeader(title: "By hour", detail: detail)
+                    LogbookHourlyChart(counts: sky.hourly, highlight: sky.busiestHourOfDay, scale: 2, height: 120)
+                }
+            } explorer: {
+                TVSkySliceExplorer(start: .hour(sky.busiestHourOfDay ?? 12), choice: choice, ctx: ctx)
+            }
+        } else {
+            TVChartCard(title: "By hour") { pending(count: sky.count) }
+        }
     }
 
-    /// Full screen: the rose large, the main direction, the top three and what a lean means.
-    private func headingsDetail(_ sky: LogbookSky) -> some View {
-        HStack(alignment: .center, spacing: 80) {
-            LogbookHeadingRose(sectors: sky.headings, size: 600, scale: 2.8)
-            VStack(alignment: .leading, spacing: 28) {
-                if let main = sky.mainHeading {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("\(Int((main.share * 100).rounded()))%")
-                            .font(.mono(110, .heavy))
-                            .foregroundStyle(ChartTone.heading(main.degrees))
-                        Text("heading \(LogbookFormat.direction(main.degrees))")
-                            .font(.mono(36, .bold))
-                            .foregroundStyle(Palette.value)
-                    }
+    /// Aircraft by day of the week; a click opens it full screen, day by day.
+    @ViewBuilder
+    private func weekdays(_ choice: LogbookSkyChoice) -> some View {
+        let sky = choice.sky
+        if sky.showsTimes {
+            TVExplorableCard(isExploring: isExploring(.weekdays)) {
+                VStack(alignment: .leading, spacing: 18) {
+                    TVChartCardHeader(title: "By weekday", detail: sky.busiestWeekday.map { "\(Calendar.current.weekdaySymbols[$0])s" })
+                    LogbookWeekdayChart(counts: sky.weekdays, scale: 2, height: 120)
                 }
-                HStack(spacing: 18) {
-                    ForEach(sky.topHeadings(), id: \.sector) { entry in
-                        VStack(spacing: 6) {
-                            Text(LogbookFormat.sectorNames[entry.sector])
-                                .font(.mono(40, .heavy))
-                                .foregroundStyle(ChartTone.heading(Double(entry.sector) * 22.5))
-                            Text("\(Int((entry.share * 100).rounded()))%")
-                                .font(.mono(22, .semibold))
-                                .foregroundStyle(Palette.caption)
-                        }
-                        .frame(width: 170)
-                        .padding(.vertical, 18)
-                        .background(Palette.paper.opacity(0.7), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    }
-                }
-                Text("Each petal is the share of aircraft on that heading at their closest pass; the red dot is you. A strong lean usually means you're under an approach or departure path.")
-                    .font(.mono(22))
-                    .foregroundStyle(Palette.caption)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: 820, alignment: .leading)
+            } explorer: {
+                TVSkySliceExplorer(start: .weekday(sky.busiestWeekday ?? 0), choice: choice, ctx: ctx)
             }
+        } else {
+            TVChartCard(title: "By weekday") { pending(count: sky.count) }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// Altitude at the closest pass; a click opens it full screen, band by band.
+    @ViewBuilder
+    private func altitudes(_ choice: LogbookSkyChoice) -> some View {
+        let sky = choice.sky
+        if sky.showsAltitudes {
+            TVExplorableCard(isExploring: isExploring(.altitudes)) {
+                VStack(alignment: .leading, spacing: 18) {
+                    TVChartCardHeader(title: "How high they pass", detail: "Altitude at the closest pass")
+                    LogbookAltitudeChart(bins: sky.altitudes, scale: 2, height: 160)
+                }
+            } explorer: {
+                TVSkySliceExplorer(start: .altitude(sky.busiestAltitudeBand ?? 0), choice: choice, ctx: ctx)
+            }
+        } else {
+            TVChartCard(title: "How high they pass") { pending(count: sky.withAltitude, noun: "in the air") }
+        }
     }
 
     private func summary(_ digest: LogbookDigest) -> some View {

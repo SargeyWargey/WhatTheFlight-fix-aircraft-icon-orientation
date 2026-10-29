@@ -39,10 +39,10 @@ struct LogbookStatsTab: View {
                         StatsSkyFillingCard(choice: choice)
                     } else {
                         StatsAltitudeSpeedCard(sky: choice.sky, wide: true)
-                        StatsDirectionsCard(sky: choice.sky, wide: true)
+                        StatsDirectionsCard(choice: choice, ctx: ctx, wide: true)
                         StatsRouteWebCard(sky: choice.sky, wide: true)
                         HStack(alignment: .top, spacing: 20) {
-                            StatsWhenCard(sky: choice.sky)
+                            StatsWhenCard(choice: choice, ctx: ctx)
                             StatsAltitudeCard(sky: choice.sky)
                         }
                         .fixedSize(horizontal: false, vertical: true)
@@ -69,9 +69,9 @@ struct LogbookStatsTab: View {
                         StatsSkyFillingCard(choice: choice)
                     } else {
                         StatsAltitudeSpeedCard(sky: choice.sky)
-                        StatsDirectionsCard(sky: choice.sky)
+                        StatsDirectionsCard(choice: choice, ctx: ctx)
                         StatsRouteWebCard(sky: choice.sky)
-                        StatsWhenCard(sky: choice.sky)
+                        StatsWhenCard(choice: choice, ctx: ctx)
                         StatsAltitudeCard(sky: choice.sky)
                     }
                     StatsEverywhereHeader(digest: digest)
@@ -222,11 +222,16 @@ private struct StatsActivityCard: View {
     }
 }
 
-/// When your sky is busiest: by hour of the day and by weekday.
+/// When your sky is busiest: by hour of the day and by weekday. Tap a bar or drag along them to
+/// read one; the pick stays, with what it's made of and a link to its aircraft.
 private struct StatsWhenCard: View {
-    let sky: LogbookSky
+    let choice: LogbookSkyChoice
+    let ctx: LogbookContext
+
+    @State private var picked: LogbookSkySlice?
 
     var body: some View {
+        let sky = choice.sky
         VStack(alignment: .leading, spacing: 12) {
             LogbookHeader(title: "When your sky is busiest") {
                 if sky.showsTimes, let hour = sky.busiestHourOfDay {
@@ -234,7 +239,11 @@ private struct StatsWhenCard: View {
                 }
             }
             if sky.showsTimes {
-                LogbookHourlyChart(counts: sky.hourly, highlight: sky.busiestHourOfDay, height: 120)
+                LogbookHourlyChart(counts: sky.hourly, highlight: sky.busiestHourOfDay, height: 120, picked: pickedHour) {
+                    picked = $0.map(LogbookSkySlice.hour)
+                }
+                .padding(.top, 26)
+                if case .hour? = picked { drill }
                 Divider()
                 HStack {
                     Text("By day of the week").monoScaled(11, .semibold).foregroundStyle(Palette.caption)
@@ -243,13 +252,67 @@ private struct StatsWhenCard: View {
                         Text("Busiest on \(Calendar.current.weekdaySymbols[i])s").monoScaled(11, .bold).foregroundStyle(Palette.value)
                     }
                 }
-                LogbookWeekdayChart(counts: sky.weekdays, height: 100)
+                LogbookWeekdayChart(counts: sky.weekdays, height: 100, picked: pickedWeekday) {
+                    picked = $0.map(LogbookSkySlice.weekday)
+                }
+                .padding(.top, 26)
+                if case .weekday? = picked { drill }
+                if picked == nil {
+                    Text("Tap a bar, or drag along them, to read it and see its aircraft.")
+                        .monoScaled(10)
+                        .foregroundStyle(Palette.caption)
+                }
             } else {
                 StatsChartPending(count: sky.count)
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .logbookCard()
+        .onChange(of: choice.scope) { picked = nil }
+    }
+
+    private var pickedHour: Int? {
+        if case .hour(let h)? = picked { return h }
+        return nil
+    }
+
+    private var pickedWeekday: Int? {
+        if case .weekday(let d)? = picked { return d }
+        return nil
+    }
+
+    /// Under the chart that was touched: its share, rank and regulars, and the way to its aircraft.
+    @ViewBuilder
+    private var drill: some View {
+        if let picked {
+            StatsSliceDrill(slice: picked, choice: choice, ctx: ctx, compact: true) { self.picked = nil }
+        }
+    }
+}
+
+/// A picked petal or bar: what it's made of, then "See the 42 aircraft ›".
+private struct StatsSliceDrill: View {
+    let slice: LogbookSkySlice
+    let choice: LogbookSkyChoice
+    let ctx: LogbookContext
+    var compact = false
+    var onClose: (() -> Void)? = nil
+
+    var body: some View {
+        let summary = ctx.logbook.digest.summary(of: slice, spot: choice.spot?.id, from: ctx.logbook.recent)
+        VStack(alignment: .leading, spacing: compact ? 8 : 14) {
+            LogbookSliceOverview(summary: summary, compact: compact, onClose: onClose)
+            if summary.count > 0 {
+                NavigationLink(value: LogbookRoute.filter(.sky(slice, spot: choice.spot?.id))) {
+                    Text(summary.count == 1 ? "See the aircraft ›" : "See the \(RadarFormat.wholeNumber(summary.count)) aircraft ›")
+                }
+                .monoScaled(12, .bold)
+                .foregroundStyle(Palette.ink)
+            }
+        }
+        .padding(compact ? 10 : 0)
+        .background(compact ? Palette.paper.opacity(0.6) : .clear, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .transition(.opacity)
     }
 }
 
@@ -289,13 +352,18 @@ private struct StatsAltitudeSpeedCard: View {
 }
 
 /// Which way aircraft fly over you: a big compass rose of their headings at the closest
-/// pass, the main direction and the top three. Under the altitude-vs-speed chart.
+/// pass, the main direction and the top three. Under the altitude-vs-speed chart. Tap a petal
+/// (or one of the top three) for that direction's share, who flies it and a link to them.
 private struct StatsDirectionsCard: View {
-    let sky: LogbookSky
+    let choice: LogbookSkyChoice
+    let ctx: LogbookContext
     /// Rose and numbers side by side (iPad).
     var wide = false
 
+    @State private var picked: Int?
+
     var body: some View {
+        let sky = choice.sky
         if !sky.showsHeadings {
             VStack(alignment: .leading, spacing: 12) {
                 LogbookHeader("Which way they fly")
@@ -304,13 +372,19 @@ private struct StatsDirectionsCard: View {
             .logbookCard()
         } else {
             VStack(alignment: .leading, spacing: 14) {
-                LogbookHeader("Which way they fly")
+                LogbookHeader(title: "Which way they fly") {
+                    if picked != nil {
+                        Button("All directions") { picked = nil }
+                    }
+                }
                 let layout = wide ? AnyLayout(HStackLayout(alignment: .center, spacing: 36)) : AnyLayout(VStackLayout(alignment: .leading, spacing: 18))
                 layout {
-                    LogbookHeadingRose(sectors: sky.headings, size: wide ? 320 : 290, scale: 1.35)
+                    LogbookHeadingRose(sectors: sky.headings, size: wide ? 320 : 290, scale: 1.35, picked: picked) { picked = $0 }
                         .frame(maxWidth: wide ? nil : .infinity)
                     VStack(alignment: .leading, spacing: 14) {
-                        if let main = sky.mainHeading {
+                        if let picked {
+                            StatsSliceDrill(slice: .heading(picked), choice: choice, ctx: ctx)
+                        } else if let main = sky.mainHeading {
                             HStack(alignment: .firstTextBaseline, spacing: 10) {
                                 Text("\(Int((main.share * 100).rounded()))%")
                                     .monoScaled(44, .heavy)
@@ -322,28 +396,44 @@ private struct StatsDirectionsCard: View {
                         }
                         HStack(spacing: 8) {
                             ForEach(sky.topHeadings(), id: \.sector) { entry in
-                                VStack(spacing: 2) {
-                                    Text(LogbookFormat.sectorNames[entry.sector])
-                                        .monoScaled(18, .heavy)
-                                        .foregroundStyle(ChartTone.heading(Double(entry.sector) * 22.5))
-                                    Text("\(Int((entry.share * 100).rounded()))%")
-                                        .monoScaled(11, .semibold)
-                                        .foregroundStyle(Palette.caption)
+                                Button {
+                                    picked = picked == entry.sector ? nil : entry.sector
+                                } label: {
+                                    VStack(spacing: 2) {
+                                        Text(LogbookFormat.sectorNames[entry.sector])
+                                            .monoScaled(18, .heavy)
+                                            .foregroundStyle(ChartTone.heading(Double(entry.sector) * 22.5))
+                                        Text("\(Int((entry.share * 100).rounded()))%")
+                                            .monoScaled(11, .semibold)
+                                            .foregroundStyle(Palette.caption)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .background(Palette.paper, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                    .overlay {
+                                        if picked == entry.sector {
+                                            RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Palette.ink, lineWidth: 2)
+                                        }
+                                    }
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                                .background(Palette.paper, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .buttonStyle(.plain)
                                 .accessibilityElement(children: .combine)
+                                .accessibilityAddTraits(picked == entry.sector ? .isSelected : [])
                             }
                         }
-                        Text("Each petal is the share of aircraft on that heading at their closest pass; the red dot is you. A strong lean usually means you're under an approach or departure path.")
-                            .monoScaled(11)
-                            .foregroundStyle(Palette.caption)
-                            .fixedSize(horizontal: false, vertical: true)
+                        if picked == nil {
+                            Text("Each petal is the share of aircraft on that heading at their closest pass; the red dot is you. A strong lean usually means you're under an approach or departure path. Tap a petal to see who flies that way.")
+                                .monoScaled(11)
+                                .foregroundStyle(Palette.caption)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             .logbookCard(padding: 18)
+            .animation(.snappy(duration: 0.2), value: picked)
+            .onChange(of: choice.scope) { picked = nil }
         }
     }
 }

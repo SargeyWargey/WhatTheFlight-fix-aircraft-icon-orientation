@@ -2,8 +2,8 @@
 //  TVExplorableCard.swift
 //  WhatTheFlight
 //
-//  Charts the Siri Remote can explore: the Stats tab's altitude-vs-speed chart and route web.
-//  On the page a chart is a card like any other: it lifts when focus reaches it, and the
+//  Charts the Siri Remote can explore: every chart on the Stats tab (and the Overview's
+//  activity). On the page a chart is a card like any other: it lifts when focus reaches it, and the
 //  arrows carry on between cards. A click opens it full screen (`TVChartExplorer`), where the
 //  chart is the only thing the remote can land on, so every arrow moves the pick inside it;
 //  back closes whatever's open inside, then returns to the page.
@@ -44,6 +44,22 @@ struct TVExplorableCard<Card: View, Explorer: View>: View {
         // route web's flights) comes back to.
         .onChange(of: isExploring) { _, exploring in
             if !exploring { focused = true }
+        }
+    }
+}
+
+/// A chart card's title, with a note on the right ("Busiest 8–9 AM").
+struct TVChartCardHeader: View {
+    let title: LocalizedStringKey
+    var detail: String? = nil
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title).radarCaptionTV()
+            Spacer()
+            if let detail {
+                Text(detail).font(.mono(22, .bold)).foregroundStyle(Palette.value)
+            }
         }
     }
 }

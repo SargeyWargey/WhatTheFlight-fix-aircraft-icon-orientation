@@ -588,7 +588,8 @@ private struct AltitudeSpeedReadout: View {
 
 /// A drag that only starts sideways, so a swipe up or down over the chart still scrolls the
 /// page. The page's scroll waits for it to decide, which an up-or-down swipe does at once.
-private struct SidewaysScrub: UIGestureRecognizerRepresentable {
+/// Also runs along the logbook's bar charts (`LogbookBarPicking`).
+struct SidewaysScrub: UIGestureRecognizerRepresentable {
     let onChange: (CGPoint) -> Void
 
     func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator { Coordinator() }
@@ -619,7 +620,7 @@ private struct SidewaysScrub: UIGestureRecognizerRepresentable {
 }
 
 /// Hold still for a moment, then drag in any direction. Moving first scrolls the page instead.
-private struct PressAndScrub: UIGestureRecognizerRepresentable {
+struct PressAndScrub: UIGestureRecognizerRepresentable {
     let onChange: (CGPoint) -> Void
 
     func makeUIGestureRecognizer(context: Context) -> UILongPressGestureRecognizer {

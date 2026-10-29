@@ -250,6 +250,109 @@ final class LogbookDigestTests: XCTestCase {
                        .everywhere, "nothing positioned: everywhere")
     }
 
+    // MARK: Slices (drilling into a chart)
+
+    /// Two spots, a sighting from before positions were saved, one from before zones were, and
+    /// a spread of tracks, hours and altitudes.
+    private func slicedBook() -> [Sighting] {
+        let tracks: [Double?] = [2, 45, 92, 181, 225, 230, 268, 359, nil]
+        let altitudes = [0, 2_500, 7_000, 12_000, 31_000, 37_000, 44_000]
+        var book = (0..<70).map { i in
+            watched("a\(i)", at(daysAgo: i % 9, hour: (i * 5) % 24, minute: i % 60), from: i % 3 == 0 ? decatur : atlanta,
+                    place: "Atlanta, GA", track: tracks[i % tracks.count], altitude: altitudes[i % altitudes.count],
+                    zone: i % 4 == 0 ? nil : "America/New_York")
+        }
+        book += (0..<20).map { i in
+            watched("c\(i)", at(daysAgo: i % 3, hour: 7 + i % 4), from: chicago, place: "Chicago, IL",
+                    track: tracks[(i + 3) % tracks.count], altitude: altitudes[(i + 2) % altitudes.count], zone: "America/Chicago")
+        }
+        book.append(sighting("old", at(daysAgo: 12, hour: 9), track: 225, place: "Atlanta, GA"))
+        book.append(sighting("lost", at(daysAgo: 12, hour: 10), track: 225, place: nil))
+        return book.sorted { $0.firstSeen < $1.firstSeen }
+    }
+
+    func testEverySliceListsExactlyTheAircraftItsBarCounts() {
+        let book = slicedBook()
+        let digest = LogbookDigest(book, now: now, calendar: calendar)
+        let recent = Array(book.reversed())
+        XCTAssertEqual(digest.spots.map(\.name), ["Atlanta, GA", "Chicago, IL"])
+        let skies: [(String?, LogbookSky)] = [(nil, digest.sky)] + digest.spots.map { ($0.id, $0.sky) }
+        for (spot, sky) in skies {
+            for chart in [LogbookSkySlice.heading(0), .hour(0), .weekday(0), .altitude(0)] {
+                let bins = sky.bins(of: chart)
+                for i in bins.indices {
+                    let slice = chart.with(index: i)
+                    let found = digest.sightings(in: slice, spot: spot, from: recent, calendar: calendar)
+                    XCTAssertEqual(found.count, bins[i], "\(slice) in \(spot ?? "everywhere")")
+                }
+            }
+        }
+        let home = digest.spots[0].id
+        XCTAssertTrue(digest.sightings(in: .heading(10), spot: home, from: recent, calendar: calendar).contains { $0.id == "old" },
+                      "a sighting without a position joins the spot named after its place")
+        XCTAssertFalse(digest.sightings(in: .heading(10), spot: home, from: recent, calendar: calendar).contains { $0.id == "lost" })
+        XCTAssertTrue(digest.sightings(in: .heading(10), spot: nil, from: recent, calendar: calendar).contains { $0.id == "lost" })
+        XCTAssertTrue(digest.sightings(in: .heading(10), spot: "gone", from: recent, calendar: calendar).isEmpty)
+        XCTAssertEqual(digest.sightings(in: .hour(9), spot: home, from: recent, calendar: calendar).map(\.firstSeen),
+                       digest.sightings(in: .hour(9), spot: home, from: recent, calendar: calendar).map(\.firstSeen).sorted(by: >),
+                       "newest first, like the list they came from")
+    }
+
+    func testASliceSummarySaysItsShareRankAndWhoIsInIt() {
+        func flight(_ id: String, _ track: Double, hour: Int, airline: String, type: String, altitude: Int) -> Sighting {
+            sighting(id, at(daysAgo: 1, hour: hour), type: type, airline: airline, from: "ATL", to: track > 180 ? "DFW" : "LGA",
+                     altitude: altitude, track: track)
+        }
+        let book = [
+            flight("w1", 270, hour: 18, airline: "Delta Air Lines", type: "A321", altitude: 9_000),
+            flight("w2", 268, hour: 18, airline: "Delta Air Lines", type: "B738", altitude: 11_000),
+            flight("w3", 272, hour: 7, airline: "American Airlines", type: "A321", altitude: 10_000),
+            flight("e1", 90, hour: 8, airline: "Delta Air Lines", type: "B739", altitude: 30_000),
+            flight("n1", 0, hour: 8, airline: "Southwest Airlines", type: "B737", altitude: 4_000),
+        ].sorted { $0.firstSeen < $1.firstSeen }
+        let digest = LogbookDigest(book, now: now, calendar: calendar)
+        let recent = Array(book.reversed())
+        let west = digest.summary(of: .heading(12), spot: nil, from: recent, calendar: calendar)
+        XCTAssertEqual(west.count, 3)
+        XCTAssertEqual(west.total, 5)
+        XCTAssertEqual(west.percent, 60)
+        XCTAssertEqual(west.rank, 1)
+        XCTAssertEqual(west.rankText, "The busiest direction")
+        XCTAssertEqual(west.airlines.map(\.title), ["Delta Air Lines", "American Airlines"])
+        XCTAssertEqual(west.types.first?.id, "A321")
+        XCTAssertEqual(west.routes.map(\.title), ["ATL → DFW"])
+        XCTAssertEqual(west.typicalAltitudeFeet, 10_000)
+        XCTAssertEqual(west.busiestHour, 18)
+        XCTAssertNil(west.mainSector, "a petal doesn't repeat its own direction")
+
+        let eight = digest.summary(of: .hour(8), spot: nil, from: recent, calendar: calendar)
+        XCTAssertEqual(eight.count, 2)
+        XCTAssertEqual(eight.rank, 1, "tied with 6 PM")
+        XCTAssertNil(eight.busiestHour)
+        XCTAssertEqual(eight.mainSector, 0, "north and east tie; north comes first")
+
+        let seven = digest.summary(of: .hour(7), spot: nil, from: recent, calendar: calendar)
+        XCTAssertEqual(seven.rankText, "3rd busiest hour", "two hours have more")
+
+        XCTAssertEqual(Set(digest.sightings(matching: .sky(.heading(12), spot: nil), in: recent).map(\.id)), ["w1", "w2", "w3"])
+        XCTAssertFalse(LogbookFilter.sky(.heading(12), spot: nil).matches(book[0], firstOfType: []), "needs the digest")
+    }
+
+    func testSliceWording() {
+        XCTAssertEqual(LogbookSkySlice.heading(10).title, "Heading southwest")
+        XCTAssertEqual(LogbookSkySlice.hour(8).title, "8–9 AM")
+        XCTAssertEqual(LogbookFilter.sky(.hour(23), spot: nil).title, "11 PM–12 AM")
+        XCTAssertEqual(LogbookSkySlice.heading(10).phrase, "heading southwest")
+        XCTAssertEqual(LogbookSkySlice.hour(8).phrase, "from 8–9 AM")
+        XCTAssertEqual(LogbookSky.altitudeBandTitle(0, units: .imperial), "Below 5,000 ft")
+        XCTAssertEqual(LogbookSky.altitudeBandTitle(2, units: .imperial), "10,000–15,000 ft")
+        XCTAssertEqual(LogbookSky.altitudeBandTitle(8, units: .imperial), "40,000+ ft")
+        XCTAssertEqual(LogbookSky.altitudeBandTitle(2, units: .metric), "3–4.5 km")
+        XCTAssertEqual(LogbookSky.altitudeBandTitle(8, units: .metric), "12+ km")
+        XCTAssertEqual((1...4).map(LogbookSliceSummary.ordinal), ["1st", "2nd", "3rd", "4th"])
+        XCTAssertEqual([11, 12, 13, 21, 22].map(LogbookSliceSummary.ordinal), ["11th", "12th", "13th", "21st", "22nd"])
+    }
+
     func testFormatting() {
         XCTAssertEqual(LogbookFormat.hourRange(7), "7–8 AM")
         XCTAssertEqual(LogbookFormat.hourRange(11), "11 AM–12 PM")

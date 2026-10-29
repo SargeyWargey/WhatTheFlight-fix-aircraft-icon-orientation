@@ -378,13 +378,35 @@
     "+%lld more in range" : {
 
     },
+    "▲ ▼ step through the altitudes · Click to see the aircraft · Back to return to Stats" : {
+
+    },
     "◀ ▶ ▲ ▼ step from dot to dot · Click for the full card · Back to return to Stats" : {
 
     },
     "◀ ▶ go round the airports · ▼ ▲ through their routes · Click to see the flights · Back to return to Stats" : {
 
     },
+    "◀ ▶ go round the directions · Click to see the aircraft · Back to return to Stats" : {
+
+    },
     "◀ ▶ Move through the tour" : {
+
+    },
+    "◀ ▶ step through the %@ · Click to see the aircraft · Back to return to %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "◀ ▶ step through the %1$@ · Click to see the aircraft · Back to return to %2$@"
+          }
+        }
+      }
+    },
+    "◀ ▶ step through the days · Click to see the aircraft · Back to return to Stats" : {
+
+    },
+    "◀ ▶ step through the hours · Click to see the aircraft · Back to return to Stats" : {
 
     },
     "◀ ▶ to flip through the cards" : {
@@ -457,6 +479,9 @@
 
     },
     "About" : {
+
+    },
+    "Activity" : {
 
     },
     "Activity · by month" : {
@@ -597,6 +622,9 @@
     "All %lld ›" : {
 
     },
+    "All directions" : {
+
+    },
     "All places" : {
 
     },
@@ -685,9 +713,6 @@
     "B748 or Boeing 747" : {
 
     },
-    "Back to return to Stats" : {
-
-    },
     "Back Up Logbook…" : {
 
     },
@@ -766,6 +791,9 @@
     "Busiest between %@" : {
 
     },
+    "Busiest hour" : {
+
+    },
     "Busiest on %@s" : {
 
     },
@@ -832,6 +860,9 @@
     "Clear the location?" : {
 
     },
+    "Clear the pick" : {
+
+    },
     "Clear the whole logbook?" : {
 
     },
@@ -841,10 +872,16 @@
     "Click to explore" : {
 
     },
+    "Click to explore it direction by direction." : {
+
+    },
     "Click to explore the chart." : {
 
     },
-    "Click to see it full screen." : {
+    "Click to see the %@ aircraft" : {
+
+    },
+    "Click to see the aircraft" : {
 
     },
     "Click to see these flights" : {
@@ -1031,6 +1068,9 @@
     "Each petal is the share of aircraft on that heading at their closest pass; the red dot is you. A strong lean usually means you're under an approach or departure path." : {
 
     },
+    "Each petal is the share of aircraft on that heading at their closest pass; the red dot is you. A strong lean usually means you're under an approach or departure path. Tap a petal to see who flies that way." : {
+
+    },
     "Easiest: aim your iPhone" : {
 
     },
@@ -1062,6 +1102,9 @@
 
     },
     "Evening digest" : {
+
+    },
+    "Every aircraft · %@" : {
 
     },
     "Every aircraft by altitude and speed, with the highest and fastest ringed" : {
@@ -1538,6 +1581,9 @@
     "No aircraft found for “%@”" : {
 
     },
+    "No aircraft logged here yet." : {
+
+    },
     "No aircraft yet" : {
 
     },
@@ -1822,6 +1868,9 @@
     "Pick a Spot" : {
 
     },
+    "Picked" : {
+
+    },
     "Picked sighting" : {
 
     },
@@ -2047,6 +2096,12 @@
     "Searching…" : {
 
     },
+    "See the %@ aircraft ›" : {
+
+    },
+    "See the aircraft ›" : {
+
+    },
     "See today ›" : {
 
     },
@@ -2267,6 +2322,9 @@
 
     },
     "Tally" : {
+
+    },
+    "Tap a bar, or drag along them, to read it and see its aircraft." : {
 
     },
     "Tap an airport to see its routes." : {

@@ -378,27 +378,37 @@ struct LogbookMonthView: View {
 // MARK: - A subset
 
 /// Every sighting of an airline, type, route, airport, country or place (or a quick filter),
-/// with when they tend to come by.
+/// with when they tend to come by. A petal or bar of the sky charts leads with what it's
+/// made of: its share of the chart, where it ranks, who flies it.
 struct LogbookFilteredView: View {
     let filter: LogbookFilter
     let ctx: LogbookContext
 
     var body: some View {
         let digest = ctx.logbook.digest
-        let matches = digest.sightings(matching: filter, in: ctx.logbook.recent)
+        let summary: LogbookSliceSummary? = {
+            guard case .sky(let slice, let spot) = filter else { return nil }
+            return digest.summary(of: slice, spot: spot, from: ctx.logbook.recent)
+        }()
+        let matches = summary?.sightings ?? digest.sightings(matching: filter, in: ctx.logbook.recent)
         List {
             Section {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(Self.caption(filter)).radarCaption(scales: true)
-                    Text(filter.title)
-                        .monoScaled(26, .heavy)
-                        .foregroundStyle(Palette.ink)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.6)
+                    Text(Self.caption(filter, digest: digest)).radarCaption(scales: true)
+                    if let summary {
+                        LogbookSliceOverview(summary: summary)
+                            .padding(.top, 4)
+                    } else {
+                        Text(filter.title)
+                            .monoScaled(26, .heavy)
+                            .foregroundStyle(Palette.ink)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.6)
+                    }
                     if case .country(let code) = filter {
                         Text(RegistrationCountry.flag(forCode: code)).font(.system(size: 30))
                     }
-                    if let last = matches.first, let first = matches.last {
+                    if summary == nil, let last = matches.first, let first = matches.last {
                         Text("\(RadarFormat.wholeNumber(matches.count)) sighting\(matches.count == 1 ? "" : "s") · first \(first.firstSeen.formatted(date: .abbreviated, time: .omitted)) · last \(LogbookGrouping.shortTitle(for: last.firstSeen))")
                             .monoScaled(12)
                             .foregroundStyle(Palette.value)
@@ -406,7 +416,7 @@ struct LogbookFilteredView: View {
                 }
                 .listRowBackground(Color.clear)
             }
-            if matches.count > 2 {
+            if matches.count > 2, !filter.isHourSlice {
                 Section("When they come by") {
                     LogbookHourlyChart(counts: LogbookDayView.hourly(matches))
                         .padding(.vertical, 6)
@@ -422,7 +432,7 @@ struct LogbookFilteredView: View {
         .fontDesign(.monospaced)
     }
 
-    static func caption(_ filter: LogbookFilter) -> String {
+    static func caption(_ filter: LogbookFilter, digest: LogbookDigest) -> String {
         switch filter {
         case .airframe: return "Aircraft"
         case .airline: return "Airline"
@@ -431,8 +441,19 @@ struct LogbookFilteredView: View {
         case .airport: return "Airport"
         case .country: return "Registered in"
         case .place: return "Watched from"
+        case .sky(let slice, let spot):
+            // "Which way they fly · Atlanta, GA".
+            return "\(slice.chartTitle) · \(spot.flatMap { id in digest.spots.first { $0.id == id }?.name } ?? "All places")"
         default: return "Sightings"
         }
+    }
+}
+
+private extension LogbookFilter {
+    /// One hour's aircraft: a "when they come by" chart would be a single bar.
+    var isHourSlice: Bool {
+        if case .sky(.hour, _) = self { return true }
+        return false
     }
 }
 

@@ -1,0 +1,39 @@
+Build 11: favorite aircraft, "Can I see it?" with live clouds and fog, and a much bigger logbook Stats tab you can explore.
+
+New
+• What it's doing: the radar's center says "On approach to ATL", "Climbing out of ATL" or "Cruising · 2h 05m to DFW".
+• Favorite aircraft: yellow wherever they turn up, top of the Aircraft list, synced to all your devices.
+• Can I see it?: says when an aircraft is hidden by cloud, haze, distance, the horizon or the sun (Settings → Radar → Weather).
+• Clouds and fog drift across the radar and map with the wind.
+• Watchlist alerts for a tail number, type, airline or callsign, plus alerts for favorites, pins and first-ever types.
+• Logbook Stats: altitude vs speed, a route web, and tap a petal, hour or weekday to see its share, who flies it and every aircraft. On Apple TV every chart opens full screen.
+• Your month and year in the sky: recap cards on the logbook's Overview.
+• Follow on Lock Screen (iPhone): route, progress and arrival countdown until it lands.
+• Next Overhead widget for the Home Screen, Lock Screen and StandBy.
+• Sky View draws where the aircraft will fly next and lists aircraft "rising soon".
+• Aircraft details: maker, exact model and registered company.
+• Metric units, a backup data source (adsb.lol), saved spots and share cards.
+• Logbook: add camera-roll photos, export and back up, ask Siri, evening digest.
+• Read alerts aloud, and 14 new app icons with a Light / Dark switch.
+• Apple Watch: its own logbook entries and a battery saver.
+
+Improved
+• The radar's bottom bar now matches the Liquid Glass tab bar.
+• Aircraft list: no pin buttons on rows; pin from the details.
+• Flight details spell out the cities.
+• Apple Watch: set the overhead distance, alert lead time and favorite/pin alerts.
+
+Please try:
+• Open an aircraft's details, tap Favorite, then find it in yellow on the radar and at the top of the Aircraft list.
+• Watch an airliner near an airport and see the line change from cruising to approach.
+• On a cloudy day, check the line under a high aircraft's type, then turn on Prefer aircraft you can see.
+• Open Logbook → Stats, tap the biggest petal on Which way they fly, then follow the link to its aircraft.
+• On Apple TV, open Which way they fly, step to a quieter direction and click to see its aircraft.
+• Open the logbook, tap "Your 2026" and flip through the cards.
+• Choose Alert Me → Any of its type on an airliner and wait for the next one.
+• Tap Follow on Lock Screen on an airliner, then lock your phone.
+• Add the Next Overhead widget to your Lock Screen.
+• Lift your phone toward an approaching aircraft in Sky View and follow the dashed line.
+• Switch Units to Metric, or Data source to Open data, and check the radar.
+• Back up your logbook to Files, then restore it and check nothing is duplicated.
+• Leave your iPhone behind and log an aircraft with only your Apple Watch.

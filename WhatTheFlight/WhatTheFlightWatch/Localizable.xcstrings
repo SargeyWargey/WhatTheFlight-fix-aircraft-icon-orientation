@@ -300,6 +300,12 @@
     "Big gentle hills, one line weight" : {
 
     },
+    "By day of the week" : {
+
+    },
+    "By hour" : {
+
+    },
     "Callsign" : {
 
     },
@@ -376,6 +382,9 @@
 
     },
     "Hold to switch to %@" : {
+
+    },
+    "How high they pass" : {
 
     },
     "Hybrid" : {
@@ -739,6 +748,9 @@
 
     },
     "What's That Plane?" : {
+
+    },
+    "Which way they fly" : {
 
     },
     "While the app is open. For alerts with your wrist down, start Sky Watch on iPhone. The watchlist comes from your iPhone's Alerts settings." : {

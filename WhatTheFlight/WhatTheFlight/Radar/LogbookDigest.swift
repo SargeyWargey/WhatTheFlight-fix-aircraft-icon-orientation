@@ -189,10 +189,12 @@ struct LogbookRank: Identifiable, Hashable, Sendable {
     let latest: Sighting
 }
 
-/// A subset of the logbook: a quick filter on the Sightings tab, or a ranked entry's sightings.
+/// A subset of the logbook: a quick filter on the Sightings tab, a ranked entry's sightings,
+/// or the aircraft behind one petal or bar of a spot's sky charts (`spot` nil = every place).
 enum LogbookFilter: Hashable, Sendable {
     case notable, photographed, helicopters, military, newTypes
     case airframe(String), airline(String), type(String), route(String), airport(String), country(String), place(String)
+    case sky(LogbookSkySlice, spot: String?)
 
     /// The quick filters, in chip order.
     static let quick: [LogbookFilter] = [.notable, .photographed, .helicopters, .military, .newTypes]
@@ -211,9 +213,12 @@ enum LogbookFilter: Hashable, Sendable {
         case .airport(let key): return AirportCatalog.airport(iata: key).map { "\($0.iata) · \($0.city)" } ?? key
         case .country(let key): return RegistrationCountry.countryName(forCode: key)
         case .place(let key): return key
+        case .sky(let slice, _): return slice.title
         }
     }
 
+    /// One sighting on its own. A sky slice needs its spot and local clocks, so it never
+    /// matches here: go through `LogbookDigest.sightings(matching:in:)`.
     func matches(_ s: Sighting, firstOfType: Set<String>) -> Bool {
         switch self {
         case .notable: return !s.tags.isEmpty
@@ -228,6 +233,7 @@ enum LogbookFilter: Hashable, Sendable {
         case .airport(let key): return s.originIATA == key || s.destinationIATA == key
         case .country(let key): return s.registrationCountry == key
         case .place(let key): return s.placeName == key
+        case .sky: return false
         }
     }
 }
@@ -379,7 +385,8 @@ struct LogbookDigest: Sendable {
     }
 
     func sightings(matching filter: LogbookFilter, in all: [Sighting]) -> [Sighting] {
-        all.filter { filter.matches($0, firstOfType: firstOfType) }
+        if case .sky(let slice, let spot) = filter { return sightings(in: slice, spot: spot, from: all) }
+        return all.filter { filter.matches($0, firstOfType: firstOfType) }
     }
 
     /// Locked badges and unfinished levels closest to done, most nearly there first. Records
