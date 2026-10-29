@@ -45,6 +45,7 @@ struct FlightHero: View {
 
     private var flight: Flight { contact.flight }
     @Environment(\.favoriteAircraft) private var favorites
+    @Environment(\.skyVisibility) private var skyVisibility
 
     var body: some View {
         if case .trailing(let width) = photo {
@@ -184,6 +185,12 @@ struct FlightHero: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
+            if let phase = contact.phase {
+                PhaseLine(phase: phase, scale: detailScale)
+            }
+            if let visibility = skyVisibility.of(contact), visibility.text != nil {
+                VisibilityLine(visibility: visibility, scale: detailScale)
+            }
         }
     }
 
@@ -209,9 +216,9 @@ struct FlightHero: View {
     private var altitudeStat: some View {
         StatBlock(
             title: "Altitude",
-            value: RadarFormat.wholeNumber(contact.altitudeFeet),
-            numeric: Double(contact.altitudeFeet),
-            unit: "ft",
+            value: RadarFormat.altitude(contact.altitudeFeet),
+            numeric: RadarFormat.altitudeValue(contact.altitudeFeet),
+            unit: RadarFormat.altitudeUnit(),
             scale: detailScale,
             accessory: altitudeTrend
         )
@@ -220,9 +227,9 @@ struct FlightHero: View {
     private var speedStat: some View {
         StatBlock(
             title: "Speed",
-            value: RadarFormat.wholeNumber(flight.groundSpeedKnots),
-            numeric: Double(flight.groundSpeedKnots),
-            unit: "kts",
+            value: RadarFormat.speed(flight.groundSpeedKnots),
+            numeric: RadarFormat.speedValue(flight.groundSpeedKnots),
+            unit: RadarFormat.speedUnit(),
             scale: detailScale
         )
     }
@@ -230,9 +237,9 @@ struct FlightHero: View {
     private var distanceStat: some View {
         StatBlock(
             title: "Distance",
-            value: RadarFormat.miles(contact.distanceMiles),
+            value: RadarFormat.distance(contact.distanceMiles),
             numeric: contact.distanceMiles.rounded(),
-            unit: "mi",
+            unit: RadarFormat.distanceUnit(),
             scale: detailScale,
             accessory: AnyView(
                 Image(systemName: "location.north.fill")
@@ -253,6 +260,69 @@ struct FlightHero: View {
         case .level:
             return nil
         }
+    }
+}
+
+/// Whether the aircraft can be seen, for the hero and the details. Set at each app's root
+/// from `RadarModel.visibility(of:)`; nil everywhere else (previews, the tour).
+struct SkyVisibilityLookup {
+    var of: (RadarContact) -> SkyVisibility? = { _ in nil }
+}
+
+extension EnvironmentValues {
+    @Entry var skyVisibility = SkyVisibilityLookup()
+}
+
+/// "Above the clouds · overcast at 2,500 ft": only when you can't see it (or it's dark).
+struct VisibilityLine: View {
+    let visibility: SkyVisibility
+    var scale: CGFloat = 1
+    var scales = false
+
+    var body: some View {
+        if let text = visibility.text {
+            HStack(spacing: 5 * scale) {
+                Image(systemName: visibility.symbol)
+                    .font(.system(size: 10 * scale, weight: .bold))
+                Group {
+                    if scales {
+                        Text(text).monoScaled(11, .semibold)
+                    } else {
+                        Text(text).font(.mono(11 * scale, .semibold))
+                    }
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            }
+            .foregroundStyle(visibility.canSee ? Palette.route : Palette.warning)
+            .accessibilityElement(children: .combine)
+        }
+    }
+}
+
+/// "On approach to ATL · 12 mi out", with the phase's symbol.
+struct PhaseLine: View {
+    let phase: FlightPhase
+    var scale: CGFloat = 1
+    /// Sheets and lists follow Dynamic Type; the radar face stays fixed.
+    var scales = false
+
+    var body: some View {
+        HStack(spacing: 5 * scale) {
+            Image(systemName: phase.symbol)
+                .font(.system(size: 10 * scale, weight: .bold))
+            Group {
+                if scales {
+                    Text(phase.text).monoScaled(12, .semibold)
+                } else {
+                    Text(phase.text).font(.mono(12 * scale, .semibold))
+                }
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+        }
+        .foregroundStyle(Palette.route)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -291,7 +361,7 @@ struct RouteLine: View {
 }
 
 struct StatBlock: View {
-    let title: String
+    let title: LocalizedStringKey
     let value: String
     let numeric: Double
     let unit: String
@@ -355,7 +425,7 @@ struct ApproachChip: View {
                 HStack(spacing: 6 * scale) {
                     Image(systemName: "scope")
                         .font(.system(size: 11 * scale, weight: .bold))
-                    Text("Closest pass \(RadarFormat.miles(contact.closestApproach.distanceMiles)) mi in \(RadarFormat.countdown(contact.closestApproach.secondsFromNow))")
+                    Text("Closest pass \(RadarFormat.distanceText(contact.closestApproach.distanceMiles)) in \(RadarFormat.countdown(contact.closestApproach.secondsFromNow))")
                         .font(.mono(12 * scale, .semibold))
                         .contentTransition(.numericText(countsDown: true))
                 }
@@ -481,7 +551,7 @@ struct CenterStateView: View {
         case .scanning:
             return "Listening for aircraft overhead"
         case .clearSkies(let radius):
-            return "Nothing airborne within \(Int(radius)) mi right now."
+            return "Nothing airborne within \(RadarFormat.radius(radius)) right now."
         case .error(let text):
             return text
         }
@@ -497,7 +567,7 @@ struct CenterStateView: View {
             return denied ? "Open Settings" : "Use My Location"
             #endif
         case .scanning: return nil
-        case .clearSkies(let radius): return radius < RadarSettings.radiusRange.upperBound ? "Widen to \(Int(min(RadarSettings.radiusRange.upperBound, radius * 2))) mi" : nil
+        case .clearSkies(let radius): return radius < RadarSettings.radiusRange.upperBound ? "Widen to \(RadarFormat.radius(min(RadarSettings.radiusRange.upperBound, radius * 2)))" : nil
         case .error: return "Try Again"
         }
     }

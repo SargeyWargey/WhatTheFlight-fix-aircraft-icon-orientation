@@ -18,11 +18,11 @@ struct Achievement: Identifiable, Equatable, Sendable {
 
         var title: String {
             switch self {
-            case .milestones: return "Milestones"
-            case .rareBirds: return "Rare Birds"
-            case .moments: return "Moments"
-            case .collections: return "Collections"
-            case .skyView: return "Sky View"
+            case .milestones: return String(localized: "Milestones")
+            case .rareBirds: return String(localized: "Rare Birds")
+            case .moments: return String(localized: "Moments")
+            case .collections: return String(localized: "Collections")
+            case .skyView: return String(localized: "Sky View")
             }
         }
     }
@@ -138,6 +138,10 @@ struct Achievement: Identifiable, Equatable, Sendable {
             return result
         }
         func number(_ n: Int) -> String { RadarFormat.wholeNumber(n) }
+        // Badge levels stay in miles, feet and knots; only their wording follows the units.
+        func distance(_ miles: Int) -> String { RadarFormat.wholeDistance(Double(miles)) }
+        let metric = Units.isMetric
+        let aMile = metric ? "1.6 km" : "a mile"
 
         /// A badge counted by qualifying sightings: level n unlocks with the tiers[n]-th one.
         func make(_ id: String, _ title: String, _ group: Group, _ symbol: String, tiers: [Int] = [1],
@@ -165,12 +169,12 @@ struct Achievement: Identifiable, Equatable, Sendable {
 
         /// A best-ever badge: progress is the highest `value` so far ("Highest 47,000 ft"), and
         /// each level is reached by the first sighting to get there.
-        func best(_ id: String, _ title: String, _ group: Group, _ symbol: String, tiers: [Int], unit: String, word: String,
+        func best(_ id: String, _ title: String, _ group: Group, _ symbol: String, tiers: [Int], format: (Int) -> String, word: String,
                   value: (Sighting) -> Int?, detail: (Int) -> String, about: String) -> Achievement {
             let values = sightings.map(value)
             let top = values.compactMap { $0 }.max() ?? 0
-            return custom(id, title, group, symbol, tiers: tiers, tierLabels: tiers.map { "\(number($0)) \(unit)" },
-                          progress: top, progressLabel: top > 0 ? "\(word) \(number(top)) \(unit)" : nil, isRecord: true,
+            return custom(id, title, group, symbol, tiers: tiers, tierLabels: tiers.map(format),
+                          progress: top, progressLabel: top > 0 ? "\(word) \(format(top))" : nil, isRecord: true,
                           reached: { target in sightings.indices.first { (values[$0] ?? 0) >= target }.map { sightings[$0] } },
                           examples: newest(sightings.indices.filter { (values[$0] ?? 0) >= tiers[0] }.map { sightings[$0] }),
                           detail: detail, about: about)
@@ -250,9 +254,9 @@ struct Achievement: Identifiable, Equatable, Sendable {
         let home = squares.max { ($0.value.count, $1.key) < ($1.value.count, $0.key) }.map { center($0.value) }
         let milesFromHome = home.map { home in squares.mapValues { Int(GeoMath.distanceMiles(from: home, to: center($0))) } } ?? [:]
         let farFromHome = best(
-            "farfromhome", "Far From Home", .milestones, "suitcase.fill", tiers: [100, 1_000, 5_000], unit: "mi", word: "Farthest",
+            "farfromhome", "Far From Home", .milestones, "suitcase.fill", tiers: [100, 1_000, 5_000], format: distance, word: "Farthest",
             value: { s in s.observerCoordinate.flatMap { milesFromHome[square($0, perDegree: 10)] } },
-            detail: { "Log aircraft \(number($0)) miles from your usual spot" },
+            detail: { "Log aircraft \(RadarFormat.spokenDistance(Double($0))) from your usual spot" },
             about: "Measured from where you log the most aircraft. Take your iPhone on holiday: the radar works wherever you are, and everything you see goes in the same logbook.")
 
         // Airports you've watched beside: each place you watched from, about 0.7 mi across,
@@ -273,7 +277,9 @@ struct Achievement: Identifiable, Equatable, Sendable {
         }
 
         // Photos: counted by photo, filed under their sightings.
-        let photos = sightings.flatMap { s in s.spotPhotos.map { (sighting: s, photo: $0) } }.sorted { $0.photo.takenAt < $1.photo.takenAt }
+        // Sky View's own photos; ones added from the camera roll don't count.
+        let photos = sightings.flatMap { s in s.spotPhotos.filter { !$0.isFromLibrary }.map { (sighting: s, photo: $0) } }
+            .sorted { $0.photo.takenAt < $1.photo.takenAt }
         func photoBadge(_ id: String, _ title: String, _ symbol: String, tiers: [Int], _ shots: [(sighting: Sighting, photo: SpotPhoto)],
                         detail: (Int) -> String, about: String) -> Achievement {
             custom(id, title, .skyView, symbol, tiers: tiers, progress: shots.count,
@@ -311,8 +317,8 @@ struct Achievement: Identifiable, Equatable, Sendable {
             progress: windows.max() ?? 0,
             reached: { target in windows.firstIndex { $0 >= target }.map { near[$0] } },
             examples: peak?.sightings ?? [],
-            detail: { "Log \($0) aircraft within 5 miles in one hour" },
-            about: "Rush hour in the sky. Only aircraft that pass within 5 miles count, so a bigger radar radius doesn't help: you need to be under a hub's approach at its busiest.")
+            detail: { "Log \($0) aircraft within \(RadarFormat.spokenDistance(5)) in one hour" },
+            about: "Rush hour in the sky. Only aircraft that pass within \(RadarFormat.spokenDistance(5)) count, so a bigger radar radius doesn't help: you need to be under a hub's approach at its busiest.")
 
         // The same airframe: again and again, and back after a long time away.
         var visits: [String: [Sighting]] = [:]
@@ -392,15 +398,20 @@ struct Achievement: Identifiable, Equatable, Sendable {
         }
 
         // Right overhead: levels for ever-closer passes.
-        let passes: [(miles: Double, label: String, words: String)] = [
-            (0.5, "½ mi", "half a mile"), (0.25, "¼ mi", "a quarter of a mile"),
-            (0.1, "0.1 mi", "0.1 mi (about 530 ft)"), (0.05, "0.05 mi", "0.05 mi (about 260 ft)"),
-        ]
+        let passes: [(miles: Double, label: String, words: String)] = metric
+            ? [0.5, 0.25, 0.1, 0.05].map { miles in
+                let label = RadarFormat.shortDistance(miles)
+                return (miles, label, label.replacingOccurrences(of: " m", with: " meters"))
+            }
+            : [
+                (0.5, "½ mi", "half a mile"), (0.25, "¼ mi", "a quarter of a mile"),
+                (0.1, "0.1 mi", "0.1 mi (about 530 ft)"), (0.05, "0.05 mi", "0.05 mi (about 260 ft)"),
+            ]
         let closest = sightings.map(\.closestMiles).min()
         let overhead = custom(
             "overhead", "Right Overhead", .moments, "scope", tiers: [1, 2, 3, 4], tierLabels: passes.map(\.label),
             progress: closest.map { c in passes.filter { c < $0.miles }.count } ?? 0,
-            progressLabel: closest.map { "Closest \(String(format: "%.2f", $0)) mi" }, isRecord: true,
+            progressLabel: closest.map { "Closest \(metric ? RadarFormat.shortDistance($0) : String(format: "%.2f mi", $0))" }, isRecord: true,
             reached: { level in sightings.first { $0.closestMiles < passes[level - 1].miles } },
             examples: newest(matching { $0.closestMiles < 0.5 }),
             detail: { "Have an aircraft pass within \(passes[$0 - 1].words)" },
@@ -446,8 +457,8 @@ struct Achievement: Identifiable, Equatable, Sendable {
                  about: "Each town or neighbourhood you watch from counts once. Take the radar on your travels."),
             farFromHome,
             make("fence", "Fence Spotter", .milestones, "airplane.arrival", tiers: [1, 5, 25], fenceFirsts,
-                 detail: { $0 == 1 ? "Watch from within 2 miles of an airport" : "Watch from beside \($0) different airports" },
-                 about: "The airport fence and the end of the runway are spotters' favourite places. Any airport within 2 miles of where you're watching counts, once each."),
+                 detail: { $0 == 1 ? "Watch from within \(RadarFormat.spokenDistance(2)) of an airport" : "Watch from beside \($0) different airports" },
+                 about: "The airport fence and the end of the runway are spotters' favourite places. Any airport within \(RadarFormat.spokenDistance(2)) of where you're watching counts, once each."),
             fullHouse,
 
             // Rare birds
@@ -490,14 +501,14 @@ struct Achievement: Identifiable, Equatable, Sendable {
             make("testflight", "Test Flight", .rareBirds, "testtube.2", matching(isTestFlight),
                  detail: { _ in "Spot a Boeing or Airbus test flight" },
                  about: "New aircraft fly under their maker's own callsign before delivery: BOE for Boeing, AIB for Airbus. Live near Seattle, Charleston, Toulouse or Hamburg and you'll see plenty."),
-            best("highflier", "High Flier", .rareBirds, "arrow.up.to.line", tiers: [45_000, 49_000, 51_000], unit: "ft", word: "Highest",
+            best("highflier", "High Flier", .rareBirds, "arrow.up.to.line", tiers: [45_000, 49_000, 51_000], format: { RadarFormat.altitudeText($0) }, word: "Highest",
                  value: { $0.altitudeAtClosestFeet },
-                 detail: { "Spot an aircraft at \(number($0)) ft or higher" },
-                 about: "Airliners rarely go above 41,000 ft. Business jets like the Gulfstream G650 and the Global 7500 are certified to 51,000 ft, but seldom fly that high."),
-            best("speed", "Speed Demon", .rareBirds, "gauge.with.dots.needle.100percent", tiers: [600, 650, 675], unit: "kts", word: "Fastest",
+                 detail: { "Spot an aircraft at \(RadarFormat.altitudeText($0)) or higher" },
+                 about: "Airliners rarely go above \(RadarFormat.altitudeText(41_000)). Business jets like the Gulfstream G650 and the Global 7500 are certified to \(RadarFormat.altitudeText(51_000)), but seldom fly that high."),
+            best("speed", "Speed Demon", .rareBirds, "gauge.with.dots.needle.100percent", tiers: [600, 650, 675], format: { RadarFormat.speedText($0) }, word: "Fastest",
                  value: { $0.speedKnots },
-                 detail: { "Spot an aircraft doing \($0) kts or more" },
-                 about: "Ground speed, not airspeed: a winter jet stream behind an eastbound airliner can push it well past 600 knots over the ground. The record is just under 700."),
+                 detail: { "Spot an aircraft doing \(RadarFormat.speedText($0)) or more" },
+                 about: "Ground speed, not airspeed: a winter jet stream behind an eastbound airliner can push it well past \(RadarFormat.speedText(600)) over the ground. The record is just under \(RadarFormat.speedText(700))."),
 
             // Moments
             overhead,
@@ -553,13 +564,13 @@ struct Achievement: Identifiable, Equatable, Sendable {
                  distinct { $0.typeCode == nil ? nil : $0.silhouette.rawValue },
                  detail: { _ in "Spot every radar silhouette: airliners, wide-bodies, jumbos, regionals, bizjets, props, light aircraft, fighters, military transports and helicopters" },
                  about: "Every aircraft on the radar is drawn as one of \(silhouettes) shapes. Listed here: the first of each you logged."),
-            best("longhaul", "Long Haul", .collections, "globe.europe.africa.fill", tiers: [5_000, 7_000, 9_000], unit: "mi", word: "Longest",
+            best("longhaul", "Long Haul", .collections, "globe.europe.africa.fill", tiers: [5_000, 7_000, 9_000], format: distance, word: "Longest",
                  value: { $0.routeMiles.map { Int($0) } },
-                 detail: { "Spot a flight whose route is \(number($0)) miles or longer" },
-                 about: "Measured airport to airport along the great circle. Atlanta to Johannesburg is about 8,400 miles; Singapore to New York, the world's longest, about 9,500."),
+                 detail: { "Spot a flight whose route is \(distance($0)) or longer" },
+                 about: "Measured airport to airport along the great circle. Atlanta to Johannesburg is about \(distance(8_400)); Singapore to New York, the world's longest, about \(distance(9_500))."),
             make("compass", "Compass Rose", .collections, "safari.fill", tiers: [12, 24, 36], compassFirsts,
-                 detail: { $0 == 36 ? "Have aircraft pass within a mile on every 10° of the compass" : "Have aircraft pass within a mile heading \($0) different ways" },
-                 about: "Each 10° slice of the compass counts once, for aircraft passing within a mile. Under an approach path most traffic lines up with the runway, so the crosswind directions take a long time."),
+                 detail: { $0 == 36 ? "Have aircraft pass within \(aMile) on every 10° of the compass" : "Have aircraft pass within \(aMile) heading \($0) different ways" },
+                 about: "Each 10° slice of the compass counts once, for aircraft passing within \(aMile). Under an approach path most traffic lines up with the runway, so the crosswind directions take a long time."),
 
             // Sky View
             photoBadge("shutterbug", "Shutterbug", "camera.fill", tiers: [1, 10, 50, 250, 1_000], photos,
@@ -574,7 +585,7 @@ struct Achievement: Identifiable, Equatable, Sendable {
                        about: "A 747, an A380, a giant freighter, a bomber, a warbird, or anything the radar flags as notable: military, government, air ambulance or an emergency."),
             photoBadge("closeup", "Close-up", "plus.magnifyingglass", tiers: [1, 10, 50],
                        photos.filter { $0.photo.distanceMiles <= 1 && $0.photo.altitudeFeet <= 3_000 },
-                       detail: { $0 == 1 ? "Photograph an aircraft within a mile and below 3,000 ft" : "Take \($0) close-ups: within a mile and below 3,000 ft" },
+                       detail: { $0 == 1 ? "Photograph an aircraft within \(aMile) and below \(RadarFormat.altitudeText(3_000))" : "Take \($0) close-ups: within \(aMile) and below \(RadarFormat.altitudeText(3_000))" },
                        about: "Near an airport, arrivals pass low enough to fill the frame. Distance and height come from the radar at the moment of the shutter."),
         ]
     }

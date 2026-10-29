@@ -4,8 +4,9 @@
 //
 //  The numbers behind the logbook on iPhone and iPad, in two halves. "Your sky" is one spot
 //  you watch from (where you are once its charts are ready, else home; a menu picks another,
-//  or all places): which way aircraft fly over it, when it's busiest (hour and weekday) and
-//  how high they pass, each shown once `LogbookSky.minimum` aircraft back it up.
+//  or all places): every aircraft's altitude against its speed, which way they fly over it,
+//  the routes between its busiest airports, when it's busiest (hour and weekday) and how
+//  high they pass, each shown once `LogbookSky.minimum` aircraft back it up.
 //  "Everywhere" counts every sighting: activity by day and month, records, what you see most
 //  (aircraft, airlines, types, routes, airports, countries), where you watch from and which
 //  devices log. Two columns on iPad.
@@ -37,7 +38,9 @@ struct LogbookStatsTab: View {
                     if choice.sky.isFillingIn {
                         StatsSkyFillingCard(choice: choice)
                     } else {
+                        StatsAltitudeSpeedCard(sky: choice.sky, wide: true)
                         StatsDirectionsCard(sky: choice.sky, wide: true)
+                        StatsRouteWebCard(sky: choice.sky, wide: true)
                         HStack(alignment: .top, spacing: 20) {
                             StatsWhenCard(sky: choice.sky)
                             StatsAltitudeCard(sky: choice.sky)
@@ -65,7 +68,9 @@ struct LogbookStatsTab: View {
                     if choice.sky.isFillingIn {
                         StatsSkyFillingCard(choice: choice)
                     } else {
+                        StatsAltitudeSpeedCard(sky: choice.sky)
                         StatsDirectionsCard(sky: choice.sky)
+                        StatsRouteWebCard(sky: choice.sky)
                         StatsWhenCard(sky: choice.sky)
                         StatsAltitudeCard(sky: choice.sky)
                     }
@@ -264,8 +269,27 @@ private struct StatsChartPending: View {
     }
 }
 
+/// Leads the Stats tab: every aircraft as a dot, speed across and altitude up, coloured by
+/// the kind of flight. Taller and with more speed ticks on iPad.
+private struct StatsAltitudeSpeedCard: View {
+    let sky: LogbookSky
+    var wide = false
+
+    var body: some View {
+        if sky.showsAltitudeSpeed {
+            AltitudeSpeedChart(phase: .ready(sky.altitudeSpeed), height: wide ? 360 : 300, wide: wide)
+        } else {
+            VStack(alignment: .leading, spacing: 12) {
+                LogbookHeader("Altitude vs speed")
+                StatsChartPending(count: sky.altitudeSpeed.count, noun: "with a speed")
+            }
+            .logbookCard()
+        }
+    }
+}
+
 /// Which way aircraft fly over you: a big compass rose of their headings at the closest
-/// pass, the main direction and the top three. Leads the Stats tab.
+/// pass, the main direction and the top three. Under the altitude-vs-speed chart.
 private struct StatsDirectionsCard: View {
     let sky: LogbookSky
     /// Rose and numbers side by side (iPad).
@@ -324,6 +348,25 @@ private struct StatsDirectionsCard: View {
     }
 }
 
+/// Where they were going: a ring of the busiest route airports with a ribbon per route.
+/// Under the rose; the routes sit beside the ring on iPad.
+private struct StatsRouteWebCard: View {
+    let sky: LogbookSky
+    var wide = false
+
+    var body: some View {
+        if sky.showsRouteWeb {
+            RouteWebChart(web: sky.routeWeb, diameter: wide ? 360 : 320, wide: wide)
+        } else {
+            VStack(alignment: .leading, spacing: 12) {
+                LogbookHeader("Route web")
+                StatsChartPending(count: sky.routeWeb.routed, noun: "with a route")
+            }
+            .logbookCard()
+        }
+    }
+}
+
 /// How high aircraft were at their closest pass.
 private struct StatsAltitudeCard: View {
     let sky: LogbookSky
@@ -333,7 +376,7 @@ private struct StatsAltitudeCard: View {
             LogbookHeader("How high they pass")
             if sky.showsAltitudes {
                 LogbookAltitudeChart(bins: sky.altitudes, height: 190)
-                Text("Altitude at the closest pass, in feet.")
+                Text("Altitude at the closest pass, in \(Units.isMetric ? "kilometers" : "thousands of feet").")
                     .monoScaled(10)
                     .foregroundStyle(Palette.caption)
             } else {

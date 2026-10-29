@@ -57,6 +57,10 @@ struct SkyView: View {
     @State private var toast: String?
     /// After a photo, lowering the phone to look at it shouldn't close Sky View.
     @State private var keepOpen = false
+    /// "Rising soon", worked out every couple of seconds rather than every frame.
+    @State private var risers: [SkyRiser] = []
+    /// 0 by day … 1 at night, for the path line's colour.
+    @State private var night = 0.0
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -88,6 +92,12 @@ struct SkyView: View {
                     SkyGrid(projector: frame.projector)
                         .allowsHitTesting(false)
 
+                    if let locked = frame.locked {
+                        SkyPathLine(points: predictedPath(locked, projector: frame.projector, at: timeline.date),
+                                    color: SkyPathLine.color(night: night))
+                            .allowsHitTesting(false)
+                    }
+
                     ForEach(frame.onScreen) { target in
                         SkyMarker(isLocked: target.id == frame.locked?.id, isVisual: target.isVisual,
                                   notable: target.contact.profile.notable.first?.tag)
@@ -116,7 +126,7 @@ struct SkyView: View {
                         .opacity(flash ? 0.55 : 0)
                         .allowsHitTesting(false)
 
-                    chrome(frame, size: geo.size)
+                    chrome(frame, size: geo.size, date: timeline.date)
                 }
                 .contentShape(Rectangle())
                 .gesture(dragGesture(size: geo.size), including: motion.isAvailable ? .subviews : .all)
@@ -159,6 +169,13 @@ struct SkyView: View {
             #endif
         }
         .task { await camera.start() }
+        .task {
+            while !Task.isCancelled {
+                risers = findRisers(at: Date())
+                night = nightness(at: Date())
+                try? await Task.sleep(for: .seconds(2))
+            }
+        }
         .onDisappear {
             motion.stop()
             camera.stop()
@@ -233,6 +250,44 @@ struct SkyView: View {
             return Target(contact: contact, elevation: elevation, direction: direction,
                           projection: projector.project(seen?.direction ?? direction), isVisual: seen != nil)
         }
+    }
+
+    /// The next ten minutes of the locked aircraft's flight, on screen: points in front of the
+    /// camera only, with the compass correction applied like the labels.
+    private func predictedPath(_ target: Target, projector: SkyProjector, at date: Date) -> [CGPoint] {
+        guard let observer = model.observer else { return [] }
+        let observerFeet = (location.location?.altitude ?? 0) * 3.28084
+        return SkyForecast.path(of: target.contact.flight, observer: observer, from: date, observerFeet: observerFeet)
+            .map { projector.project(SkyProjector.direction(azimuth: correction.azimuth($0.azimuth), elevation: $0.elevation)) }
+            .prefix { $0.isInFront }
+            .map(\.point)
+    }
+
+    /// How dark it is for the path line: 0 with the sun up, 1 once it's 6° down (dusk over),
+    /// fading between.
+    private func nightness(at date: Date) -> Double {
+        #if DEBUG
+        // `-wtf.debugSkyNight 0|1` picks the colour for screenshots.
+        if UserDefaults.standard.object(forKey: "wtf.debugSkyNight") != nil { return UserDefaults.standard.double(forKey: "wtf.debugSkyNight") }
+        #endif
+        guard let observer = model.observer else { return 0 }
+        let sun = SunPosition.at(date, latitude: observer.latitude, longitude: observer.longitude)
+        return min(1, max(0, -sun.elevation / 6))
+    }
+
+    /// Aircraft still below the trees that will be up within ten minutes, soonest first (two at
+    /// most). Most aircraft fail the cheap test, so few are forecast at all.
+    private func findRisers(at date: Date) -> [SkyRiser] {
+        guard let observer = model.observer else { return [] }
+        let observerFeet = (location.location?.altitude ?? 0) * 3.28084
+        var found: [SkyRiser] = []
+        for c in model.allContacts where SkyForecast.mightRise(c, observerFeet: observerFeet) {
+            if let rise = SkyForecast.rise(of: c.flight, observer: observer, from: date, observerFeet: observerFeet) {
+                found.append(SkyRiser(id: c.id, name: c.flight.displayIdentifier, azimuth: rise.azimuth,
+                                      at: date.addingTimeInterval(rise.seconds)))
+            }
+        }
+        return Array(found.sorted { $0.at < $1.at }.prefix(2))
     }
 
     /// The on-screen aircraft closest to the reticle, if it's close enough to count as aimed at.
@@ -339,7 +394,7 @@ struct SkyView: View {
     // MARK: Chrome
 
     @ViewBuilder
-    private func chrome(_ frame: Frame, size: CGSize) -> some View {
+    private func chrome(_ frame: Frame, size: CGSize, date: Date) -> some View {
         let projector = frame.projector, locked = frame.locked, targets = frame.targets
         VStack(spacing: 0) {
             HStack(alignment: .top) {
@@ -397,12 +452,19 @@ struct SkyView: View {
                     .padding(.horizontal, 16)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             } else {
-                Text(targets.isEmpty ? "Nothing in range right now" : "Aim the circle at an aircraft")
-                    .font(.mono(12, .semibold))
-                    .foregroundStyle(.white.opacity(0.85))
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .glassSurface(in: Capsule())
+                // One glass panel: the hint, with anything rising soon above it.
+                VStack(alignment: .leading, spacing: 8) {
+                    if !risers.isEmpty {
+                        RisingSoon(risers: risers, now: date)
+                    }
+                    Text(targets.isEmpty ? "Nothing in range right now" : "Aim the circle at an aircraft")
+                        .font(.mono(12, .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .glassSurface(in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .animation(.smooth(duration: 0.3), value: risers.map(\.id))
             }
 
             cameraControls
@@ -806,7 +868,7 @@ private struct SkyLabel: View {
                 }
                 Text(f.displayIdentifier).font(.mono(13, .heavy))
             }
-            Text("\(f.typeCode ?? "—") · \(RadarFormat.miles(contact.distanceMiles)) mi")
+            Text("\(f.typeCode ?? "—") · \(RadarFormat.distanceText(contact.distanceMiles))")
                 .font(.mono(10, .semibold))
                 .opacity(0.85)
         }
@@ -900,12 +962,12 @@ private struct LockedCard: View {
                     }
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
-                    Text([f.typeName ?? f.typeCode, "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft"].compactMap { $0 }.joined(separator: " · "))
+                    Text([f.typeName ?? f.typeCode, "\(RadarFormat.altitudeText(contact.altitudeFeet))"].compactMap { $0 }.joined(separator: " · "))
                         .monoScaled(11)
                         .foregroundStyle(.white.opacity(0.85))
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
-                    Text("\(RadarFormat.miles(contact.distanceMiles)) mi away · \(Int(elevation.rounded()))° up · \(RadarFormat.wholeNumber(f.groundSpeedKnots)) kts")
+                    Text("\(RadarFormat.distanceText(contact.distanceMiles)) away · \(Int(elevation.rounded()))° up · \(RadarFormat.speedText(f.groundSpeedKnots))")
                         .monoScaled(11)
                         .foregroundStyle(.white.opacity(0.85))
                         .lineLimit(1)
@@ -966,5 +1028,69 @@ private struct SkyCameraPreview: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: PreviewView, context: Context) {}
+}
+#endif
+
+#if os(iOS)
+/// The locked aircraft's next ten minutes: a dashed line ahead of it, fading as it goes, with
+/// a dot a minute along. Route purple by day, the pin's yellow at night (each stands out on
+/// that sky). One Canvas with a dark edge under the dashes (no blurred shadow: that cost a
+/// full-screen pass every frame).
+struct SkyPathLine: View {
+    let points: [CGPoint]
+    var color: Color = Palette.route
+
+    /// Purple to yellow through dusk (`night` 0 … 1).
+    static func color(night: Double) -> Color {
+        Palette.route.mix(with: Palette.pinned, by: min(1, max(0, night)))
+    }
+
+    var body: some View {
+        Canvas { context, _ in
+            guard points.count > 1, let first = points.first, let last = points.last else { return }
+            var path = Path()
+            path.move(to: first)
+            for p in points.dropFirst() { path.addLine(to: p) }
+            let dashes: [CGFloat] = [6, 7]
+            context.stroke(path, with: .color(.black.opacity(0.3)), style: StrokeStyle(lineWidth: 4, lineCap: .round, dash: dashes))
+            context.stroke(path, with: .linearGradient(Gradient(colors: [color.opacity(0.95), color.opacity(0.25)]), startPoint: first, endPoint: last),
+                           style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: dashes))
+            for (i, p) in points.enumerated() where i > 0 && i % 3 == 0 {
+                let dot = Path(ellipseIn: CGRect(x: p.x - 2.5, y: p.y - 2.5, width: 5, height: 5))
+                context.fill(dot, with: .color(color.opacity(0.9 - Double(i) / Double(points.count) * 0.5)))
+            }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// One aircraft rising soon: who, where to look, and when it clears the trees.
+struct SkyRiser: Equatable, Identifiable {
+    let id: String
+    let name: String
+    let azimuth: Double
+    let at: Date
+}
+
+/// "Rising soon: DL570 from the SW in 2:10", counting down with the frame.
+struct RisingSoon: View {
+    let risers: [SkyRiser]
+    let now: Date
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("RISING SOON")
+                .font(.mono(9, .heavy))
+                .tracking(1.3)
+                .foregroundStyle(.white.opacity(0.7))
+            ForEach(risers) { riser in
+                Text("\(riser.name) from the \(GeoMath.cardinal(riser.azimuth)) in \(RadarFormat.countdown(max(0, riser.at.timeIntervalSince(now))))")
+                    .font(.mono(12, .bold))
+                    .foregroundStyle(.white)
+                    .monospacedDigit()
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
 }
 #endif

@@ -26,7 +26,7 @@ struct WatchWhatsOverheadIntent: AppIntent {
             return .result(dialog: "I couldn't reach Flightradar24 just now. Try again in a moment.")
         }
         guard let nearest = contacts.first else {
-            return .result(dialog: "Clear skies — nothing's flying within \(Int(store.radiusMiles)) miles of you.")
+            return .result(dialog: "Clear skies — nothing's flying within \(RadarFormat.spokenDistance(store.radiusMiles)) of you.")
         }
         return .result(dialog: IntentDialog(stringLiteral: SpokenTraffic.siriAnswer(for: nearest)))
     }

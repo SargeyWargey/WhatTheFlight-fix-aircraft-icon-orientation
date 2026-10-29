@@ -68,7 +68,9 @@ struct TVTrafficMap: View {
                                ringOpacity: settings.mapType == .standard ? TVMapLayout.ringOpacity : 1,
                                washOpacity: TVMapLayout.washOpacity,
                                // Just the dot at home: no "You · Atlanta".
-                               mapType: settings.mapType, cardInset: cardInset)
+                               mapType: settings.mapType, cardInset: cardInset,
+                               fog: settings.weatherFog ? model.weatherFog : nil,
+                               fogAttribution: settings.weatherFog && model.weatherFog != nil && model.fogFromAppleWeather)
             )
             .ignoresSafeArea()
             // Decorative, like the radar face: the hero and the dock's Aircraft list are the

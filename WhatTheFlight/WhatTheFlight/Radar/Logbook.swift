@@ -22,11 +22,11 @@ enum LogDevice: String, Codable, CaseIterable, Sendable, Comparable {
 
     var title: String {
         switch self {
-        case .iPhone: return "iPhone"
-        case .iPad: return "iPad"
-        case .appleTV: return "Apple TV"
-        case .watch: return "Apple Watch"
-        case .mac: return "Mac"
+        case .iPhone: return String(localized: "iPhone")
+        case .iPad: return String(localized: "iPad")
+        case .appleTV: return String(localized: "Apple TV")
+        case .watch: return String(localized: "Apple Watch")
+        case .mac: return String(localized: "Mac")
         }
     }
 
@@ -201,6 +201,13 @@ final class Logbook {
     /// count and history don't scan the whole book. Observed, so a count on screen updates
     /// when a new visit is logged.
     private var byAirframe: [String: [Int]] = [:]
+    /// The first sighting (by id) of each type code and each airline, for "First Qatar
+    /// Airways in your logbook".
+    @ObservationIgnored private var firstOfType: [String: String] = [:]
+    @ObservationIgnored private var firstOfAirline: [String: String] = [:]
+    /// First-of alerts wait until the logbook holds this many sightings: a new logbook would
+    /// otherwise call out nearly everything.
+    nonisolated static let firstSeenBaseline = 100
     @ObservationIgnored private var isDirty = false
     @ObservationIgnored private var lastSave = Date.distantPast
     /// Off when the file is there but couldn't be read: a save would replace it.
@@ -266,6 +273,13 @@ final class Logbook {
         }
     }
 
+    /// The units changed: records and badge labels in the digest are worded in them, so
+    /// screens rebuild it.
+    func formattingDidChange() {
+        revision &+= 1
+        digestVersion &+= 1
+    }
+
     private func finishRebuild(_ digest: LogbookDigest, revision: Int, day: Date) {
         rebuildingDigest = false
         if (digestCache?.revision ?? -1) <= revision { digestCache = (revision, day, digest) }
@@ -315,6 +329,7 @@ final class Logbook {
                 added = true
                 index[f.id] = sightings.count - 1
                 if let airframe = s.airframe { byAirframe[airframe, default: []].append(sightings.count - 1) }
+                noteFirsts(s)
                 isDirty = true
                 changed.insert(s.id)
             }
@@ -522,6 +537,8 @@ final class Logbook {
         sightings = []
         index = [:]
         byAirframe = [:]
+        firstOfType = [:]
+        firstOfAirline = [:]
         isDirty = true
         save()
         onLocalChange?([], ids)
@@ -600,6 +617,32 @@ final class Logbook {
             if let airframe = s.airframe { airframes[airframe, default: []].append(i) }
         }
         byAirframe = airframes
+        firstOfType = [:]
+        firstOfAirline = [:]
+        for s in sightings { noteFirsts(s) }
+    }
+
+    private func noteFirsts(_ s: Sighting) {
+        if let code = s.typeCode, firstOfType[code] == nil { firstOfType[code] = s.id }
+        if s.isAirline, firstOfAirline[s.operatorName] == nil { firstOfAirline[s.operatorName] = s.id }
+    }
+
+    // MARK: Firsts
+
+    /// Whether this aircraft is the first of its type or airline in the logbook (it's
+    /// logged as it enters the radius, so it's the first when its own sighting is), once
+    /// the logbook has a baseline. The type wins when it's both.
+    func firstSeen(_ contact: RadarContact) -> FirstSeen? {
+        guard sightings.count >= Self.firstSeenBaseline else { return nil }
+        let f = contact.flight
+        if let code = f.typeCode, firstOfType[code] == f.id {
+            return .type(contact.profile.typeName ?? code)
+        }
+        let info = contact.profile.operatorInfo
+        if info.kind == .airline, firstOfAirline[info.title] == f.id {
+            return .airline(info.title)
+        }
+        return nil
     }
 }
 

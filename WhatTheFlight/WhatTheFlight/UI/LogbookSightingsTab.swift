@@ -10,6 +10,7 @@
 
 #if os(iOS)
 import SwiftUI
+import PhotosUI
 
 struct LogbookSightingsTab: View {
     let ctx: LogbookContext
@@ -532,6 +533,10 @@ struct SightingDetailView: View {
     @Environment(\.showsAircraftPhotos) private var showsPhotos
     @Environment(\.favoriteAircraft) private var favorites
     @Environment(\.toggleFavorite) private var toggleFavorite
+    /// Photos picked from the camera roll, being filed under this sighting.
+    @State private var picked: [PhotosPickerItem] = []
+    @State private var isAddingPhotos = false
+    @State private var photoProblem: String?
 
     var body: some View {
         // The live copy, so photos added or deleted show straight away.
@@ -589,8 +594,8 @@ struct SightingDetailView: View {
                 .listRowBackground(Color.clear)
             }
 
-            if !s.spotPhotos.isEmpty {
-                Section("Your photos · \(s.spotPhotos.count)") {
+            Section {
+                if !s.spotPhotos.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
                             ForEach(s.spotPhotos) { photo in
@@ -607,6 +612,24 @@ struct SightingDetailView: View {
                     }
                     .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
                 }
+                PhotosPicker(selection: $picked, maxSelectionCount: 10, matching: .images, preferredItemEncoding: .current) {
+                    HStack {
+                        Label(isAddingPhotos ? "Adding…" : "Add from Photos", systemImage: "photo.badge.plus")
+                        if isAddingPhotos { Spacer(); ProgressView() }
+                    }
+                }
+                .disabled(isAddingPhotos)
+                if let photoProblem {
+                    Text(photoProblem).monoScaled(11).foregroundStyle(Palette.warning)
+                }
+            } header: {
+                Text(s.spotPhotos.isEmpty ? "Your photos" : "Your photos · \(s.spotPhotos.count)")
+            } footer: {
+                Text("Shot it on another camera? Add the photos here and they're filed with this sighting, with a boarding pass to share.")
+            }
+            .onChange(of: picked) { _, items in
+                guard !items.isEmpty else { return }
+                Task { await addPhotos(items, to: s) }
             }
 
             Section("Sighting") {
@@ -614,13 +637,13 @@ struct SightingDetailView: View {
                 LabeledContent("Last seen", value: s.lastSeen.formatted(date: .omitted, time: .shortened))
                 LabeledContent("In range for", value: s.inRangeText)
                 LabeledContent("Closest pass", value: s.closestPreciseText)
-                LabeledContent("Altitude then", value: "\(RadarFormat.wholeNumber(s.altitudeAtClosestFeet)) ft")
-                LabeledContent("Speed then", value: "\(RadarFormat.wholeNumber(s.speedKnots)) kts")
+                LabeledContent("Altitude then", value: "\(RadarFormat.altitudeText(s.altitudeAtClosestFeet))")
+                LabeledContent("Speed then", value: "\(RadarFormat.speedText(s.speedKnots))")
                 if let track = s.trackAtClosest {
                     LabeledContent("Heading", value: "\(Int(track.rounded()) % 360)° \(GeoMath.cardinal(track))")
                 }
                 if let miles = s.routeMiles {
-                    LabeledContent("Route length", value: "\(RadarFormat.wholeNumber(Int(miles.rounded()))) mi")
+                    LabeledContent("Route length", value: "\(RadarFormat.wholeDistance(miles))")
                 }
                 if let place = s.placeName { LabeledContent("Watching from", value: place) }
                 if let devices = s.devicesText { LabeledContent("Logged on", value: devices) }
@@ -686,6 +709,42 @@ struct SightingDetailView: View {
         .navigationTitle(s.displayIdentifier)
         .navigationBarTitleDisplayMode(.inline)
         .fontDesign(.monospaced)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                SightingShareButton(info: SightingCardInfo(sighting: s), text: shareText(s)) {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                }
+            }
+        }
+    }
+
+    /// Files each picked photo under the sighting: the logbook's copy plus its record.
+    private func addPhotos(_ items: [PhotosPickerItem], to s: Sighting) async {
+        isAddingPhotos = true
+        photoProblem = nil
+        var failed = 0
+        for item in items {
+            guard let data = try? await item.loadTransferable(type: Data.self),
+                  let made = await Task.detached(priority: .userInitiated, operation: {
+                      SpotPhotoProcessing.libraryPhoto(data, for: s, device: logbook.device)
+                  }).value,
+                  logbook.addPhoto(made.photo, imageData: made.data, contact: nil) else {
+                failed += 1
+                continue
+            }
+        }
+        if failed > 0 { photoProblem = failed == 1 ? "One photo couldn't be read." : "\(failed) photos couldn't be read." }
+        picked = []
+        isAddingPhotos = false
+    }
+
+    private func shareText(_ s: Sighting) -> String {
+        var text = "✈️ \(s.displayIdentifier)"
+        if let route = s.routeText { text += " \(route)" }
+        if let type = s.typeName ?? s.typeCode { text += " · \(type)" }
+        text += " — \(RadarFormat.preciseDistance(s.closestMiles)) away at \(RadarFormat.altitudeText(s.altitudeAtClosestFeet))"
+        text += ", \(s.firstSeen.formatted(date: .abbreviated, time: .shortened)). Spotted with What The Flight?"
+        return text
     }
 }
 #endif

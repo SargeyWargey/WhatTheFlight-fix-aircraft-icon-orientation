@@ -124,6 +124,7 @@ struct SkyProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<SkyEntry>) -> Void) {
+        Units.reload()
         Task { completion(Timeline(entries: await entries(), policy: .atEnd)) }
     }
 

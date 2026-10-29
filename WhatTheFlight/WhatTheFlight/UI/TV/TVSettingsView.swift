@@ -50,6 +50,8 @@ struct TVRadarSettingsView: View {
     @State private var showCoordinates = false
     @State private var confirmReset = false
     @State private var confirmClearLocation = false
+    /// The saved spot being watched from, clicked again: offer to remove it.
+    @State private var spotToDelete: SavedSpot?
     @State private var confirmClearLogbook = false
 
     init(settings: RadarSettings, model: RadarModel, link: TVLinkReceiver, tvLocation: TVLocationProvider, initialPane: TVSettingsPane,
@@ -167,6 +169,41 @@ struct TVRadarSettingsView: View {
             }
         }
         .focusSection()
+
+        TVSectionHeader(title: "Saved spots")
+        if settings.savedSpots.isEmpty {
+            Text("Save where this Apple TV is watching from to switch back to it in one click, handy if it moves between rooms or homes.")
+                .font(.mono(20))
+                .foregroundStyle(Palette.caption)
+                .padding(.leading, 6)
+        }
+        ForEach(settings.savedSpots) { spot in
+            let isCurrent = settings.currentSavedSpot?.id == spot.id
+            TVValueRow(title: LocalizedStringKey(spot.name), subtitle: LocalizedStringKey(spot.coordinate.shortDescription),
+                       value: isCurrent ? "Watching" : "Watch",
+                       symbol: isCurrent ? "checkmark.circle.fill" : "mappin.circle.fill") {
+                if isCurrent {
+                    spotToDelete = spot
+                } else {
+                    withAnimation(.snappy) { settings.watch(spot) }
+                    model.post(notice: "Watching from \(spot.name)", symbol: "mappin.circle.fill")
+                }
+            }
+            .confirmationDialog("Remove \(spot.name)?", isPresented: Binding(get: { spotToDelete == spot }, set: { if !$0 { spotToDelete = nil } })) {
+                Button("Remove Saved Spot", role: .destructive) { settings.removeSpot(spot) }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("You're watching from it now. The radar keeps watching here until you pick another place.")
+            }
+        }
+        if let coordinate = settings.locationMode == .custom ? settings.customCoordinate : model.observer,
+           !settings.savedSpots.contains(where: { $0.isAt(coordinate) }) {
+            TVValueRow(title: "Save This Spot", subtitle: "As “\(placeTitle)”", value: "", symbol: "plus.circle.fill") {
+                let spot = settings.saveSpot(named: placeTitle, at: coordinate)
+                if settings.locationMode == .custom { settings.customPlaceName = spot.name }
+                model.post(notice: "Saved \(spot.name)", symbol: "mappin.circle.fill")
+            }
+        }
 
         TVSectionHeader(title: "Which way does the TV face?")
         Text("The compass direction you look when you watch the TV. Planes ahead of you appear at the top of the screen.")
@@ -393,22 +430,51 @@ struct TVRadarSettingsView: View {
         TVSectionHeader(title: "Coverage")
         TVChoiceRow(
             title: "Radius",
-            subtitle: "\(Int(settings.radiusMiles)) mi",
+            subtitle: LocalizedStringKey(RadarFormat.radius(settings.radiusMiles, in: settings.units)),
             options: [5.0, 10, 15, 20, 25, 30, 40, 50, 75, 100],
             selection: settings.radiusMiles,
-            label: { "\(Int($0))" },
+            label: { RadarFormat.distance($0, in: settings.units) },
             onSelect: { settings.radiusMiles = $0 }
         )
+        TVChoiceRow(
+            title: "Data source",
+            subtitle: LocalizedStringKey(settings.dataSource.subtitle),
+            options: DataSourcePreference.allCases,
+            selection: settings.dataSource,
+            label: { $0.title },
+            onSelect: { settings.dataSource = $0 }
+        )
+        TVChoiceRow(
+            title: "Units",
+            subtitle: LocalizedStringKey(settings.units.subtitle),
+            options: UnitSystem.allCases,
+            selection: settings.units,
+            label: { $0.title },
+            onSelect: { settings.units = $0 }
+        )
+
+        TVSectionHeader(title: "Weather")
+        TVToggleRow(title: "Clouds and fog", subtitle: "Drifting over the radar and the map, from Apple Weather around you",
+                    symbol: "cloud.fog.fill", isOn: $settings.weatherFog)
+        TVToggleRow(title: "Can I see it?", subtitle: "Says when the aircraft in the center is above the clouds, lost in haze or too far to make out",
+                    symbol: "eye.fill", isOn: $settings.showsVisibility)
+        TVToggleRow(title: "Prefer aircraft you can see", subtitle: "When the nearest is above the clouds or too far to make out, the nearest visible one takes the center",
+                    symbol: "binoculars.fill", isOn: $settings.preferVisible)
+        if settings.weatherFog {
+            WeatherAttributionView()
+                .padding(.horizontal, 20)
+                .padding(.top, 4)
+        }
 
         TVSectionHeader(title: "Alerts")
         TVToggleRow(title: "Overhead alerts", subtitle: "A banner when an aircraft is about to pass over you", symbol: "scope", isOn: $settings.overheadAlerts)
         if settings.overheadAlerts {
             TVChoiceRow(
                 title: "Overhead means within",
-                subtitle: "\(settings.overheadAlertMiles.formatted(.number.precision(.fractionLength(0...1)))) mi",
+                subtitle: LocalizedStringKey(RadarFormat.preciseDistance(settings.overheadAlertMiles, in: settings.units)),
                 options: [0.5, 1, 1.5, 2, 3, 5],
                 selection: settings.overheadAlertMiles,
-                label: { "\($0.formatted(.number.precision(.fractionLength(0...1)))) mi" },
+                label: { RadarFormat.preciseDistance($0, in: settings.units) },
                 onSelect: { settings.overheadAlertMiles = $0 }
             )
             TVChoiceRow(
@@ -423,11 +489,28 @@ struct TVRadarSettingsView: View {
         TVToggleRow(title: "Speak alerts", subtitle: "Also announce them out loud: “Delta Air Lines flight 1199 is approaching overhead…”",
                     symbol: "speaker.wave.2.fill", isOn: $settings.spokenAlerts)
         if settings.spokenAlerts {
-            TVValueRow(title: "Play a sample", subtitle: sampleSubtitle, value: "", symbol: "play.circle.fill") {
+            TVValueRow(title: "Play a sample", subtitle: LocalizedStringKey(sampleSubtitle), value: "", symbol: "play.circle.fill") {
                 AlertSpeaker.shared.speak(sampleAnnouncement)
             }
         }
         TVToggleRow(title: "Notable aircraft", subtitle: "Emergencies, military, air ambulances and rare types", symbol: "star.fill", isOn: $settings.notableAlerts)
+        TVToggleRow(title: "Favorites and pins", subtitle: "When an aircraft you've favorited or pinned comes into range", symbol: "heart.fill", isOn: $settings.favoriteAlerts)
+        TVToggleRow(title: "Firsts for your logbook", subtitle: "The first time a new aircraft type or airline turns up, once the logbook has \(Logbook.firstSeenBaseline) sightings",
+                    symbol: "sparkles", isOn: $settings.firstSeenAlerts)
+
+        TVSectionHeader(title: "Watchlist")
+        if settings.watchlist.isEmpty {
+            Text("Open an aircraft's details and choose Alert Me to be told whenever its type, airline or the aircraft itself comes into range.")
+                .font(.mono(22))
+                .foregroundStyle(Palette.caption)
+                .padding(.horizontal, 24)
+        } else {
+            ForEach(settings.watchlist) { rule in
+                TVValueRow(title: LocalizedStringKey(rule.title), subtitle: LocalizedStringKey(rule.kind.title), value: "Remove", symbol: rule.kind.symbol) {
+                    withAnimation(.snappy) { settings.removeFromWatchlist(rule) }
+                }
+            }
+        }
 
         TVSectionHeader(title: "Logbook")
         TVToggleRow(title: "Keep a logbook", subtitle: "Record every aircraft that comes inside your radius. Syncs with your iPhone and iPad through iCloud; demo traffic is never logged",
@@ -453,7 +536,7 @@ struct TVRadarSettingsView: View {
         if let contact = model.contacts.first {
             return SpokenTraffic.sentence(for: contact, reason: .overhead)
         }
-        return "Delta Air Lines flight 1199, from Atlanta to Chicago, is approaching overhead, about 2 minutes away, at 9,500 feet. Look northeast."
+        return "Delta Air Lines flight 1199, from Atlanta to Chicago, is approaching overhead, about 2 minutes away, at \(RadarFormat.spokenAltitude(9_500)). Look northeast."
     }
 
     /// "30 s", "1 min", "2½ min".
@@ -481,7 +564,7 @@ struct TVRadarSettingsView: View {
         )
         TVChoiceRow(
             title: "Topography",
-            subtitle: settings.topography.subtitle,
+            subtitle: LocalizedStringKey(settings.topography.subtitle),
             options: RadarSettings.TopographyStyle.allCases,
             selection: settings.topography,
             label: { $0.title },
@@ -500,6 +583,8 @@ struct TVRadarSettingsView: View {
         TVToggleRow(title: "Compass bezel", symbol: "location.north.line.fill", isOn: $settings.showCompassBezel)
         TVToggleRow(title: "Radar sweep", symbol: "dot.radiowaves.right", isOn: $settings.radarSweep)
         TVToggleRow(title: "Aircraft photos", symbol: "photo.fill", isOn: $settings.showPhotos)
+        TVToggleRow(title: "Aircraft details", subtitle: "Maker, exact model and registered owner from adsbdb.com (companies only, never a person)",
+                    symbol: "info.circle.fill", isOn: $settings.aircraftFacts)
         if settings.showPhotos {
             TVToggleRow(title: "Photos on flight cards", subtitle: "The aircraft's photo on the radar and the map card, whenever Planespotters has one",
                         symbol: "photo.on.rectangle", isOn: $settings.cardPhotos)
@@ -519,10 +604,10 @@ struct TVRadarSettingsView: View {
             )
             TVChoiceRow(
                 title: "Map range",
-                subtitle: "\(Int(settings.effectiveMapRadius)) mi · on the radar or map, hold ● to change it",
+                subtitle: "\(RadarFormat.radius(settings.effectiveMapRadius, in: settings.units)) · on the radar or map, hold ● to change it",
                 options: RadarSettings.mapRadiusChoices,
                 selection: settings.mapRadiusMiles,
-                label: { $0.map { "\(Int($0))" } ?? "Same as radar" },
+                label: { $0.map { RadarFormat.distance($0, in: settings.units) } ?? "Same as radar" },
                 onSelect: { settings.mapRadiusMiles = $0 }
             )
             TVChoiceRow(
@@ -546,12 +631,14 @@ struct TVRadarSettingsView: View {
     @ViewBuilder
     private var aboutPane: some View {
         TVSectionHeader(title: "What The Flight?")
-        TVValueRow(title: "Version", value: appVersion, symbol: "app.badge") {}
+        TVValueRow(title: "Version", value: LocalizedStringKey(appVersion), symbol: "app.badge") {}
         TVValueRow(title: "Flight data", subtitle: "Unofficial public feed — may change without notice", value: "Flightradar24", symbol: "antenna.radiowaves.left.and.right") {}
         TVValueRow(title: "Aircraft photos", value: "Planespotters.net", symbol: "camera.fill") {}
+        TVValueRow(title: "Aircraft details", value: "adsbdb.com", symbol: "info.circle") {}
+        TVValueRow(title: "Backup traffic", value: "adsb.lol · ODbL", symbol: "antenna.radiowaves.left.and.right") {}
         TVValueRow(title: "Airports", subtitle: "Public domain", value: "OurAirports", symbol: "mappin.and.ellipse") {}
         TVValueRow(title: "Airlines", subtitle: "Open Database License (ODbL)", value: "OpenFlights", symbol: "airplane.circle") {}
-        TVValueRow(title: "iPhone link code", value: link.code, symbol: "iphone") {}
+        TVValueRow(title: "iPhone link code", value: LocalizedStringKey(link.code), symbol: "iphone") {}
         TVValueRow(title: "Take the tour", subtitle: "What the radar shows and how to drive it", value: "", symbol: "sparkles") {
             showTour()
         }
@@ -614,9 +701,9 @@ struct TVPlaceSearchView: View {
                     }
                     ForEach(completer.suggestions) { suggestion in
                         TVValueRow(
-                            title: suggestion.title,
-                            subtitle: suggestion.subtitle.isEmpty ? nil : suggestion.subtitle,
-                            value: status(for: suggestion.id),
+                            title: LocalizedStringKey(suggestion.title),
+                            subtitle: suggestion.subtitle.isEmpty ? nil : LocalizedStringKey(suggestion.subtitle),
+                            value: LocalizedStringKey(status(for: suggestion.id)),
                             symbol: suggestion.isQuery ? "magnifyingglass" : "mappin.circle.fill"
                         ) {
                             pick(suggestion)
@@ -624,7 +711,7 @@ struct TVPlaceSearchView: View {
                     }
                     if completer.suggestions.isEmpty {
                         ForEach(fallback) { place in
-                            TVValueRow(title: place.name, subtitle: place.detail.isEmpty ? nil : place.detail, value: "", symbol: "mappin.circle.fill") {
+                            TVValueRow(title: LocalizedStringKey(place.name), subtitle: place.detail.isEmpty ? nil : LocalizedStringKey(place.detail), value: "", symbol: "mappin.circle.fill") {
                                 onPick(place)
                             }
                         }

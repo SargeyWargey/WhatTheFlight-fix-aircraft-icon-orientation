@@ -42,6 +42,12 @@ final class WatchLocationService: NSObject {
         didSet { if precision != oldValue { applyPrecision() } }
     }
 
+    /// Battery saver: the radar turns in 6° steps instead of 2° (Identify and Find, which
+    /// set `.pointing`, keep the fine compass).
+    var batterySaver = false {
+        didSet { if batterySaver != oldValue { applyPrecision() } }
+    }
+
     override init() {
         authorization = manager.authorizationStatus
         super.init()
@@ -81,6 +87,7 @@ final class WatchLocationService: NSObject {
             manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
             manager.distanceFilter = 20
         }
+        manager.headingFilter = batterySaver && precision != .pointing ? 6 : 2
     }
 }
 

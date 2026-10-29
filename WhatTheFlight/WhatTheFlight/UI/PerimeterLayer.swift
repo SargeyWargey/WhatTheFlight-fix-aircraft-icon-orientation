@@ -103,7 +103,7 @@ struct PerimeterLayer: View {
         let badge = contact.profile.notable.first.map { ", \($0.badge.capitalized)" } ?? ""
         let pinned = pinnedIDs.contains(contact.id) ? ", pinned" : ""
         let favorite = favorites.contains(contact.flight) ? ", favorite" : ""
-        return "\(contact.flight.displayIdentifier)\(badge)\(favorite)\(pinned), \(RadarFormat.miles(contact.distanceMiles)) miles \(dir), \(motion)"
+        return "\(contact.flight.displayIdentifier)\(badge)\(favorite)\(pinned), \(RadarFormat.spokenDistance(contact.distanceMiles)) \(dir), \(motion)"
     }
 }
 
@@ -183,7 +183,7 @@ struct DistanceLabel: View {
     var scale: CGFloat = 1
 
     var body: some View {
-        Text(RadarFormat.miles(miles))
+        Text(RadarFormat.distance(miles))
             .font(.mono((isFocused ? 15 : 13) * scale, .bold))
             .monospacedDigit()
             .foregroundStyle(isPinned ? Palette.pinned : isFocused ? Palette.signal : Palette.blip(for: profile))

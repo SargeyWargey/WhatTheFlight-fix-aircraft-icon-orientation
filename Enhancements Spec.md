@@ -280,7 +280,7 @@ your logbook" should mean across devices.
 
 ## Part C — Features
 
-### C1 · P1 · A second data source with automatic fallback
+### C1 · P1 · A second data source with automatic fallback <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Why first: the feed is an unofficial Flightradar24 endpoint behind a spoofed Safari
   User-Agent (`Services/FlightFeed.swift`). A format change or a block takes all three apps
   down the same hour. `protocol FlightFeed` already makes a second provider cheap.
@@ -304,8 +304,9 @@ your logbook" should mean across devices.
     duplicate sighting across a switch; do not try to merge.
 - Done when: blocking `data-cloud.flightradar24.com` at the router leaves the radar live
   with the badge naming the source; unit tests cover the parser and the switch logic.
+- *As built (2026-10-26):* airplanes.live closed to non-feeders in Aug 2026 (see `Flight Data Sources Spec.md` §2), so the secondary is adsb.lol, keyless (500 requests a day per address), which suits an outage fallback. `Core/ReadsbParser.swift` and `Services/OpenFeed.swift`: `ReadsbFeed` (point, `reg/` and `callsign/` lookups) and `LayeredFeed` (an actor: steps down after two server failures in a row or at once on a 429, never for being offline; retries Flightradar24 after five minutes). Ids are `ac-<hex>`. Flight numbers come from airline callsigns whose suffix is all digits (DAL1751 → DL1751). Setting `wtf.dataSource` = automatic / flightradar24 / open, on iPhone, iPad and TV; widgets, Siri, Top Shelf and Where Is It Now? follow it through `SharedRadarStore.feed`. The radar shows "Backup data · adsb.lol · no routes" along the bottom (TV: "via adsb.lol" under the badge), details credit the source (ODbL). The Data Sources Spec's later phases (source-independent ids, routes from VRS, the coverage check, a production key or caching server) still wait on its §5 decisions.
 
-### C2 · P1 · Watchlist and "new to your logbook" alerts
+### C2 · P1 · Watchlist and "new to your logbook" alerts <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - What the user sees: Settings → Alerts → Watchlist, a list of rules such as "N685DA",
   "any Boeing 747", "Qatar Airways", "callsign REACH". From a flight's details: "Alert me
   when this aircraft returns" and "Alert me for any <type>". Plus automatic alerts the
@@ -324,8 +325,9 @@ your logbook" should mean across devices.
     already renders any reason.
 - Done when: unit tests for every rule kind and for first-seen; a rule added on iPhone
   fires on the Watch within one context update.
+- *As built (2026-10-26):* `Core/Watchlist.swift` (`WatchlistRule`: registration (or hex), exact ICAO type, airline ICAO, callsign prefix; names resolve through new `AirlineCatalog.search` / `AircraftTypeCatalog.search`). `TrafficAlert.Reason` gains `.watchlist`, `.favorite` (a favourite or pinned aircraft coming into range: added beside the spec) and `.firstSeen`; lookups come through `TrafficAlertLookups`. Firsts are by type and airline only (an airframe first would fire for most aircraft), indexed in `Logbook` (`firstOfType` / `firstOfAirline`), and only once the logbook holds `Logbook.firstSeenBaseline` (100) sightings. iPhone: Settings → Alerts (Favorites and pins, Firsts for your logbook, Watchlist page with an add sheet) and Alert Me on a flight's details; TV: the same switches, the list in Settings → Radar, Alert Me on the detail screen; Watch: the list and the favourites switch arrive in `WatchSync.Context` (optional fields, still v1).
 
-### C3 · P1 · A phase-of-flight line on the hero
+### C3 · P1 · A phase-of-flight line on the hero <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - What the user sees, under the type line: "On approach to ATL · 12 mi out",
   "Climbing out of ATL", "Cruising · 2h 05m to DFW", "Descending toward DFW". Short form on
   the Watch hero ("Approach ATL"). Also in details and in `SpokenTraffic.identification`.
@@ -335,8 +337,9 @@ your logbook" should mean across devices.
   climbing / descending by trend; else cruising with the remaining time when
   `RouteProgress.remainingSeconds` is known. No route → trend only.
 - Done when: unit tests for each branch; the line never shows for helicopters without a route.
+- *As built (2026-10-26):* `Core/FlightPhase.swift`; `RadarContact.phase`; `PhaseLine` on the hero, iPhone details and TV details. The Watch hero shows the short form in place of the speed line when the flight has a route. `SpokenTraffic.identification` adds it only when it says something (`isInformative`: approach, departure, descent toward an airport, cruise with time left).
 
-### C4 · P2 · Shareable sighting card and logbook export
+### C4 · P2 · Shareable sighting card and logbook export <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Card: a 1080 × 1350 image from `ImageRenderer` at 3×: silhouette glyph, identifier,
   operator, route with cities, type, altitude, speed, closest pass, place and date, and a
   map snippet from `MKMapSnapshotter` with the trail. No aircraft photo on the card unless
@@ -347,8 +350,9 @@ your logbook" should mean across devices.
   seen, identifier, callsign, registration, hex, type, operator, origin, destination,
   closest miles, altitude, speed, tags, place, device.
 - Done when: the card renders in light and dark; the CSV opens in Numbers with headers.
+- *As built (2026-10-26):* `UI/SightingCard.swift`: `SightingShareCard` (360 × 450 pt at 3×, so the card is 1080 × 1350 inside a 1200 × 1470 picture) over an `MKMapSnapshotter` map with the trail, observer and aircraft; `SightingShareButton` shares it with the text from the details and from a sighting's page. `Radar/LogbookExport.swift` + `UI/LogbookTransfer.swift`: Settings → Logbook → Export & backup: the CSV (units follow the setting), plus a backup folder (`Logbook.json` + `Photos/<id>.heic`) and Restore from Backup, which merges (`Logbook.restore`) and sends what changed to iCloud. iPhone and iPad only: tvOS has no Files.
 
-### C5 · P2 · Airframe facts
+### C5 · P2 · Airframe facts <span style="color:#FFB300; font-weight:900; font-size:1.2em">◐ PARTLY IMPLEMENTED</span>
 - What the user sees: "Built 1998 · 28 years" and the manufacturer on the hero's type
   line and in details; a Vintage badge for thirty-year-old airframes.
 - Design: `AircraftFactsProvider` actor modelled on `AircraftPhotoProvider` (cache, in-flight
@@ -359,8 +363,9 @@ your logbook" should mean across devices.
   never a person's name.
 - Done when: facts appear within a second on Wi-Fi, never block the hero, and the
   toggle off removes every network call.
+- *As built (2026-10-26):* adsbdb has no build year (checked 2026-10-26; hexdb has none either and OpenSky's metadata endpoint is gone), so "Built 1998 · 28 years" and the Vintage badge wait for a source with one (adsb.fi, which needs written permission). Done: `Core/AirframeFacts.swift` (maker, exact variant "Boeing 717-231", registered owner only when `isOrganisation`, country), `Services/AircraftFactsProvider.swift` (actor, memory + 30-day disk cache, in-flight dedupe), `AirframeFactsView` under the type on iPhone and TV details, setting Aircraft details (`wtf.aircraftFacts`), credited in About. `AirframeFacts.yearBuilt` / `ageLine` are ready for a year source.
 
-### C6 · P2 · Smart Stack relevance and a countdown widget <span style="color:#FFB300; font-weight:900; font-size:1.2em">◐ PARTLY IMPLEMENTED</span>
+### C6 · P2 · Smart Stack relevance and a countdown widget <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - <span style="color:#00E676; font-weight:900; font-size:1.5em">✅ IMPLEMENTED</span> Watch: in `WhatTheFlightWatchWidgets/WatchComplications.swift`, implement widget
   relevance so the complication surfaces when a closest pass is within five minutes
   (`WidgetRelevance` with date-interval contexts from `NearbyTraffic.projectedSnapshots`).
@@ -373,8 +378,9 @@ your logbook" should mean across devices.
   can be enabled from that path before promising it, otherwise the button opens the app.
 - Done when: the complication appears in the Smart Stack during a demo overhead pass;
   the widget counts down without refreshing.
+- *As built (2026-10-26):* iPhone half: `WhatTheFlightWidgets/NextOverheadWidget.swift` (kind `NextOverhead`; small, medium, Lock Screen rectangular / circular / inline) built on `NearbyTraffic.timeline` like the Watch's complication, timer text and a draining ring, `TimelineEntryRelevance` rising toward each pass. The app now shares `overheadMiles`. The medium size's Start Sky Watch is a link (`whattheflight://skywatch`) that opens the app, since Sky Watch needs background location started in the foreground.
 
-### C7 · P3 · Sky View extras <span style="color:#FFB300; font-weight:900; font-size:1.2em">◐ PARTLY IMPLEMENTED</span>
+### C7 · P3 · Sky View extras <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - <span style="color:#00E676; font-weight:900; font-size:1.5em">✅ IMPLEMENTED</span> Snapshot: an `AVCapturePhotoOutput` on the existing session; compose the labels over the
   photo with `ImageRenderer` and save with the Photos add-only permission.
 - Predicted path: project the ten-minute `projectedPath` through `SkyProjector` and draw a
@@ -383,8 +389,9 @@ your logbook" should mean across devices.
   "Rising soon: DL570 from the SW in 2:10".
 - Done when: a snapshot lands in Photos with readable labels; the path draws only for the
   locked aircraft.
+- *As built (2026-10-26):* `Core/SkyForecast.swift` (`path`, `rise`): `SkyPathLine` draws the locked aircraft's next ten minutes dashed, with a dot a minute; `RisingSoon` lists the two soonest aircraft climbing from under 3° to 5° within ten minutes, true bearing, once a second.
 
-### C8 · P2 · Saved spots
+### C8 · P2 · Saved spots <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - What the user sees: Settings → Location lists named spots (Home, Office, Airport fence);
   pick one to watch; "Save this spot" from the picker and the TV's place search.
 - Design: `SavedSpot: Codable { id, name, latitude, longitude }` as JSON under `wtf.spots`
@@ -392,15 +399,17 @@ your logbook" should mean across devices.
   so the rest of the app is untouched. Include the name in `TVLink.Payload`. Logging rules
   stay: the TV logs its spot, the iPhone does not log a custom spot.
 - Done when: three spots round-trip through relaunch on iPhone and TV.
+- *As built (2026-10-26):* `SavedSpot` in `Services/RadarSettings.swift` (`wtf.spots`), `watch(_:)`, `saveSpot(named:at:)` (the same place again renames it), `currentSavedSpot`. iPhone: Settings → Location (save the custom spot or where you are, rename and delete by swipe). TV: Settings → Location → Saved spots. `TVLink.Payload.placeName` carries a spot's name to the TV.
 
-### C9 · P3 · Daily digest
+### C9 · P3 · Daily digest <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - iPhone only. At app background, compute today's logbook numbers and schedule one
   `UNCalendarNotificationTrigger` for 20:00 local (setting `wtf.digest`, time editable):
   "Today: 142 aircraft · 3 new types · closest N44RH at 0.3 mi". Only when the logbook grew
   today. Tapping opens the logbook via `AppRouter`.
 - Done when: a day with sightings produces one notification; a day without produces none.
+- *As built (2026-10-26):* `Radar/DailyDigest.swift` (wording, `fireDate`) and `Services/DigestNotifier.swift` (rescheduled at every backgrounding, passive interruption, taps open the logbook). Off by default: Settings → Logbook → Evening digest, with a time picker (`wtf.digestTime`, minutes after midnight).
 
-### C10 · P2 · Metric units
+### C10 · P2 · Metric units <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Design: `wtf.units` = imperial / metric, defaulting from `Locale.current.measurementSystem`.
   `RadarFormat` gains unit-aware `distance`, `altitude`, `speed` returning value and unit;
   every call site goes through them (hero, perimeter labels, details, lists, widgets,
@@ -408,13 +417,15 @@ your logbook" should mean across devices.
   feet and knots.
 - Done when: `grep -rn '" mi\| ft"\| kts"'` over the UI finds no remaining literals; the
   radius slider shows km.
+- *As built (2026-10-26):* `Core/Units.swift`: `UnitSystem` (`wtf.units`, default from the locale), `Units.current` (lock-protected, shared with extensions through the App Group key `wtf.shared.units`), and `RadarFormat` helpers (`distance` / `distanceText` / `preciseDistance` / `shortDistance` / `wholeDistance` / `radius`, `altitude…`, `speed…`, `verticalRate`, `spoken…`). Every literal went through them, including badges (their levels stay in feet, miles and knots, worded in the units in use) and the altitude chart (1,500 m bands in metric). Settings → Radar → Units on iPhone, iPad and TV; the Watch follows the iPhone through the context.
 
-### C11 · P3 · Retire the legacy macOS app via Designed for iPad
+### C11 · P3 · Retire the legacy macOS app via Designed for iPad <span style="color:#FFB300; font-weight:900; font-size:1.2em">◐ PARTLY IMPLEMENTED</span>
 - After B4. Enable the iPad app on Apple silicon, then check on a Mac: location works
   (no heading → north up, bezel still), Sky View hides when no camera, Multipeer pairing
   works, the window is resizable with the radar centred. Then delete `Legacy/` and the
   macOS-only scene in `WhatTheFlightApp.swift`.
 - Done when: the Mac build is the iPad build and the repo has no legacy sources.
+- *As built (2026-10-26):* The main and test targets no longer list macOS or visionOS (`SUPPORTED_PLATFORMS`), `SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES`, and a signed build for this Mac ("Designed for iPad") succeeds. On a Mac `SkyViewSupport.isAvailable` is false, so the bar's Sky View button, lift-to-look, Find in the Sky and `whattheflight://sky` go. Not done: running it on the Mac to check location, Multipeer and window sizing, and deleting `Legacy/`, `WhatTheFlightTests/Legacy`, `WhatTheFlightUITests/Legacy`, the stray `Views/tvOSComponents.swift` and the macOS scene in `WhatTheFlightApp.swift`: none of it compiles any more, but the deletion is left for you.
 
 ---
 

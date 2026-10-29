@@ -58,6 +58,12 @@ struct TrafficMap: View {
         /// Running under the status bar: its height, so the compass (and the ring) sit below
         /// the clock and battery rather than behind them.
         var topInset: CGFloat = 0
+        /// Clouds and fog over the map (Settings → Radar → Clouds and fog); nil, none.
+        var fog: WeatherFog? = nil
+        /// On screen and awake: the clouds drift.
+        var fogDrifts = true
+        /// The fog is Apple Weather's: its mark goes in the corner, above the Maps logo.
+        var fogAttribution = false
     }
 
     @State private var camera: MapCameraPosition = .automatic
@@ -71,6 +77,9 @@ struct TrafficMap: View {
     @State private var visibleBounds: GeographicBounds?
     @State private var trails: [TrailSegment] = []
     @State private var airports: [Airport] = []
+    /// Where the fog's square sits on screen, kept out of this view's body so a moving camera
+    /// redraws only the fog.
+    @LazyState private var fogPlacement = MapFogPlacement()
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverOn
@@ -147,6 +156,19 @@ struct TrafficMap: View {
     // MARK: Body
 
     var body: some View {
+        MapReader { proxy in
+            map(proxy)
+        }
+    }
+
+    /// Keeps the fog's square on the ground as the camera moves.
+    private func placeFog(_ proxy: MapProxy) {
+        guard options.fog != nil else { return }
+        fogPlacement.update(proxy: proxy, center: observer, halfMiles: WeatherFog.reachMiles(radius: radiusMiles), space: .local)
+    }
+
+    @ViewBuilder
+    private func map(_ proxy: MapProxy) -> some View {
         let blips = blips
         let positionKey = PositionKey(blips)
         // Imagery is dark whatever the appearance (see `.environment` below).
@@ -213,6 +235,13 @@ struct TrafficMap: View {
             }
         }
         .mapStyle(mapStyle)
+        // Over the base map and the aircraft, under the recentre button.
+        .overlay(alignment: .topLeading) {
+            if let fog = options.fog {
+                MapFogOverlay(fog: fog, center: observer, radiusMiles: radiusMiles, placement: fogPlacement,
+                              look: .map(colorScheme, imagery: isImagery), isActive: options.fogDrifts)
+            }
+        }
         // Glyphs move to each once-a-second position instead of hopping (MapKit plays the move
         // in about a quarter of a second, whatever the length asked for). Animated as part of
         // the tick's own update: setting positions from `onChange` cost the map a second full
@@ -223,6 +252,20 @@ struct TrafficMap: View {
         .safeAreaPadding(.top, options.topInset)
         .safeAreaPadding(.trailing, options.cardInset.width)
         .safeAreaPadding(.bottom, options.cardInset.height)
+        .overlay(alignment: .bottomLeading) {
+            if options.fogAttribution || (options.fog != nil && WeatherAttributionView.showsStandIn) {
+                // MapKit keeps its logo inside the map's safe area, the card's inset included
+                // (counted from the screen's edge, like the recentre button's): stand just above it.
+                GeometryReader { geo in
+                    WeatherAttributionView(compact: true, markHeight: 11 * options.scale)
+                        .padding(.leading, geo.safeAreaInsets.leading + 10 * options.scale)
+                        .padding(.bottom, max(options.cardInset.height, geo.safeAreaInsets.bottom) + 34 * options.scale)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                        .environment(\.colorScheme, isImagery ? .dark : colorScheme)
+                }
+                .ignoresSafeArea()
+            }
+        }
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size in
             // A different size fits a different distance: learn it again.
             if size != mapSize { metresPerMile = nil }
@@ -232,7 +275,11 @@ struct TrafficMap: View {
             visibleBounds = GeographicBounds(region: context.region)
             rebuildAirports()
             learnFit(from: context.camera)
+            placeFog(proxy)
         }
+        .onMapCameraChange(frequency: .continuous) { _ in placeFog(proxy) }
+        .onChange(of: FogPlaceKey(on: options.fog != nil, radiusMiles: radiusMiles, latitude: observer.latitude,
+                                  longitude: observer.longitude, size: mapSize)) { _, _ in placeFog(proxy) }
         .onChange(of: PlaceKey(observer: observer, radiusMiles: radiusMiles, northUp: headingUp == nil,
                                pinnedOutside: pinnedOutside?.id), initial: true) { old, new in
             reframe(animated: old != new)
@@ -352,6 +399,14 @@ struct TrafficMap: View {
     private func keepPinnedAircraftInView() {
         guard let pinned = pinnedOutside, let frame, !(options.interactive && camera.positionedByUser) else { return }
         if !frame.encloses(pinned.coordinate, margin: 0.92) { reframe(animated: true) }
+    }
+
+    private struct FogPlaceKey: Equatable {
+        let on: Bool
+        let radiusMiles: Double
+        let latitude: Double
+        let longitude: Double
+        let size: CGSize
     }
 
     private struct PlaceKey: Equatable {

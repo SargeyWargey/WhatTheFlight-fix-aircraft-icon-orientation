@@ -114,7 +114,8 @@ struct ChartTone: Sendable {
         return blend([(0, teal), (45, green), (90, amber), (180, pink), (270, violet), (360, teal)], d < 0 ? d + 360 : d)
     }
 
-    private static let green = ChartTone(light: 0x3F8A2A, dark: 0x9BE07A)
+    /// Also one of the route web's airport colours.
+    static let green = ChartTone(light: 0x3F8A2A, dark: 0x9BE07A)
 
     /// `x` along stops at ascending positions, mixed separately for light and dark.
     static func blend(_ stops: [(at: Double, tone: ChartTone)], _ x: Double) -> Color {

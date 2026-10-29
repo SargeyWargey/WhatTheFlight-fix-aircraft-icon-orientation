@@ -80,6 +80,8 @@ struct RadarSnapshot: Codable, Equatable, Sendable {
 struct SharedRadarStore {
     static let appGroup = "group.SargeyWargey.WhatTheFlight"
     static let widgetKind = "NearestFlight"
+    /// iPhone's Next Overhead widget.
+    static let nextOverheadKind = "NextOverhead"
 
     let defaults: UserDefaults
 
@@ -120,6 +122,15 @@ struct SharedRadarStore {
         nonmutating set { defaults.set(newValue, forKey: Key.overheadMiles) }
     }
 
+    /// The app's data source choice, so widgets, Siri and Top Shelf fetch the same way.
+    var dataSource: DataSourcePreference {
+        get { defaults.string(forKey: Key.dataSource).flatMap(DataSourcePreference.init(rawValue:)) ?? .automatic }
+        nonmutating set { defaults.set(newValue.rawValue, forKey: Key.dataSource) }
+    }
+
+    /// A feed for an extension's one-shot fetch: layered, following the app's choice.
+    var feed: FlightFeed { LayeredFeed(preference: dataSource) }
+
     var snapshot: RadarSnapshot? {
         get { defaults.data(forKey: Key.snapshot).flatMap { try? JSONDecoder().decode(RadarSnapshot.self, from: $0) } }
         nonmutating set { defaults.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: Key.snapshot) }
@@ -132,6 +143,7 @@ struct SharedRadarStore {
         static let radius = "wtf.shared.radius"
         static let overheadMiles = "wtf.shared.overheadMiles"
         static let snapshot = "wtf.shared.snapshot"
+        static let dataSource = "wtf.shared.dataSource"
     }
 }
 
@@ -186,7 +198,7 @@ struct SkyMoment: Equatable, Sendable {
 /// A one-shot fetch for extensions: what's flying around a point right now, nearest first.
 enum NearbyTraffic {
     static func contacts(around observer: CLLocationCoordinate2D, radiusMiles: Double,
-                         feed: FlightFeed = FlightRadarFeed()) async throws -> [RadarContact] {
+                         feed: FlightFeed = SharedRadarStore().feed) async throws -> [RadarContact] {
         let flights = try await flights(around: observer, radiusMiles: radiusMiles, feed: feed)
         return contacts(flights, observer: observer, radiusMiles: radiusMiles, at: Date())
     }
@@ -194,7 +206,7 @@ enum NearbyTraffic {
     /// Airborne flights in a box a little wider than the radius, so aircraft about to enter
     /// it are known too (complication timelines project them forward).
     static func flights(around observer: CLLocationCoordinate2D, radiusMiles: Double,
-                        feed: FlightFeed = FlightRadarFeed()) async throws -> [Flight] {
+                        feed: FlightFeed = SharedRadarStore().feed) async throws -> [Flight] {
         let bounds = GeographicBounds.around(center: observer, radiusMiles: radiusMiles + 3)
         return try await feed.flights(in: bounds).filter { !$0.isOnGround }
     }

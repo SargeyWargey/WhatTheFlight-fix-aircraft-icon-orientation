@@ -85,8 +85,8 @@ struct WhereaboutsView: View {
             }
 
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                stat("Altitude", f.isOnGround ? "On ground" : "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft")
-                stat("Speed", "\(RadarFormat.wholeNumber(f.groundSpeedKnots)) kts")
+                stat("Altitude", f.isOnGround ? "On ground" : "\(RadarFormat.altitudeText(f.altitudeFeet))")
+                stat("Speed", "\(RadarFormat.speedText(f.groundSpeedKnots))")
                 stat("Flight", f.displayIdentifier)
                 stat("Heading", "\(Int(f.track.rounded()) % 360)° \(GeoMath.cardinal(f.track))")
             }

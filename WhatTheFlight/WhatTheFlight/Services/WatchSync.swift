@@ -28,6 +28,14 @@ enum WatchSync {
         var overheadAlertMiles: Double
         var notableAlerts: Bool
         var sentAt: Date
+        // Added after version 1 shipped, so optional: absent keeps the Watch's own value.
+        /// `UnitSystem` raw value.
+        var units: String? = nil
+        var overheadAlertLeadSeconds: Double? = nil
+        var watchlist: [WatchlistRule]? = nil
+        var favoriteAlerts: Bool? = nil
+        var keepLogbook: Bool? = nil
+        var syncLogbook: Bool? = nil
 
         var observer: CLLocationCoordinate2D? {
             guard let latitude, let longitude else { return nil }

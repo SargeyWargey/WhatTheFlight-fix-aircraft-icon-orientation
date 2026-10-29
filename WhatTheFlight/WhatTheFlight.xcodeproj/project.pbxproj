@@ -122,6 +122,8 @@
 				Core/Log.swift,
 				Core/NotableTraffic.swift,
 				Core/OperatorInfo.swift,
+				Core/ReadsbParser.swift,
+				Core/Units.swift,
 				Data/AircraftTypeCatalog.swift,
 				Data/AirlineCatalog.swift,
 				"Data/AirlineCatalog+Data.swift",
@@ -132,6 +134,8 @@
 				Services/AircraftPhotoProvider.swift,
 				Services/AppRouter.swift,
 				Services/FlightFeed.swift,
+				Services/FlightFollowAttributes.swift,
+				Services/OpenFeed.swift,
 				Services/SharedRadarStore.swift,
 				Services/SkyWatchAttributes.swift,
 				UI/Theme.swift,
@@ -154,6 +158,8 @@
 				Core/Log.swift,
 				Core/NotableTraffic.swift,
 				Core/OperatorInfo.swift,
+				Core/ReadsbParser.swift,
+				Core/Units.swift,
 				Data/AircraftTypeCatalog.swift,
 				Data/AirlineCatalog.swift,
 				"Data/AirlineCatalog+Data.swift",
@@ -163,6 +169,7 @@
 				Models/GeographicBounds.swift,
 				Services/AircraftPhotoProvider.swift,
 				Services/FlightFeed.swift,
+				Services/OpenFeed.swift,
 				Services/SharedRadarStore.swift,
 			);
 			target = 7C5F000B2E3D806500AAC798 /* WhatTheFlightTopShelf */;
@@ -172,6 +179,7 @@
 			membershipExceptions = (
 				Core/Flight.swift,
 				Core/FlightFeedParser.swift,
+				Core/FlightPhase.swift,
 				Core/FocusPolicy.swift,
 				Core/GeoMath.swift,
 				Core/Log.swift,
@@ -179,8 +187,13 @@
 				Core/OperatorInfo.swift,
 				Core/PerimeterTrack.swift,
 				Core/PollingPolicy.swift,
+				Core/ReadsbParser.swift,
 				Core/RouteProgress.swift,
 				Core/SkyProjector.swift,
+				Core/SkyVisibility.swift,
+				Core/Units.swift,
+				Core/Watchlist.swift,
+				Core/WeatherFog.swift,
 				Core/WristPointing.swift,
 				Data/AircraftTypeCatalog.swift,
 				Data/AirlineCatalog.swift,
@@ -198,6 +211,8 @@
 				Radar/TrafficAlerts.swift,
 				Services/AircraftPhotoProvider.swift,
 				Services/FlightFeed.swift,
+				Services/LogbookSync.swift,
+				Services/OpenFeed.swift,
 				Services/PinSync.swift,
 				Services/RadarSettings.swift,
 				Services/SharedRadarStore.swift,
@@ -227,6 +242,8 @@
 				Core/Log.swift,
 				Core/NotableTraffic.swift,
 				Core/OperatorInfo.swift,
+				Core/ReadsbParser.swift,
+				Core/Units.swift,
 				Data/AircraftTypeCatalog.swift,
 				Data/AirlineCatalog.swift,
 				"Data/AirlineCatalog+Data.swift",
@@ -235,6 +252,7 @@
 				Data/RegistrationCountry.swift,
 				Models/GeographicBounds.swift,
 				Services/FlightFeed.swift,
+				Services/OpenFeed.swift,
 				Services/SharedRadarStore.swift,
 				UI/AircraftGlyph.swift,
 				UI/Theme.swift,
@@ -895,6 +913,7 @@
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "What The Flight? links your iPhone and Apple TV on your local network so you can send your location and the direction your TV faces.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "What The Flight? uses your location to show the aircraft flying over you.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "What The Flight? uses your location to show the aircraft flying over you.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Photos you take in Sky View are saved to your camera roll, with the flight in the caption.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -915,7 +934,9 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3,7";
@@ -952,6 +973,7 @@
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "What The Flight? links your iPhone and Apple TV on your local network so you can send your location and the direction your TV faces.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "What The Flight? uses your location to show the aircraft flying over you.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "What The Flight? uses your location to show the aircraft flying over you.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Photos you take in Sky View are saved to your camera roll, with the flight in the caption.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -972,7 +994,9 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3,7";
@@ -995,7 +1019,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = SargeyWargey.WhatTheFlightTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3,7";
@@ -1019,7 +1045,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = SargeyWargey.WhatTheFlightTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3,7";
@@ -1042,7 +1070,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = SargeyWargey.WhatTheFlightUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3,7";
@@ -1065,7 +1095,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = SargeyWargey.WhatTheFlightUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3,7";

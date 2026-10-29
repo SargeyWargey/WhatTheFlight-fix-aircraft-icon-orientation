@@ -51,7 +51,7 @@ struct SkyEntry: TimelineEntry {
     var status: String {
         if needsSetup { return "Open the app" }
         if isStale { return "Open to refresh" }
-        if let radius = moment?.snapshot.radiusMiles { return "Clear within \(Int(radius)) mi" }
+        if let radius = moment?.snapshot.radiusMiles { return "Clear within \(RadarFormat.radius(radius))" }
         return "Clear skies"
     }
 
@@ -83,7 +83,7 @@ struct NearestComplicationView: View {
             if let f = entry.nearest {
                 ComplicationDial(flight: f) {
                     VStack(spacing: -2) {
-                        Text(RadarFormat.miles(f.distanceMiles))
+                        Text(RadarFormat.distance(f.distanceMiles))
                             .font(.mono(16, .heavy))
                             .minimumScaleFactor(0.6)
                         Text("MI")
@@ -113,13 +113,13 @@ struct NearestComplicationView: View {
 
     var cornerLabel: Text {
         guard let f = entry.nearest else { return Text(entry.status) }
-        return Text("\(f.identifier) · \(RadarFormat.miles(f.distanceMiles)) mi \(GeoMath.cardinal(f.bearing))")
+        return Text("\(f.identifier) · \(RadarFormat.distanceText(f.distanceMiles)) \(GeoMath.cardinal(f.bearing))")
     }
 
     private var inline: some View {
         Group {
             if let f = entry.nearest {
-                Text("\(Image(systemName: f.isHelicopter ? "fan.fill" : "airplane")) \(f.identifier) \(RadarFormat.miles(f.distanceMiles)) mi \(GeoMath.cardinal(f.bearing))")
+                Text("\(Image(systemName: f.isHelicopter ? "fan.fill" : "airplane")) \(f.identifier) \(RadarFormat.distanceText(f.distanceMiles)) \(GeoMath.cardinal(f.bearing))")
             } else {
                 Text("\(Image(systemName: "airplane")) \(entry.status)")
             }
@@ -138,7 +138,7 @@ struct NearestComplicationView: View {
                 if let f = entry.nearest {
                     VStack(alignment: .leading, spacing: 1) {
                         FlightTitle(flight: f, size: 15)
-                        Text("\(RadarFormat.miles(f.distanceMiles)) mi \(GeoMath.cardinal(f.bearing)) · \(RadarFormat.wholeNumber(f.altitudeFeet)) ft")
+                        Text("\(RadarFormat.distanceText(f.distanceMiles)) \(GeoMath.cardinal(f.bearing)) · \(RadarFormat.altitudeText(f.altitudeFeet))")
                             .font(.mono(11, .semibold))
                             .foregroundStyle(Palette.value)
                             .lineLimit(1)
@@ -169,7 +169,7 @@ struct NearestComplicationView: View {
             // The countdown goes last in a Text of its own: a timer measures wider than its
             // digits and would push anything after it off the card.
             HStack(spacing: 3) {
-                Text("\(Image(systemName: "scope")) \(RadarFormat.miles(f.closestPassMiles ?? f.distanceMiles)) mi in")
+                Text("\(Image(systemName: "scope")) \(RadarFormat.distanceText(f.closestPassMiles ?? f.distanceMiles)) in")
                     .fixedSize()
                 countdownText(to: passAt, from: entry.date)
                     .monospacedDigit()
@@ -183,7 +183,7 @@ struct NearestComplicationView: View {
 
     private var spoken: String {
         guard let f = entry.nearest else { return entry.status }
-        return "Nearest aircraft \(f.identifier), \(RadarFormat.miles(f.distanceMiles)) miles \(GeoMath.cardinal(f.bearing)), \(RadarFormat.wholeNumber(f.altitudeFeet)) feet"
+        return "Nearest aircraft \(f.identifier), \(RadarFormat.spokenDistance(f.distanceMiles)) \(GeoMath.cardinal(f.bearing)), \(RadarFormat.spokenAltitude(f.altitudeFeet))"
     }
 }
 
@@ -235,7 +235,7 @@ struct SkyRadarComplicationView: View {
     private var inline: some View {
         Group {
             if entry.nearest != nil, let radius = entry.snapshot?.radiusMiles {
-                Text("\(Image(systemName: "airplane")) \(entry.inRangeCount) aircraft within \(Int(radius)) mi")
+                Text("\(Image(systemName: "airplane")) \(entry.inRangeCount) aircraft within \(RadarFormat.radius(radius))")
             } else {
                 Text("\(Image(systemName: "airplane")) \(entry.status)")
             }
@@ -277,7 +277,7 @@ struct SkyRadarComplicationView: View {
                                     .foregroundStyle(f.id == entry.nearest?.id ? Palette.ink : Palette.value)
                                     .lineLimit(1)
                                 Spacer(minLength: 2)
-                                Text("\(RadarFormat.miles(f.distanceMiles)) \(GeoMath.cardinal(f.bearing))")
+                                Text("\(RadarFormat.distance(f.distanceMiles)) \(GeoMath.cardinal(f.bearing))")
                                     .font(.mono(10, .semibold))
                                     .foregroundStyle(Palette.caption)
                                     .lineLimit(1)
@@ -296,7 +296,7 @@ struct SkyRadarComplicationView: View {
     private var spoken: String {
         guard entry.snapshot != nil else { return entry.status }
         guard let f = entry.nearest else { return entry.status }
-        return "\(entry.inRangeCount) aircraft in range. Nearest \(f.identifier), \(RadarFormat.miles(f.distanceMiles)) miles \(GeoMath.cardinal(f.bearing))"
+        return "\(entry.inRangeCount) aircraft in range. Nearest \(f.identifier), \(RadarFormat.spokenDistance(f.distanceMiles)) \(GeoMath.cardinal(f.bearing))"
     }
 }
 
@@ -409,13 +409,13 @@ struct NextOverheadComplicationView: View {
             VStack(alignment: .leading, spacing: roomy ? 2 : 1) {
                 if let p = entry.passing {
                     header("OVERHEAD NOW", accent: true) {
-                        Text("\(RadarFormat.miles(p.flight.distanceMiles)) mi \(GeoMath.cardinal(p.flight.bearing))")
+                        Text("\(RadarFormat.distanceText(p.flight.distanceMiles)) \(GeoMath.cardinal(p.flight.bearing))")
                             .font(.mono(13, .heavy))
                             .foregroundStyle(Palette.signal)
                             .widgetAccentable()
                     }
                     FlightTitle(flight: p.flight, size: 14, showsGlyph: true)
-                    Text("Look up · \(RadarFormat.wholeNumber(p.flight.altitudeFeet)) ft")
+                    Text("Look up · \(RadarFormat.altitudeText(p.flight.altitudeFeet))")
                         .font(.mono(10, .semibold))
                         .foregroundStyle(Palette.caption)
                 } else if let p = entry.nextPass {
@@ -430,7 +430,7 @@ struct NextOverheadComplicationView: View {
                     }
                     FlightTitle(flight: p.flight, size: 14, showsGlyph: true)
                     if roomy {
-                        Text("\(p.miles < 0.5 ? "Right overhead" : "Within \(RadarFormat.miles(p.miles)) mi") · \(RadarFormat.wholeNumber(p.flight.altitudeFeet)) ft")
+                        Text("\(p.miles < 0.5 ? "Right overhead" : "Within \(RadarFormat.distanceText(p.miles))") · \(RadarFormat.altitudeText(p.flight.altitudeFeet))")
                             .font(.mono(10, .semibold))
                             .foregroundStyle(Palette.caption)
                             .lineLimit(1)
@@ -480,7 +480,7 @@ struct NextOverheadComplicationView: View {
 
     private var spoken: String {
         if let p = entry.passing {
-            return "\(p.flight.identifier) overhead now, \(RadarFormat.miles(p.flight.distanceMiles)) miles \(GeoMath.cardinal(p.flight.bearing))"
+            return "\(p.flight.identifier) overhead now, \(RadarFormat.spokenDistance(p.flight.distanceMiles)) \(GeoMath.cardinal(p.flight.bearing))"
         }
         if let p = entry.nextPass {
             let seconds = max(0, p.date.timeIntervalSince(entry.date))

@@ -1,0 +1,404 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Round 3 icon render</title>
+<style>html,body{margin:0;padding:0;background:#000;overflow:hidden}svg{display:block}</style>
+<body>
+<script>
+// Source for the round 3 app icons (Settings → Display → App Icon, iPhone and iPad): the
+// playful set and the aircraft-and-stats set, as reviewed at
+// https://claude.ai/artifact/1KRtbk5NcjRQBz7LEo7M7T. Every icon is drawn as SVG on a 100-unit
+// square. Open with a hash to render one: #<id>,<light|dark|tinted>,<size>, e.g.
+// icon-render.html#interrobang,dark,1024. `render.sh` renders them all into the app.
+(() => {
+  // ---------- Aircraft silhouettes (same 64-grid geometry as the app's AircraftGlyph) ----------
+  const C = 32, m = x => +(64 - x).toFixed(2);
+  function fus({ n, t, w, nose = 7, tw = w * 0.35, taper = t - 14, sharp = false }) {
+    const a = sharp ? `C ${C + w * .15} ${n + nose * .35}, ${C + w * .9} ${n + nose * .75}, ${C + w} ${n + nose}`
+                    : `C ${C + w * .55} ${n}, ${C + w} ${n + nose * .45}, ${C + w} ${n + nose}`;
+    const b = sharp ? `C ${C - w * .9} ${n + nose * .75}, ${C - w * .15} ${n + nose * .35}, ${C} ${n}`
+                    : `C ${C - w} ${n + nose * .45}, ${C - w * .55} ${n}, ${C} ${n}`;
+    return `<path d="M ${C} ${n} ${a} L ${C + w} ${taper} L ${C + tw} ${t} L ${C - tw} ${t} L ${C - w} ${taper} L ${C - w} ${n + nose} ${b} Z"/>`;
+  }
+  const poly = pts => `<path d="M ${pts.concat(pts.slice().reverse().map(([x, y]) => [m(x), y])).map(p => p.join(' ')).join(' L ')} Z"/>`;
+  const pods = (cx, y1, y2, w) => [cx, m(cx)].map(x => `<rect x="${x - w / 2}" y="${y1}" width="${w}" height="${y2 - y1}" rx="${w / 2}"/>`).join('');
+  const SHAPES = {
+    airliner: () => fus({ n: 5, t: 60, w: 3.6, nose: 7, tw: 1.2, taper: 46 }) + poly([[32.5, 25], [57, 37.5], [57.5, 40.5], [32.5, 36]]) + pods(42.5, 25.5, 33, 4.6) + poly([[32.5, 51], [43, 56.5], [43.3, 59], [32.5, 57]]),
+    widebody: () => fus({ n: 3, t: 61, w: 4.6, nose: 8, tw: 1.4, taper: 46 }) + poly([[32.5, 22], [61.5, 39], [62, 42.5], [32.5, 37]]) + pods(44, 22.5, 33, 6.2) + poly([[32.5, 50.5], [46, 57], [46.3, 60], [32.5, 57]]),
+    fourEngine: () => fus({ n: 2.5, t: 61.5, w: 5, nose: 9, tw: 1.5, taper: 47 }) + poly([[32.5, 21], [62, 40.5], [62.5, 44], [32.5, 37]]) + pods(41.5, 22.5, 31, 4.8) + pods(52, 29, 37, 4.4) + poly([[32.5, 50.5], [47, 57.5], [47.3, 60.5], [32.5, 57]]),
+    fighter: () => fus({ n: 2, t: 60, w: 3.6, nose: 15, tw: 2.4, taper: 54, sharp: true }) + poly([[33, 14], [37.5, 27], [37.5, 33], [32.5, 33]]) + poly([[34, 27], [56, 42], [56, 46.5], [34, 46.5]]) + poly([[34, 50], [45, 57], [45, 60.5], [34, 60]]),
+    light: () => fus({ n: 9, t: 58, w: 3.8, nose: 4, tw: .9, taper: 30 }) + poly([[32.5, 21], [61, 21.3], [61, 28.5], [32.5, 28.5]]) + `<circle cx="32" cy="8.5" r="8" fill-opacity=".34"/><rect x="24" y="7.6" width="16" height="1.8" rx=".9"/><circle cx="32" cy="8.5" r="1.9"/>` + poly([[32.5, 49.5], [42.5, 49.8], [42.5, 55], [32.5, 55.5]]),
+    helicopter: () => `<g fill-opacity=".55"><rect x="3" y="25.3" width="58" height="3.4" rx="1.7" transform="rotate(45 32 27)"/><rect x="3" y="25.3" width="58" height="3.4" rx="1.7" transform="rotate(-45 32 27)"/></g><path d="M 30.2 36 L 33.8 36 L 33 57 L 31 57 Z"/><rect x="25" y="49" width="14" height="3" rx="1.2"/><rect x="33.6" y="52.5" width="2.6" height="9" rx="1"/><ellipse cx="32" cy="27" rx="6.5" ry="11"/>`,
+  };
+  /** Draws a silhouette centred at (x, y), `size` units across, turned `rot` degrees. */
+  const craft = (kind, x, y, size, rot, fill, extra = '') =>
+    `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${size / 64}) translate(-32 -32)" fill="${fill}" ${extra}>${SHAPES[kind]()}</g>`;
+
+  // ---------- Helpers ----------
+  let uid = 0;
+  const id = p => `${p}${++uid}`;
+  function rng(seed) { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+  /** Topographic contour lines around one off-centre summit. */
+  function contours(seed, stroke, opacity, width = .45, cx = 26, cy = 70, rings = 15) {
+    const r = rng(seed);
+    const ph = [r() * 6.28, r() * 6.28, r() * 6.28], amp = [.16, .09, .05];
+    let out = '';
+    for (let k = 1; k <= rings; k++) {
+      const base = k * 7.2;
+      let d = '';
+      for (let i = 0; i <= 90; i++) {
+        const t = i / 90 * Math.PI * 2;
+        const rr = base * (1 + amp[0] * Math.sin(2 * t + ph[0] + k * .12) + amp[1] * Math.sin(3 * t + ph[1]) + amp[2] * Math.sin(5 * t + ph[2] + k * .3));
+        d += (i ? 'L' : 'M') + (cx + rr * Math.cos(t)).toFixed(1) + ' ' + (cy + rr * Math.sin(t)).toFixed(1);
+      }
+      out += `<path d="${d}Z" fill="none" stroke="${stroke}" stroke-opacity="${opacity}" stroke-width="${width}"/>`;
+    }
+    return out;
+  }
+  const rings = (cx, cy, radii, stroke, op, dash = '1.2 2.4', w = .6) =>
+    radii.map(r => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${stroke}" stroke-opacity="${op}" stroke-width="${w}" stroke-dasharray="${dash}"/>`).join('');
+  /** A fading radar sweep wedge ending at `angle` (deg, 0 = north). */
+  function sweep(cx, cy, r, angle, color, maxOp = .5, span = 70, steps = 14) {
+    let out = '';
+    for (let i = 0; i < steps; i++) {
+      const a0 = (angle - span + span * i / steps) * Math.PI / 180, a1 = (angle - span + span * (i + 1) / steps) * Math.PI / 180;
+      const p0 = [cx + r * Math.sin(a0), cy - r * Math.cos(a0)], p1 = [cx + r * Math.sin(a1), cy - r * Math.cos(a1)];
+      out += `<path d="M ${cx} ${cy} L ${p0[0].toFixed(2)} ${p0[1].toFixed(2)} A ${r} ${r} 0 0 1 ${p1[0].toFixed(2)} ${p1[1].toFixed(2)} Z" fill="${color}" fill-opacity="${(maxOp * ((i + 1) / steps) ** 2).toFixed(3)}"/>`;
+    }
+    const e = angle * Math.PI / 180;
+    return out + `<line x1="${cx}" y1="${cy}" x2="${(cx + r * Math.sin(e)).toFixed(2)}" y2="${(cy - r * Math.cos(e)).toFixed(2)}" stroke="${color}" stroke-width=".9" stroke-opacity="${maxOp + .3}"/>`;
+  }
+  const linear = (gid, stops, x1 = 0, y1 = 0, x2 = 0, y2 = 1) =>
+    `<linearGradient id="${gid}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stops.map(([o, c, a = 1]) => `<stop offset="${o}" stop-color="${c}" stop-opacity="${a}"/>`).join('')}</linearGradient>`;
+  const radial = (gid, stops, cx = .5, cy = .5, r = .7) =>
+    `<radialGradient id="${gid}" cx="${cx}" cy="${cy}" r="${r}">${stops.map(([o, c, a = 1]) => `<stop offset="${o}" stop-color="${c}" stop-opacity="${a}"/>`).join('')}</radialGradient>`;
+  /** Compass ticks around a rounded square, like the radar's bezel. */
+  function bezel(inset, stroke, op, every = 5, majorEvery = 30) {
+    let out = '';
+    const s = 100 - inset * 2, cx = 50, cy = 50;
+    for (let deg = 0; deg < 360; deg += every) {
+      const a = deg * Math.PI / 180, dx = Math.sin(a), dy = -Math.cos(a);
+      const t = Math.min((s / 2) / Math.max(Math.abs(dx), 1e-6), (s / 2) / Math.max(Math.abs(dy), 1e-6));
+      const major = deg % majorEvery === 0, len = major ? 4 : 2.2;
+      const x1 = cx + dx * t, y1 = cy + dy * t, x2 = cx + dx * (t - len), y2 = cy + dy * (t - len);
+      if (deg === 0) continue;
+      out += `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="${stroke}" stroke-opacity="${major ? op * 1.6 : op}" stroke-width="${major ? .9 : .6}" stroke-linecap="round"/>`;
+    }
+    return out;
+  }
+  const northMark = (fill, y = 6) => `<path d="M 50 ${y} L 54.2 ${y + 7.5} L 50 ${y + 5.6} L 45.8 ${y + 7.5} Z" fill="${fill}"/>`;
+
+  // ---------- Round 3: playful concepts ----------
+  const cubicAt = ([a, b, c, d], t) => { const u = 1 - t; return [0, 1].map(k => u * u * u * a[k] + 3 * u * u * t * b[k] + 3 * u * t * t * c[k] + t * t * t * d[k]); };
+  /** Points every `step` units along a run of cubic (4-point) and straight (2-point) segments. */
+  function along(segs, step) {
+    const pts = [];
+    segs.forEach(sg => { for (let i = 0; i <= 60; i++) { const t = i / 60; pts.push(sg.length === 4 ? cubicAt(sg, t) : [sg[0][0] + (sg[1][0] - sg[0][0]) * t, sg[0][1] + (sg[1][1] - sg[0][1]) * t]); } });
+    const out = [pts[0]]; let acc = 0;
+    for (let i = 1; i < pts.length; i++) { acc += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); if (acc >= step) { out.push(pts[i]); acc = 0; } }
+    return out;
+  }
+  const QUESTION = [[[30, 36], [30, 20], [41, 13], [51, 13]], [[51, 13], [63, 13], [71, 21], [71, 31]], [[71, 31], [71, 43], [52, 45], [51, 57]], [[51, 57], [51, 61]]];
+  const bg = (gid, [a, b], diag) => linear(gid, [[0, a], [1, b]], 0, 0, diag ? 1 : 0, 1);
+  const stars = (mode, pts) => mode === 'dark' ? pts.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i % 2 ? .45 : .7}" fill="#fff" fill-opacity=".65"/>`).join('') : '';
+  const TINT_BG = ['#171717', '#000000'];
+
+  const PLAY = [
+    {
+      id: 'interrobang', name: 'Interrobang', tag: 'Evolves today’s icon', pun: '“What the…?!”',
+      idea: 'Today’s contrail question mark gets a second plane drawing the exclamation mark beside it: the “?!” you say when something odd flies over.',
+      why: 'The easiest step from the icon you ship. Same teal and coral, one extra gold plane, still bold at 60 pt.',
+      draw(mode) {
+        const c = { light: { bg: ['#1F565C', '#0D2A2F'], trail: '#FFFFFF', a: '#FF6B5E', b: '#FFC247' },
+                    dark: { bg: ['#0D2327', '#020306'], trail: '#E7EAF0', a: '#FF6B5E', b: '#FFC247' },
+                    tinted: { bg: TINT_BG, trail: '#FFFFFF', a: '#FFFFFF', b: '#CFCFCF' } }[mode];
+        const g = id('g'), t = id('t'), t2 = id('t');
+        return `<defs>${bg(g, c.bg)}${linear(t, [[0, c.trail, .22], [1, c.trail, 1]], .1, .1, .5, .9)}
+            <linearGradient id="${t2}" gradientUnits="userSpaceOnUse" x1="0" y1="15" x2="0" y2="58"><stop offset="0" stop-color="${c.trail}" stop-opacity=".22"/><stop offset="1" stop-color="${c.trail}"/></linearGradient></defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          <path d="M 17 35 C 17 20, 27 13, 38 13 C 50 13, 58 21, 58 31 C 58 42, 40 45, 39 56 L 39 60" fill="none" stroke="url(#${t})" stroke-width="8.5" stroke-linecap="round"/>
+          <path d="M 77 15 L 77 58" fill="none" stroke="url(#${t2})" stroke-width="8.5" stroke-linecap="round"/>
+          ${craft('airliner', 39, 76, 22, 180, c.a)}
+          ${craft('airliner', 77, 76, 22, 198, c.b)}`;
+      }
+    },
+    {
+      id: 'cloud', name: 'Cloud Mark', tag: 'Goes with clouds & fog', pun: '“What’s in that cloud?”',
+      idea: 'The question mark is a puffy cloud, and a coral plane pops out of the bottom as its dot.',
+      why: 'Soft and friendly, and it ties in with the clouds now drifting over the radar. The cloud shape is unmistakable small.',
+      draw(mode) {
+        const c = { light: { bg: ['#9FD0FA', '#3F7FDB'], cloud: '#FFFFFF', shade: '#BFD2EE', plane: '#FF6B5E' },
+                    dark: { bg: ['#1F2466', '#05070D'], cloud: '#E4E8F5', shade: '#6F79A8', plane: '#FF6B5E' },
+                    tinted: { bg: TINT_BG, cloud: '#EFEFEF', shade: '#8C8C8C', plane: '#FFFFFF' } }[mode];
+        const g = id('g');
+        const puffs = along(QUESTION, 4.2).map(([x, y], i) => [x, y, 6.6 + 1.5 * Math.sin(i * 1.7)]);
+        return `<defs>${bg(g, c.bg)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>${stars(mode, [[12, 18], [86, 12], [88, 60], [10, 70], [24, 90], [80, 88]])}
+          ${puffs.map(([x, y, r]) => `<circle cx="${(x + .5).toFixed(1)}" cy="${(y + 2).toFixed(1)}" r="${r.toFixed(1)}" fill="${c.shade}"/>`).join('')}
+          ${puffs.map(([x, y, r]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="${c.cloud}"/>`).join('')}
+          ${craft('airliner', 51, 80, 22, 180, c.plane)}`;
+      }
+    },
+    {
+      id: 'wideeyed', name: 'Wide-Eyed', tag: 'Mascot', pun: '“Wait, what?”',
+      idea: 'An airliner head-on, its cockpit windows wide with surprise, brows up and mouth in an “o”.',
+      why: 'The most character, so it could become a mascot for the website and the tour. Friendly rather than rude, so fine for 4+.',
+      draw(mode) {
+        const c = { light: { bg: ['#FF8A73', '#E5483B'], body: '#FFFFFF', ink: '#1E1D2B', fan: '#2A2494' },
+                    dark: { bg: ['#123A40', '#020306'], body: '#F1F3F8', ink: '#0A0E14', fan: '#2A2494' },
+                    tinted: { bg: TINT_BG, body: '#EDEDED', ink: '#000000', fan: '#3A3A3A' } }[mode];
+        const g = id('g'), mirror = d => d.replace(/(-?\d+(\.\d+)?) (-?\d+(\.\d+)?)/g, (_, x, _a, y) => `${(100 - x).toFixed(1)} ${y}`);
+        const wing = 'M 40 58 L 5 51 L 5 55.5 L 40 64 Z', tail = 'M 50 31.5 L 33 29.5 L 33 32 L 50 34.5 Z';
+        const engine = x => `<circle cx="${x}" cy="64" r="6.6" fill="${c.body}"/><circle cx="${x}" cy="64" r="4.2" fill="${c.fan}"/><circle cx="${x}" cy="64" r="1.3" fill="${c.body}"/>`;
+        const eye = x => `<ellipse cx="${x}" cy="49" rx="5.3" ry="6.3" fill="#FFFFFF" stroke="${c.ink}" stroke-width="1.6"/><circle cx="${x + .6}" cy="46.4" r="2.7" fill="${c.ink}"/><circle cx="${x + 1.5}" cy="45.4" r=".85" fill="#FFFFFF"/>`;
+        return `<defs>${bg(g, c.bg)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          <path d="M 47.6 34 L 50 13 L 52.4 34 Z" fill="${c.body}"/>
+          <path d="${tail}" fill="${c.body}"/><path d="${mirror(tail)}" fill="${c.body}"/>
+          <path d="${wing}" fill="${c.body}"/><path d="${mirror(wing)}" fill="${c.body}"/>
+          ${engine(24.5)}${engine(75.5)}
+          <circle cx="50" cy="54" r="17.2" fill="${c.body}"/>
+          ${eye(43)}${eye(57)}
+          <path d="M 37.8 39.6 Q 42.6 36.2 47.4 38.8" fill="none" stroke="${c.ink}" stroke-width="1.9" stroke-linecap="round"/>
+          <path d="M 52.6 38.8 Q 57.4 36.2 62.2 39.6" fill="none" stroke="${c.ink}" stroke-width="1.9" stroke-linecap="round"/>
+          <ellipse cx="50" cy="62" rx="2.5" ry="3.1" fill="${c.ink}"/>`;
+      }
+    },
+    {
+      id: 'paper', name: 'Loop-the-Loop', tag: 'Most playful', pun: '“What was that?”',
+      idea: 'A paper plane shows off: its dashed trail loops the loop before it zips off to the top corner.',
+      why: 'Light-hearted and simple, with no airliner at all, so it stands apart from every flight-tracker icon.',
+      draw(mode) {
+        const c = { light: { bg: ['#5B54F0', '#2A2494'], top: '#FFFFFF', low: '#CFCCF7', keel: '#9C97EA', trail: '#FFFFFF' },
+                    dark: { bg: ['#1A1650', '#05070D'], top: '#F2F3FA', low: '#A8A4FF', keel: '#6F64EC', trail: '#A8A4FF' },
+                    tinted: { bg: TINT_BG, top: '#F2F2F2', low: '#B5B5B5', keel: '#7A7A7A', trail: '#FFFFFF' } }[mode];
+        const g = id('g');
+        const tri = (pts, fill) => `<path d="M ${pts.map(p => p.join(' ')).join(' L ')} Z" fill="${fill}"/>`;
+        return `<defs>${bg(g, c.bg, true)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          <path d="M 8 92 C 20 80, 28 68, 38 62 C 52 54, 56 38, 44 37 C 32 36, 32 54, 48 55 C 58 56, 62 46, 64 40" fill="none" stroke="${c.trail}" stroke-opacity=".85" stroke-width="2.8" stroke-linecap="round" stroke-dasharray="3.6 4.6"/>
+          <g transform="translate(74 30) rotate(-40) scale(.95)">
+            ${tri([[24, 0], [-20, -15], [-6, 2]], c.top)}${tri([[24, 0], [-6, 2], [-16, 15]], c.low)}${tri([[24, 0], [-6, 2], [-11, 6.5]], c.keel)}
+          </g>`;
+      }
+    },
+    {
+      id: 'doubletake', name: 'Double Take', tag: 'A story in one picture', pun: '“Hang on…”',
+      idea: 'A plane flies past, then whips round in a hairpin to look again, with little surprise marks at its nose.',
+      why: 'Tells the app’s whole reason to exist: you look up, you look twice. The contrail keeps it in the family.',
+      draw(mode) {
+        const c = { light: { bg: ['#8EC3F5', '#2A78C8'], trail: '#FFFFFF', plane: '#FFFFFF', pop: '#FFC247' },
+                    dark: { bg: ['#1F2466', '#05070D'], trail: '#C9D4FF', plane: '#FFFFFF', pop: '#FFC247' },
+                    tinted: { bg: TINT_BG, trail: '#FFFFFF', plane: '#FFFFFF', pop: '#BDBDBD' } }[mode];
+        const g = id('g'), t = id('t');
+        return `<defs>${bg(g, c.bg)}<linearGradient id="${t}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="80" y2="0"><stop offset="0" stop-color="${c.trail}" stop-opacity=".1"/><stop offset="1" stop-color="${c.trail}"/></linearGradient></defs>
+          <rect width="100" height="100" fill="url(#${g})"/>${stars(mode, [[14, 16], [86, 84], [10, 40], [40, 90]])}
+          <path d="M -4 74 C 26 74, 52 72, 68 64 C 86 55, 90 33, 74 27 C 63 23, 52 30, 50 42" fill="none" stroke="url(#${t})" stroke-width="5.5" stroke-linecap="round"/>
+          ${craft('airliner', 48.5, 52, 30, 192, c.plane)}
+          <g stroke="${c.pop}" stroke-width="3.2" stroke-linecap="round">
+            <path d="M 31 60 L 24 57"/><path d="M 31.5 69 L 24 70.5"/><path d="M 36 77 L 31.5 82.5"/>
+          </g>`;
+      }
+    },
+    {
+      id: 'tailfin', name: 'Tail Fin', tag: 'Airline look', pun: '“Flying ?-Air”',
+      idea: 'A swept airliner tail in the app’s own made-up livery: coral, a gold stripe, and a question mark with a plane for its dot.',
+      why: 'Reads like an airline’s app, which is the joke: the airline of “what was that?”. An invented livery, so no trademarks.',
+      draw(mode) {
+        const c = { light: { bg: ['#B4D8FA', '#4A86E0'], fin: '#FF6B5E', rudder: '#E5483B', crown: '#FFFFFF', stripe: '#FFC247', mark: '#FFFFFF' },
+                    dark: { bg: ['#14213D', '#05070D'], fin: '#FF6B5E', rudder: '#D23A2D', crown: '#DDE2EE', stripe: '#FFC247', mark: '#FFFFFF' },
+                    tinted: { bg: TINT_BG, fin: '#D6D6D6', rudder: '#A8A8A8', crown: '#F2F2F2', stripe: '#8A8A8A', mark: '#1A1A1A' } }[mode];
+        const g = id('g');
+        return `<defs>${bg(g, c.bg)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          <path d="M 18 100 L 56 18 C 58 13, 61 11, 66 11 L 84 11 C 88 11, 89 14, 88 18 L 80 100 Z" fill="${c.fin}"/>
+          <path d="M 86 26 L 79.4 92" stroke="${c.rudder}" stroke-width="1.2" fill="none"/>
+          <path d="M 24.5 86 L 81.4 86 L 81.95 80 L 27.3 80 Z" fill="${c.stripe}"/>
+          <path d="M 0 100 L 0 93 C 22 87, 78 87, 100 91 L 100 100 Z" fill="${c.crown}"/>
+          <g transform="translate(66 47) skewX(-18)">
+            <path d="M -10 -11 C -10 -19, -4 -23, 1.5 -23 C 8 -23, 12 -18.5, 12 -13 C 12 -5, 2 -4.5, 1.5 2.5 L 1.5 4" fill="none" stroke="${c.mark}" stroke-width="5.4" stroke-linecap="round"/>
+          </g>
+          ${craft('airliner', 64, 61, 13, 180, c.mark)}`;
+      }
+    },
+    {
+      id: 'board', name: 'Departure Board', tag: 'Airport sign', pun: '“Flight: ?”',
+      idea: 'A split-flap departure board tile flipping to a question mark, with a little plane for the dot, on airport-sign yellow.',
+      why: 'Straight from the airport, instantly “travel”. One glyph and one tile, so it stays crisp small.',
+      draw(mode) {
+        const c = { light: { bg: ['#FFD25C', '#F0A020'], card: '#1E1D2B', top: '#2A2938', gap: '#0C0B12', pin: '#55525F', glyph: '#FFFFFF' },
+                    dark: { bg: ['#1E1D28', '#05070D'], card: '#2A2B36', top: '#343544', gap: '#0A0A10', pin: '#FFC247', glyph: '#FFC247' },
+                    tinted: { bg: TINT_BG, card: '#2E2E2E', top: '#3A3A3A', gap: '#000000', pin: '#7A7A7A', glyph: '#FFFFFF' } }[mode];
+        const g = id('g');
+        return `<defs>${bg(g, c.bg)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          <rect x="19" y="13" width="62" height="74" rx="8" fill="${c.card}"/>
+          <path d="M 27 13 L 73 13 A 8 8 0 0 1 81 21 L 81 50 L 19 50 L 19 21 A 8 8 0 0 1 27 13 Z" fill="${c.top}"/>
+          <path d="M 38 35 C 38 25, 44 21, 50 21 C 57 21, 62 26, 62 32 C 62 40, 51 41, 50 49 L 50 56" fill="none" stroke="${c.glyph}" stroke-width="7" stroke-linecap="round"/>
+          ${craft('airliner', 50, 71, 15, 180, c.glyph)}
+          <rect x="19" y="49" width="62" height="2" fill="${c.gap}"/>
+          <rect x="14.5" y="46.5" width="5" height="7" rx="1.5" fill="${c.pin}"/><rect x="80.5" y="46.5" width="5" height="7" rx="1.5" fill="${c.pin}"/>`;
+      }
+    },
+    {
+      id: 'birdplane', name: 'Bird or Plane?', tag: 'Spotter’s joke', pun: '“Is it a bird? Is it a plane?”',
+      idea: 'A big airliner crosses a dusk sky while a small gull below it wonders out loud.',
+      why: 'The oldest sky joke there is, with the plane still the hero. Warm dusk colours are unlike anything else on a Home Screen.',
+      draw(mode) {
+        const c = { light: { bg: ['#FFD36B', '#FF9466'], plane: '#2A2494', bird: '#2A2494', bubble: '#FFFFFF' },
+                    dark: { bg: ['#2A2494', '#0A0E14'], plane: '#FFC247', bird: '#FFC247', bubble: '#FFFFFF' },
+                    tinted: { bg: TINT_BG, plane: '#FFFFFF', bird: '#CFCFCF', bubble: '#FFFFFF' } }[mode];
+        const g = id('g'), qInk = mode === 'tinted' ? '#000000' : '#2A2494';
+        return `<defs>${bg(g, c.bg, true)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>${stars(mode, [[82, 80], [12, 14], [90, 46], [46, 90]])}
+          ${craft('airliner', 66, 34, 50, 42, c.plane)}
+          <path d="M 13 80 Q 19 72 25 78 Q 31 72 37 80" fill="none" stroke="${c.bird}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="26.5" cy="69" r="1.5" fill="${c.bubble}"/><circle cx="29" cy="64" r="2.2" fill="${c.bubble}"/>
+          <circle cx="32" cy="53" r="7.5" fill="${c.bubble}"/>
+          <path d="M 29.3 51 C 29.3 48.6, 30.6 47.4, 32.1 47.4 C 33.8 47.4, 34.9 48.6, 34.9 50 C 34.9 52.2, 32.3 52.4, 32.2 54.4" fill="none" stroke="${qInk}" stroke-width="1.7" stroke-linecap="round"/>
+          <circle cx="32.2" cy="57" r="1" fill="${qInk}"/>`;
+      }
+    },
+  ];
+  // ---------- Round 3b: aircraft and stats ----------
+  // The logbook's ChartTone colours: light on paper, dark on night.
+  const TONE = {
+    light: { night: '#2A2494', violet: '#3A33D6', sky: '#2A78C8', teal: '#0B8573', amber: '#B47200', coral: '#C9502A', pink: '#C2347E' },
+    dark:  { night: '#6F64EC', violet: '#A8A4FF', sky: '#6CB8FF', teal: '#4FDCC4', amber: '#FFC247', coral: '#FF9466', pink: '#FF7BC4' },
+    tinted:{ night: '#5A5A5A', violet: '#7A7A7A', sky: '#A6A6A6', teal: '#C4C4C4', amber: '#F0F0F0', coral: '#D6D6D6', pink: '#B0B0B0' },
+  };
+  const PAPER = ['#F3F1EC', '#DCD9D1'], NIGHT = ['#141A2A', '#0A0E14'];
+  const polar = (cx, cy, r, deg) => [cx + r * Math.sin(deg * Math.PI / 180), cy - r * Math.cos(deg * Math.PI / 180)];
+  const QMARK = 'M -4 -3 C -4 -6.5, -1.8 -8, .2 -8 C 2.6 -8, 4 -6.4, 4 -4.6 C 4 -1.6, .4 -1.3, .2 1.6';
+
+  const STATS = [
+    {
+      id: 'trend', name: 'Trend Contrail', tag: 'Chart', pun: '“Up and to the right”',
+      idea: 'A line chart drawn as a contrail over a faint grid, with a coral plane climbing off the last point.',
+      why: 'Says “stats” and “flight” in a single stroke, and still reads as a chart at 60 pt.',
+      draw(mode) {
+        const c = { light: { bg: PAPER, grid: '#3A33D6', gridOp: .13, line: '#3A33D6', dot: '#E5483B', plane: '#E5483B' },
+                    dark: { bg: NIGHT, grid: '#FFFFFF', gridOp: .08, line: '#A8A4FF', dot: '#FF6B5E', plane: '#FF6B5E' },
+                    tinted: { bg: TINT_BG, grid: '#FFFFFF', gridOp: .1, line: '#FFFFFF', dot: '#BDBDBD', plane: '#FFFFFF' } }[mode];
+        const g = id('g'), a = id('a'), t = id('t');
+        const pts = [[10, 80], [24, 68], [37, 72], [51, 52], [64, 56], [76, 34]];
+        const line = 'M ' + pts.map(p => p.join(' ')).join(' L ');
+        return `<defs>${bg(g, c.bg)}${linear(a, [[0, c.line, .3], [1, c.line, 0]])}
+            <linearGradient id="${t}" gradientUnits="userSpaceOnUse" x1="10" y1="0" x2="76" y2="0"><stop offset="0" stop-color="${c.line}" stop-opacity=".3"/><stop offset="1" stop-color="${c.line}"/></linearGradient></defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          ${[26, 44, 62].map(y => `<line x1="8" y1="${y}" x2="92" y2="${y}" stroke="${c.grid}" stroke-opacity="${c.gridOp}" stroke-width=".8"/>`).join('')}
+          <line x1="8" y1="86" x2="92" y2="86" stroke="${c.grid}" stroke-opacity="${c.gridOp * 2.2}" stroke-width="1"/>
+          <path d="${line} L 76 86 L 10 86 Z" fill="url(#${a})"/>
+          <path d="${line}" fill="none" stroke="url(#${t})" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          ${pts.slice(0, -1).map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.5" fill="${c.dot}"/>`).join('')}
+          ${craft('airliner', 79.8, 27, 20, 29, c.plane)}`;
+      }
+    },
+    {
+      id: 'hours', name: 'Sky by the Hour', tag: 'From the Stats tab', pun: '“Your sky, hour by hour”',
+      idea: 'The logbook’s hourly chart: each bar is the colour of the sky at that hour, indigo night to pink dawn to amber noon and back, with a plane over the busiest hour.',
+      why: 'Straight from the app, colours and all. That run of sky colours looks like nothing else on a Home Screen.',
+      draw(mode) {
+        const k = TONE[mode], g = id('g');
+        const back = mode === 'light' ? PAPER : mode === 'dark' ? ['#121735', '#05070D'] : TINT_BG;
+        const heights = [10, 7, 9, 24, 44, 36, 30, 38, 50, 42, 22, 13];
+        const tones = ['night', 'night', 'night', 'pink', 'coral', 'amber', 'amber', 'amber', 'coral', 'pink', 'violet', 'night'];
+        const plane = mode === 'light' ? '#E5483B' : '#FFFFFF';
+        return `<defs>${bg(g, back)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          ${heights.map((h, i) => `<rect x="${(13 + i * 6.4).toFixed(1)}" y="${80 - h}" width="5.2" height="${h}" rx="2.2" fill="${k[tones[i]]}"/>`).join('')}
+          <line x1="10" y1="84" x2="90" y2="84" stroke="${mode === 'light' ? '#3A33D6' : '#FFFFFF'}" stroke-opacity=".22" stroke-width="1" stroke-dasharray="1.4 2.4"/>
+          ${craft('airliner', 66.8, 19, 15, 90, plane)}`;
+      }
+    },
+    {
+      id: 'rose', name: 'Heading Rose', tag: 'From the Stats tab', pun: '“Which way they fly”',
+      idea: 'The logbook’s heading rose: petals coloured by direction, longest where most aircraft head, around an airliner, with the radar’s red north.',
+      why: 'A chart and a compass at once, so it nods to the radar as well as the logbook.',
+      draw(mode) {
+        const k = TONE[mode], g = id('g');
+        const back = mode === 'light' ? PAPER : mode === 'dark' ? NIGHT : TINT_BG;
+        const lengths = [34, 24, 16, 22, 30, 38, 26, 18, 14, 20, 28, 36];
+        const tones = ['violet', 'sky', 'sky', 'teal', 'teal', 'amber', 'amber', 'coral', 'coral', 'pink', 'pink', 'night'];
+        const petals = lengths.map((r, i) => {
+          const a = i * 30, [x1, y1] = polar(50, 52, r, a - 12), [x2, y2] = polar(50, 52, r, a + 12);
+          return `<path d="M 50 52 L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z" fill="${k[tones[i]]}"/>`;
+        }).join('');
+        const ink = mode === 'light' ? '#3A33D6' : '#FFFFFF';
+        const north = mode === 'tinted' ? '#FFFFFF' : mode === 'light' ? '#E5483B' : '#FF6B5E';
+        return `<defs>${bg(g, back)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          ${rings(50, 52, [14, 28, 42], ink, .18, '1.2 2.4', .6)}
+          ${petals}
+          <circle cx="50" cy="52" r="11" fill="${back[1]}"/>
+          ${craft('airliner', 50, 52, 20, 30, ink)}
+          ${northMark(north, 2)}`;
+      }
+    },
+    {
+      id: 'tally', name: 'Tally', tag: 'Most playful', pun: '“Counting planes”',
+      idea: 'Four contrails climb side by side and a fifth crosses them: a tally mark drawn by five planes.',
+      why: 'The simplest “I keep count” picture there is, in the teal and coral you ship today.',
+      draw(mode) {
+        const c = { light: { bg: ['#1F565C', '#0D2A2F'], trail: '#FFFFFF', plane: '#FF6B5E', fifth: '#FFC247' },
+                    dark: { bg: ['#0D2327', '#020306'], trail: '#E7EAF0', plane: '#FF6B5E', fifth: '#FFC247' },
+                    tinted: { bg: TINT_BG, trail: '#FFFFFF', plane: '#FFFFFF', fifth: '#CFCFCF' } }[mode];
+        const g = id('g'), v = id('v'), d = id('d');
+        const tops = [[27, 30], [41, 26], [55, 32], [69, 28]];
+        return `<defs>${bg(g, c.bg)}
+            <linearGradient id="${v}" gradientUnits="userSpaceOnUse" x1="0" y1="84" x2="0" y2="28"><stop offset="0" stop-color="${c.trail}" stop-opacity=".12"/><stop offset="1" stop-color="${c.trail}"/></linearGradient>
+            <linearGradient id="${d}" gradientUnits="userSpaceOnUse" x1="14" y1="0" x2="76" y2="0"><stop offset="0" stop-color="${c.trail}" stop-opacity=".15"/><stop offset="1" stop-color="${c.trail}"/></linearGradient></defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          ${tops.map(([x, t]) => `<path d="M ${x} 84 L ${x} ${t}" stroke="url(#${v})" stroke-width="5.5" stroke-linecap="round"/>${craft('airliner', x, t - 7, 13, 0, c.plane)}`).join('')}
+          <path d="M 14 74 L 76 42" stroke="url(#${d})" stroke-width="5.5" stroke-linecap="round"/>
+          ${craft('airliner', 82, 39, 14, 63, c.fifth)}`;
+      }
+    },
+    {
+      id: 'badge', name: 'Badge Ring', tag: 'Badges', pun: '“Plane Spotter, level 3”',
+      idea: 'A logbook badge: a gold progress ring nearly closed around an airliner, with its level dots underneath.',
+      why: 'The badges are a big part of the logbook. This makes the icon feel like a game you’re winning.',
+      draw(mode) {
+        const c = { light: { bg: ['#4A43E6', '#2A239E'], ring: '#FFC247', plane: '#FFFFFF' },
+                    dark: { bg: ['#18154A', '#0A0E14'], ring: '#FFC247', plane: '#FFFFFF' },
+                    tinted: { bg: TINT_BG, ring: '#F0F0F0', plane: '#FFFFFF' } }[mode];
+        const g = id('g'), C = 2 * Math.PI * 29;
+        return `<defs>${bg(g, c.bg)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          <circle cx="50" cy="46" r="29" fill="none" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="7.5"/>
+          <circle cx="50" cy="46" r="29" fill="none" stroke="${c.ring}" stroke-width="7.5" stroke-linecap="round" stroke-dasharray="${(C * .72).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 50 46)"/>
+          <circle cx="50" cy="46" r="20" fill="#FFFFFF" fill-opacity=".1"/>
+          ${craft('airliner', 50, 46, 28, 45, c.plane)}
+          ${[34, 42, 50, 58, 66].map((x, i) => `<circle cx="${x}" cy="87" r="2.8" fill="${i < 3 ? c.ring : '#FFFFFF'}" fill-opacity="${i < 3 ? 1 : .28}"/>`).join('')}`;
+      }
+    },
+    {
+      id: 'collection', name: 'Collection', tag: 'Stats + the pun', pun: '“Six down, three to go”',
+      idea: 'A spotter’s collection card: nine squares, six holding aircraft you’ve logged in the logbook’s colours, three still a question mark.',
+      why: 'Mixes the stats with the pun: the empty squares are the “what’s that?” still to find.',
+      draw(mode) {
+        const k = TONE[mode], g = id('g');
+        const back = mode === 'light' ? PAPER : mode === 'dark' ? NIGHT : TINT_BG;
+        const cell = mode === 'light' ? '#3A33D6' : '#FFFFFF', q = mode === 'light' ? '#75726C' : '#8790A0';
+        const grid = [[['airliner', 'violet'], ['widebody', 'sky'], null], [['helicopter', 'teal'], ['fourEngine', 'amber'], ['fighter', 'coral']], [null, ['light', 'pink'], null]];
+        return `<defs>${bg(g, back)}</defs>
+          <rect width="100" height="100" fill="url(#${g})"/>
+          ${grid.map((row, r) => row.map((item, col) => {
+            const x = 10 + col * 28, y = 10 + r * 28, cx = x + 12, cy = y + 12;
+            const square = `<rect x="${x}" y="${y}" width="24" height="24" rx="6" fill="${cell}" fill-opacity="${item ? .08 : .05}"${item ? '' : ` stroke="${q}" stroke-opacity=".5" stroke-width=".8" stroke-dasharray="1.6 2"`}/>`;
+            return square + (item ? craft(item[0], cx, cy, 18, 0, k[item[1]])
+              : `<g transform="translate(${cx} ${cy - .8})"><path d="${QMARK}" fill="none" stroke="${q}" stroke-width="2.4" stroke-linecap="round"/><circle cx=".2" cy="5.4" r="1.3" fill="${q}"/></g>`);
+          }).join('')).join('')}`;
+      }
+    },
+  ];
+
+  const ALL = PLAY.concat(STATS);
+  window.ICON_IDS = ALL.map(c => c.id);
+  const [icon, mode, size] = location.hash.slice(1).split(',');
+  const concept = ALL.find(c => c.id === icon);
+  if (!concept) { document.body.textContent = 'Unknown icon ' + icon; return; }
+  const s = +size || 1024;
+  document.body.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 100 100">${concept.draw(mode)}</svg>`;
+})();
+</script>
+</body>

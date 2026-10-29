@@ -201,7 +201,7 @@ can go any time. A6 last: it needs both apps open and a proxy to prove it.
 
 ## Part C — Options and features
 
-### C1 · P2 · Battery saver
+### C1 · P2 · Battery saver <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Where: `WatchSettingsView.swift` Radar section (~41–58); `PollingPolicy.interval`
   (distance-based, no refresh setting any more; `lowPower` stretches it); `RadarModel.pollFloor` is
   10 s on watchOS; `WatchLocationService.precision`; `settings.radarSweep`.
@@ -212,8 +212,9 @@ can go any time. A6 last: it needs both apps open and a proxy to prove it.
   Footer: "Updates less often; the radar still moves between updates."
 - Done when: two 30-minute sessions on the same sky, saver on and off, show a clear
   difference in Settings → Battery; the hero keeps dead-reckoning at 1 Hz either way.
+- *As built (2026-10-26):* `WatchSettings.batterySaver` (`wtf.watch.batterySaver`, Settings below the radar options): `PollingPolicy.interval(saver:)` doubles the interval with a 20 s floor (Identify and Find still poll fastest), the sweep and springs stop (`\.batterySaver` environment, read with Reduce Motion), and `WatchLocationService.batterySaver` sets a 6° heading filter except while pointing.
 
-### C2 · P2 · Alert distance and lead time on the Watch
+### C2 · P2 · Alert distance and lead time on the Watch <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Where: `WatchSettingsView.swift` Wrist alerts section (~72–80) has only the Overhead,
   Notable and Haptics toggles. `overheadAlertMiles` (`RadarSettings.swift` ~174) arrives
   only through `WatchSync.Context` (`WatchSettings.apply` ~64–76);
@@ -226,6 +227,7 @@ can go any time. A6 last: it needs both apps open and a proxy to prove it.
   §6.2: the phone's values apply when a context arrives; Watch edits hold until then.
 - Done when: 3 mi on the Watch makes the demo's overhead haptic fire at 3 mi; a new
   context from the phone updates the pickers.
+- *As built (2026-10-26):* "Within" and "Ahead" pickers in Wrist alerts (the iPhone's value is always offered), plus a Favorites & pins switch; `overheadAlertLeadSeconds` rides in `WatchSync.Context` as an optional field.
 
 ### C3 · P2 · Identify range and precision
 - Where: `Core/WristPointing.swift` ~172 `identifyRangeMiles = 15`, ~179 `identifyCone = 10`,
@@ -254,7 +256,7 @@ can go any time. A6 last: it needs both apps open and a proxy to prove it.
 - Done when: with Headphones only and no AirPods, Identify locks silently; connect them
   and it speaks.
 
-### C5 · P1 · Logbook on the Watch
+### C5 · P1 · Logbook on the Watch <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Where: `Radar/Logbook.swift`, `LogbookDigest`, `LogbookSky` and `LogbookAchievements` are
   already in the Watch membership list; `Services/LogbookSync.swift` is not;
   `RadarModel.logbook` is never set on the Watch (`WatchRootView`). Apple Watch Spec §5.8
@@ -281,6 +283,7 @@ can go any time. A6 last: it needs both apps open and a proxy to prove it.
 - Done when: a flight seen on the Watch alone appears in the iPhone logbook within a
   minute with device Apple Watch; a regular's detail page says "Seen before"; a badge
   earned on the Watch taps the wrist and shows its card.
+- *As built (2026-10-26):* `Services/LogbookSync.swift` builds for watchOS and skips photo records there; the Watch entitlements add the iCloud container and CloudKit (the Watch App ID needs the capability when signing). `WatchRootView` keeps `Logbook(maxEntries: 3_000, device: .watch)`, logs only with Watch from = Here, flushes on background; `keepLogbook` / `syncLogbook` come in the context and there's a Keep a logbook switch. "Seen N times before" on `WatchFlightDetail`, `WatchLogbookRow` (today / in all) atop settings, and a badge earned taps the wrist and shows `WatchBadgeCard` for four seconds. Not yet checked on a device: the first sync of a large iPhone logbook to the Watch.
 
 ### C6 · P2 · More complications and date-window relevance <span style="color:#00E676; font-weight:900; font-size:1.2em">✅ IMPLEMENTED</span>
 - Where: `WatchComplications.swift` has one kind, `WatchOverhead` (~89–100); relevance is

@@ -32,6 +32,7 @@ enum LogbookRoute: Hashable {
     case badge(String)
     case ranking(LogbookRanking)
     case records
+    case recap(LogbookRecap.Period)
 
     /// A ranked entry's page: an aircraft's history, or the sightings it stands for.
     static func entry(_ kind: LogbookRanking, _ id: String) -> LogbookRoute {
@@ -45,6 +46,8 @@ struct LogbookView: View {
     var isLive: (String) -> Bool = { _ in false }
     /// Shows a Done button that calls this.
     var onDone: (() -> Void)?
+    /// A page to open on, on the Overview tab (Spotlight's airframe results).
+    var initialRoute: LogbookRoute? = nil
 
     @State private var tab = LogbookTab.initial
 
@@ -72,7 +75,7 @@ struct LogbookView: View {
     }
 
     private func stack<Content: View>(_ tab: LogbookTab, _ ctx: LogbookContext, @ViewBuilder _ content: () -> Content) -> some View {
-        LogbookTabStack(tab: tab, ctx: ctx) {
+        LogbookTabStack(tab: tab, ctx: ctx, initial: tab == .overview ? initialRoute.map { [$0] } ?? [] : []) {
             content()
                 .toolbar {
                     if let onDone {
@@ -91,7 +94,14 @@ private struct LogbookTabStack<Content: View>: View {
     let ctx: LogbookContext
     @ViewBuilder var content: Content
 
-    @State private var path: [LogbookRoute] = []
+    @State private var path: [LogbookRoute]
+
+    init(tab: LogbookTab, ctx: LogbookContext, initial: [LogbookRoute] = [], @ViewBuilder content: () -> Content) {
+        self.tab = tab
+        self.ctx = ctx
+        self.content = content()
+        _path = State(initialValue: initial)
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -102,7 +112,10 @@ private struct LogbookTabStack<Content: View>: View {
         }
         .fontDesign(.monospaced)
         #if DEBUG
-        .task { path = Self.debugPath(for: tab, digest: ctx.logbook.digest) }
+        .task {
+            let debug = Self.debugPath(for: tab, digest: ctx.logbook.digest)
+            if !debug.isEmpty { path = debug }
+        }
         #endif
     }
 
@@ -118,6 +131,8 @@ private struct LogbookTabStack<Content: View>: View {
         case (.stats, "records"): return [.records]
         case (.stats, "mostseen"): return [.ranking(.aircraft)]
         case (.stats, "regular"): return [.ranking(.aircraft)] + (digest.rankings[.aircraft]?.first.map { [.airframe($0.id)] } ?? [])
+        case (.overview, "recap"): return [.recap(LogbookRecap.periods()[0])]
+        case (.overview, "recapmonth"): return [.recap(LogbookRecap.periods()[1])]
         default: return []
         }
     }
@@ -143,6 +158,7 @@ struct LogbookDestination: View {
         case .badge(let id): AchievementPager(achievements: ctx.logbook.digest.achievements, selection: id, logbook: ctx.logbook, onTrack: ctx.onTrack, isLive: ctx.isLive)
         case .ranking(let kind): LogbookMostSeenView(kind: kind, ctx: ctx)
         case .records: LogbookRecordsView(ctx: ctx)
+        case .recap(let period): LogbookRecapView(period: period, logbook: ctx.logbook)
         }
     }
 }
@@ -167,6 +183,7 @@ struct LogbookOverview: View {
                 HStack(alignment: .top, spacing: 20) {
                     VStack(spacing: 22) {
                         LogbookTodayCard(recap: digest.today, digest: digest, ctx: ctx)
+                        LogbookRecapEntry(logbook: ctx.logbook)
                         LogbookActivityCard(digest: digest, ctx: ctx)
                         LogbookRecordsStrip(records: digest.records, columns: 2)
                     }
@@ -181,6 +198,7 @@ struct LogbookOverview: View {
             } else {
                 VStack(spacing: 22) {
                     LogbookTodayCard(recap: digest.today, digest: digest, ctx: ctx)
+                    LogbookRecapEntry(logbook: ctx.logbook)
                     LogbookNumbersGrid(digest: digest)
                     LogbookActivityCard(digest: digest, ctx: ctx)
                     LogbookRecordsStrip(records: digest.records)
@@ -268,7 +286,7 @@ struct LogbookTodayCard: View {
 /// A number over a small caption, on paper.
 struct LogbookChip: View {
     let value: String
-    let label: String
+    let label: LocalizedStringKey
     var tint: Color = Palette.ink
 
     var body: some View {

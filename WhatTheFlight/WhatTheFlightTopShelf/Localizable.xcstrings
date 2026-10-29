@@ -1,0 +1,42 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Automatic" : {
+
+    },
+    "Demo traffic" : {
+
+    },
+    "Flightradar24" : {
+
+    },
+    "Flightradar24 only" : {
+
+    },
+    "Flightradar24, switching to adsb.lol while it's down" : {
+
+    },
+    "Imperial" : {
+
+    },
+    "Kilometers, meters and km/h" : {
+
+    },
+    "Metric" : {
+
+    },
+    "Miles, feet and knots" : {
+
+    },
+    "Open data" : {
+
+    },
+    "adsb.lol" : {
+
+    },
+    "adsb.lol only: open ADS-B data, without routes" : {
+
+    }
+  },
+  "version" : "1.0"
+}

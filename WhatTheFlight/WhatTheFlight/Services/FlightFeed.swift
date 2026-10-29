@@ -16,11 +16,21 @@ protocol FlightFeed: Sendable {
     func search(_ query: String) async throws -> [Flight]
     /// Where these airframes (by registration) and flights (by callsign) are now, anywhere.
     func lookup(registrations: [String], callsigns: [String]) async throws -> [Flight]
+    /// Where this airframe (or, without a registration, this callsign) is right now,
+    /// anywhere, on the ground included. `nil` when it isn't transmitting.
+    func locate(registration: String?, callsign: String?) async throws -> Flight?
+    /// Which source answered the last request; a layered feed says which of its sources.
+    func lastSource() async -> FeedSource?
+    /// Automatic, Flightradar24 only, or open data only (layered feeds; others ignore it).
+    func setPreference(_ preference: DataSourcePreference) async
 }
 
 extension FlightFeed {
     func search(_ query: String) async throws -> [Flight] { [] }
     func lookup(registrations: [String], callsigns: [String]) async throws -> [Flight] { [] }
+    func locate(registration: String?, callsign: String?) async throws -> Flight? { nil }
+    func lastSource() async -> FeedSource? { nil }
+    func setPreference(_ preference: DataSourcePreference) async {}
 }
 
 enum FeedError: LocalizedError, Equatable {
@@ -35,11 +45,24 @@ enum FeedError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .offline: return "You're offline"
-        case .unreachable: return "Can't reach Flightradar24 right now"
-        case .timedOut: return "Flightradar24 took too long to answer"
-        case .rateLimited: return "Flightradar24 is rate limiting us — slowing down"
-        case .http(let code): return "Flightradar24 returned HTTP \(code)"
-        case .badData: return "Flightradar24 sent data we couldn't read"
+        case .unreachable: return "Can't reach the flight data right now"
+        case .timedOut: return "The flight data took too long to arrive"
+        case .rateLimited: return "Too many requests for flight data — slowing down"
+        case .http(let code): return "The flight data server returned HTTP \(code)"
+        case .badData: return "The flight data couldn't be read"
+        }
+    }
+
+    /// Worth trying another source for: the server, not the phone's connection.
+    var isServerProblem: Bool { self != .offline }
+
+    /// Maps a transport error the way every feed does.
+    static func from(_ error: URLError) -> Error {
+        switch error.code {
+        case .cancelled: return CancellationError()
+        case .timedOut: return FeedError.timedOut
+        case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed, .internationalRoamingOff: return FeedError.offline
+        default: return FeedError.unreachable
         }
     }
 }
@@ -117,6 +140,8 @@ struct FlightRadarFeed: FlightFeed {
         guard let url = Self.url(for: bounds) else { throw FeedError.badData }
         return try await fetch(url)
     }
+
+    func lastSource() async -> FeedSource? { .flightradar24 }
 
     /// Where this airframe (or, without a registration, this callsign) is right now,
     /// anywhere in the world. `nil` when it isn't transmitting.

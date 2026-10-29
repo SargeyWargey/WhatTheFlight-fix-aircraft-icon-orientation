@@ -2,24 +2,33 @@
 //  AppIconPicker.swift
 //  WhatTheFlight
 //
-//  Settings → Display → App Icon (iPhone, iPad). The Apple TV has no alternate icons: App
-//  Store Connect rejects tvOS alternates built from image stacks.
+//  Settings → Display → App Icon (iPhone, iPad): one Automatic / Light / Dark switch, then
+//  every concept in its group. Picking a concept applies it in the switch's look; moving the
+//  switch re-dresses the icon you have. The Apple TV has no alternate icons: App Store
+//  Connect rejects tvOS alternates built from image stacks.
 //
 
 #if os(iOS)
 import SwiftUI
 
-/// The icon artwork with the platform's corner shape.
+/// The icon artwork with the platform's corner shape, in the choice's look.
 struct AppIconPreview: View {
     let choice: AppIconChoice
     var size: CGFloat
 
     var body: some View {
-        Image(choice.previewName)
-            .resizable()
-            .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: size * 0.2237, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: size * 0.2237, style: .continuous).stroke(.black.opacity(0.1), lineWidth: 0.5))
+        let shape = RoundedRectangle(cornerRadius: size * 0.2237, style: .continuous)
+        Group {
+            if let dark = choice.previewIsDark {
+                // The preview image's own light or dark appearance, whatever the screen's.
+                Image(choice.previewName).resizable().environment(\.colorScheme, dark ? .dark : .light)
+            } else {
+                Image(choice.previewName).resizable()
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(shape)
+        .overlay(shape.stroke(.black.opacity(0.1), lineWidth: 0.5))
     }
 }
 
@@ -27,6 +36,7 @@ struct AppIconPickerView: View {
     var onChange: (AppIconChoice) -> Void = { _ in }
 
     @State private var current = AppIconChoice.current
+    @State private var look = AppIconChoice.current.look
     @State private var problem: String?
 
     private let columns = [GridItem(.adaptive(minimum: 96), spacing: 14)]
@@ -34,12 +44,21 @@ struct AppIconPickerView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 26) {
-                ForEach(AppIconChoice.Group.allCases) { group in
+                VStack(alignment: .leading, spacing: 8) {
+                    Picker("Look", selection: $look) {
+                        ForEach(AppIconChoice.Look.allCases) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    Text(lookFooter)
+                        .font(.footnote)
+                        .foregroundStyle(Palette.caption)
+                }
+                ForEach(AppIconConcept.Group.allCases) { group in
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(group.rawValue).radarCaption(scales: true)
+                        Text(group.title).radarCaption(scales: true)
                         LazyVGrid(columns: columns, alignment: .leading, spacing: 18) {
-                            ForEach(AppIconChoice.allCases.filter { $0.group == group }) { choice in
-                                Button { select(choice) } label: { cell(choice) }
+                            ForEach(AppIconConcept.allCases.filter { $0.group == group }) { concept in
+                                Button { select(AppIconChoice(concept, look)) } label: { cell(concept) }
                                     .buttonStyle(.plain)
                             }
                         }
@@ -54,10 +73,26 @@ struct AppIconPickerView: View {
         .background(Palette.paper.ignoresSafeArea())
         .navigationTitle("App Icon")
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: look) { _, newLook in
+            let next = AppIconChoice(current.concept, newLook)
+            if next != current { select(next) }
+        }
     }
 
-    private func cell(_ choice: AppIconChoice) -> some View {
-        let selected = choice == current
+    private var lookFooter: String {
+        let tinted = String(localized: "A tinted Home Screen always shows the tinted version.")
+        switch look {
+        case .automatic: return String(localized: "Each icon follows your Home Screen's light or dark setting.") + " " + tinted
+        case .light: return String(localized: "Each icon stays light, even on a dark Home Screen.") + " " + tinted
+        case .dark: return String(localized: "Each icon stays dark, even on a light Home Screen.") + " " + tinted
+        }
+    }
+
+    private func cell(_ concept: AppIconConcept) -> some View {
+        let choice = AppIconChoice(concept, look)
+        let selected = concept == current.concept
+        // Round 1, Signal Red and Classic only come in Automatic.
+        let subtitle = choice.look == look ? concept.subtitle : String(localized: "Follows your Home Screen")
         return VStack(spacing: 6) {
             AppIconPreview(choice: choice, size: 72)
                 .padding(4)
@@ -65,12 +100,12 @@ struct AppIconPickerView: View {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .stroke(selected ? Palette.ink : .clear, lineWidth: 2.5)
                 )
-            Text(choice.title)
+            Text(concept.title)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(selected ? Palette.ink : Palette.value)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
-            Text(choice.subtitle)
+            Text(subtitle)
                 .font(.caption2)
                 .foregroundStyle(Palette.caption)
                 .multilineTextAlignment(.center)
@@ -80,7 +115,7 @@ struct AppIconPickerView: View {
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(choice.title), \(choice.subtitle)")
+        .accessibilityLabel("\(choice.title), \(subtitle)")
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
 

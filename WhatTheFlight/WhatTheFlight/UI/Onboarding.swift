@@ -47,7 +47,7 @@ struct TourPage: Identifiable {
         }
         return [
             TourPage(art: .radar, eyebrow: "Welcome to What The Flight?", title: "Every aircraft around you",
-                     body: "Each icon on the edge is a real aircraft in that direction, with how many miles away it is. Turn around and they turn with you."),
+                     body: "Each icon on the edge is a real aircraft in that direction, with how far away it is. Turn around and they turn with you."),
             TourPage(art: .center, eyebrow: "The center", title: "The nearest takes the center",
                      body: "Swipe left for the next one out and right to come back, or tap any icon. Hold the center to pin an aircraft and follow it anywhere."),
             TourPage(art: .details, eyebrow: "Details", title: "Tap for the full story",
@@ -78,7 +78,7 @@ struct TourPage: Identifiable {
 
     private static let tv: [TourPage] = [
         TourPage(art: .radar, eyebrow: "Welcome to What The Flight?", title: "Every aircraft around you",
-                 body: "Each icon on the edge is a real aircraft in that direction, with how many miles away it is. The top of the screen is the way you face when you watch."),
+                 body: "Each icon on the edge is a real aircraft in that direction, with how far away it is. The top of the screen is the way you face when you watch."),
         TourPage(art: .remote, eyebrow: "The Siri Remote", title: "The nearest takes the center",
                  body: "◀ ▶ step through the aircraft, click for the full story, play/pause pins one, and ▼ opens the dock."),
         TourPage(art: .map, eyebrow: "The map", title: "Radar, split or map",
@@ -160,8 +160,11 @@ private struct TourScreen {
 
     /// The Duo's strip down the right side (the vertical bar), in real points.
     static let strip: CGFloat = 84
-    /// The radar's bar (`RadarControlBar.height`, iOS only), in real points.
-    static let barHeight: CGFloat = 56
+    /// The radar's bar (`RadarControlBar.height`, `.sideMargin`, `.maxWidth`, iOS only), in
+    /// real points.
+    static let barHeight: CGFloat = 62
+    static let barSideMargin: CGFloat = 21
+    static let barMaxWidth: CGFloat = 480
 
     /// Where the radar's backdrop goes: the whole screen, or the square on the left of an
     /// iPad on its side.
@@ -378,7 +381,7 @@ private struct DeviceShell<Content: View>: View {
 }
 
 /// The radar's bar, drawn small: Map (or Radar), Sky View, the live count, Logbook and
-/// Settings, in a glass capsule.
+/// Settings, sharing a glass capsule as wide as the real one (the system tab bar's margins).
 private struct MiniBar: View {
     enum First { case map, radar, none }
 
@@ -389,39 +392,38 @@ private struct MiniBar: View {
 
     var body: some View {
         let c = screen.chromeK
+        let width = min(screen.radarPane.width - 12 * c,
+                        min(TourScreen.barMaxWidth, screen.real.width - 2 * TourScreen.barSideMargin) * c)
         HStack(spacing: 0) {
             if first != .none {
                 item(first == .radar ? "scope" : "map.fill", tapped: tapped)
             }
             item("camera.viewfinder")
-            Rectangle()
-                .fill(Palette.faint.opacity(0.5))
-                .frame(width: max(0.5, c), height: 26 * c)
-                .padding(.horizontal, 2 * c)
             HStack(spacing: 3 * c) {
                 Circle().fill(Palette.live).frame(width: 6 * c, height: 6 * c)
-                Text("5").font(.mono(16 * c, .heavy)).foregroundStyle(Palette.ink)
+                Text("5").font(.mono(17 * c, .heavy)).foregroundStyle(Palette.ink)
             }
-            .frame(width: 66 * c)
+            .frame(maxWidth: .infinity)
             item("book.closed.fill")
             item("gearshape.fill")
         }
-        .padding(.horizontal, 5 * c)
-        .frame(height: TourScreen.barHeight * c)
+        .padding(.horizontal, 6 * c)
+        .frame(width: max(0, width), height: TourScreen.barHeight * c)
         .miniGlass(Capsule())
     }
 
     private func item(_ symbol: String, tapped: Bool = false) -> some View {
         let c = screen.chromeK
         return Image(systemName: symbol)
-            .font(.system(size: 17 * c, weight: .semibold))
+            .font(.system(size: 21 * c, weight: .medium))
             .foregroundStyle(Palette.ink)
-            .frame(width: 64 * c, height: 46 * c)
+            .frame(maxWidth: .infinity)
+            .frame(height: 54 * c)
             .background {
-                Circle()
-                    .fill(Palette.ink.opacity(0.25))
-                    .frame(width: 40 * c, height: 40 * c)
-                    .scaleEffect(tapped ? 1 : 0.5)
+                // The tab bar's lens under the finger.
+                Capsule()
+                    .fill(Palette.value.opacity(0.12))
+                    .scaleEffect(tapped ? 1 : 0.6)
                     .opacity(tapped ? 1 : 0)
             }
     }
@@ -574,7 +576,7 @@ private struct RadarFace: View {
         let tint = isFocused ? Palette.signal : Palette.blip
         return ZStack {
             // A pinned aircraft's miles are yellow, like the pin on the hero.
-            Text("\(traffic.miles)")
+            Text(RadarFormat.distance(Double(traffic.miles)))
                 .font(.mono(icon * (isFocused ? 0.6 : 0.55), .bold))
                 .foregroundStyle(isPinned ? Palette.pinned : tint)
                 .paperHalo()
@@ -618,7 +620,7 @@ private struct MiniHero: View {
             Text(traffic.route)
                 .font(.mono(size * 0.42, .semibold))
                 .foregroundStyle(Palette.route)
-            Text("\(traffic.miles) MI")
+            Text(RadarFormat.distanceText(Double(traffic.miles)).uppercased())
                 .font(.mono(size * 0.42, .bold))
                 .foregroundStyle(Palette.signal)
                 .padding(.top, size * 0.2)
@@ -1084,7 +1086,7 @@ private struct MapCard: View {
             Text(traffic.flight).font(.mono(size * 0.55, .heavy)).foregroundStyle(Palette.ink)
             Text(traffic.route).font(.mono(size * 0.32, .semibold)).foregroundStyle(Palette.route)
             Spacer(minLength: 0)
-            Text("\(traffic.miles) MI").font(.mono(size * 0.32, .bold)).foregroundStyle(Palette.signal)
+            Text(RadarFormat.distanceText(Double(traffic.miles)).uppercased()).font(.mono(size * 0.32, .bold)).foregroundStyle(Palette.signal)
         }
         .lineLimit(1)
         .padding(.horizontal, size * 0.5)
@@ -1399,7 +1401,7 @@ private struct TourLogbook: View {
                 Image(systemName: "scope").foregroundStyle(Palette.signal)
                 Text("Closest").foregroundStyle(Palette.caption)
                 Spacer()
-                Text("DL1199 · <1 mi").foregroundStyle(Palette.value)
+                Text("DL1199 · <1 \(RadarFormat.distanceUnit())").foregroundStyle(Palette.value)
             }
             .font(.mono(11 * unit, .semibold))
             .padding(10 * unit)

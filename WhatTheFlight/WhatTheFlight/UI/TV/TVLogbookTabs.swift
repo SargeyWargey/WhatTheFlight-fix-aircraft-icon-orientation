@@ -25,7 +25,7 @@ struct TVLogbookContext {
 
 /// A titled row of cards that scrolls sideways.
 private struct TVShelf<Content: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -44,7 +44,7 @@ private struct TVShelf<Content: View>: View {
 
 /// A chart or summary on a card the remote can land on, so the page scrolls to it.
 private struct TVChartCard<Content: View>: View {
-    var title: String? = nil
+    var title: LocalizedStringKey? = nil
     var detail: String? = nil
     @ViewBuilder var content: Content
 
@@ -178,6 +178,9 @@ struct TVLogbookOverview: View {
     let ctx: TVLogbookContext
 
     @Environment(\.favoriteAircraft) private var favorites
+    /// This year and this month, for the "In the sky" shelf.
+    @State private var recaps: [(period: LogbookRecap.Period, total: Int)] = []
+    @State private var shownRecap: LogbookRecap.Period?
 
     var body: some View {
         let digest = ctx.logbook.digest
@@ -190,6 +193,7 @@ struct TVLogbookOverview: View {
                         .padding(.top, 80)
                 } else {
                     today(digest)
+                    recapShelf
                     activity(digest)
                     highlights(digest)
                     records(digest)
@@ -199,6 +203,55 @@ struct TVLogbookOverview: View {
             }
             .padding(.horizontal, 100)
             .padding(.vertical, 40)
+        }
+        .task(id: ctx.logbook.sightings.count / 25) {
+            let sightings = ctx.logbook.sightings
+            recaps = await Task.detached(priority: .utility) {
+                LogbookRecap.periods().prefix(2).compactMap { period in
+                    let total = LogbookRecap.total(sightings, period: period)
+                    return total > 0 ? (period, total) : nil
+                }
+            }.value
+        }
+        .fullScreenCover(isPresented: Binding(get: { shownRecap != nil }, set: { if !$0 { shownRecap = nil } })) {
+            if let period = shownRecap {
+                LogbookRecapView(period: period, logbook: ctx.logbook)
+            }
+        }
+        #if DEBUG
+        .onAppear {
+            // `-wtf.debugLogbookPage recap|recapmonth` opens this year's or this month's recap.
+            switch UserDefaults.standard.string(forKey: "wtf.debugLogbookPage") {
+            case "recap": shownRecap = LogbookRecap.periods()[0]
+            case "recapmonth": shownRecap = LogbookRecap.periods()[1]
+            default: break
+            }
+        }
+        #endif
+    }
+
+    @ViewBuilder
+    private var recapShelf: some View {
+        if !recaps.isEmpty {
+            TVShelf(title: "In the sky") {
+                ForEach(Array(recaps.enumerated()), id: \.offset) { _, item in
+                    Button {
+                        shownRecap = item.period
+                    } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(item.period.isYear ? "Your \(item.period.shortTitle())" : item.period.title())
+                                .font(.mono(34, .heavy))
+                                .foregroundStyle(Palette.ink)
+                            Text("\(RadarFormat.wholeNumber(item.total)) aircraft · see the recap")
+                                .font(.mono(22, .semibold))
+                                .foregroundStyle(Palette.caption)
+                        }
+                        .frame(width: 520, height: 150, alignment: .leading)
+                        .padding(.horizontal, 30)
+                    }
+                    .buttonStyle(TVCardButtonStyle())
+                }
+            }
         }
     }
 
@@ -554,6 +607,8 @@ struct TVLogbookStats: View {
     /// Whose sky the charts show; nil until one's picked (then the TV's own spot once its
     /// charts are ready, else the busiest).
     @State private var scope: LogbookSkyScope?
+    /// "Which way they fly" open full screen.
+    @State private var exploringHeadings = false
 
     var body: some View {
         let digest = ctx.logbook.digest
@@ -573,7 +628,15 @@ struct TVLogbookStats: View {
                             pending(count: sky.count, text: "Which way they fly, when the sky is busiest and how high they pass appear once \(LogbookSky.minimum) aircraft are logged\(choice.spot == nil ? "" : " around \(choice.title)"): enough to show this sky's pattern, not just one afternoon.")
                         }
                     } else {
-                        directions(sky)
+                        // Which way they fly beside the route web, altitude vs speed under them; a
+                        // click opens any of them full screen.
+                        HStack(alignment: .top, spacing: 30) {
+                            directions(sky)
+                            routeWeb(sky)
+                        }
+                        .fixedSize(horizontal: false, vertical: true)
+                        .focusSection()
+                        altitudeSpeed(sky)
                         HStack(alignment: .top, spacing: 30) {
                             TVChartCard(title: "By hour", detail: sky.showsTimes ? sky.busiestHourOfDay.map { "Busiest \(LogbookFormat.hourRange($0))" } : nil) {
                                 if sky.showsTimes {
@@ -696,8 +759,37 @@ struct TVLogbookStats: View {
         }
     }
 
-    /// The big one: a compass rose of where aircraft head over this sky, the main direction
-    /// and the top three, right under the header.
+    /// The headline: every aircraft as a dot, speed across and altitude up, coloured by the
+    /// kind of flight. A click opens it full screen, where the remote steps from dot to dot.
+    @ViewBuilder
+    private func altitudeSpeed(_ sky: LogbookSky) -> some View {
+        if sky.showsAltitudeSpeed {
+            AltitudeSpeedChart(phase: .ready(sky.altitudeSpeed), scale: 1.8, height: 300, wide: true,
+                               sighting: { ctx.logbook.sighting(id: $0) })
+        } else {
+            TVChartCard(title: "Altitude vs speed") {
+                pending(count: sky.altitudeSpeed.count, noun: "with a speed")
+            }
+        }
+    }
+
+    /// Where they were going: the busiest route airports in a ring, a ribbon per route. A
+    /// click opens it full screen: ◀ ▶ go round the airports, ▼ ▲ through their routes, a
+    /// click opens those flights.
+    @ViewBuilder
+    private func routeWeb(_ sky: LogbookSky) -> some View {
+        if sky.showsRouteWeb {
+            // Half the width beside Which way they fly: a smaller ring, the routes still beside it.
+            RouteWebChart(web: sky.routeWeb, scale: 1.8, diameter: 210, wide: true, logbook: ctx.logbook, showPhotos: ctx.showPhotos)
+        } else {
+            TVChartCard(title: "Route web") {
+                pending(count: sky.routeWeb.routed, noun: "with a route")
+            }
+        }
+    }
+
+    /// A compass rose of where aircraft head over this sky and the main direction, beside the
+    /// route web. A click opens it full screen with the top three and what the lean means.
     @ViewBuilder
     private func directions(_ sky: LogbookSky) -> some View {
         if !sky.showsHeadings {
@@ -705,45 +797,83 @@ struct TVLogbookStats: View {
                 pending(count: sky.headed, noun: "with a heading")
             }
         } else {
-            TVChartCard(title: "Which way they fly") {
-                HStack(alignment: .center, spacing: 80) {
-                    LogbookHeadingRose(sectors: sky.headings, size: 460, scale: 2.4)
-                    VStack(alignment: .leading, spacing: 28) {
-                        if let main = sky.mainHeading {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("\(Int((main.share * 100).rounded()))%")
-                                    .font(.mono(110, .heavy))
-                                    .foregroundStyle(ChartTone.heading(main.degrees))
-                                Text("heading \(LogbookFormat.direction(main.degrees))")
-                                    .font(.mono(36, .bold))
-                                    .foregroundStyle(Palette.value)
-                            }
-                        }
-                        HStack(spacing: 18) {
-                            ForEach(sky.topHeadings(), id: \.sector) { entry in
-                                VStack(spacing: 6) {
-                                    Text(LogbookFormat.sectorNames[entry.sector])
-                                        .font(.mono(40, .heavy))
-                                        .foregroundStyle(ChartTone.heading(Double(entry.sector) * 22.5))
-                                    Text("\(Int((entry.share * 100).rounded()))%")
-                                        .font(.mono(22, .semibold))
-                                        .foregroundStyle(Palette.caption)
+            TVExplorableCard(isExploring: $exploringHeadings) {
+                VStack(alignment: .leading, spacing: 18) {
+                    Text("Which way they fly").radarCaptionTV()
+                    HStack(alignment: .center, spacing: 40) {
+                        LogbookHeadingRose(sectors: sky.headings, size: 360, scale: 2)
+                        VStack(alignment: .leading, spacing: 22) {
+                            if let main = sky.mainHeading {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("\(Int((main.share * 100).rounded()))%")
+                                        .font(.mono(80, .heavy))
+                                        .foregroundStyle(ChartTone.heading(main.degrees))
+                                    Text("heading \(LogbookFormat.direction(main.degrees))")
+                                        .font(.mono(28, .bold))
+                                        .foregroundStyle(Palette.value)
                                 }
-                                .frame(width: 170)
-                                .padding(.vertical, 18)
-                                .background(Palette.paper.opacity(0.7), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                             }
+                            Text("Click to see it full screen.")
+                                .font(.mono(20))
+                                .foregroundStyle(Palette.caption)
                         }
-                        Text("Each petal is the share of aircraft on that heading at their closest pass; the red dot is you. A strong lean usually means you're under an approach or departure path.")
-                            .font(.mono(22))
-                            .foregroundStyle(Palette.caption)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: 820, alignment: .leading)
                     }
                 }
-                .frame(maxWidth: .infinity)
+            } explorer: {
+                TVChartExplorer(title: "Which way they fly", detail: "\(RadarFormat.wholeNumber(sky.headed)) aircraft",
+                                hint: "Back to return to Stats", move: { _ in }, select: {},
+                                spoken: { headingsSummary(sky) }) {
+                    headingsDetail(sky)
+                }
             }
         }
+    }
+
+    /// "38% heading southwest; then northeast, west": what VoiceOver says full screen.
+    private func headingsSummary(_ sky: LogbookSky) -> String {
+        let main = sky.mainHeading.map { "\(Int(($0.share * 100).rounded()))% heading \(LogbookFormat.direction($0.degrees))" } ?? ""
+        let others = sky.topHeadings().map { LogbookFormat.sectorNames[$0.sector] }.joined(separator: ", ")
+        return others.isEmpty ? main : "\(main); top headings \(others)"
+    }
+
+    /// Full screen: the rose large, the main direction, the top three and what a lean means.
+    private func headingsDetail(_ sky: LogbookSky) -> some View {
+        HStack(alignment: .center, spacing: 80) {
+            LogbookHeadingRose(sectors: sky.headings, size: 600, scale: 2.8)
+            VStack(alignment: .leading, spacing: 28) {
+                if let main = sky.mainHeading {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(Int((main.share * 100).rounded()))%")
+                            .font(.mono(110, .heavy))
+                            .foregroundStyle(ChartTone.heading(main.degrees))
+                        Text("heading \(LogbookFormat.direction(main.degrees))")
+                            .font(.mono(36, .bold))
+                            .foregroundStyle(Palette.value)
+                    }
+                }
+                HStack(spacing: 18) {
+                    ForEach(sky.topHeadings(), id: \.sector) { entry in
+                        VStack(spacing: 6) {
+                            Text(LogbookFormat.sectorNames[entry.sector])
+                                .font(.mono(40, .heavy))
+                                .foregroundStyle(ChartTone.heading(Double(entry.sector) * 22.5))
+                            Text("\(Int((entry.share * 100).rounded()))%")
+                                .font(.mono(22, .semibold))
+                                .foregroundStyle(Palette.caption)
+                        }
+                        .frame(width: 170)
+                        .padding(.vertical, 18)
+                        .background(Palette.paper.opacity(0.7), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    }
+                }
+                Text("Each petal is the share of aircraft on that heading at their closest pass; the red dot is you. A strong lean usually means you're under an approach or departure path.")
+                    .font(.mono(22))
+                    .foregroundStyle(Palette.caption)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: 820, alignment: .leading)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func summary(_ digest: LogbookDigest) -> some View {
@@ -763,8 +893,8 @@ struct TVLogbookStats: View {
             TVSectionHeader(title: "Records")
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 24), GridItem(.flexible(), spacing: 24)], spacing: 16) {
                 ForEach(Array(records.enumerated()), id: \.element.id) { i, r in
-                    TVValueRow(title: r.title, subtitle: "\(r.sighting.displayIdentifier) · \(r.sighting.typeName ?? r.sighting.typeCode ?? "Aircraft")",
-                               value: r.value, symbol: r.symbol, tint: r.tint) {
+                    TVValueRow(title: LocalizedStringKey(r.title), subtitle: "\(r.sighting.displayIdentifier) · \(r.sighting.typeName ?? r.sighting.typeCode ?? "Aircraft")",
+                               value: LocalizedStringKey(r.value), symbol: r.symbol, tint: r.tint) {
                         ctx.actions.open(TVSightingBrowse(records.map { .init(sighting: $0.sighting, label: "\($0.title) · \($0.value)") }, start: i))
                     }
                 }

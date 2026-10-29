@@ -52,6 +52,11 @@ struct SpotPhoto: Codable, Identifiable, Hashable, Sendable {
     var visuallyLocked: Bool
     var pixelWidth: Int
     var pixelHeight: Int
+    /// Added from the camera roll rather than taken in Sky View: the numbers are the
+    /// sighting's closest pass, and it doesn't count toward the Sky View badges.
+    var fromLibrary: Bool?
+
+    var isFromLibrary: Bool { fromLibrary == true }
 
     var fileName: String { "\(id).heic" }
 
@@ -110,6 +115,47 @@ struct SpotPhoto: Codable, Identifiable, Hashable, Sendable {
         self.visuallyLocked = visuallyLocked
         self.pixelWidth = pixelWidth
         self.pixelHeight = pixelHeight
+    }
+
+    /// A photo from the camera roll, filed under a sighting: its stats are the sighting's at
+    /// the closest pass.
+    init(id: String = UUID().uuidString, sighting s: Sighting, takenAt: Date, device: LogDevice?, pixelWidth: Int, pixelHeight: Int) {
+        self.id = id
+        flightID = s.id
+        self.takenAt = takenAt
+        self.device = device
+        displayIdentifier = s.displayIdentifier
+        callsign = s.callsign
+        registration = s.registration
+        typeCode = s.typeCode
+        operatorName = s.operatorName
+        kind = s.kind
+        originIATA = s.originIATA
+        destinationIATA = s.destinationIATA
+        tags = s.tags
+        distanceMiles = s.closestMiles
+        altitudeFeet = s.altitudeAtClosestFeet
+        speedKnots = s.speedKnots
+        track = s.trackAtClosest ?? 0
+        elevationDegrees = GeoMath.elevationDegrees(groundDistanceMiles: s.closestMiles, altitudeFeet: Double(s.altitudeAtClosestFeet))
+        if let from = s.observerCoordinate, let to = s.closestCoordinate {
+            bearingDegrees = GeoMath.bearing(from: from, to: to)
+        } else {
+            bearingDegrees = 0
+        }
+        let at = s.closestCoordinate ?? s.observerCoordinate
+        aircraftLatitude = at?.latitude ?? 0
+        aircraftLongitude = at?.longitude ?? 0
+        observerLatitude = s.observerLatitude
+        observerLongitude = s.observerLongitude
+        placeName = s.placeName
+        displayZoom = 1
+        frameX = nil
+        frameY = nil
+        visuallyLocked = false
+        self.pixelWidth = pixelWidth
+        self.pixelHeight = pixelHeight
+        fromLibrary = true
     }
 
     /// The same shot, credited to a different aircraft that was also in it.

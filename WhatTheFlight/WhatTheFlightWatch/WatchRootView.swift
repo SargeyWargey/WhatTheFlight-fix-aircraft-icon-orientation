@@ -36,6 +36,12 @@ struct WatchRootView: View {
     @LazyState private var complications = ComplicationPublisher()
     @State private var pinSync: PinSync?
     @State private var favoriteSync: FavoriteSync?
+    /// What the Watch saw on its own (never the iPhone's spot), merged with the iPhone's
+    /// through iCloud. Smaller than the phone's: the newest 3,000.
+    @LazyState private var logbook = Logbook(maxEntries: 3_000, device: .watch)
+    @State private var logbookSync: LogbookSync?
+    /// A badge just earned on the wrist, shown for a moment.
+    @State private var unlockedBadge: Achievement?
     /// First run: the tour, before the location prompt.
     @State private var showTour = false
     /// A route that arrived before the first feed load (e.g. from a complication).
@@ -63,12 +69,13 @@ struct WatchRootView: View {
             TabView(selection: $page) {
                 WatchSettingsView(settings: settings, watchSettings: watchSettings, location: location, link: link,
                                   model: model, open: { path.append($0) }, close: backToRadar,
-                                  showTour: { showTour = true })
+                                  showTour: { showTour = true }, logbook: logbook)
                     .tag(Page.settings)
                 WatchRadarView(model: model, settings: settings, watchSettings: watchSettings, location: location,
                                isActive: page == .radar && path.isEmpty,
                                open: { path.append($0) },
                                showNearby: { withAnimation { page = .nearby } })
+                    .environment(\.batterySaver, watchSettings.batterySaver)
                     .tag(Page.radar)
                 WatchNearbyList(model: model, settings: settings, location: location, watchSettings: watchSettings,
                                 open: { path.append($0) }, close: backToRadar)
@@ -79,7 +86,7 @@ struct WatchRootView: View {
                 switch screen {
                 case .detail(let id):
                     WatchFlightDetail(flightID: id, model: model, settings: settings, watchSettings: watchSettings,
-                                      location: location, open: { path.append($0) })
+                                      location: location, open: { path.append($0) }, logbook: logbook)
                 case .find(let id):
                     PointAndFindView(model: model, settings: settings, watchSettings: watchSettings,
                                      location: location, initialTargetID: id)
@@ -118,6 +125,11 @@ struct WatchRootView: View {
             }
             link.activate()
             startPinSync()
+            logbook.onBadgeUnlocked = { badge in
+                WatchHaptics.play(.success, enabled: settings.hapticsEnabled)
+                unlockedBadge = badge
+            }
+            updateLogbook()
             // Identify names anything you can see within 15 mi, whatever the radar's radius.
             model.queryRadiusFloor = WristPointing.identifyRangeMiles + 1
             if watchSettings.hasSeenTour {
@@ -139,9 +151,11 @@ struct WatchRootView: View {
                 model.refreshNow()
                 pinSync?.refresh()
                 favoriteSync?.refresh()
+                logbookSync?.fetchNow()
             case .background:
                 model.stop()
                 location.stop()
+                logbook.flush()
                 complications.publish(model: model, settings: settings, placeName: placeName, force: true)
             default:
                 break
@@ -160,6 +174,20 @@ struct WatchRootView: View {
             }
         }
         .onChange(of: locationPrecision, initial: true) { _, precision in location.precision = precision }
+        .onChange(of: watchSettings.locationSource) { _, _ in updateLogbook() }
+        .onChange(of: settings.keepLogbook) { _, _ in updateLogbook() }
+        .onChange(of: settings.syncLogbook) { _, _ in updateLogbook() }
+        .sheet(item: $unlockedBadge) { badge in
+            WatchBadgeCard(badge: badge)
+                .task {
+                    try? await Task.sleep(for: .seconds(4))
+                    unlockedBadge = nil
+                }
+        }
+        .onChange(of: watchSettings.batterySaver, initial: true) { _, on in
+            model.batterySaver = on
+            location.batterySaver = on
+        }
         .onChange(of: isPointing, initial: true) { _, pointing in model.pollsFastest = pointing }
         .task(id: isDimmedRadar) {
             // The clock keeps the icons moving, once a minute.
@@ -272,6 +300,19 @@ struct WatchRootView: View {
 
     /// Pins and favourites follow you between devices through iCloud (`PinSync`,
     /// `FavoriteSync`): favourites show in yellow on the Watch radar too.
+    /// Logs only what the Watch itself sees: watching the iPhone's spot would log the phone's
+    /// sky under the Watch's name. Syncs with the iPhone's logbook through iCloud.
+    private func updateLogbook() {
+        let logs = settings.keepLogbook && watchSettings.locationSource == .here
+        model.logbook = logs ? logbook : nil
+        if settings.keepLogbook && settings.syncLogbook {
+            if logbookSync == nil { logbookSync = LogbookSync(logbook: logbook) }
+            logbookSync?.start()
+        } else {
+            logbookSync?.stop()
+        }
+    }
+
     private func startPinSync() {
         guard pinSync == nil else { return }
         let sync = PinSync(settings: settings)

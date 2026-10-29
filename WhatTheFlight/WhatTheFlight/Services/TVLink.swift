@@ -22,6 +22,9 @@ enum TVLink {
         var facingDegrees: Double?
         var senderName: String
         var sentAt: Date
+        /// The spot's name when the iPhone sends a saved or named spot ("Home"). Added later,
+        /// so optional.
+        var placeName: String? = nil
     }
 
     struct Ack: Codable, Equatable, Sendable {

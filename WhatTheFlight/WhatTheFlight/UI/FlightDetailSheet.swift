@@ -52,7 +52,7 @@ struct FlightDetailSheet: View {
                         telemetry(contact)
                         routeCard(contact)
                         actions(contact)
-                        Text("Live data: Flightradar24 (unofficial feed). Positions between updates are estimated.")
+                        Text(model.source.attribution)
                             .monoScaled(10)
                             .foregroundStyle(Palette.faint)
                             .multilineTextAlignment(.center)
@@ -112,6 +112,14 @@ struct FlightDetailSheet: View {
                     .foregroundStyle(Palette.caption)
                     .padding(.top, 4)
             }
+            if let phase = contact.phase {
+                PhaseLine(phase: phase, scales: true)
+                    .padding(.top, 2)
+            }
+            if settings.aircraftFacts {
+                AirframeFactsView(registration: flight.registration, hex: flight.hex)
+                    .padding(.top, 2)
+            }
             if let logbook, let airframe = flight.registration ?? flight.hex {
                 seenCounter(airframe: airframe, logbook: logbook)
                     .padding(.top, 6)
@@ -142,18 +150,24 @@ struct FlightDetailSheet: View {
 
     private func telemetry(_ contact: RadarContact) -> some View {
         let f = contact.flight
-        let vs: String = f.verticalRateFPM == 0 ? "Level" : "\(f.verticalRateFPM > 0 ? "+" : "")\(RadarFormat.wholeNumber(f.verticalRateFPM)) fpm"
+        let vs = RadarFormat.verticalRate(f.verticalRateFPM)
         let cpa = contact.isApproaching
-            ? "\(RadarFormat.miles(contact.closestApproach.distanceMiles)) mi in \(RadarFormat.countdown(contact.closestApproach.secondsFromNow))"
+            ? "\(RadarFormat.distanceText(contact.closestApproach.distanceMiles)) in \(RadarFormat.countdown(contact.closestApproach.secondsFromNow))"
             : "Moving away"
+        // "Can you see it?" goes with the hint on the radar (Settings → Radar → Weather).
+        let sight: [(String, String)] = settings.showsVisibility
+            ? [("Can you see it?", model.visibility(of: contact).map { $0.canSee ? "Yes, look \(GeoMath.cardinal(contact.bearing))" : $0.shortText } ?? "—")]
+            : []
+        let weather: [(String, String)] = model.skyConditions.map { [("Weather · \($0.station)", $0.shortSummary)] } ?? []
         let rows: [(String, String)] = [
-            ("Altitude", "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft"),
+            ("Altitude", "\(RadarFormat.altitudeText(contact.altitudeFeet))"),
             ("Vertical", vs),
-            ("Speed", "\(RadarFormat.wholeNumber(f.groundSpeedKnots)) kts"),
+            ("Speed", "\(RadarFormat.speedText(f.groundSpeedKnots))"),
             ("Track", "\(Int(f.track.rounded()))° \(GeoMath.cardinal(f.track))"),
-            ("Distance", "\(RadarFormat.miles(contact.distanceMiles)) mi"),
+            ("Distance", "\(RadarFormat.distanceText(contact.distanceMiles))"),
             ("Bearing", "\(Int(contact.bearing.rounded()))° \(GeoMath.cardinal(contact.bearing))"),
             ("Closest pass", cpa),
+        ] + sight + weather + [
             ("Squawk", f.squawk ?? "—"),
             ("Registration", f.registration ?? "—"),
             ("Callsign", f.callsign ?? "—"),
@@ -250,11 +264,18 @@ struct FlightDetailSheet: View {
                 .accessibilityHint(isFavorite ? "Stops calling this aircraft out in yellow"
                                               : "Calls this aircraft out in yellow on the radar, the map and in your logbook")
             }
-            ShareLink(item: shareText(contact)) {
-                Label("Share", systemImage: "square.and.arrow.up")
-                    .frame(maxWidth: .infinity)
+            HStack(spacing: 10) {
+                SightingShareButton(info: SightingCardInfo(contact: contact, observer: model.observer,
+                                                           trail: model.trail(for: contact.id).map(\.coordinate),
+                                                           placeName: model.logPlaceName),
+                                    text: shareText(contact)) {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(RadarButtonStyle(prominent: false))
+                WatchlistMenu(flight: contact.flight, profile: contact.profile, settings: settings)
+                    .buttonStyle(RadarButtonStyle(prominent: false))
             }
-            .buttonStyle(RadarButtonStyle(prominent: false))
             if !model.contacts.contains(where: { $0.id == contact.id }), contact.flight.canLocate {
                 // Out of the radius (or off the feed's query box): look for it anywhere.
                 NavigationLink {
@@ -265,6 +286,20 @@ struct FlightDetailSheet: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(RadarButtonStyle(prominent: true))
+            }
+            if contact.flight.hasRoute, FlightFollow.shared.isAvailable {
+                let following = FlightFollow.shared.isFollowing(contact.flight)
+                Button {
+                    Task {
+                        if following { await FlightFollow.shared.stop() } else { await FlightFollow.shared.start(contact, model: model) }
+                    }
+                } label: {
+                    Label(following ? "Stop Following" : "Follow on Lock Screen",
+                          systemImage: following ? "lock.slash" : "lock.rectangle.on.rectangle")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(RadarButtonStyle(prominent: false))
+                .accessibilityHint("Shows this flight's progress and arrival countdown on the Lock Screen and in the Dynamic Island")
             }
             if let onFindInSky {
                 Button {
@@ -290,7 +325,7 @@ struct FlightDetailSheet: View {
         var text = "✈️ \(f.displayIdentifier)"
         if f.hasRoute { text += " \(Self.place(f.originIATA, f.origin)) → \(Self.place(f.destinationIATA, f.destination))" }
         if let type = f.typeName ?? f.typeCode { text += " · \(type)" }
-        text += " — \(RadarFormat.wholeNumber(contact.altitudeFeet)) ft, \(RadarFormat.miles(contact.distanceMiles)) mi away. Spotted with What The Flight?"
+        text += " — \(RadarFormat.altitudeText(contact.altitudeFeet)), \(RadarFormat.distanceText(contact.distanceMiles)) away. Spotted with What The Flight?"
         return text
     }
 
@@ -573,7 +608,7 @@ struct RouteProgressView: View {
             .frame(height: 6 * scale)
             .padding(.vertical, 4 * scale)
             HStack {
-                Text("\(RadarFormat.wholeNumber(Int(progress.flownMiles.rounded()))) mi flown")
+                Text("\(RadarFormat.wholeDistance(progress.flownMiles)) flown")
                 Spacer()
                 Text(remainingText)
             }
@@ -585,7 +620,7 @@ struct RouteProgressView: View {
     }
 
     private var remainingText: String {
-        let miles = "\(RadarFormat.wholeNumber(Int(progress.remainingMiles.rounded()))) mi to go"
+        let miles = "\(RadarFormat.wholeDistance(progress.remainingMiles)) to go"
         guard let seconds = progress.remainingSeconds else { return miles }
         return "\(miles) · ~\(RouteProgress.duration(seconds))"
     }

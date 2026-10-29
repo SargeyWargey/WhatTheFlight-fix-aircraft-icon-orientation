@@ -120,7 +120,7 @@ struct PointAndFindView: View {
                 .foregroundStyle(Palette.ink)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
-            Text("\(RadarFormat.miles(target.distanceMiles)) mi \(GeoMath.cardinal(target.bearing)) · \(RadarFormat.wholeNumber(target.altitudeFeet)) ft")
+            Text("\(RadarFormat.distanceText(target.distanceMiles)) \(GeoMath.cardinal(target.bearing)) · \(RadarFormat.altitudeText(target.altitudeFeet))")
                 .font(.mono(9, .semibold))
                 .foregroundStyle(Palette.caption)
                 .lineLimit(1)
@@ -221,7 +221,7 @@ struct PointAndFindView: View {
                         let look = watchSettings.aimStyle == .point ? "Look along your arm" : "Look past the red arrow"
                         WristTapNotification.post(
                             title: "On it: \(target.flight.displayIdentifier)",
-                            body: "\(look) · \(RadarFormat.miles(target.distanceMiles)) mi \(GeoMath.cardinal(target.bearing)) · \(RadarFormat.wholeNumber(target.altitudeFeet)) ft",
+                            body: "\(look) · \(RadarFormat.distanceText(target.distanceMiles)) \(GeoMath.cardinal(target.bearing)) · \(RadarFormat.altitudeText(target.altitudeFeet))",
                             contact: target)
                     }
                 }

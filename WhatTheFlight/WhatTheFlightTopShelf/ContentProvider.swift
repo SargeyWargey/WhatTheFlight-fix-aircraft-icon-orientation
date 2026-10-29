@@ -12,6 +12,7 @@ import TVServices
 final class ContentProvider: TVTopShelfContentProvider {
     override func loadTopShelfContent() async -> TVTopShelfContent? {
         Catalogs.warmUp()
+        Units.reload()
         let store = SharedRadarStore()
         // nil falls back to the static Top Shelf image.
         guard let snapshot = await NearbyTraffic.latestSnapshot(store: store), !snapshot.flights.isEmpty else { return nil }
@@ -20,7 +21,7 @@ final class ContentProvider: TVTopShelfContentProvider {
         let photos = await Self.photos(for: flights, within: .seconds(6))
         let items = flights.map { flight in
             let item = TVTopShelfSectionedItem(identifier: flight.id)
-            item.title = [flight.identifier, flight.route, "\(RadarFormat.miles(flight.distanceMiles)) mi \(GeoMath.cardinal(flight.bearing))"]
+            item.title = [flight.identifier, flight.route, "\(RadarFormat.distanceText(flight.distanceMiles)) \(GeoMath.cardinal(flight.bearing))"]
                 .compactMap { $0 }
                 .joined(separator: " · ")
             item.imageShape = .hdtv

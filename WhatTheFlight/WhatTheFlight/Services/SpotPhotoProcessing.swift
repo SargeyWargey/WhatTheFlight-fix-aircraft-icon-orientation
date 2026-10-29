@@ -34,6 +34,34 @@ enum SpotPhotoProcessing {
         return (encoded, CGSize(width: image.width, height: image.height))
     }
 
+    /// A camera roll photo filed under a sighting: the logbook's copy and its record. Nil if
+    /// the image can't be read.
+    static func libraryPhoto(_ data: Data, for sighting: Sighting, device: LogDevice?) -> (photo: SpotPhoto, data: Data)? {
+        guard let copy = logbookCopy(of: data) else { return nil }
+        let zone = sighting.timeZone.flatMap(TimeZone.init(identifier:)) ?? .current
+        let photo = SpotPhoto(sighting: sighting, takenAt: captureDate(of: data, timeZone: zone) ?? sighting.firstSeen, device: device,
+                              pixelWidth: Int(copy.size.width), pixelHeight: Int(copy.size.height))
+        return (photo, copy.data)
+    }
+
+    /// When the shot was taken, from its EXIF (local time, with its offset when the camera
+    /// wrote one; otherwise read in `timeZone`).
+    static func captureDate(of data: Data, timeZone: TimeZone) -> Date? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let exif = properties[kCGImagePropertyExifDictionary] as? [CFString: Any],
+              let stamp = exif[kCGImagePropertyExifDateTimeOriginal] as? String else { return nil }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        if let offset = exif[kCGImagePropertyExifOffsetTimeOriginal] as? String {
+            formatter.dateFormat = "yyyy:MM:dd HH:mm:ssxxx"
+            if let date = formatter.date(from: stamp + offset) { return date }
+        }
+        formatter.dateFormat = "yyyy:MM:dd HH:mm:ss"
+        formatter.timeZone = timeZone
+        return formatter.date(from: stamp)
+    }
+
     static func encode(_ image: CGImage, type: UTType, quality: Double) -> Data? {
         let output = NSMutableData()
         guard let destination = CGImageDestinationCreateWithData(output, type.identifier as CFString, 1, nil) else { return nil }
@@ -60,7 +88,7 @@ enum SpotPhotoProcessing {
         var parts = [photo.displayIdentifier, photo.operatorName]
         parts.append([photo.typeName ?? photo.typeCode, photo.registration].compactMap { $0 }.joined(separator: " "))
         if let from = photo.originIATA, let to = photo.destinationIATA { parts.append("\(from) → \(to)") }
-        parts.append("\(RadarFormat.miles(photo.distanceMiles)) mi away at \(RadarFormat.wholeNumber(photo.altitudeFeet)) ft")
+        parts.append("\(RadarFormat.distanceText(photo.distanceMiles)) away at \(RadarFormat.altitudeText(photo.altitudeFeet))")
         return parts.filter { !$0.isEmpty }.joined(separator: " · ") + " · What The Flight?"
     }
 

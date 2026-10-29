@@ -141,7 +141,7 @@ APPLE TV
 Put the sky on the big screen: a radar, a map, or both side by side, with spoken alerts when something flies over. Send your spot and the way your TV faces from your iPhone in one tap.
 
 MAKE IT YOURS
-Topographic backgrounds that drift like the tide, light and dark looks, ten app icons, Home Screen and Lock Screen widgets, and Siri: just ask "What's that plane in What The Flight?"
+Topographic backgrounds that drift like the tide, light and dark looks, more than twenty app icons, Home Screen and Lock Screen widgets, and Siri: just ask "What's that plane in What The Flight?"
 
 NO ACCOUNT, NO ADS
 There's nothing to sign up for and no tracking. Your logbook stays on your devices and in your own iCloud.

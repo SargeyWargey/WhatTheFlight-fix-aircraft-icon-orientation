@@ -75,6 +75,7 @@ struct TVRadarRootView: View {
         .environment(\.radarObserver, model.observer)
         .environment(\.topographyStyle, settings.topography)
         .environment(\.favoriteAircraft, settings.favoriteSet)
+        .environment(\.skyVisibility, settings.showsVisibility ? SkyVisibilityLookup { model.visibility(of: $0) } : SkyVisibilityLookup())
         .onAppear {
             link.onPayload = { apply($0) }
             model.logbook = logbook
@@ -120,6 +121,33 @@ struct TVRadarRootView: View {
         .onChange(of: keepsScreenAwake, initial: true) { _, awake in UIApplication.shared.isIdleTimerDisabled = awake }
         .onChange(of: settings.syncLogbook, initial: true) { _, _ in updateLogbookSync() }
         .onChange(of: settings.demoTraffic) { _, _ in model.settingsDidChange(refetch: true) }
+        .onChange(of: settings.units) { _, _ in logbook.formattingDidChange() }
+        .onChange(of: settings.dataSource) { _, _ in model.dataSourceDidChange() }
+        .onChange(of: settings.preferVisible) { _, _ in model.settingsDidChange(refetch: false) }
+        .task(id: weatherKey) {
+            // The weather reports around now and every 15 minutes: the nearest for "Can I see
+            // it?", all of them for the clouds and fog.
+            guard let key = weatherKey else { return }
+            // Range chips change the key in quick steps: ask once it settles (each Apple
+            // Weather fetch is five calls).
+            try? await Task.sleep(for: .seconds(1.5))
+            while !Task.isCancelled {
+                if let observer = observerCoordinate {
+                    #if DEBUG
+                    if let preset = UserDefaults.standard.string(forKey: "wtf.debugWeather") {
+                        model.setWeather(SkyReport.debugPreset(preset, around: observer))
+                        return
+                    }
+                    #endif
+                    let report = await SkyConditionsProvider.shared.report(near: observer, reachMiles: key.reachMiles)
+                    let clouds = settings.weatherFog
+                        ? await CloudCoverProvider.shared.samples(around: observer, radiusMiles: max(settings.radiusMiles, settings.effectiveMapRadius))
+                        : nil
+                    model.setWeather(report, clouds: clouds)
+                }
+                try? await Task.sleep(for: .seconds(SkyConditionsProvider.refresh))
+            }
+        }
         .onChange(of: settings.radiusMiles) { _, _ in
             // Re-filter at once while the chips move; re-query once they settle.
             model.settingsDidChange(refetch: false)
@@ -228,7 +256,7 @@ struct TVRadarRootView: View {
     private func announce(_ alert: TrafficAlert) {
         model.post(notice: alert.title, symbol: alert.symbol)
         guard settings.spokenAlerts, let contact = model.contact(id: alert.flightID) else { return }
-        AlertSpeaker.shared.speak(SpokenTraffic.sentence(for: contact, reason: alert.reason), about: contact.id)
+        AlertSpeaker.shared.speak(SpokenTraffic.sentence(for: contact, alert: alert), about: contact.id)
     }
 
     /// The aircraft being read out takes over the centre as its sentence starts, and stays
@@ -274,6 +302,10 @@ struct TVRadarRootView: View {
             model.post(notice: "Location received from iPhone", symbol: "iphone.radiowaves.left.and.right")
         }
         placeLookup?.cancel()
+        if let name = payload.placeName, !name.isEmpty {
+            settings.customPlaceName = name
+            return
+        }
         placeLookup = Task {
             let name = await PlaceServices.name(for: coordinate)
             guard !Task.isCancelled else { return }
@@ -282,6 +314,14 @@ struct TVRadarRootView: View {
     }
 
     // MARK: State
+
+    /// A new weather fetch on moving to another ~7 km square or reaching further (the map's
+    /// own range); none with every weather feature off.
+    private var weatherKey: WeatherFetchKey? {
+        guard settings.usesWeather, let observer = observerCoordinate else { return nil }
+        let radius = max(settings.radiusMiles, settings.effectiveMapRadius)
+        return WeatherFetchKey(area: PlaceNamer.area(of: observer), reachMiles: WeatherFog.reachMiles(radius: radius), fog: settings.weatherFog)
+    }
 
     private var observerCoordinate: CLLocationCoordinate2D? {
         switch settings.locationMode {

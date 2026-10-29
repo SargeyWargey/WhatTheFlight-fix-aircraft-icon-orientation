@@ -140,7 +140,7 @@ struct BoardingPassCard: View {
                     .frame(width: frame.width, height: frame.height)
             }
             HStack {
-                chip("\(CameraZoom.label(photo.displayZoom))×" + (photo.visuallyLocked ? " · LOCKED ON" : ""))
+                chip(photo.isFromLibrary ? "CAMERA ROLL" : "\(CameraZoom.label(photo.displayZoom))×" + (photo.visuallyLocked ? " · LOCKED ON" : ""))
                 Spacer()
                 chip("WHAT THE FLIGHT?")
             }
@@ -198,9 +198,9 @@ struct BoardingPassCard: View {
                     field("Tail", photo.registration ?? "—")
                 }
                 GridRow {
-                    field("Altitude", "\(RadarFormat.wholeNumber(photo.altitudeFeet)) ft")
-                    field("Speed", "\(RadarFormat.wholeNumber(photo.speedKnots)) kts")
-                    field("Distance", "\(RadarFormat.miles(photo.distanceMiles)) mi")
+                    field("Altitude", "\(RadarFormat.altitudeText(photo.altitudeFeet))")
+                    field("Speed", "\(RadarFormat.speedText(photo.speedKnots))")
+                    field("Distance", "\(RadarFormat.distanceText(photo.distanceMiles))")
                 }
                 GridRow {
                     field("Date", photo.takenAt.formatted(.dateTime.day().month(.abbreviated).year()).uppercased())
@@ -300,7 +300,7 @@ struct BoardingPassCard: View {
                 .frame(maxHeight: .infinity)
             }
             .frame(height: 10)
-            Text("\(RadarFormat.wholeNumber(Int(miles.flown.rounded()))) mi flown · \(RadarFormat.wholeNumber(Int(miles.remaining.rounded()))) to go")
+            Text("\(RadarFormat.wholeDistance(miles.flown)) flown · \(RadarFormat.wholeDistance(miles.remaining)) to go")
                 .font(.mono(10, .semibold))
                 .foregroundStyle(Ink.muted)
         }
@@ -499,7 +499,7 @@ struct SpotPhotoView: View {
                 if !alternatives.isEmpty, let onReassign {
                     Menu {
                         ForEach(alternatives) { other in
-                            Button("\(other.displayIdentifier) · \(RadarFormat.miles(other.distanceMiles)) mi") { onReassign(other) }
+                            Button("\(other.displayIdentifier) · \(RadarFormat.distanceText(other.distanceMiles))") { onReassign(other) }
                         }
                     } label: {
                         Label("Wrong aircraft?", systemImage: "arrow.triangle.swap")

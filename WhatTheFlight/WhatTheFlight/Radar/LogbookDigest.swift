@@ -40,7 +40,7 @@ extension Sighting {
 
 enum LogbookFormat {
     static func preciseMiles(_ miles: Double) -> String {
-        miles < 10 ? String(format: "%.1f mi", miles) : "\(RadarFormat.wholeNumber(Int(miles.rounded()))) mi"
+        RadarFormat.preciseDistance(miles)
     }
 
     /// "6 min", "1 h 05 min", "Under a min".
@@ -71,6 +71,14 @@ enum LogbookFormat {
     /// "N", "NNE" … for a 16-point compass sector.
     static let sectorNames = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
                               "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+
+    /// "North", "North-northeast" … spelled out, in the same order.
+    static let sectorWords = [
+        String(localized: "North"), String(localized: "North-northeast"), String(localized: "Northeast"), String(localized: "East-northeast"),
+        String(localized: "East"), String(localized: "East-southeast"), String(localized: "Southeast"), String(localized: "South-southeast"),
+        String(localized: "South"), String(localized: "South-southwest"), String(localized: "Southwest"), String(localized: "West-southwest"),
+        String(localized: "West"), String(localized: "West-northwest"), String(localized: "Northwest"), String(localized: "North-northwest"),
+    ]
 
     /// Eight-way names for "mostly westbound".
     static func direction(_ degrees: Double) -> String {
@@ -136,12 +144,12 @@ enum LogbookRanking: String, CaseIterable, Identifiable, Hashable, Sendable {
 
     var title: String {
         switch self {
-        case .aircraft: return "Aircraft"
-        case .airlines: return "Airlines"
-        case .types: return "Types"
-        case .routes: return "Routes"
-        case .airports: return "Airports"
-        case .countries: return "Countries"
+        case .aircraft: return String(localized: "Aircraft")
+        case .airlines: return String(localized: "Airlines")
+        case .types: return String(localized: "Types")
+        case .routes: return String(localized: "Routes")
+        case .airports: return String(localized: "Airports")
+        case .countries: return String(localized: "Countries")
         }
     }
 
@@ -191,11 +199,11 @@ enum LogbookFilter: Hashable, Sendable {
 
     var title: String {
         switch self {
-        case .notable: return "Notable"
-        case .photographed: return "Photographed"
-        case .helicopters: return "Helicopters"
-        case .military: return "Military"
-        case .newTypes: return "New types"
+        case .notable: return String(localized: "Notable")
+        case .photographed: return String(localized: "Photographed")
+        case .helicopters: return String(localized: "Helicopters")
+        case .military: return String(localized: "Military")
+        case .newTypes: return String(localized: "New types")
         case .airframe(let key): return key
         case .airline(let key): return key
         case .type(let key): return AircraftTypeCatalog.name(forTypeCode: key) ?? key
@@ -416,20 +424,20 @@ struct LogbookDigest: Sendable {
             records.append(.init(id: "closest", title: "Closest pass", value: s.closestPreciseText, symbol: "scope", sighting: s))
         }
         if let s = sightings.max(by: { $0.altitudeAtClosestFeet < $1.altitudeAtClosestFeet }) {
-            records.append(.init(id: "highest", title: "Highest", value: "\(RadarFormat.wholeNumber(s.altitudeAtClosestFeet)) ft", symbol: "arrow.up.to.line", sighting: s))
+            records.append(.init(id: "highest", title: "Highest", value: "\(RadarFormat.altitudeText(s.altitudeAtClosestFeet))", symbol: "arrow.up.to.line", sighting: s))
         }
         if let s = sightings.max(by: { $0.speedKnots < $1.speedKnots }) {
-            records.append(.init(id: "fastest", title: "Fastest", value: "\(RadarFormat.wholeNumber(s.speedKnots)) kts", symbol: "gauge.with.dots.needle.100percent", sighting: s))
+            records.append(.init(id: "fastest", title: "Fastest", value: "\(RadarFormat.speedText(s.speedKnots))", symbol: "gauge.with.dots.needle.100percent", sighting: s))
         }
         if let s = sightings.filter({ $0.isAirline && $0.altitudeAtClosestFeet > 0 }).min(by: { $0.altitudeAtClosestFeet < $1.altitudeAtClosestFeet }) {
-            records.append(.init(id: "lowest", title: "Lowest airline flight", value: "\(RadarFormat.wholeNumber(s.altitudeAtClosestFeet)) ft", symbol: "arrow.down.to.line", sighting: s))
+            records.append(.init(id: "lowest", title: "Lowest airline flight", value: "\(RadarFormat.altitudeText(s.altitudeAtClosestFeet))", symbol: "arrow.down.to.line", sighting: s))
         }
         if let s = sightings.max(by: { $0.timeInRange < $1.timeInRange }), s.timeInRange >= 60 {
             records.append(.init(id: "longest", title: "Longest in range", value: LogbookFormat.duration(s.timeInRange), symbol: "clock", sighting: s))
         }
         let routed = sightings.compactMap { s in s.routeMiles.map { (sighting: s, miles: $0) } }
         if let best = routed.max(by: { $0.miles < $1.miles }) {
-            records.append(.init(id: "route", title: "Longest route", value: "\(RadarFormat.wholeNumber(Int(best.miles.rounded()))) mi", symbol: "globe.americas", sighting: best.sighting))
+            records.append(.init(id: "route", title: "Longest route", value: "\(RadarFormat.wholeDistance(best.miles))", symbol: "globe.americas", sighting: best.sighting))
         }
         return records
     }

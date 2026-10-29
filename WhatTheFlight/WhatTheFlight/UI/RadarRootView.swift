@@ -10,6 +10,7 @@ import SwiftUI
 import UIKit
 import WidgetKit
 import UserNotifications
+import CoreSpotlight
 
 struct RadarRootView: View {
     @State private var settings: RadarSettings
@@ -26,6 +27,8 @@ struct RadarRootView: View {
     @State private var sky: SkyRequest?
     /// A deep link that arrived before the first feed load (e.g. tapped from a widget).
     @State private var deferredRoute: AppRouter.Route?
+    /// A page the logbook opens on (Spotlight's airframe results).
+    @State private var logbookRoute: LogbookRoute?
     /// `-wtf.debugLargeSheet YES` opens the detail and search sheets full height (screenshots).
     @State private var detailDetent: PresentationDetent = UserDefaults.standard.bool(forKey: "wtf.debugLargeSheet") ? .large : .medium
     /// Search opens full height from the bar's aircraft count.
@@ -105,6 +108,7 @@ struct RadarRootView: View {
         }
         .environment(\.topographyStyle, settings.topography)
         .environment(\.favoriteAircraft, settings.favoriteSet)
+        .environment(\.skyVisibility, settings.showsVisibility ? SkyVisibilityLookup { model.visibility(of: $0) } : SkyVisibilityLookup())
         .background { FoldSensor(monitor: fold).ignoresSafeArea() }
         // The compass and the 1 Hz clock change many times a minute; watching them here keeps
         // the root (and any sheet over it) from re-evaluating with them.
@@ -124,7 +128,9 @@ struct RadarRootView: View {
         }
         // At regular width (iPad, the Duo's inner screen) the logbook fills the screen.
         .fullScreenCover(isPresented: logbookCover) {
-            LogbookView(logbook: logbook, onTrack: track, isLive: { model.contact(id: $0) != nil }) { self.sheet = nil }
+            LogbookView(logbook: logbook, onTrack: track, isLive: { model.contact(id: $0) != nil },
+                        onDone: { self.sheet = nil }, initialRoute: logbookRoute)
+                .id(logbookRoute)
                 .environment(\.radarObserver, model.observer)
                 .environment(\.topographyStyle, settings.topography)
                 .environment(\.showsAircraftPhotos, settings.showPhotos)
@@ -141,6 +147,7 @@ struct RadarRootView: View {
         }
         .onAppear {
             model.logbook = logbook
+            LogbookAccess.live = logbook
             logbook.onBadgeUnlocked = { [model] badge in model.post(notice: badge.unlockNotice, symbol: badge.symbol) }
             startPinSync()
             model.onAlert = deliver
@@ -172,6 +179,8 @@ struct RadarRootView: View {
                 favoriteSync?.refresh()
             case .background:
                 logbook.flush()
+                DigestNotifier.reschedule(logbook: logbook, settings: settings)
+                LogbookSpotlight.reindex(logbook, enabled: settings.keepLogbook)
                 // Sky Watch keeps the radar (and its alerts) running while the phone is locked.
                 if !skyWatch.isActive {
                     model.stop()
@@ -186,7 +195,10 @@ struct RadarRootView: View {
             if listening { raise.start() } else { raise.stop() }
         }
         .onChange(of: fold.interfaceOrientations, initial: true) { _, turns in location.interfaceOrientations = turns }
-        .onChange(of: model.lastUpdated) { _, _ in widgets.publish(model: model, settings: settings, placeName: placeName) }
+        .onChange(of: model.lastUpdated) { _, _ in
+            widgets.publish(model: model, settings: settings, placeName: placeName)
+            FlightFollow.shared.update(from: model)
+        }
         .onChange(of: model.hasLoadedOnce) { _, loaded in
             if loaded, let route = deferredRoute {
                 deferredRoute = nil
@@ -194,6 +206,12 @@ struct RadarRootView: View {
             }
         }
         .onOpenURL { router.open($0) }
+        .onContinueUserActivity(CSSearchableItemActionType) { activity in
+            if let id = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+               let airframe = LogbookSpotlight.airframe(fromIdentifier: id) {
+                router.pending = .airframe(airframe)
+            }
+        }
         .onContinueUserActivity(WatchSync.handoffActivityType) { activity in
             if let id = activity.userInfo?[WatchSync.handoffFlightKey] as? String { router.pending = .flight(id) }
         }
@@ -206,13 +224,27 @@ struct RadarRootView: View {
         // Restarts only on moving to a new ~5 km square, so a slow lookup isn't cancelled by
         // every GPS fix; a stale one is.
         .task(id: loggingPlaceArea) { await nameLoggingPlace() }
+        .task(id: weatherArea) { await refreshWeather() }
+        .onChange(of: settings.preferVisible) { _, _ in model.settingsDidChange(refetch: false) }
         .onChange(of: settings.showHelicopters) { _, _ in
             model.settingsDidChange(refetch: false)
             sendWatchContext()
         }
         .onChange(of: settings.alertRules) { _, _ in sendWatchContext() }
+        .onChange(of: settings.units) { _, _ in
+            logbook.formattingDidChange()
+            sendWatchContext()
+            WidgetCenter.shared.reloadAllTimelines()
+        }
         .onChange(of: settings.demoTraffic) { _, _ in model.settingsDidChange(refetch: true) }
-        .onChange(of: settings.syncLogbook, initial: true) { _, _ in updateLogbookSync() }
+        .onChange(of: settings.dataSource) { _, _ in model.dataSourceDidChange() }
+        // A Spotlight result opens the logbook on its page once; the next opening starts fresh.
+        .onChange(of: sheet) { old, new in if old == .logbook, new != .logbook { logbookRoute = nil } }
+        .onChange(of: settings.syncLogbook, initial: true) { _, _ in
+            updateLogbookSync()
+            sendWatchContext()
+        }
+        .onChange(of: settings.keepLogbook) { _, _ in sendWatchContext() }
         .task(id: settings.radiusMiles) {
             // Re-filter instantly while the slider moves; re-query once it settles.
             model.settingsDidChange(refetch: false)
@@ -259,14 +291,17 @@ struct RadarRootView: View {
                 .presentationDetents([.medium, .large], selection: $searchDetent)
                 .presentationDragIndicator(.visible)
         case .detail(let id):
-            FlightDetailSheet(flightID: id, model: model, settings: settings, logbook: logbook) { id in
-                self.sheet = nil
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { sky = SkyRequest(targetID: id) }
-            }
+            FlightDetailSheet(flightID: id, model: model, settings: settings, logbook: logbook,
+                              onFindInSky: SkyViewSupport.isAvailable ? { id in
+                                  self.sheet = nil
+                                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { sky = SkyRequest(targetID: id) }
+                              } : nil)
             .presentationDetents([.medium, .large], selection: $detailDetent)
             .presentationDragIndicator(.visible)
         case .logbook:
-            LogbookView(logbook: logbook, onTrack: track, isLive: { model.contact(id: $0) != nil }) { self.sheet = nil }
+            LogbookView(logbook: logbook, onTrack: track, isLive: { model.contact(id: $0) != nil },
+                        onDone: { self.sheet = nil }, initialRoute: logbookRoute)
+                .id(logbookRoute)
         case .welcome:
             OnboardingView(
                 onStart: {
@@ -451,6 +486,38 @@ struct RadarRootView: View {
     }
 
     /// The `PlaceNamer` square you're in, when sightings are being stamped with it.
+    /// About 7 km squares: a new weather report only when the radar moves somewhere else (or
+    /// reaches further). Nil, no reports, with every weather feature off.
+    private var weatherArea: WeatherFetchKey? {
+        guard settings.usesWeather, let observer = observerCoordinate else { return nil }
+        return WeatherFetchKey(area: PlaceNamer.area(of: observer), reachMiles: WeatherFog.reachMiles(radius: settings.radiusMiles),
+                               fog: settings.weatherFog)
+    }
+
+    /// The weather reports around now and every 15 minutes: the nearest for "Can I see it?",
+    /// all of them for the clouds and fog.
+    private func refreshWeather() async {
+        guard let key = weatherArea else { return }
+        // The radius slider changes the key many times a second: ask once it settles (each
+        // Apple Weather fetch is five calls).
+        try? await Task.sleep(for: .seconds(1.5))
+        while !Task.isCancelled {
+            if let observer = observerCoordinate {
+                #if DEBUG
+                if let preset = UserDefaults.standard.string(forKey: "wtf.debugWeather") {
+                    model.setWeather(SkyReport.debugPreset(preset, around: observer))
+                    return
+                }
+                #endif
+                let report = await SkyConditionsProvider.shared.report(near: observer, reachMiles: key.reachMiles)
+                let clouds = settings.weatherFog
+                    ? await CloudCoverProvider.shared.samples(around: observer, radiusMiles: settings.radiusMiles) : nil
+                model.setWeather(report, clouds: clouds)
+            }
+            try? await Task.sleep(for: .seconds(SkyConditionsProvider.refresh))
+        }
+    }
+
     private var loggingPlaceArea: String? {
         guard settings.locationMode == .device, let here = location.location?.coordinate else { return nil }
         return PlaceNamer.area(of: here)
@@ -462,6 +529,7 @@ struct RadarRootView: View {
         store.observer = observerCoordinate
         store.placeName = placeName
         store.radiusMiles = settings.radiusMiles
+        store.overheadMiles = settings.overheadAlertMiles
         sendWatchContext()
     }
 
@@ -506,7 +574,10 @@ struct RadarRootView: View {
             placeName: settings.locationMode == .custom ? placeName : nil,
             showHelicopters: settings.showHelicopters,
             overheadAlerts: settings.overheadAlerts, overheadAlertMiles: settings.overheadAlertMiles,
-            notableAlerts: settings.notableAlerts, sentAt: Date()
+            notableAlerts: settings.notableAlerts, sentAt: Date(),
+            units: settings.units.rawValue, overheadAlertLeadSeconds: settings.overheadAlertLeadSeconds,
+            watchlist: settings.watchlist, favoriteAlerts: settings.favoriteAlerts,
+            keepLogbook: settings.keepLogbook, syncLogbook: settings.syncLogbook
         ))
     }
 
@@ -560,10 +631,16 @@ struct RadarRootView: View {
                 model.post(notice: "That aircraft has left the area", symbol: "airplane.departure")
             }
         case .sky:
+            guard SkyViewSupport.isAvailable else { return }
             sheet = nil
             sky = SkyRequest()
         case .logbook:
             sky = nil
+            logbookRoute = nil
+            sheet = .logbook
+        case .airframe(let reg):
+            sky = nil
+            logbookRoute = .airframe(reg)
             sheet = .logbook
         case .radar:
             sky = nil
@@ -588,11 +665,17 @@ struct RadarRootView: View {
     }
 
     /// Banner while the app is on screen; a notification while it runs in the background.
+    /// Read aloud as well when Read Alerts Aloud is on (only through headphones, AirPods or
+    /// the car unless that's turned off), so a walk with Sky Watch running needs no looking.
     private func deliver(_ alert: TrafficAlert) {
         if UIApplication.shared.applicationState == .active {
             model.post(notice: alert.title, symbol: alert.symbol)
         } else {
             AlertNotifier.deliver(alert)
+        }
+        if settings.spokenAlerts, !settings.spokenAlertsHeadphonesOnly || AlertSpeaker.hasPrivateRoute,
+           let contact = model.contact(id: alert.flightID) {
+            AlertSpeaker.shared.speak(SpokenTraffic.sentence(for: contact, alert: alert), about: contact.id)
         }
     }
 
@@ -600,7 +683,7 @@ struct RadarRootView: View {
     /// half open: then the camera and the motion sensors can sit in different halves, and a
     /// phone standing in tabletop keeps looking "raised".
     private var listensForRaise: Bool {
-        scenePhase == .active && settings.raiseToSkyView && sheet == nil && sky == nil && !fold.posture.isHalfOpen
+        SkyViewSupport.isAvailable && scenePhase == .active && settings.raiseToSkyView && sheet == nil && sky == nil && !fold.posture.isHalfOpen
     }
 
     private var keepsScreenAwake: Bool { settings.keepScreenAwake && scenePhase == .active }
@@ -610,8 +693,34 @@ struct RadarRootView: View {
     /// `-wtf.debugFocus DL570` focuses a flight (screenshots, UI tests).
     private func openDebugSheetIfRequested() {
         let defaults = UserDefaults.standard
-        // `-wtf.debugIcon <choice>` switches the Home Screen icon (e.g. `edgeRadar`, `automatic`).
-        if let raw = defaults.string(forKey: "wtf.debugIcon"), let choice = AppIconChoice(rawValue: raw) {
+        // `-wtf.debugShareCard YES` writes the newest sighting's share card to
+        // tmp/ShareCard.png in the app's container, and every card of this year's and this
+        // month's recaps to RecapCard-year-1.png… and RecapCard-month-1.png… (the TV's
+        // landscape ones to RecapCard-wide-year-1.png…).
+        if defaults.bool(forKey: "wtf.debugShareCard"), let s = logbook.sightings.last {
+            Task { @MainActor in
+                let dir = FileManager.default.temporaryDirectory
+                if let image = await SightingCardRenderer.render(SightingCardInfo(sighting: s)) {
+                    try? image.pngData()?.write(to: dir.appendingPathComponent("ShareCard.png"))
+                }
+                for (name, period) in zip(["year", "month"], LogbookRecap.periods()) {
+                    guard let recap = LogbookRecap(logbook.sightings, period: period) else { continue }
+                    for kind in RecapSlide.Kind.allCases {
+                        if let card = RecapRenderer.share(kind: kind, recap: recap) {
+                            try? card.image.pngData()?.write(to: dir.appendingPathComponent("RecapCard-\(name)-\(kind.rawValue + 1).png"))
+                        }
+                        // The TV's landscape cards, drawn here because the TV can't save them.
+                        if let card = RecapRenderer.share(kind: kind, recap: recap, format: .wide) {
+                            try? card.image.pngData()?.write(to: dir.appendingPathComponent("RecapCard-wide-\(name)-\(kind.rawValue + 1).png"))
+                        }
+                    }
+                }
+                Log.ui.notice("Share cards written to \(dir.path, privacy: .public)")
+            }
+        }
+        // `-wtf.debugIcon <concept>[.<look>]` switches the Home Screen icon (e.g. `tally.dark`,
+        // `edgeRadar`, `automatic`).
+        if let raw = defaults.string(forKey: "wtf.debugIcon"), let choice = AppIconChoice(debugName: raw) {
             Task { @MainActor in
                 // iOS only changes the icon once the app is on screen.
                 try? await Task.sleep(for: .seconds(2))
@@ -697,6 +806,7 @@ final class WidgetPublisher {
             lastReload = Date()
             lastNearest = nearest
             WidgetCenter.shared.reloadTimelines(ofKind: SharedRadarStore.widgetKind)
+            WidgetCenter.shared.reloadTimelines(ofKind: SharedRadarStore.nextOverheadKind)
         }
     }
 }
@@ -748,6 +858,8 @@ struct RadarMapPane: View {
     /// Keeps the ring and the recentre button clear of the hero card and the bar.
     var cardInset: CGSize = .zero
 
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some View {
         GeometryReader { geo in
             TrafficMap(
@@ -766,7 +878,10 @@ struct RadarMapPane: View {
                 // trailing edge, the vertical bar strip being outside it.
                 options: .init(interactive: true,
                                cardInset: CGSize(width: cardInset.width + geo.safeAreaInsets.trailing, height: cardInset.height),
-                               topInset: geo.safeAreaInsets.top),
+                               topInset: geo.safeAreaInsets.top,
+                               fog: settings.weatherFog ? model.weatherFog : nil,
+                               fogDrifts: scenePhase == .active,
+                               fogAttribution: settings.weatherFog && model.weatherFog != nil && model.fogFromAppleWeather),
                 // Browsing the map never pins: an aircraft outside the radius is only held.
                 onTap: { id in withAnimation(.snappy) { model.focus(on: id, pinning: false) } }
             )

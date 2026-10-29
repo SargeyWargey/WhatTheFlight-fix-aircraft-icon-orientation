@@ -61,7 +61,12 @@ final class AlertNotificationDelegate: NSObject, UNUserNotificationCenterDelegat
     }
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        guard let id = response.notification.request.content.userInfo["flightID"] as? String else { return }
+        let info = response.notification.request.content.userInfo
+        if info[DigestNotifier.routeKey] as? String == "logbook" {
+            await MainActor.run { AppRouter.shared.pending = .logbook }
+            return
+        }
+        guard let id = info["flightID"] as? String else { return }
         let find = response.actionIdentifier == AlertNotifier.findAction
         await MainActor.run { AppRouter.shared.pending = find ? .find(id) : .flight(id) }
     }

@@ -18,6 +18,8 @@ struct WatchFlightDetail: View {
     let watchSettings: WatchSettings
     let location: WatchLocationService
     let open: (WatchRootView.Screen) -> Void
+    /// The Watch's logbook, for "Seen 3× before".
+    var logbook: Logbook? = nil
 
     private var heading: Double {
         watchSettings.northUp ? 0 : (location.heading ?? 0)
@@ -51,6 +53,12 @@ struct WatchFlightDetail: View {
         return ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 header(f)
+                if let seen = logbook?.seenBeforeSummary(for: f) {
+                    Label(seen, systemImage: "book.closed.fill")
+                        .font(.mono(10, .semibold))
+                        .foregroundStyle(Palette.route)
+                        .lineLimit(2)
+                }
                 if let progress = RouteProgress(flight: f, position: contact.coordinate) {
                     routeProgress(progress)
                 }
@@ -131,14 +139,14 @@ struct WatchFlightDetail: View {
         return VStack(alignment: .leading, spacing: 6) {
             sectionTitle("Right now")
             HStack(alignment: .top) {
-                stat("Distance", "\(RadarFormat.miles(contact.distanceMiles)) mi") {
+                stat("Distance", "\(RadarFormat.distanceText(contact.distanceMiles))") {
                     Image(systemName: "location.north.fill")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(Palette.signal)
                         .continuousRotation(contact.bearing - heading)
                 }
                 Spacer()
-                stat("Altitude", "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft") {
+                stat("Altitude", "\(RadarFormat.altitudeText(contact.altitudeFeet))") {
                     switch f.verticalTrend {
                     case .climbing: Image(systemName: "arrow.up.right").font(.system(size: 8, weight: .heavy)).foregroundStyle(Palette.live)
                     case .descending: Image(systemName: "arrow.down.right").font(.system(size: 8, weight: .heavy)).foregroundStyle(Palette.warning)
@@ -147,7 +155,7 @@ struct WatchFlightDetail: View {
                 }
             }
             HStack(alignment: .top) {
-                stat("Speed", "\(RadarFormat.wholeNumber(f.groundSpeedKnots)) kts") { EmptyView() }
+                stat("Speed", "\(RadarFormat.speedText(f.groundSpeedKnots))") { EmptyView() }
                 Spacer()
                 stat("Look", GeoMath.cardinal(contact.bearing)) { EmptyView() }
             }

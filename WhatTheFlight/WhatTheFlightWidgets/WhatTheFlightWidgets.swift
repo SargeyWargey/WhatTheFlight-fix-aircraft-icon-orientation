@@ -13,6 +13,8 @@ import SwiftUI
 struct WhatTheFlightWidgets: WidgetBundle {
     var body: some Widget {
         NearestFlightWidget()
+        NextOverheadWidget()
         SkyWatchLiveActivity()
+        FlightFollowLiveActivity()
     }
 }

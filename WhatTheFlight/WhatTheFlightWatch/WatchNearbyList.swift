@@ -23,7 +23,7 @@ struct WatchNearbyList: View {
     var body: some View {
         List {
             if model.contacts.isEmpty {
-                Text("Nothing within \(Int(settings.radiusMiles)) mi right now.")
+                Text("Nothing within \(RadarFormat.radius(settings.radiusMiles)) right now.")
                     .font(.mono(11))
                     .foregroundStyle(Palette.caption)
             }
@@ -36,7 +36,7 @@ struct WatchNearbyList: View {
                 }
             }
             if !model.outsideContacts.isEmpty {
-                Text("+\(model.outsideContacts.count) just outside your \(Int(settings.radiusMiles)) mi radius")
+                Text("+\(model.outsideContacts.count) just outside your \(RadarFormat.radius(settings.radiusMiles)) radius")
                     .font(.mono(9))
                     .foregroundStyle(Palette.faint)
                     .listRowBackground(Color.clear)
@@ -81,7 +81,7 @@ struct WatchNearbyList: View {
                         .font(.system(size: 7, weight: .bold))
                         .foregroundStyle(Palette.signal)
                         .rotationEffect(.degrees(contact.bearing - heading))
-                    Text("\(RadarFormat.miles(contact.distanceMiles))").font(.mono(13, .bold)).foregroundStyle(Palette.value)
+                    Text("\(RadarFormat.distance(contact.distanceMiles))").font(.mono(13, .bold)).foregroundStyle(Palette.value)
                 }
                 Text("\(RadarFormat.wholeNumber(contact.altitudeFeet / 100 * 100))′")
                     .font(.mono(9))
@@ -89,7 +89,7 @@ struct WatchNearbyList: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(f.displayIdentifier), \(RadarFormat.miles(contact.distanceMiles)) miles \(GeoMath.cardinal(contact.bearing)), \(RadarFormat.wholeNumber(contact.altitudeFeet)) feet")
+        .accessibilityLabel("\(f.displayIdentifier), \(RadarFormat.spokenDistance(contact.distanceMiles)) \(GeoMath.cardinal(contact.bearing)), \(RadarFormat.spokenAltitude(contact.altitudeFeet))")
     }
 
     private func subtitle(_ f: Flight) -> String {

@@ -20,8 +20,20 @@ struct LogbookSky: Sendable {
     /// Aircraft a chart needs before it shows. Fewer describes an afternoon (one runway
     /// direction, the hours you happened to look up) rather than the place.
     static let minimum = 50
-    static let altitudeBand = 5_000
+    /// Altitude bands of 5,000 ft, or 1,500 m with metric units (the digest is rebuilt when
+    /// the units change).
+    static var altitudeBandFeet: Double { Units.isMetric ? 1_500 / UnitSystem.metersPerFoot : 5_000 }
     static let altitudeBands = 9
+
+    /// "10–15k" / "3–4.5 km", the top band open-ended: "40k+ ft" / "12+ km".
+    static func altitudeBandLabel(_ index: Int, units: UnitSystem = Units.current) -> String {
+        let top = index == altitudeBands - 1
+        if units == .metric {
+            func km(_ i: Int) -> String { (Double(i) * 1.5).formatted(.number.precision(.fractionLength(0...1))) }
+            return top ? "\(km(index))+ km" : "\(km(index))–\(km(index + 1))"
+        }
+        return top ? "\(index * 5)k+ ft" : "\(index * 5)–\((index + 1) * 5)k"
+    }
 
     let count: Int
     /// Aircraft first seen in each hour of the day, local time where they were seen, midnight first.
@@ -30,8 +42,15 @@ struct LogbookSky: Sendable {
     let weekdays: [Int]
     /// Tracks at the closest pass in 16 compass sectors, north first.
     let headings: [Int]
-    /// Altitude at the closest pass in 5,000 ft bands; the last is 40,000 ft and up.
+    /// Altitude at the closest pass in 5,000 ft (or 1,500 m) bands; the last is open-ended.
     let altitudes: [Int]
+    #if !os(watchOS)
+    /// Every aircraft with a speed, at its closest pass, for the altitude-vs-speed chart. The
+    /// Watch has no such chart, so it skips the work.
+    let altitudeSpeed: AltitudeSpeedSet
+    /// Where they were flying from and to, between the busiest route airports.
+    let routeWeb: RouteWeb
+    #endif
 
     /// Aircraft with a heading (sightings from before headings were logged have none).
     var headed: Int { headings.reduce(0, +) }
@@ -41,6 +60,11 @@ struct LogbookSky: Sendable {
     var showsTimes: Bool { count >= Self.minimum }
     var showsHeadings: Bool { headed >= Self.minimum }
     var showsAltitudes: Bool { withAltitude >= Self.minimum }
+    #if !os(watchOS)
+    var showsAltitudeSpeed: Bool { altitudeSpeed.count >= Self.minimum }
+    /// Enough aircraft with a known route, and at least two airports to join.
+    var showsRouteWeb: Bool { routeWeb.routed >= Self.minimum && routeWeb.airports.count > 1 }
+    #endif
     /// No chart has enough behind it yet.
     var isFillingIn: Bool { !showsTimes && !showsHeadings && !showsAltitudes }
 
@@ -51,6 +75,7 @@ struct LogbookSky: Sendable {
         var weekdays = Array(repeating: 0, count: 7)
         var headings = Array(repeating: 0, count: 16)
         var altitudes = Array(repeating: 0, count: Self.altitudeBands)
+        let bandFeet = Self.altitudeBandFeet
         // A clock per zone; sightings in a row nearly always share one. "" is the calendar's.
         var clocks: [String: DayClock] = [:]
         var zone = ""
@@ -68,7 +93,7 @@ struct LogbookSky: Sendable {
                 headings[Int(((GeoMath.normalize(track) + 11.25) / 22.5).rounded(.down)) % 16] += 1
             }
             if s.altitudeAtClosestFeet > 0 {
-                altitudes[min(Self.altitudeBands - 1, s.altitudeAtClosestFeet / Self.altitudeBand)] += 1
+                altitudes[min(Self.altitudeBands - 1, Int(Double(s.altitudeAtClosestFeet) / bandFeet))] += 1
             }
         }
         count = sightings.count
@@ -76,6 +101,10 @@ struct LogbookSky: Sendable {
         self.weekdays = weekdays
         self.headings = headings
         self.altitudes = altitudes
+        #if !os(watchOS)
+        altitudeSpeed = AltitudeSpeedSet(sightings: sightings)
+        routeWeb = RouteWeb(sightings)
+        #endif
     }
 
     private static func calendar(_ base: Calendar, in zone: String) -> Calendar {

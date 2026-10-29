@@ -34,6 +34,29 @@ enum AirlineCatalog {
 
     static func airline(icao: String) -> Airline? { byICAO[icao.uppercased()] }
 
+    /// Airlines whose name, ICAO or IATA code matches `text`: exact codes first, then names
+    /// that start with it, then names containing it; curated airlines before the rest.
+    static func search(_ text: String, limit: Int = 20) -> [Airline] {
+        let q = text.trimmingCharacters(in: .whitespaces).lowercased()
+        guard q.count >= 2 else { return [] }
+        let curatedCodes = Set(curated.map(\.icao))
+        func rank(_ a: Airline) -> Int? {
+            let name = a.name.lowercased()
+            if a.icao.lowercased() == q || a.iata?.lowercased() == q { return 0 }
+            if name.hasPrefix(q) { return 1 }
+            if name.contains(" \(q)") { return 2 }
+            if name.contains(q) { return 3 }
+            return nil
+        }
+        return byICAO.values
+            .compactMap { a in rank(a).map { (a, $0) } }
+            .sorted { l, r in
+                (l.1, curatedCodes.contains(l.0.icao) ? 0 : 1, l.0.name) < (r.1, curatedCodes.contains(r.0.icao) ? 0 : 1, r.0.name)
+            }
+            .prefix(limit)
+            .map(\.0)
+    }
+
     /// "DAL1032" → "DAL". ICAO flight callsigns are three letters followed by the flight
     /// number, so "LIFE2" or "N5404T" never match by accident.
     static func icaoPrefix(ofCallsign callsign: String?) -> String? {

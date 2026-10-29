@@ -4,10 +4,11 @@
 //
 //  Every aircraft the radar can see, searchable by flight, airline, type, registration or
 //  airport, plus any aircraft in the world by tail number, flight number or callsign.
-//  Tapping one sends it to the centre of the radar; the pin button follows it wherever it
-//  goes (on the radar edge and the map, with a pin on its icon). Favourites come first, live
-//  when they're flying nearby, otherwise a way to find out where they are; swipe any row to
-//  add or remove one.
+//  Tapping one sends it to the centre of the radar; pinning it, from its details, follows it
+//  wherever it goes (on the radar edge and the map). Rows carry no pin button: a pinned
+//  aircraft that isn't flying, which has no details, is unpinned with a swipe. Favourites come
+//  first, live when they're flying nearby, otherwise a way to find out where they are; swipe
+//  any row to add or remove one.
 //
 
 #if os(iOS)
@@ -61,7 +62,7 @@ struct FlightSearchSheet: View {
                         Text("Pinned · \(pins.count)")
                     } footer: {
                         if trimmedQuery.isEmpty {
-                            Text("Pinned aircraft stay on the radar edge and the map wherever they are.")
+                            Text("Pinned aircraft stay on the radar edge and the map wherever they are. Unpin one from its details, or swipe one that isn't flying.")
                         }
                     }
                 }
@@ -264,16 +265,22 @@ struct FlightSearchSheet: View {
                     .lineLimit(1)
             }
             Spacer(minLength: 8)
-            pinButton(isPinned: true) { withAnimation(.snappy) { model.unpin(pin) } }
         }
         .padding(.vertical, 4)
         .listRowBackground(Palette.paperShade.opacity(0.25))
+        .swipeActions(edge: .trailing) {
+            Button(role: .destructive) {
+                withAnimation(.snappy) { model.unpin(pin) }
+            } label: {
+                Label("Unpin", systemImage: "pin.slash")
+            }
+        }
+        .accessibilityAction(named: "Unpin") { withAnimation(.snappy) { model.unpin(pin) } }
     }
 
     private func row(_ contact: RadarContact, isRemote: Bool = false) -> some View {
         let f = contact.flight
         let isFocused = model.focus.focusedID == contact.id
-        let isPinned = model.isPinned(contact.id)
         let isFavorite = model.isFavorite(f)
         return HStack(spacing: 10) {
             Button {
@@ -320,11 +327,11 @@ struct FlightSearchSheet: View {
                     }
                     Spacer(minLength: 8)
                     VStack(alignment: .trailing, spacing: 3) {
-                        Text("\(RadarFormat.wholeNumber(Int(contact.distanceMiles.rounded()))) mi")
+                        Text("\(RadarFormat.wholeDistance(contact.distanceMiles))")
                             .monoScaled(15, .bold)
                             .foregroundStyle(Palette.value)
                             .lineLimit(1)
-                        Text(f.isOnGround ? "Ground" : "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft")
+                        Text(f.isOnGround ? "Ground" : "\(RadarFormat.altitudeText(contact.altitudeFeet))")
                             .monoScaled(11)
                             .foregroundStyle(Palette.caption)
                             .lineLimit(1)
@@ -337,12 +344,6 @@ struct FlightSearchSheet: View {
             }
             .buttonStyle(.borderless)
             .tint(.primary)
-
-            pinButton(isPinned: isPinned) {
-                withAnimation(.snappy) {
-                    if isPinned { model.unpin(contact.id) } else { model.pin(f) }
-                }
-            }
         }
         .padding(.vertical, 4)
         .listRowBackground(isFocused ? Palette.signal.opacity(0.08) : Palette.paperShade.opacity(0.25))
@@ -361,19 +362,6 @@ struct FlightSearchSheet: View {
         // Far-away results are easier to tell apart by their tail number.
         if isRemote, let reg = f.registration, reg != f.displayIdentifier { parts.insert(reg, at: 0) }
         return parts.compactMap { $0 }.joined(separator: " · ")
-    }
-
-    private func pinButton(isPinned: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: isPinned ? "pin.fill" : "pin")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(isPinned ? Palette.pinned : Palette.caption)
-                .frame(width: 36, height: 36)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.borderless)
-        .accessibilityLabel(isPinned ? "Unpin" : "Pin")
-        .accessibilityHint(isPinned ? "Stops following this aircraft" : "Follows this aircraft on the radar wherever it goes")
     }
 
     /// In-range and nearby aircraft go to the centre; anything from the worldwide search is

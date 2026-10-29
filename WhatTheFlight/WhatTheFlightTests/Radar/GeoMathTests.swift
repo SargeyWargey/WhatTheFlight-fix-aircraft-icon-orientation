@@ -91,10 +91,10 @@ final class GeoMathTests: XCTestCase {
     }
 
     func testMilesFormattingRoundsToWholeNumbers() {
-        XCTAssertEqual(RadarFormat.miles(0.2), "<1")
-        XCTAssertEqual(RadarFormat.miles(0.5), "1")
-        XCTAssertEqual(RadarFormat.miles(14.49), "14")
-        XCTAssertEqual(RadarFormat.miles(14.5), "15")
+        XCTAssertEqual(RadarFormat.distance(0.2, in: .imperial), "<1")
+        XCTAssertEqual(RadarFormat.distance(0.5, in: .imperial), "1")
+        XCTAssertEqual(RadarFormat.distance(14.49, in: .imperial), "14")
+        XCTAssertEqual(RadarFormat.distance(14.5, in: .imperial), "15")
         XCTAssertEqual(RadarFormat.countdown(72), "1:12")
         XCTAssertEqual(RadarFormat.countdown(3725), "1:02:05")
     }

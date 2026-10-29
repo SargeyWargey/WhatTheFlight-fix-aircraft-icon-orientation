@@ -44,6 +44,26 @@ final class RadarModel {
     /// Bumped whenever the trails change (once per feed, not per tick), so views that draw
     /// them rebuild only then.
     private(set) var trailVersion = 0
+    /// Where the traffic on screen came from. The radar says so when it isn't Flightradar24.
+    private(set) var source: FeedSource = .flightradar24
+    /// The nearest weather report, for "Can I see it?" (the app fetches it).
+    var skyConditions: SkyConditions? {
+        didSet { if skyConditions != oldValue, settings.preferVisible { recompute() } }
+    }
+    /// The clouds and fog over the radar and the map (nil when it's clear).
+    private(set) var weatherFog: WeatherFog?
+    /// Whether the fog came from Apple Weather, whose attribution then has to show.
+    private(set) var fogFromAppleWeather = false
+
+    /// New weather: the nearest airport report for "Can I see it?" (it has the cloud base),
+    /// and Apple Weather's samples for the fog, or every airport report when there are none.
+    func setWeather(_ report: SkyReport, clouds: [CloudSample]? = nil) {
+        skyConditions = report.nearest
+        let fromApple = clouds.map { !$0.isEmpty } ?? false
+        let fog = fromApple ? clouds.flatMap { WeatherFog(samples: $0) } : WeatherFog(reports: report.all, near: observer)
+        if fog != weatherFog { weatherFog = fog }
+        if fromApple != fogFromAppleWeather { fogFromAppleWeather = fromApple }
+    }
     /// When `start()` last ran. A restart (wrist raised, app brought back) gets `staleAfter`
     /// before the feed counts as quiet, since a poll is on its way.
     private(set) var resumedAt = Date.distantPast
@@ -93,6 +113,8 @@ final class RadarModel {
     }
     /// Low Power Mode stretches the poll interval; read at every poll. Tests pin it off.
     @ObservationIgnored var isLowPowerMode: () -> Bool = { ProcessInfo.processInfo.isLowPowerModeEnabled }
+    /// Apple Watch's battery saver: polls half as often (Identify and Find still poll fastest).
+    @ObservationIgnored var batterySaver = false
     /// The widest map ring showing this traffic, when wider than the radar's (the Apple TV's
     /// own map range). Trails are kept to 1.5× the wider ring, as far as maps draw them.
     @ObservationIgnored var trailRadiusFloor: Double = 0
@@ -114,9 +136,10 @@ final class RadarModel {
         var coordinate: CLLocationCoordinate2D { CLLocationCoordinate2D(latitude: latitude, longitude: longitude) }
     }
 
-    init(settings: RadarSettings, liveFeed: FlightFeed = FlightRadarFeed(), demoFeed: FlightFeed = DemoTrafficFeed()) {
+    /// `liveFeed` nil: Flightradar24 with adsb.lol behind it, as the data source setting says.
+    init(settings: RadarSettings, liveFeed: FlightFeed? = nil, demoFeed: FlightFeed = DemoTrafficFeed()) {
         self.settings = settings
-        self.liveFeed = liveFeed
+        self.liveFeed = liveFeed ?? LayeredFeed(preference: settings.dataSource)
         self.demoFeed = demoFeed
         // Pins saved under an older, higher limit.
         if settings.pinnedAircraft.count > Self.maxPins {
@@ -244,6 +267,20 @@ final class RadarModel {
 
     @ObservationIgnored private var lastFeedWasDemo: Bool?
 
+    /// Settings → Radar → Data source changed.
+    func dataSourceDidChange() {
+        let preference = settings.dataSource
+        Task {
+            await liveFeed.setPreference(preference)
+            refreshNow()
+        }
+    }
+
+    /// Finds one aircraft anywhere through the same sources as the radar.
+    func locate(registration: String?, callsign: String?) async throws -> Flight? {
+        try await liveFeed.locate(registration: registration, callsign: callsign)
+    }
+
     /// Moves the observer. Re-queries when they've moved far enough that the query box is stale.
     func setObserver(_ coordinate: CLLocationCoordinate2D?) {
         let previous = observer
@@ -277,9 +314,27 @@ final class RadarModel {
 
     // MARK: Focus actions
 
-    /// Swipe right: snap back to the current nearest aircraft.
+    /// Swipe right: snap back to the current nearest aircraft (the nearest you can see, with
+    /// Prefer Aircraft You Can See on).
     func focusNearest() {
-        setFocus(FocusPolicy.nearest(contacts))
+        setFocus(FocusPolicy.nearest(focusOrder(contacts)))
+    }
+
+    /// Can this aircraft be seen from here, given the weather and the sun?
+    func visibility(of contact: RadarContact) -> SkyVisibility? {
+        guard let observer else { return nil }
+        return contact.visibility(observer: observer, conditions: skyConditions, at: now)
+    }
+
+    /// The order the centre is handed out in: nearest first, or with Prefer Aircraft You Can
+    /// See, the nearest visible ones first (still nearest first among them).
+    private func focusOrder(_ list: [RadarContact]) -> [RadarContact] {
+        guard settings.preferVisible, let observer else { return list }
+        var seen: [RadarContact] = [], hidden: [RadarContact] = []
+        for c in list {
+            if c.visibility(observer: observer, conditions: skyConditions, at: now).canSee { seen.append(c) } else { hidden.append(c) }
+        }
+        return seen + hidden
     }
 
     /// Swipe left: step outwards to the next-nearest aircraft, then on to far-away pins.
@@ -545,9 +600,17 @@ final class RadarModel {
             consecutiveFailures = 0
             apply(result)
             status = .live
+            let answered = useDemo ? FeedSource.demo : (await feed.lastSource() ?? .flightradar24)
+            if answered != source {
+                if hasLoadedOnce, !useDemo, source != .demo {
+                    post(notice: answered == .flightradar24 ? "Back on Flightradar24" : "Flightradar24 is down · using \(answered.title)",
+                         symbol: "antenna.radiowaves.left.and.right")
+                }
+                source = answered
+            }
             if !useDemo { await refreshPins() }
             let next = PollingPolicy.interval(contacts: contacts, outside: outsideContacts, floor: Self.pollFloor,
-                                              fastest: pollsFastest, lowPower: isLowPowerMode())
+                                              fastest: pollsFastest, lowPower: isLowPowerMode(), saver: batterySaver)
             Log.feed.debug("\(self.contacts.count) in range, \(self.outsideContacts.count) outside; next poll in \(next, format: .fixed(precision: 0)) s")
             return next
         } catch is CancellationError {
@@ -685,6 +748,21 @@ final class RadarModel {
         }
     }
 
+    // MARK: Alerts
+
+    /// Favourites and pins always; firsts only while this radar is logging (demo traffic or
+    /// someone else's spot isn't a first for your logbook).
+    private var alertLookups: TrafficAlertLookups {
+        let favorites = settings.favoriteSet
+        let pinned = pinnedIDs
+        let logbook = isLogging ? logbook : nil
+        return TrafficAlertLookups(
+            isFavorite: { favorites.contains($0) },
+            isPinned: { pinned.contains($0) },
+            firstSeen: { contact in logbook?.firstSeen(contact) }
+        )
+    }
+
     // MARK: Recompute
 
     private var visibleFlights: [Flight] {
@@ -713,7 +791,7 @@ final class RadarModel {
                 let customName = settings.locationMode == .custom ? settings.customPlaceName : nil
                 logbook?.record(contacts, at: now, observer: observer, placeName: customName ?? logPlaceName)
             }
-            for alert in alertEngine.evaluate(contacts, rules: settings.alertRules, now: now) {
+            for alert in alertEngine.evaluate(contacts, rules: settings.alertRules, lookups: alertLookups, now: now) {
                 if let onAlert { onAlert(alert) } else { post(notice: alert.title, symbol: alert.symbol) }
             }
         }
@@ -722,7 +800,7 @@ final class RadarModel {
         current.isPinned = isPinned(current.focusedID)
         let fringe = fringeMiles
         let nearby = Set(outsideContacts.prefix { $0.distanceMiles <= fringe }.map(\.id))
-        let (resolved, change) = FocusPolicy.resolve(current, inRange: contacts, nearby: nearby, available: Set(all.map(\.id)))
+        let (resolved, change) = FocusPolicy.resolve(current, inRange: focusOrder(contacts), nearby: nearby, available: Set(all.map(\.id)))
         setFocus(resolved)
 
         let name = previousFocus?.flight.displayIdentifier ?? "That aircraft"
@@ -730,7 +808,7 @@ final class RadarModel {
         case .leftRange where current.isHeld:
             notice = RadarNotice(symbol: "scope", text: "\(name) flew out of range")
         case .leftRange:
-            notice = RadarNotice(symbol: "scope", text: "\(name) left your \(Int(radius)) mi radius")
+            notice = RadarNotice(symbol: "scope", text: "\(name) left your \(RadarFormat.radius(radius)) radius")
         case .lost:
             notice = RadarNotice(symbol: "antenna.radiowaves.left.and.right.slash", text: "\(name) dropped off radar")
         case .none, .initial:

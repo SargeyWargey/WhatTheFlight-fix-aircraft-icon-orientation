@@ -69,7 +69,7 @@ struct LogbookBadgesTab: View {
                 ForEach(Achievement.Group.allCases, id: \.self) { group in
                     let badges = digest.achievements.filter { $0.group == group }
                     VStack(alignment: .leading, spacing: 12) {
-                        LogbookHeader(title: group.title) {
+                        LogbookHeader(title: LocalizedStringKey(group.title)) {
                             Text("\(badges.filter(\.isUnlocked).count) of \(badges.count)").foregroundStyle(Palette.caption)
                         }
                         // Top-aligned so a title that wraps grows downward and the rings in a

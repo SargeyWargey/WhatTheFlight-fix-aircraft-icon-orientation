@@ -1,0 +1,2640 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    " " : {
+
+    },
+    ": " : {
+
+    },
+    "%@" : {
+
+    },
+    "%@  ·  %lld×" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@  ·  %2$lld×"
+          }
+        }
+      }
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@ aircraft" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ aircraft"
+          }
+        }
+      }
+    },
+    "%@ · %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$lld"
+          }
+        }
+      }
+    },
+    "%@ · %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$lld of %3$lld"
+          }
+        }
+      }
+    },
+    "%@ · on the radar or map, hold ● to change it" : {
+
+    },
+    "%@ · What The Flight?" : {
+
+    },
+    "%@ ›" : {
+
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ %@ by %@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ by %3$@%4$@"
+          }
+        }
+      }
+    },
+    "%@ → %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ → %2$@"
+          }
+        }
+      }
+    },
+    "%@ aircraft" : {
+
+    },
+    "%@ aircraft · see the recap" : {
+
+    },
+    "%@ aircraft ›" : {
+
+    },
+    "%@ aircraft from %lld places" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ aircraft from %2$lld places"
+          }
+        }
+      }
+    },
+    "%@ aircraft%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ aircraft%2$@"
+          }
+        }
+      }
+    },
+    "%@ away · %lld° up · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ away · %2$lld° up · %3$@"
+          }
+        }
+      }
+    },
+    "%@ before it passes over" : {
+
+    },
+    "%@ closest · %@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ closest · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "%@ flights · %@ out · %@ in" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ flights · %2$@ out · %3$@ in"
+          }
+        }
+      }
+    },
+    "%@ flown" : {
+
+    },
+    "%@ flown · %@ to go" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ flown · %2$@ to go"
+          }
+        }
+      }
+    },
+    "%@ from the %@ in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ from the %2$@ in %3$@"
+          }
+        }
+      }
+    },
+    "%@ in range" : {
+
+    },
+    "%@ in the sky" : {
+
+    },
+    "%@ in the Sky" : {
+
+    },
+    "%@ IN THE SKY" : {
+
+    },
+    "%@ is off screen" : {
+
+    },
+    "%@ radius" : {
+
+    },
+    "%@ sighting%@ · first %@ · last %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ sighting%2$@ · first %3$@ · last %4$@"
+          }
+        }
+      }
+    },
+    "%@ to %@, %lld flights" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ to %2$@, %3$lld flights"
+          }
+        }
+      }
+    },
+    "%@ to go%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ to go%2$@"
+          }
+        }
+      }
+    },
+    "%@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "%@, on the radar, in the logbook, in alerts and on your widgets and Apple Watch." : {
+
+    },
+    "%@, other data sources" : {
+
+    },
+    "%@×" : {
+
+    },
+    "%lld" : {
+
+    },
+    "%lld levels to go" : {
+
+    },
+    "%lld notable · %lld new type%@ · closest %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld notable · %2$lld new type%3$@ · closest %4$@"
+          }
+        }
+      }
+    },
+    "%lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "%lld of %lld · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld · %3$@"
+          }
+        }
+      }
+    },
+    "%lld of %lld ›" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld ›"
+          }
+        }
+      }
+    },
+    "%lld of %lld %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld %3$@"
+          }
+        }
+      }
+    },
+    "%lld of %lld unlocked" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld unlocked"
+          }
+        }
+      }
+    },
+    "%lld percent of the way. %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld percent of the way. %2$@."
+          }
+        }
+      }
+    },
+    "%lld-day streak · best %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld-day streak · best %2$lld"
+          }
+        }
+      }
+    },
+    "%lld%%" : {
+
+    },
+    "%lld%% of aircraft" : {
+
+    },
+    "%lld°" : {
+
+    },
+    "%lld° %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld° %2$@"
+          }
+        }
+      }
+    },
+    "%lld° %@  ·  %lld° up" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld° %2$@  ·  %3$lld° up"
+          }
+        }
+      }
+    },
+    "%lld×" : {
+
+    },
+    "© %@" : {
+
+    },
+    "+%lld more in range" : {
+
+    },
+    "◀ ▶ ▲ ▼ step from dot to dot · Click for the full card · Back to return to Stats" : {
+
+    },
+    "◀ ▶ go round the airports · ▼ ▲ through their routes · Click to see the flights · Back to return to Stats" : {
+
+    },
+    "◀ ▶ Move through the tour" : {
+
+    },
+    "◀ ▶ to flip through the cards" : {
+
+    },
+    "◀ Back" : {
+
+    },
+    "0.5×" : {
+
+    },
+    "1×" : {
+
+    },
+    "2×" : {
+
+    },
+    "4 MI · 9,500 FT" : {
+
+    },
+    "5" : {
+
+    },
+    "6 AM" : {
+
+    },
+    "6 PM" : {
+
+    },
+    "9:41" : {
+
+    },
+    "30 days" : {
+
+    },
+    "A banner when an aircraft is about to pass over you" : {
+
+    },
+    "A cloud question mark" : {
+
+    },
+    "A custom spot lets you watch the sky over home, an airport fence, anywhere. Aircraft seen at a custom spot aren't logged and don't count toward stats or badges: the logbook is what you saw yourself." : {
+
+    },
+    "A glowing sweep" : {
+
+    },
+    "A heads-up when an aircraft is about to pass within the distance below." : {
+
+    },
+    "A live map of every aircraft around you, beside the radar or full screen" : {
+
+    },
+    "A quick walk through the radar, Sky View and the logbook." : {
+
+    },
+    "A show-off paper plane" : {
+
+    },
+    "A startled airliner" : {
+
+    },
+    "A survey map, every fifth line heavier" : {
+
+    },
+    "A tail number or flight, like N608AT or DAL1751. Leave it empty for the aircraft nearest you." : {
+
+    },
+    "A tinted Home Screen always shows the tinted version." : {
+
+    },
+    "About" : {
+
+    },
+    "Activity · by month" : {
+
+    },
+    "Activity · last 30 days" : {
+
+    },
+    "Add" : {
+
+    },
+    "Add a tail number, an aircraft type, an airline or a callsign and you'll get an alert whenever one comes into range." : {
+
+    },
+    "Add from Photos" : {
+
+    },
+    "Add to Favorites" : {
+
+    },
+    "Add to Watchlist" : {
+
+    },
+    "Adding it up…" : {
+
+    },
+    "Adding…" : {
+
+    },
+    "Address, city or airport" : {
+
+    },
+    "Adds this aircraft's type, airline or tail number to your watchlist" : {
+
+    },
+    "adsb.lol" : {
+
+    },
+    "adsb.lol · ODbL" : {
+
+    },
+    "adsb.lol only: open ADS-B data, without routes" : {
+
+    },
+    "adsbdb.com" : {
+
+    },
+    "Aim at Apple TV" : {
+
+    },
+    "Aim the circle at an aircraft" : {
+
+    },
+    "aircraft" : {
+
+    },
+    "Aircraft" : {
+
+    },
+    "Aircraft by day of the week" : {
+
+    },
+    "Aircraft by hour" : {
+
+    },
+    "Aircraft by hour of the day" : {
+
+    },
+    "Aircraft details" : {
+
+    },
+    "Aircraft each day" : {
+
+    },
+    "aircraft logged" : {
+
+    },
+    "Aircraft on the edge" : {
+
+    },
+    "Aircraft out of range" : {
+
+    },
+    "Aircraft per day" : {
+
+    },
+    "Aircraft per month" : {
+
+    },
+    "Aircraft photos" : {
+
+    },
+    "Aircraft that count" : {
+
+    },
+    "Aircraft type" : {
+
+    },
+    "Airframes" : {
+
+    },
+    "Airline" : {
+
+    },
+    "Airlines" : {
+
+    },
+    "AirPods, headphones or CarPlay. With nothing connected, alerts stay quiet." : {
+
+    },
+    "Airports" : {
+
+    },
+    "Alert ahead" : {
+
+    },
+    "Alert Me" : {
+
+    },
+    "Alert me when one comes into range" : {
+
+    },
+    "Alerts" : {
+
+    },
+    "Alerts are spoken as well as shown: “Delta Air Lines flight 1199 is approaching overhead…”. With Sky Watch on they're read out with your iPhone locked too, so a walk needs no looking." : {
+
+    },
+    "Alerts arrive like overhead ones: a banner, or a notification while Sky Watch runs. Apple Watch taps your wrist for them too." : {
+
+    },
+    "All" : {
+
+    },
+    "All ›" : {
+
+    },
+    "All %lld ›" : {
+
+    },
+    "All places" : {
+
+    },
+    "All places · %@" : {
+
+    },
+    "All sorts" : {
+
+    },
+    "Allow Location Access" : {
+
+    },
+    "Also announce them out loud: “Delta Air Lines flight 1199 is approaching overhead…”" : {
+
+    },
+    "Altitude" : {
+
+    },
+    "ALTITUDE × SPEED" : {
+
+    },
+    "Altitude at the closest pass" : {
+
+    },
+    "Altitude at the closest pass, in %@." : {
+
+    },
+    "Altitude then" : {
+
+    },
+    "Altitude versus speed" : {
+
+    },
+    "Altitude vs speed" : {
+
+    },
+    "and %lld more" : {
+
+    },
+    "App Icon" : {
+
+    },
+    "Appearance" : {
+
+    },
+    "Appears at %lld, enough to show a pattern." : {
+
+    },
+    "Apple TV" : {
+
+    },
+    "Apple Watch" : {
+
+    },
+    "Around the clock" : {
+
+    },
+    "As “%@”" : {
+
+    },
+    "ATL" : {
+
+    },
+    "Automatic" : {
+
+    },
+    "Automatic uses Flightradar24 and switches to adsb.lol, open community ADS-B data, if Flightradar24 stops answering. Open data has no routes or schedules, so flights show without their airports. Data from adsb.lol is © adsb.lol contributors, ODbL 1.0." : {
+
+    },
+    "Average" : {
+
+    },
+    "Average %lld; most %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Average %1$lld; most %2$lld"
+          }
+        }
+      }
+    },
+    "avg %lld" : {
+
+    },
+    "B748 or Boeing 747" : {
+
+    },
+    "Back to return to Stats" : {
+
+    },
+    "Back Up Logbook…" : {
+
+    },
+    "Backup flight data" : {
+
+    },
+    "Backup traffic" : {
+
+    },
+    "Badge Ring" : {
+
+    },
+    "Badges" : {
+
+    },
+    "Badges · next up" : {
+
+    },
+    "Badges · next up · %lld of %lld unlocked" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Badges · next up · %1$lld of %2$lld unlocked"
+          }
+        }
+      }
+    },
+    "Behavior" : {
+
+    },
+    "Best %@ · %lld ›" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Best %1$@ · %2$lld ›"
+          }
+        }
+      }
+    },
+    "Best day" : {
+
+    },
+    "Best hour" : {
+
+    },
+    "Best streak" : {
+
+    },
+    "Big gentle hills, one line weight" : {
+
+    },
+    "Bird or Plane?" : {
+
+    },
+    "BOARDING PASS" : {
+
+    },
+    "BUSIEST" : {
+
+    },
+    "Busiest %@ · %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Busiest %1$@ · %2$lld"
+          }
+        }
+      }
+    },
+    "Busiest at %@" : {
+
+    },
+    "Busiest between %@" : {
+
+    },
+    "Busiest on %@s" : {
+
+    },
+    "Busiest routes" : {
+
+    },
+    "Business jet" : {
+
+    },
+    "By day of the week" : {
+
+    },
+    "By hour" : {
+
+    },
+    "By month" : {
+
+    },
+    "By weekday" : {
+
+    },
+    "Calls this aircraft out in yellow on the radar, the map and in your logbook" : {
+
+    },
+    "Callsign" : {
+
+    },
+    "Can I see it?" : {
+
+    },
+    "Can't see it right now" : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Cargo" : {
+
+    },
+    "Charts fill in as aircraft are logged: when your sky is busiest, which way they fly, how high they pass." : {
+
+    },
+    "Charts fill in as aircraft are logged." : {
+
+    },
+    "Checks your logbook for the aircraft nearest you, or a tail number or flight you name." : {
+
+    },
+    "Choose another place" : {
+
+    },
+    "Classic" : {
+
+    },
+    "Clear Location" : {
+
+    },
+    "Clear Logbook" : {
+
+    },
+    "Clear skies — nothing's flying within %@ of you." : {
+
+    },
+    "Clear the location?" : {
+
+    },
+    "Clear the whole logbook?" : {
+
+    },
+    "Click or press Back to close" : {
+
+    },
+    "Click to explore" : {
+
+    },
+    "Click to explore the chart." : {
+
+    },
+    "Click to see it full screen." : {
+
+    },
+    "Click to see these flights" : {
+
+    },
+    "Climbing" : {
+
+    },
+    "Close" : {
+
+    },
+    "Close Sky View" : {
+
+    },
+    "closest" : {
+
+    },
+    "Closest" : {
+
+    },
+    "Closest ever" : {
+
+    },
+    "Closest pass" : {
+
+    },
+    "Closest pass %@ in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Closest pass %1$@ in %2$@"
+          }
+        }
+      }
+    },
+    "Cloud Mark" : {
+
+    },
+    "Clouds and fog" : {
+
+    },
+    "Clouds and fog drift across the radar and the map, downwind, from Apple Weather around you (or the airport weather reports when Apple Weather isn't available). It's broadly where the weather is, not a satellite picture." : {
+
+    },
+    "Clouds from Apple Weather; \"Can I see it?\" from airport reports at aviationweather.gov. Both every 15 minutes." : {
+
+    },
+    "Code" : {
+
+    },
+    "Collection" : {
+
+    },
+    "Collections" : {
+
+    },
+    "Compass" : {
+
+    },
+    "Compass bezel" : {
+
+    },
+    "Contour motion" : {
+
+    },
+    "Contrails that say ?!" : {
+
+    },
+    "Couldn't check" : {
+
+    },
+    "Counting planes" : {
+
+    },
+    "Countries" : {
+
+    },
+    "Coverage" : {
+
+    },
+    "Custom Spot" : {
+
+    },
+    "Dark" : {
+
+    },
+    "Data" : {
+
+    },
+    "Data source" : {
+
+    },
+    "Date" : {
+
+    },
+    "Day" : {
+
+    },
+    "Days" : {
+
+    },
+    "Days and hours" : {
+
+    },
+    "Decimal degrees. South latitudes and west longitudes are negative (Atlanta is 33.749, -84.388)." : {
+
+    },
+    "Delete" : {
+
+    },
+    "Delete Photo" : {
+
+    },
+    "Delete this photo?" : {
+
+    },
+    "Delta · Airbus A321neo" : {
+
+    },
+    "DEMO" : {
+
+    },
+    "DEMO %lld" : {
+
+    },
+    "Demo traffic" : {
+
+    },
+    "Demo traffic. These aircraft are simulated and aren't logged." : {
+
+    },
+    "Departure Board" : {
+
+    },
+    "Descending" : {
+
+    },
+    "Digest" : {
+
+    },
+    "Directions aircraft were heading" : {
+
+    },
+    "Display" : {
+
+    },
+    "Distance" : {
+
+    },
+    "DL1199" : {
+
+    },
+    "DL1199 · <1 %@" : {
+
+    },
+    "Done" : {
+
+    },
+    "Double Take" : {
+
+    },
+    "Double-tap for details" : {
+
+    },
+    "Drifting over the radar and the map, from Apple Weather around you" : {
+
+    },
+    "Each dot is one sighting at its closest point. Click to explore it dot by dot." : {
+
+    },
+    "Each dot is one sighting at its closest point. Tap a dot, or drag sideways to run along them." : {
+
+    },
+    "Each icon follows your Home Screen's light or dark setting." : {
+
+    },
+    "Each icon stays dark, even on a light Home Screen." : {
+
+    },
+    "Each icon stays light, even on a dark Home Screen." : {
+
+    },
+    "Each petal is the share of aircraft on that heading at their closest pass; the red dot is you. A strong lean usually means you're under an approach or departure path." : {
+
+    },
+    "Easiest: aim your iPhone" : {
+
+    },
+    "East" : {
+
+    },
+    "East-northeast" : {
+
+    },
+    "East-southeast" : {
+
+    },
+    "Edge Radar" : {
+
+    },
+    "Emergencies, military, air ambulances and rare types" : {
+
+    },
+    "Emergencies, military, air ambulances and rare types." : {
+
+    },
+    "Ends the flight's Live Activity." : {
+
+    },
+    "Ends the Sky Watch Live Activity and its alerts." : {
+
+    },
+    "Enter Coordinates" : {
+
+    },
+    "Evening digest" : {
+
+    },
+    "Every aircraft by altitude and speed, with the highest and fastest ringed" : {
+
+    },
+    "Every aircraft that comes inside your radius is logged here automatically, with stats, records and badges." : {
+
+    },
+    "Every aircraft that comes inside your radius is logged here automatically." : {
+
+    },
+    "Every aircraft that comes inside your radius, with where you were, stats and badges. Demo traffic and custom spots aren't logged, only what's around you." : {
+
+    },
+    "EVERY LEVEL" : {
+
+    },
+    "Every sighting · %@" : {
+
+    },
+    "Every sighting · %lld" : {
+
+    },
+    "Every sighting, photo and badge will be removed, on all your devices if the logbook syncs with iCloud." : {
+
+    },
+    "Every time you've seen %@." : {
+
+    },
+    "Everywhere" : {
+
+    },
+    "Export & backup" : {
+
+    },
+    "Export as Spreadsheet" : {
+
+    },
+    "Facing" : {
+
+    },
+    "FACING %@° %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "FACING %1$@° %2$@"
+          }
+        }
+      }
+    },
+    "Failed to load" : {
+
+    },
+    "FASTEST" : {
+
+    },
+    "Favorite" : {
+
+    },
+    "Favorites · %lld" : {
+
+    },
+    "Favorites and pins" : {
+
+    },
+    "Favorites show in yellow on the radar, the map and in your logbook, whatever flight they're on." : {
+
+    },
+    "Favorites show in yellow on the radar, the map and in your logbook. Swipe any aircraft to add or remove one." : {
+
+    },
+    "Filling in" : {
+
+    },
+    "Find in the Sky" : {
+
+    },
+    "Finds this aircraft anywhere in the world, even far outside your radius." : {
+
+    },
+    "Fine tune" : {
+
+    },
+    "First seen" : {
+
+    },
+    "Firsts" : {
+
+    },
+    "Firsts for your logbook" : {
+
+    },
+    "Flight data" : {
+
+    },
+    "Flight, airline, type, airport…" : {
+
+    },
+    "Flight, tail number, airline, airport…" : {
+
+    },
+    "Flight: ?" : {
+
+    },
+    "Flightradar24" : {
+
+    },
+    "Flightradar24 isn't answering, so traffic comes from %@, without routes." : {
+
+    },
+    "Flightradar24 only" : {
+
+    },
+    "Flightradar24, switching to adsb.lol while it's down" : {
+
+    },
+    "Flights" : {
+
+    },
+    "Follow on Lock Screen" : {
+
+    },
+    "Follows your Home Screen" : {
+
+    },
+    "Forget the saved place, facing direction and iPhone hand-off" : {
+
+    },
+    "From %@ to %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "From %1$@ to %2$@"
+          }
+        }
+      }
+    },
+    "General aviation" : {
+
+    },
+    "Ground" : {
+
+    },
+    "Haptics" : {
+
+    },
+    "Have I seen ${aircraft} before?" : {
+
+    },
+    "Have I Seen This Plane Before?" : {
+
+    },
+    "Heading" : {
+
+    },
+    "heading %@" : {
+
+    },
+    "Heading Rose" : {
+
+    },
+    "Helicopter" : {
+
+    },
+    "Helicopters" : {
+
+    },
+    "HIGHEST" : {
+
+    },
+    "HIGHEST · FASTEST" : {
+
+    },
+    "Highlands" : {
+
+    },
+    "Highlights" : {
+
+    },
+    "Hold steady…" : {
+
+    },
+    "Home" : {
+
+    },
+    "Hour" : {
+
+    },
+    "How high they pass" : {
+
+    },
+    "How many aircraft you've logged today, any new types, and the closest pass." : {
+
+    },
+    "Hybrid" : {
+
+    },
+    "I can't see anything flying near you right now." : {
+
+    },
+    "I couldn't reach Flightradar24 just now. Try again in a moment." : {
+
+    },
+    "ICAO hex" : {
+
+    },
+    "Imperial" : {
+
+    },
+    "In range · %lld" : {
+
+    },
+    "In range for" : {
+
+    },
+    "In the sky" : {
+
+    },
+    "Interrobang" : {
+
+    },
+    "iPad" : {
+
+    },
+    "iPhone" : {
+
+    },
+    "iPhone connected" : {
+
+    },
+    "iPhone link code" : {
+
+    },
+    "It's removed from the logbook on all your devices. The original stays in your camera roll." : {
+
+    },
+    "Just outside · %lld" : {
+
+    },
+    "Keep a logbook" : {
+
+    },
+    "Keep screen awake" : {
+
+    },
+    "Keep the radar running — anything that qualifies shows up here." : {
+
+    },
+    "Keep typing to search worldwide" : {
+
+    },
+    "Keep typing to search worldwide by tail or flight number." : {
+
+    },
+    "Kilometers, meters and km/h" : {
+
+    },
+    "Kind" : {
+
+    },
+    "Last 14 days" : {
+
+    },
+    "Last 30 days" : {
+
+    },
+    "Last photo" : {
+
+    },
+    "Last seen" : {
+
+    },
+    "Last: %@ · %@ %@ ›" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last: %1$@ · %2$@ %3$@ ›"
+          }
+        }
+      }
+    },
+    "Latitude must be −90…90 and longitude −180…180." : {
+
+    },
+    "LEVEL %lld" : {
+
+    },
+    "Lift to open Sky View" : {
+
+    },
+    "Light" : {
+
+    },
+    "Loading altitude and speed" : {
+
+    },
+    "Location" : {
+
+    },
+    "Locked" : {
+
+    },
+    "LOCKED" : {
+
+    },
+    "Logbook" : {
+
+    },
+    "Logbook, seen %lld %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Logbook, seen %1$lld %2$@"
+          }
+        }
+      }
+    },
+    "Logged on" : {
+
+    },
+    "Logged on %@" : {
+
+    },
+    "Logging" : {
+
+    },
+    "Look" : {
+
+    },
+    "Look up, look twice" : {
+
+    },
+    "Looking for %@…" : {
+
+    },
+    "Looking for Apple TV…" : {
+
+    },
+    "Looking for it on Flightradar24…" : {
+
+    },
+    "Looking straight up" : {
+
+    },
+    "Loop-the-Loop" : {
+
+    },
+    "Mac" : {
+
+    },
+    "Maker, exact model and registered owner from adsbdb.com (companies only, never a person)" : {
+
+    },
+    "Map" : {
+
+    },
+    "Map north up" : {
+
+    },
+    "Map range" : {
+
+    },
+    "Map range and style" : {
+
+    },
+    "Map style" : {
+
+    },
+    "Map view" : {
+
+    },
+    "Match the code on your TV" : {
+
+    },
+    "Matches" : {
+
+    },
+    "Me" : {
+
+    },
+    "Metric" : {
+
+    },
+    "MIDNIGHT" : {
+
+    },
+    "Miles, feet and knots" : {
+
+    },
+    "Milestones" : {
+
+    },
+    "Military" : {
+
+    },
+    "Moments" : {
+
+    },
+    "More Icons" : {
+
+    },
+    "More info" : {
+
+    },
+    "Most seen" : {
+
+    },
+    "Most Seen" : {
+
+    },
+    "Most seen %@ · %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Most seen %1$@ · %2$lld"
+          }
+        }
+      }
+    },
+    "Motion" : {
+
+    },
+    "Moving away" : {
+
+    },
+    "My %@ in the sky" : {
+
+    },
+    "My Location" : {
+
+    },
+    "N" : {
+
+    },
+    "N685DA" : {
+
+    },
+    "Name the places you watch from (home, the office, the end of the runway) and switch between them with a tap. Like any custom spot, what you see from a saved spot isn't logged unless you're there with My Location." : {
+
+    },
+    "Name This Spot" : {
+
+    },
+    "New airline%@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "New airline%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "New type" : {
+
+    },
+    "New types" : {
+
+    },
+    "Next" : {
+
+    },
+    "Next up" : {
+
+    },
+    "Night Scope" : {
+
+    },
+    "No aircraft found for “%@”" : {
+
+    },
+    "No aircraft yet" : {
+
+    },
+    "No longer in the logbook" : {
+
+    },
+    "No map for this one: it was logged before positions were saved." : {
+
+    },
+    "No new types or badges this time. The sky has more." : {
+
+    },
+    "No photos yet" : {
+
+    },
+    "No photos yet. Take one in Sky View on your iPhone; with the logbook in iCloud, it shows up here too." : {
+
+    },
+    "No places found for “%@”" : {
+
+    },
+    "No repeat visitors yet." : {
+
+    },
+    "No repeat visitors yet. Aircraft you see more than once show up here." : {
+
+    },
+    "No repeat visitors yet. Any aircraft you see more than once is listed here." : {
+
+    },
+    "No route filed" : {
+
+    },
+    "No screen saver or sleep while the radar is open" : {
+
+    },
+    "No sightings yet" : {
+
+    },
+    "No stats yet" : {
+
+    },
+    "None" : {
+
+    },
+    "NOON" : {
+
+    },
+    "North" : {
+
+    },
+    "North-northeast" : {
+
+    },
+    "North-northwest" : {
+
+    },
+    "Northeast" : {
+
+    },
+    "Northwest" : {
+
+    },
+    "Notable" : {
+
+    },
+    "Notable aircraft" : {
+
+    },
+    "Nothing in range right now" : {
+
+    },
+    "Nothing in the sky right now." : {
+
+    },
+    "Nothing logged that month" : {
+
+    },
+    "Nothing logged yet today" : {
+
+    },
+    "Nothing logged yet today." : {
+
+    },
+    "Nothing logged yet." : {
+
+    },
+    "Nothing matches %@." : {
+
+    },
+    "Nothing to show" : {
+
+    },
+    "Nothing twice yet. Next time." : {
+
+    },
+    "Nothing yet." : {
+
+    },
+    "Number %lld, %@%@%@, %lld times" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Number %1$lld, %2$@%3$@%4$@, %5$lld times"
+          }
+        }
+      }
+    },
+    "of %lld %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "of %1$lld %2$@"
+          }
+        }
+      }
+    },
+    "Off" : {
+
+    },
+    "Off, the map turns so the top of the screen is the way the TV faces" : {
+
+    },
+    "OK" : {
+
+    },
+    "On" : {
+
+    },
+    "on %lld %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "on %1$lld %2$@"
+          }
+        }
+      }
+    },
+    "ON RADAR" : {
+
+    },
+    "On the radar the contour lines slowly flow out from the hilltops while the ground stays put. At 1× they move one line spacing every 20 seconds. Motion pauses with Reduce Motion and in Low Power Mode." : {
+
+    },
+    "One logbook across your iPhone, iPad and Apple TV. Each sighting shows which device logged it, and a flight seen on two devices counts once." : {
+
+    },
+    "One notification at the end of a day you logged something: how many aircraft, any new types or airlines, and the closest pass. Tap it for the logbook." : {
+
+    },
+    "Only with headphones" : {
+
+    },
+    "Open an aircraft's details and choose Alert Me to be told whenever its type, airline or the aircraft itself comes into range." : {
+
+    },
+    "Open data" : {
+
+    },
+    "Open Database License (ODbL)" : {
+
+    },
+    "Open in Flightradar24" : {
+
+    },
+    "Open iOS Settings" : {
+
+    },
+    "Open Logbook" : {
+
+    },
+    "Open Sky View" : {
+
+    },
+    "Open What The Flight? on your Apple TV. Both devices must be on the same Wi-Fi." : {
+
+    },
+    "Open What The Flight? once so I know where you're watching from." : {
+
+    },
+    "OpenFlights" : {
+
+    },
+    "Opens settings" : {
+
+    },
+    "Opens the camera with every aircraft labeled where it is in the sky" : {
+
+    },
+    "Or hold the Siri button on your remote and say the address" : {
+
+    },
+    "Or set it up manually" : {
+
+    },
+    "Or type on your iPhone when the keyboard notification appears" : {
+
+    },
+    "ORD" : {
+
+    },
+    "Other data sources" : {
+
+    },
+    "OurAirports" : {
+
+    },
+    "Overhead" : {
+
+    },
+    "OVERHEAD" : {
+
+    },
+    "Overhead alerts" : {
+
+    },
+    "Overhead distance" : {
+
+    },
+    "Overhead means within" : {
+
+    },
+    "Overview" : {
+
+    },
+    "Page %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Page %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Per day" : {
+
+    },
+    "Perimeter" : {
+
+    },
+    "Photo" : {
+
+    },
+    "Photo © %@ · Planespotters.net" : {
+
+    },
+    "Photo of %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Photo of %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "Photographed" : {
+
+    },
+    "Photographs the aircraft in view and adds it to your logbook" : {
+
+    },
+    "Photos" : {
+
+    },
+    "Photos · %lld" : {
+
+    },
+    "Photos on flight cards" : {
+
+    },
+    "Photos you take in Sky View go to your camera roll at full resolution, with the flight in the caption. The logbook keeps its own smaller copy either way, for the boarding pass and iCloud." : {
+
+    },
+    "Pick a different spot" : {
+
+    },
+    "Pick a Spot" : {
+
+    },
+    "Picked sighting" : {
+
+    },
+    "Pin" : {
+
+    },
+    "Pinned · %lld" : {
+
+    },
+    "Pinned aircraft stay on the radar edge and the map wherever they are. Unpin one from its details, or swipe one that isn't flying." : {
+
+    },
+    "Place" : {
+
+    },
+    "Plain paper" : {
+
+    },
+    "Plane Spotter, level 3" : {
+
+    },
+    "Planes by the Numbers" : {
+
+    },
+    "Planes Seen Today" : {
+
+    },
+    "Planes Today" : {
+
+    },
+    "Planespotters.net" : {
+
+    },
+    "Play a sample" : {
+
+    },
+    "Play a Sample" : {
+
+    },
+    "Point your camera at the sky to label every aircraft." : {
+
+    },
+    "Prefer aircraft you can see" : {
+
+    },
+    "Press MENU to return to the radar" : {
+
+    },
+    "Public domain" : {
+
+    },
+    "QTR or Qatar Airways" : {
+
+    },
+    "Question Contrail" : {
+
+    },
+    "Radar" : {
+
+    },
+    "Radar face" : {
+
+    },
+    "Radar sweep" : {
+
+    },
+    "Radius" : {
+
+    },
+    "Raise your iPhone toward the sky and every aircraft is labeled through the camera; lower it or tap ✕ to return to the radar. With this off, open Sky View from Find in the Sky on any flight's details." : {
+
+    },
+    "Range" : {
+
+    },
+    "Rare Birds" : {
+
+    },
+    "RCH" : {
+
+    },
+    "Read alerts aloud" : {
+
+    },
+    "Read aloud" : {
+
+    },
+    "Received %@" : {
+
+    },
+    "Recenter map" : {
+
+    },
+    "Recently unlocked" : {
+
+    },
+    "Record every aircraft that comes inside your radius. Syncs with your iPhone and iPad through iCloud; demo traffic is never logged" : {
+
+    },
+    "Records" : {
+
+    },
+    "Refresh" : {
+
+    },
+    "Registered in" : {
+
+    },
+    "Registration" : {
+
+    },
+    "Relief" : {
+
+    },
+    "Remaster" : {
+
+    },
+    "Remove" : {
+
+    },
+    "Remove %@?" : {
+
+    },
+    "Remove every sighting, photo and badge" : {
+
+    },
+    "Remove from Favorites" : {
+
+    },
+    "Remove Saved Spot" : {
+
+    },
+    "Removes every sighting, photo and badge, on all your devices if the logbook syncs with iCloud." : {
+
+    },
+    "Rename" : {
+
+    },
+    "Rename Spot" : {
+
+    },
+    "Replaces live data with simulated aircraft around you, handy indoors or for showing the app off. Demo aircraft aren't logged." : {
+
+    },
+    "Reset" : {
+
+    },
+    "Reset all settings" : {
+
+    },
+    "Reset all settings?" : {
+
+    },
+    "Reset to Defaults" : {
+
+    },
+    "Restore from Backup…" : {
+
+    },
+    "Ridges and winding valleys, the most detail" : {
+
+    },
+    "RISING SOON" : {
+
+    },
+    "Route" : {
+
+    },
+    "Route length" : {
+
+    },
+    "Route web" : {
+
+    },
+    "Routes" : {
+
+    },
+    "Routes it flew over you" : {
+
+    },
+    "Satellite" : {
+
+    },
+    "Save" : {
+
+    },
+    "Save a spot to come back to it in one tap." : {
+
+    },
+    "Save photos to camera roll" : {
+
+    },
+    "Save This Spot" : {
+
+    },
+    "Save This Spot…" : {
+
+    },
+    "Save Where I Am…" : {
+
+    },
+    "Save where this Apple TV is watching from to switch back to it in one click, handy if it moves between rooms or homes." : {
+
+    },
+    "Saved spots" : {
+
+    },
+    "Says when the aircraft in the center is above the clouds, lost in haze or too far to make out" : {
+
+    },
+    "Screen" : {
+
+    },
+    "Search above for any aircraft in the world by tail number (N509DN), flight (DL121) or callsign (DAL121), then pin it to follow it on the radar." : {
+
+    },
+    "Search aircraft" : {
+
+    },
+    "Searching Flightradar24…" : {
+
+    },
+    "Searching…" : {
+
+    },
+    "See today ›" : {
+
+    },
+    "Seen" : {
+
+    },
+    "SEEN 3× BEFORE" : {
+
+    },
+    "Seen It Before?" : {
+
+    },
+    "Send TV direction" : {
+
+    },
+    "Settings" : {
+
+    },
+    "Share" : {
+
+    },
+    "Share Boarding Pass" : {
+
+    },
+    "Shot it on another camera? Add the photos here and they're filed with this sighting, with a boarding pass to share." : {
+
+    },
+    "Show helicopters" : {
+
+    },
+    "Show on Radar" : {
+
+    },
+    "Show the whole route" : {
+
+    },
+    "Showing the latest %lld" : {
+
+    },
+    "Shows a live map of the traffic instead of the radar" : {
+
+    },
+    "Shows every aircraft you've spotted." : {
+
+    },
+    "Shows flight details" : {
+
+    },
+    "Shows in yellow on the radar, the map and in your logbook." : {
+
+    },
+    "Shows the radar instead of the map" : {
+
+    },
+    "Shows this aircraft in the center" : {
+
+    },
+    "Shows this aircraft in the center of the radar" : {
+
+    },
+    "Shows this flight's progress and arrival countdown on the Lock Screen and in the Dynamic Island" : {
+
+    },
+    "Shows your whole radius again" : {
+
+    },
+    "Sighting" : {
+
+    },
+    "Sightings" : {
+
+    },
+    "Signal Red" : {
+
+    },
+    "Simulated aircraft — great for trying it out" : {
+
+    },
+    "Six down, three to go" : {
+
+    },
+    "Skip" : {
+
+    },
+    "Sky by the Hour" : {
+
+    },
+    "Sky View" : {
+
+    },
+    "Sky Watch" : {
+
+    },
+    "Sky Watch keeps watching from your Lock Screen and Dynamic Island for two hours and sends alerts as notifications. It uses location in the background, so expect some battery use." : {
+
+    },
+    "South" : {
+
+    },
+    "South-southeast" : {
+
+    },
+    "South-southwest" : {
+
+    },
+    "Southeast" : {
+
+    },
+    "Southwest" : {
+
+    },
+    "Speak alerts" : {
+
+    },
+    "Speed" : {
+
+    },
+    "Speed then" : {
+
+    },
+    "Split" : {
+
+    },
+    "Split puts the map beside the radar. The dock's view button steps through all three" : {
+
+    },
+    "Spot" : {
+
+    },
+    "Spotted" : {
+
+    },
+    "SPOTTED FROM" : {
+
+    },
+    "Standard" : {
+
+    },
+    "Start over" : {
+
+    },
+    "Start Sky Watch" : {
+
+    },
+    "Start Watching" : {
+
+    },
+    "Stats" : {
+
+    },
+    "Stats ›" : {
+
+    },
+    "Status" : {
+
+    },
+    "Stop Following" : {
+
+    },
+    "Stop Sky Watch" : {
+
+    },
+    "Stops calling this aircraft out in yellow" : {
+
+    },
+    "Streak" : {
+
+    },
+    "Style" : {
+
+    },
+    "Survey" : {
+
+    },
+    "Survey lines over faint hill shading" : {
+
+    },
+    "Swipe left or right for the other cards" : {
+
+    },
+    "Swipe up or down to go round the airports." : {
+
+    },
+    "Swipe up or down to step through the sightings by speed." : {
+
+    },
+    "Switch to live traffic" : {
+
+    },
+    "Switch to Live Traffic" : {
+
+    },
+    "Sync with iCloud" : {
+
+    },
+    "Tail Fin" : {
+
+    },
+    "Tail number" : {
+
+    },
+    "Tail number, flight, airline…" : {
+
+    },
+    "Tail numbers, flight numbers (DL570) and callsigns (DAL570) anywhere in the world." : {
+
+    },
+    "Take one in Sky View and it lands here, with a boarding pass to share." : {
+
+    },
+    "Take photo" : {
+
+    },
+    "Take the tour" : {
+
+    },
+    "Take the tour again" : {
+
+    },
+    "Tally" : {
+
+    },
+    "Tap an airport to see its routes." : {
+
+    },
+    "Teal & Coral" : {
+
+    },
+    "Tells you about the aircraft nearest to you right now." : {
+
+    },
+    "The aircraft's photo on the radar and the map card, whenever Planespotters has one" : {
+
+    },
+    "The aircraft's photo under its details on the radar and beside them on the map card, whenever Planespotters has one. Sky View always shows it." : {
+
+    },
+    "The airline of ?" : {
+
+    },
+    "The compass bezel" : {
+
+    },
+    "The compass direction you look when you watch the TV. Planes ahead of you appear at the top of the screen." : {
+
+    },
+    "The first time a new aircraft type or airline turns up, once the logbook has %lld sightings" : {
+
+    },
+    "The first time a new aircraft type or airline turns up. Starts once your logbook has %lld sightings, so a new logbook isn't one alert after another." : {
+
+    },
+    "The lines slowly flow out from the hilltops on the radar" : {
+
+    },
+    "The maker, exact model and registered owner on an aircraft's details, from adsbdb.com. Owners are only shown when they're a company or organisation, never a person." : {
+
+    },
+    "The original icon" : {
+
+    },
+    "The radar on paper" : {
+
+    },
+    "The radar will stop until you set a new location." : {
+
+    },
+    "The radar's red" : {
+
+    },
+    "The spotter's joke" : {
+
+    },
+    "The spreadsheet is a CSV with a row per sighting that opens in Numbers or Excel. A backup is a folder with every sighting and photo, saved wherever you like in Files; restoring one merges it into the logbook, so nothing already here is lost." : {
+
+    },
+    "These aircraft are simulated, not what's really overhead, and they aren't logged." : {
+
+    },
+    "This aircraft is no longer being tracked." : {
+
+    },
+    "This device can't change the app icon." : {
+
+    },
+    "Through the camera" : {
+
+    },
+    "Time" : {
+
+    },
+    "Times seen" : {
+
+    },
+    "Today · %@" : {
+
+    },
+    "Today · %@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Today · %1$@%2$@"
+          }
+        }
+      }
+    },
+    "Today's highlights" : {
+
+    },
+    "Today's icon" : {
+
+    },
+    "Topography" : {
+
+    },
+    "Touch a bar to read it. %@" : {
+
+    },
+    "Toward %@" : {
+
+    },
+    "Track on Radar" : {
+
+    },
+    "Traffic" : {
+
+    },
+    "Traffic comes from %@, without routes." : {
+
+    },
+    "Trend Contrail" : {
+
+    },
+    "Try “Boeing 747”, “Qatar Airways”, or “RCH” for US Air Force transports. Any aircraft's details can add its type or airline too." : {
+
+    },
+    "Try Again" : {
+
+    },
+    "Try Demo Traffic" : {
+
+    },
+    "TV faces %lld degrees, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "TV faces %1$lld degrees, %2$@"
+          }
+        }
+      }
+    },
+    "Type" : {
+
+    },
+    "Type above — suggestions appear as you go" : {
+
+    },
+    "Types" : {
+
+    },
+    "UA482" : {
+
+    },
+    "Under the aircraft's type on the radar: \"Above the clouds\", \"Lost in the haze\", \"Too far away to make out\" or \"Close to the sun\" when you won't spot it by eye. Nothing shows when you can." : {
+
+    },
+    "Unfavorite" : {
+
+    },
+    "Units" : {
+
+    },
+    "Unknown" : {
+
+    },
+    "UNLOCKED" : {
+
+    },
+    "Unlocked it" : {
+
+    },
+    "Unofficial public feed — may change without notice" : {
+
+    },
+    "Unpin" : {
+
+    },
+    "Up and to the right" : {
+
+    },
+    "Updated %@ · refreshes every 30 s" : {
+
+    },
+    "Use These Coordinates" : {
+
+    },
+    "Usually" : {
+
+    },
+    "Usually %@" : {
+
+    },
+    "Version" : {
+
+    },
+    "via %@" : {
+
+    },
+    "View" : {
+
+    },
+    "Waiting for iPhone" : {
+
+    },
+    "Watch" : {
+
+    },
+    "Watch for" : {
+
+    },
+    "Watch for aircraft from your Lock Screen and Dynamic Island, with overhead alerts." : {
+
+    },
+    "Watch from" : {
+
+    },
+    "Watch This Spot" : {
+
+    },
+    "Watched from" : {
+
+    },
+    "Watching" : {
+
+    },
+    "Watching a custom spot%@. Sightings here aren't logged." : {
+
+    },
+    "Watching for" : {
+
+    },
+    "Watching from" : {
+
+    },
+    "Watching until" : {
+
+    },
+    "Watchlist" : {
+
+    },
+    "Weather" : {
+
+    },
+    "West" : {
+
+    },
+    "West-northwest" : {
+
+    },
+    "West-southwest" : {
+
+    },
+    "What The Flight?" : {
+
+    },
+    "WHAT THE FLIGHT?" : {
+
+    },
+    "What The Flight? uses Flightradar24's public web feed, which is unofficial and may change without notice." : {
+
+    },
+    "What the radar shows and how to drive it" : {
+
+    },
+    "What the…?!" : {
+
+    },
+    "What's That Plane?" : {
+
+    },
+    "When an aircraft you've favorited or pinned comes into range" : {
+
+    },
+    "When an aircraft you've favorited or pinned comes into range." : {
+
+    },
+    "When it comes by" : {
+
+    },
+    "When the nearest aircraft is above the clouds, lost in haze or too small to make out, the nearest one you can actually see takes the center instead. Uses the local weather report and where the sun is." : {
+
+    },
+    "When the nearest is above the clouds or too far to make out, the nearest visible one takes the center" : {
+
+    },
+    "When they come by" : {
+
+    },
+    "When your sky is busiest" : {
+
+    },
+    "Where are you watching from?" : {
+
+    },
+    "Where is it now?" : {
+
+    },
+    "Where Is It Now?" : {
+
+    },
+    "Which way does the TV face?" : {
+
+    },
+    "Which way they fly" : {
+
+    },
+    "Which way they fly, when the sky is busiest and how high they pass appear once %lld aircraft are logged%@: enough to show this sky's pattern, not just one afternoon." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Which way they fly, when the sky is busiest and how high they pass appear once %1$lld aircraft are logged%2$@: enough to show this sky's pattern, not just one afternoon."
+          }
+        }
+      }
+    },
+    "Wide-Eyed" : {
+
+    },
+    "Worldwide" : {
+
+    },
+    "Worldwide · %lld" : {
+
+    },
+    "Wrong aircraft?" : {
+
+    },
+    "WTF·%@" : {
+
+    },
+    "You're watching from it now. The radar keeps watching here until you pick another place." : {
+
+    },
+    "Your #%lld regular" : {
+
+    },
+    "YOUR #%lld REGULAR" : {
+
+    },
+    "Your #1 regular" : {
+
+    },
+    "YOUR #1 REGULAR" : {
+
+    },
+    "YOUR %@ IN THE SKY" : {
+
+    },
+    "Your collection" : {
+
+    },
+    "Your photo · %@" : {
+
+    },
+    "Your photos" : {
+
+    },
+    "Your photos · %lld" : {
+
+    },
+    "Your regulars" : {
+
+    },
+    "Your sky" : {
+
+    },
+    "Your sky, hour by hour" : {
+
+    },
+    "Your sky: %@" : {
+
+    },
+    "Zoom %@ times" : {
+
+    }
+  },
+  "version" : "1.0"
+}

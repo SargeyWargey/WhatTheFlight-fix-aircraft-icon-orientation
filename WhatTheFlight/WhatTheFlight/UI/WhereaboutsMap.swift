@@ -31,7 +31,8 @@ final class WhereaboutsLookup {
     private(set) var state: State = .loading
     private(set) var updatedAt: Date?
 
-    @ObservationIgnored private let feed = FlightRadarFeed()
+    /// The radar's sources, in the order the data source setting says.
+    @ObservationIgnored private let feed: FlightFeed = SharedRadarStore().feed
 
     var whereabouts: Whereabouts? {
         if case .found(let w) = state { return w }

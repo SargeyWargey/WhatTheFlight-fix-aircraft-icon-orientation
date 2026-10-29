@@ -65,8 +65,6 @@ struct RadarScreen: View {
     @State private var tagsHeight: CGFloat = 0
     /// The focused flight's card on the map, so the map keeps its ring clear of it.
     @State private var cardHeight: CGFloat = 0
-    /// The bar's natural width, so it can shrink to fit a narrow window (iPad Split View).
-    @State private var barWidth: CGFloat = 0
 
     private var heading: Double { location.heading ?? 0 }
 
@@ -100,12 +98,13 @@ struct RadarScreen: View {
                     .position(x: geo.size.width / 2, y: chrome.tagsMidY)
 
                 if showsBar {
+                    // As wide as the system tab bar: its margins from the sides, centred and
+                    // capped on a wide screen.
                     RadarControlBar(model: model, offersMap: offersMap, showsMap: showsMap,
                                     onToggleMap: actions.toggleMap, onSkyView: actions.openSkyView,
                                     onSearch: actions.openSearchFullHeight,
                                     onLogbook: actions.openLogbook, onSettings: actions.openSettings)
-                        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { barWidth = $0 }
-                        .scaleEffect(barWidth > 0 ? min(1, (geo.size.width - 16) / barWidth) : 1)
+                        .frame(width: max(0, min(RadarControlBar.maxWidth, geo.size.width - 2 * RadarControlBar.sideMargin)))
                         .position(x: geo.size.width / 2, y: chrome.barMidY)
                 }
             }
@@ -126,6 +125,12 @@ struct RadarScreen: View {
                 topographyMotion: settings.topographyMotion
             )
             .ignoresSafeArea()
+            if settings.weatherFog, !showsMap, let fog = model.weatherFog, let observer = model.observer {
+                RadarFogLayer(fog: fog, observer: observer, radiusMiles: settings.radiusMiles, heading: heading,
+                              isActive: scenePhase == .active)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+            }
         }
         .contentShape(Rectangle())
         .gesture(swipe, isEnabled: !showsMap)
@@ -244,6 +249,9 @@ struct RadarScreen: View {
                 CustomSpotTag(name: settings.customPlaceName ?? settings.customCoordinate?.shortDescription,
                               action: actions.openSpotPicker)
             }
+            if model.source == .adsbLol, !model.isDemo {
+                DataSourceTag(source: model.source, isBackup: settings.dataSource == .automatic, action: actions.openSettings)
+            }
         }
     }
 
@@ -330,7 +338,12 @@ struct RadarControlBar: View {
     let onLogbook: () -> Void
     let onSettings: () -> Void
 
-    static let height: CGFloat = 56
+    /// Along the bottom it's drawn like the system tab bar (the logbook's): as tall, as far
+    /// from the screen's sides, icons over sentence-case labels on interactive Liquid Glass.
+    static let height: CGFloat = 62
+    static let sideMargin: CGFloat = 21
+    /// iPad and other wide screens: no wider than this, centred.
+    static let maxWidth: CGFloat = 480
 
     /// The rail's sizes, scaled from the strip as the system scales its own vertical bar: a
     /// seventh of the strip between the content and the buttons, four sevenths of button and
@@ -360,7 +373,9 @@ struct RadarControlBar: View {
                     if offersMap {
                         mapButton.glassSurface(in: Circle(), interactive: true)
                     }
-                    skyViewButton.glassSurface(in: Circle(), interactive: true)
+                    if SkyViewSupport.isAvailable {
+                        skyViewButton.glassSurface(in: Circle(), interactive: true)
+                    }
                 }
                 Spacer(minLength: rail.spacing)
                 VStack(spacing: rail.groupSpacing) {
@@ -375,20 +390,14 @@ struct RadarControlBar: View {
         } else {
             HStack(spacing: 0) {
                 if offersMap { mapButton }
-                skyViewButton
-                Rectangle()
-                    .fill(Palette.faint.opacity(0.5))
-                    .frame(width: 1, height: 26)
-                    .padding(.horizontal, 2)
-                    .accessibilityHidden(true)
+                if SkyViewSupport.isAvailable { skyViewButton }
                 aircraftButton
                 logbookButton
                 settingsButton
             }
-            .padding(.horizontal, 5)
+            .padding(.horizontal, 6)
             .frame(height: Self.height)
-            .glassSurface(in: Capsule())
-            .fixedSize()
+            .glassSurface(in: Capsule(), interactive: true)
         }
     }
 
@@ -437,10 +446,11 @@ struct RadarControlBar: View {
     }
 }
 
-/// One button on the bar: a symbol (or the live count) over a small mono caption; on the
-/// rail, the symbol alone, in a square the size of a round button.
+/// One button on the bar: a purple symbol (or the live count) over a sentence-case label, as
+/// on the system tab bar, sharing the bar's width; on the rail, the symbol alone, in a square
+/// the size of a round button. A press lights a lens behind it, like the tab bar's.
 private struct BarButton<Icon: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     /// Demo traffic: a solid ink lozenge behind the count, paper type on it.
     var isHighlighted = false
     let action: () -> Void
@@ -451,37 +461,55 @@ private struct BarButton<Icon: View>: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 3) {
+            VStack(spacing: 2) {
                 icon
-                    .font(.system(size: rail?.symbolSize ?? 17, weight: .semibold))
+                    .font(.system(size: rail?.symbolSize ?? 21, weight: rail == nil ? .medium : .semibold))
                     .foregroundStyle(isHighlighted ? Palette.paper : Palette.ink)
-                    .frame(height: rail == nil ? 22 : nil)
+                    .frame(height: rail == nil ? 28 : nil)
                 if rail == nil {
                     Text(title)
-                        .font(.mono(9, .bold))
-                        .tracking(0.9)
-                        .textCase(.uppercase)
-                        .foregroundStyle(isHighlighted ? Palette.paper.opacity(0.85) : Palette.caption)
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundStyle(isHighlighted ? Palette.paper.opacity(0.9) : Palette.value)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                         .accessibilityHidden(true)
                 }
             }
-            .padding(.horizontal, rail == nil ? 7 : 0)
-            .frame(minWidth: rail == nil ? 60 : nil)
-            .frame(width: rail?.button, height: rail?.button ?? RadarControlBar.height - 10)
+            .padding(.horizontal, rail == nil ? 4 : 0)
+            .frame(maxWidth: rail == nil ? .infinity : nil)
+            .frame(width: rail?.button, height: rail?.button ?? RadarControlBar.height - 8)
             .background {
                 Capsule()
                     .fill(Palette.ink)
                     .shadow(color: Palette.ink.opacity(0.45), radius: 6)
+                    .padding(.vertical, rail == nil ? 2 : 0)
                     .opacity(isHighlighted ? 1 : 0)
             }
             .contentShape(Capsule())
             .opacity(isEnabled ? 1 : 0.4)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(BarLensStyle())
         .accessibilityShowsLargeContentViewer {
             icon
             Text(title)
         }
+    }
+}
+
+/// The tab bar's press: a soft lens swells behind the button while a finger is on it.
+private struct BarLensStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background {
+                Capsule()
+                    .fill(Palette.value.opacity(0.1))
+                    .scaleEffect(configuration.isPressed ? 1 : 0.7)
+                    .opacity(configuration.isPressed ? 1 : 0)
+            }
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 1.06 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
     }
 }
 
@@ -675,6 +703,30 @@ struct DemoTrafficTag: View {
             .accessibilityLabel("Demo traffic. These aircraft are simulated and aren't logged.")
             .accessibilityHint("Switch to live traffic")
     }
+}
+
+/// "BACKUP DATA · ADSB.LOL · NO ROUTES" while Flightradar24 is down (or open data is chosen).
+struct DataSourceTag: View {
+    let source: FeedSource
+    let isBackup: Bool
+    let action: () -> Void
+
+    var body: some View {
+        BottomTag(symbol: "antenna.radiowaves.left.and.right",
+                  text: [isBackup ? "Backup data" : "Open data", source.title, source.hasRoutes ? nil : "no routes"]
+                      .compactMap { $0 }.joined(separator: " · "),
+                  color: Palette.caption,
+                  action: action)
+            .accessibilityLabel(isBackup ? "Flightradar24 isn't answering, so traffic comes from \(source.title), without routes."
+                                         : "Traffic comes from \(source.title), without routes.")
+            .accessibilityHint("Opens settings")
+    }
+}
+
+/// Sky View needs a camera you can point and motion sensors: not there when the iPad app
+/// runs on a Mac (Designed for iPad), so its button, lift-to-look and Find in the Sky go.
+enum SkyViewSupport {
+    static let isAvailable = !ProcessInfo.processInfo.isiOSAppOnMac
 }
 
 /// A one-line note along the bottom of the radar, just above the bar.

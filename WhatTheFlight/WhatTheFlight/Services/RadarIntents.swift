@@ -27,7 +27,7 @@ struct WhatsOverheadIntent: AppIntent {
             return .result(dialog: "I couldn't reach Flightradar24 just now. Try again in a moment.", view: OverheadSnippet(flight: nil, count: 0))
         }
         guard let nearest = contacts.first else {
-            return .result(dialog: "Clear skies — nothing's flying within \(Int(store.radiusMiles)) miles of you.", view: OverheadSnippet(flight: nil, count: 0))
+            return .result(dialog: "Clear skies — nothing's flying within \(RadarFormat.spokenDistance(store.radiusMiles)) of you.", view: OverheadSnippet(flight: nil, count: 0))
         }
         return .result(dialog: IntentDialog(stringLiteral: Self.sentence(for: nearest)),
                        view: OverheadSnippet(flight: SnapshotFlight(nearest), count: contacts.count))
@@ -96,6 +96,15 @@ struct WhatTheFlightShortcuts: AppShortcutsProvider {
             "Show my \(.applicationName) logbook",
             "Open the logbook in \(.applicationName)",
         ], shortTitle: "Logbook", systemImageName: "book.closed")
+        AppShortcut(intent: SeenBeforeIntent(), phrases: [
+            "Have I seen this plane before in \(.applicationName)",
+            "Is that plane in my \(.applicationName) logbook",
+            "Have I seen that plane with \(.applicationName)",
+        ], shortTitle: "Seen It Before?", systemImageName: "book.and.wrench")
+        AppShortcut(intent: LogbookTodayIntent(), phrases: [
+            "How many planes have I seen today in \(.applicationName)",
+            "What have I spotted today in \(.applicationName)",
+        ], shortTitle: "Planes Today", systemImageName: "binoculars")
     }
 }
 
@@ -121,8 +130,8 @@ struct OverheadSnippet: View {
                             Text(route).font(.mono(14, .bold)).foregroundStyle(Palette.route)
                         }
                     }
-                    Text([f.typeName, "\(RadarFormat.miles(f.distanceMiles)) mi \(GeoMath.cardinal(f.bearing))",
-                          "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft"].compactMap { $0 }.joined(separator: " · "))
+                    Text([f.typeName, "\(RadarFormat.distanceText(f.distanceMiles)) \(GeoMath.cardinal(f.bearing))",
+                          "\(RadarFormat.altitudeText(f.altitudeFeet))"].compactMap { $0 }.joined(separator: " · "))
                         .font(.mono(12))
                         .foregroundStyle(Palette.value)
                     if count > 1 {

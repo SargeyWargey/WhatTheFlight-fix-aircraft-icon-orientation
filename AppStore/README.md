@@ -12,12 +12,12 @@ answers to Apple's questionnaires, a privacy policy and support site, and the sc
 | `Screenshots/Raw/` | Plain captures from the simulators (the studio's source material) |
 | `Screenshots/Final/` | Finished screenshots, ready to drag into App Store Connect |
 | `Header Art/` | Optional header and search-result artwork |
-| `Website/` | Privacy policy and support pages to publish on GitHub Pages |
+| [`../Website/`](../Website/) | The app's website, with the privacy policy and support pages (its own git repository, published on GitHub Pages). `AppStore/Website/` is an outdated copy |
 
 ## Checklist
 
 - [ ] Decide on the flight data source (below)
-- [ ] Put your support email into `Website/support.html` and `Website/privacy.html`
+- [ ] Put your support email into `Website/support.html`, `privacy.html` and `press.html`
 - [ ] Publish the website (guide step 3)
 - [ ] App Information, Pricing, App Privacy, Age Rating (guide step 4)
 - [ ] Deploy the CloudKit schema to Production (guide step 5)

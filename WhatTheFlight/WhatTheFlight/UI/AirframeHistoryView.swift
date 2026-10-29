@@ -262,7 +262,7 @@ struct AirframeHistoryView: View {
                     }
                 }
                 HStack(spacing: 8) {
-                    Text("\(s.closestText) closest · \(RadarFormat.wholeNumber(s.altitudeAtClosestFeet)) ft · \(RadarFormat.wholeNumber(s.speedKnots)) kts")
+                    Text("\(s.closestText) closest · \(RadarFormat.altitudeText(s.altitudeAtClosestFeet)) · \(RadarFormat.speedText(s.speedKnots))")
                     Label(s.inRangeText.lowercased(), systemImage: "clock")
                         .labelStyle(.titleAndIcon)
                         .accessibilityLabel("\(s.inRangeText) in range")
@@ -287,7 +287,7 @@ struct SpotPhotoGallery: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 18, pinnedViews: []) {
                 ForEach(months.keys.sorted(by: >), id: \.self) { month in
-                    LogbookHeader(title: LogbookGrouping.monthTitle(month)) {
+                    LogbookHeader(title: LocalizedStringKey(LogbookGrouping.monthTitle(month))) {
                         Text("\(months[month]!.count)").foregroundStyle(Palette.caption)
                     }
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 8)], spacing: 8) {

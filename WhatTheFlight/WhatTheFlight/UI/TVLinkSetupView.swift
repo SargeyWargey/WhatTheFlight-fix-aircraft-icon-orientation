@@ -258,7 +258,8 @@ struct TVLinkSetupView: View {
             longitude: coordinate.longitude,
             facingDegrees: facing,
             senderName: UIDevice.current.name,
-            sentAt: Date()
+            sentAt: Date(),
+            placeName: settings.locationMode == .custom ? settings.customPlaceName : nil
         )
         sending?.cancel()
         sending = Task {

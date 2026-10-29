@@ -19,6 +19,7 @@ struct TVFlightDetailView: View {
     @State private var photo: AircraftPhoto?
     @State private var showsLog = false
     @State private var showWhereabouts = false
+    @State private var showsWatchlist = false
     /// `-wtf.debugMapMode route` opens on the full route (screenshots).
     @State private var mapMode = DetailMap.Mode(rawValue: UserDefaults.standard.string(forKey: "wtf.debugMapMode") ?? "") ?? .nearby
 
@@ -132,6 +133,12 @@ struct TVFlightDetailView: View {
                     .font(.mono(28, .medium))
                     .foregroundStyle(Palette.caption)
             }
+            if let phase = contact.phase {
+                PhaseLine(phase: phase, scale: 2.2)
+            }
+            if model.settings.aircraftFacts {
+                AirframeFactsView(registration: f.registration, hex: f.hex, scale: 2.2, scales: false)
+            }
             // The photo takes whatever height is left, so the button row always fits.
             photoView
                 .frame(width: 700)
@@ -168,6 +175,20 @@ struct TVFlightDetailView: View {
                     .fixedSize()
             }
             .buttonStyle(TVPillButtonStyle(prominent: false))
+            let rules = WatchlistRule.suggestions(for: f, profile: contact.profile)
+            if !rules.isEmpty {
+                let settings = model.settings
+                pill(rules.contains(where: settings.watchlist.contains) ? "Watching" : "Alert Me") { showsWatchlist = true }
+                    .confirmationDialog("Alert me when one comes into range", isPresented: $showsWatchlist, titleVisibility: .visible) {
+                        ForEach(rules) { rule in
+                            let isOn = settings.watchlist.contains(rule)
+                            Button(isOn ? "Stop: \(rule.offerTitle(for: f))" : rule.offerTitle(for: f)) {
+                                if isOn { settings.removeFromWatchlist(rule) } else { settings.addToWatchlist(rule) }
+                            }
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    }
+            }
             if !model.contacts.contains(where: { $0.id == f.id }), f.canLocate {
                 pill("Where Is It Now?") { showWhereabouts = true }
             }
@@ -220,13 +241,13 @@ struct TVFlightDetailView: View {
     private func stats(_ contact: RadarContact) -> some View {
         let f = contact.flight
         let cpa = contact.isApproaching
-            ? "\(RadarFormat.miles(contact.closestApproach.distanceMiles)) mi in \(RadarFormat.countdown(contact.closestApproach.secondsFromNow))"
+            ? "\(RadarFormat.distanceText(contact.closestApproach.distanceMiles)) in \(RadarFormat.countdown(contact.closestApproach.secondsFromNow))"
             : "Moving away"
         let rows: [(String, String)] = [
-            ("Altitude", "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft"),
-            ("Speed", "\(RadarFormat.wholeNumber(f.groundSpeedKnots)) kts"),
-            ("Distance", "\(RadarFormat.miles(contact.distanceMiles)) mi \(GeoMath.cardinal(contact.bearing))"),
-            ("Vertical", f.verticalRateFPM == 0 ? "Level" : "\(f.verticalRateFPM > 0 ? "+" : "")\(RadarFormat.wholeNumber(f.verticalRateFPM)) fpm"),
+            ("Altitude", "\(RadarFormat.altitudeText(contact.altitudeFeet))"),
+            ("Speed", "\(RadarFormat.speedText(f.groundSpeedKnots))"),
+            ("Distance", "\(RadarFormat.distanceText(contact.distanceMiles)) \(GeoMath.cardinal(contact.bearing))"),
+            ("Vertical", RadarFormat.verticalRate(f.verticalRateFPM)),
             ("Track", "\(Int(f.track.rounded()))° \(GeoMath.cardinal(f.track))"),
             ("Closest pass", cpa),
             ("Registration", f.registration ?? "—"),
@@ -254,7 +275,8 @@ struct TVFlightDetailView: View {
 
 /// Every aircraft the radar can see, a search field for any aircraft in the world (tail
 /// number, flight number or callsign), and the pinned ones. Click a row to show it on the
-/// radar; the pin button beside it follows it wherever it goes.
+/// radar; pin it from its details to follow it wherever it goes. A pinned aircraft that isn't
+/// flying (no details) shows where it is now on a click and unpins on a hold.
 struct TVAircraftListView: View {
     let model: RadarModel
     let heading: Double
@@ -455,9 +477,12 @@ struct TVAircraftListView: View {
         }
     }
 
-    /// A pin that isn't flying: it comes back on the radar once it is.
+    /// A pin that isn't flying: it comes back on the radar once it is. Click for where it is
+    /// now; hold to unpin it (there are no details to unpin it from).
     private func unseenRow(_ pin: PinnedAircraft, status: String) -> some View {
-        HStack(spacing: 20) {
+        NavigationLink {
+            TVWhereaboutsView(title: pin.label, registration: pin.registration, callsign: pin.callsign, observer: model.observer)
+        } label: {
             HStack(spacing: 28) {
                 Image(systemName: "airplane")
                     .font(.system(size: 36))
@@ -465,48 +490,31 @@ struct TVAircraftListView: View {
                     .frame(width: 57)
                 VStack(alignment: .leading, spacing: 6) {
                     Text(pin.label).font(.mono(32, .bold))
-                    Text([pin.registration == pin.label ? nil : pin.registration, status].compactMap { $0 }.joined(separator: " · "))
+                    Text([pin.registration == pin.label ? nil : pin.registration, status, "Hold to unpin"].compactMap { $0 }.joined(separator: " · "))
                         .font(.mono(20))
-                        .foregroundStyle(Palette.caption)
+                        .lineLimit(1)
                 }
                 Spacer()
             }
-            .padding(.horizontal, 30)
-            .padding(.vertical, 22)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Palette.paperShade.opacity(0.25), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-            pinButton(isPinned: true) { withAnimation(.snappy) { model.unpin(pin) } }
+        }
+        .buttonStyle(TVRowButtonStyle())
+        .contextMenu {
+            Button(role: .destructive) {
+                withAnimation(.snappy) { model.unpin(pin) }
+            } label: {
+                Label("Unpin", systemImage: "pin.slash")
+            }
         }
     }
 
     private func row(_ contact: RadarContact, isRemote: Bool = false) -> some View {
-        let isPinned = model.isPinned(contact.id)
-        return HStack(spacing: 20) {
-            Button {
-                open(contact, isRemote: isRemote)
-            } label: {
-                AircraftRow(contact: contact, heading: heading, isFocusedAircraft: model.focus.focusedID == contact.id,
-                            isPinned: isPinned, showsRegistration: isRemote)
-            }
-            .buttonStyle(TVRowButtonStyle())
-            pinButton(isPinned: isPinned) {
-                withAnimation(.snappy) {
-                    if isPinned { model.unpin(contact.id) } else { model.pin(contact.flight) }
-                }
-            }
-        }
-    }
-
-    private func pinButton(isPinned: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: isPinned ? "pin.slash.fill" : "pin.fill")
-                .font(.system(size: 30, weight: .semibold))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+        Button {
+            open(contact, isRemote: isRemote)
+        } label: {
+            AircraftRow(contact: contact, heading: heading, isFocusedAircraft: model.focus.focusedID == contact.id,
+                        isPinned: model.isPinned(contact.id), showsRegistration: isRemote)
         }
         .buttonStyle(TVRowButtonStyle())
-        .frame(width: 130)
-        .accessibilityLabel(isPinned ? "Unpin" : "Pin")
     }
 
     /// Anything from the worldwide search is pinned as it's opened, so the radar keeps
@@ -560,10 +568,10 @@ struct TVAircraftListView: View {
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
                     // Yellow when pinned, like the radar edge's mile labels.
-                    Text("\(RadarFormat.wholeNumber(Int(contact.distanceMiles.rounded()))) mi")
+                    Text("\(RadarFormat.wholeDistance(contact.distanceMiles))")
                         .font(.mono(30, .bold))
                         .foregroundStyle(focused ? Color.white : isPinned ? Palette.pinned : Palette.value)
-                    Text(f.isOnGround ? "Ground" : "\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft")
+                    Text(f.isOnGround ? "Ground" : "\(RadarFormat.altitudeText(contact.altitudeFeet))")
                         .font(.mono(20))
                         .foregroundStyle(focused ? .white.opacity(0.8) : Palette.caption)
                 }

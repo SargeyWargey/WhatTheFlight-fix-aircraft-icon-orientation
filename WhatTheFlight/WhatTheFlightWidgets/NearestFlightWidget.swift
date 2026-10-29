@@ -32,6 +32,7 @@ struct NearestFlightProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<NearestFlightEntry>) -> Void) {
+        Units.reload()
         Catalogs.warmUp()
         Task {
             let entry = await entry()
@@ -88,7 +89,7 @@ struct NearestFlightView: View {
     @ViewBuilder
     private var inline: some View {
         if let f = nearest {
-            Text("\(Image(systemName: "airplane")) \(f.identifier) · \(RadarFormat.miles(f.distanceMiles)) mi \(GeoMath.cardinal(f.bearing))")
+            Text("\(Image(systemName: "airplane")) \(f.identifier) · \(RadarFormat.distanceText(f.distanceMiles)) \(GeoMath.cardinal(f.bearing))")
         } else {
             Text("\(Image(systemName: "sun.haze")) Clear skies")
         }
@@ -119,7 +120,7 @@ struct NearestFlightView: View {
                 Text(f.route ?? f.operatorName)
                     .font(.mono(12, .semibold))
                     .lineLimit(1)
-                Text("\(RadarFormat.miles(f.distanceMiles)) mi \(GeoMath.cardinal(f.bearing)) · \(RadarFormat.wholeNumber(f.altitudeFeet)) ft")
+                Text("\(RadarFormat.distanceText(f.distanceMiles)) \(GeoMath.cardinal(f.bearing)) · \(RadarFormat.altitudeText(f.altitudeFeet))")
                     .font(.mono(11))
                     .lineLimit(1)
             } else {
@@ -176,7 +177,7 @@ struct NearestFlightView: View {
                                         .lineLimit(1)
                                 }
                                 Spacer(minLength: 2)
-                                Text("\(RadarFormat.miles(f.distanceMiles)) mi")
+                                Text("\(RadarFormat.distanceText(f.distanceMiles))")
                                     .font(.mono(11, .bold))
                                     .foregroundStyle(Palette.value)
                             }
@@ -239,9 +240,9 @@ struct NearestFlightView: View {
                     .font(.system(size: 9, weight: .bold))
                     .foregroundStyle(Palette.signal)
                     .rotationEffect(.degrees(f.bearing))
-                Text("\(RadarFormat.miles(f.distanceMiles)) mi \(GeoMath.cardinal(f.bearing))")
+                Text("\(RadarFormat.distanceText(f.distanceMiles)) \(GeoMath.cardinal(f.bearing))")
                 Text("·")
-                Text("\(RadarFormat.wholeNumber(f.altitudeFeet)) ft")
+                Text("\(RadarFormat.altitudeText(f.altitudeFeet))")
             }
             .font(.mono(10, .semibold))
             .foregroundStyle(Palette.value)

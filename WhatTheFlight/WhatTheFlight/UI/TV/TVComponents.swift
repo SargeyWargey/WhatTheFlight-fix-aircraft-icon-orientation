@@ -195,9 +195,9 @@ extension EnvironmentValues {
 
 /// Title on the left, current value on the right. Click toggles / cycles.
 struct TVValueRow: View {
-    let title: String
-    var subtitle: String? = nil
-    let value: String
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey? = nil
+    let value: LocalizedStringKey
     var symbol: String? = nil
     /// The symbol and value at rest.
     var tint: Color = Palette.ink
@@ -211,9 +211,9 @@ struct TVValueRow: View {
     }
 
     private struct RowContent: View {
-        let title: String
-        let subtitle: String?
-        let value: String
+        let title: LocalizedStringKey
+        let subtitle: LocalizedStringKey?
+        let value: LocalizedStringKey
         let symbol: String?
         let tint: Color
         @Environment(\.tvRowFocused) private var focused
@@ -245,8 +245,8 @@ struct TVValueRow: View {
 
 /// On / Off row.
 struct TVToggleRow: View {
-    let title: String
-    var subtitle: String? = nil
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey? = nil
     var symbol: String? = nil
     @Binding var isOn: Bool
 
@@ -259,8 +259,8 @@ struct TVToggleRow: View {
 
 /// A titled row of choices. Left/right moves between chips, click picks.
 struct TVChoiceRow<Value: Hashable>: View {
-    let title: String
-    var subtitle: String? = nil
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey? = nil
     let options: [Value]
     let selection: Value
     let label: (Value) -> String
@@ -297,7 +297,7 @@ struct TVChoiceRow<Value: Hashable>: View {
 }
 
 struct TVSectionHeader: View {
-    let title: String
+    let title: LocalizedStringKey
     var body: some View {
         Text(title)
             .font(.mono(20, .bold))

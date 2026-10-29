@@ -31,8 +31,13 @@ enum PollingPolicy {
     /// `contacts` are in range, `outside` the rest of the query box (and far-away pins).
     /// `fastest` (Sky View, the Watch's Identify and Find) puts labels on real aircraft, so
     /// it polls at the floor whatever the distance, Low Power Mode or not.
+    /// Apple Watch's battery saver: twice the interval, never under 20 s. The radar still
+    /// dead-reckons every second in between.
+    static let saverStretch: Double = 2
+    static let saverFloor: TimeInterval = 20
+
     static func interval(contacts: [RadarContact], outside: [RadarContact], floor: TimeInterval = fastestSeconds,
-                         fastest: Bool = false, lowPower: Bool = false) -> TimeInterval {
+                         fastest: Bool = false, lowPower: Bool = false, saver: Bool = false) -> TimeInterval {
         if fastest { return floor }
         var interval: TimeInterval
         if let nearest = (contacts + outside).map(closestSoon).min() {
@@ -43,6 +48,7 @@ enum PollingPolicy {
             interval = emptySkySeconds
         }
         if lowPower { interval = max(lowPowerFloor, interval * lowPowerStretch) }
+        if saver { interval = max(saverFloor, interval * saverStretch) }
         return max(floor, interval)
     }
 

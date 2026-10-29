@@ -1,0 +1,261 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@" : {
+
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ %@ in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ in %3$@"
+          }
+        }
+      }
+    },
+    "%@ %@ overhead now" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ overhead now"
+          }
+        }
+      }
+    },
+    "%@ %@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "%@ %@ · %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ · %3$@ %4$@"
+          }
+        }
+      }
+    },
+    "%@ Clear skies" : {
+
+    },
+    "%@ Nothing passing over" : {
+
+    },
+    "%@ passes over %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ passes over %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%lld" : {
+
+    },
+    "%lld aircraft in range" : {
+
+    },
+    "%lld in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld in %2$@"
+          }
+        }
+      }
+    },
+    "%lld in range" : {
+
+    },
+    "ARRIVES IN" : {
+
+    },
+    "Alerts with your phone locked" : {
+
+    },
+    "Also up there" : {
+
+    },
+    "Automatic" : {
+
+    },
+    "Clear skies" : {
+
+    },
+    "Clear skies — still watching" : {
+
+    },
+    "Closest pass in" : {
+
+    },
+    "Counts down to the next aircraft passing over you." : {
+
+    },
+    "Demo traffic" : {
+
+    },
+    "Ends the Sky Watch Live Activity and its alerts." : {
+
+    },
+    "Ends the flight's Live Activity." : {
+
+    },
+    "Flightradar24" : {
+
+    },
+    "Flightradar24 only" : {
+
+    },
+    "Flightradar24, switching to adsb.lol while it's down" : {
+
+    },
+    "Imperial" : {
+
+    },
+    "Kilometers, meters and km/h" : {
+
+    },
+    "LANDED" : {
+
+    },
+    "Landed" : {
+
+    },
+    "Look %@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Look %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Metric" : {
+
+    },
+    "Miles, feet and knots" : {
+
+    },
+    "Moving away" : {
+
+    },
+    "Next Overhead" : {
+
+    },
+    "Next overhead" : {
+
+    },
+    "Nothing airborne nearby." : {
+
+    },
+    "Nothing in range" : {
+
+    },
+    "Nothing passing over" : {
+
+    },
+    "Nothing passing over in the next 10 min" : {
+
+    },
+    "Now" : {
+
+    },
+    "Open What The Flight? once to start." : {
+
+    },
+    "Open What The Flight? to start" : {
+
+    },
+    "Open data" : {
+
+    },
+    "Open the app to start" : {
+
+    },
+    "Over you in %@" : {
+
+    },
+    "Overhead" : {
+
+    },
+    "Overhead now · look up" : {
+
+    },
+    "Passing now" : {
+
+    },
+    "Sky Watch" : {
+
+    },
+    "Sky Watch · %@" : {
+
+    },
+    "Start Sky Watch" : {
+
+    },
+    "Stop" : {
+
+    },
+    "Stop Following" : {
+
+    },
+    "Stop Sky Watch" : {
+
+    },
+    "The nearest aircraft to you, and what else is in the sky." : {
+
+    },
+    "Where are you?" : {
+
+    },
+    "adsb.lol" : {
+
+    },
+    "adsb.lol only: open ADS-B data, without routes" : {
+
+    },
+    "in the next ten minutes" : {
+
+    },
+    "·" : {
+
+    },
+    "—" : {
+
+    }
+  },
+  "version" : "1.0"
+}

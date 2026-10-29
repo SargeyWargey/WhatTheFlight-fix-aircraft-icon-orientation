@@ -35,8 +35,8 @@ struct SkyWatchLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.trailing) {
                     if let f {
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text("\(RadarFormat.miles(f.distanceMiles)) mi").font(.mono(16, .heavy))
-                            Text("\(GeoMath.cardinal(f.bearing)) · \(RadarFormat.wholeNumber(f.altitudeFeet)) ft")
+                            Text("\(RadarFormat.distanceText(f.distanceMiles))").font(.mono(16, .heavy))
+                            Text("\(GeoMath.cardinal(f.bearing)) · \(RadarFormat.altitudeText(f.altitudeFeet))")
                                 .font(.mono(11))
                                 .foregroundStyle(.secondary)
                         }
@@ -57,7 +57,7 @@ struct SkyWatchLiveActivity: Widget {
                 Image(systemName: f?.isHelicopter == true ? "fan.fill" : "airplane")
                     .foregroundStyle(Palette.signal)
             } compactTrailing: {
-                Text(f.map { "\(RadarFormat.miles($0.distanceMiles)) mi" } ?? "\(context.state.inRangeCount)")
+                Text(f.map { "\(RadarFormat.distanceText($0.distanceMiles))" } ?? "\(context.state.inRangeCount)")
                     .font(.mono(13, .bold))
             } minimal: {
                 Image(systemName: "airplane").foregroundStyle(Palette.signal)
@@ -125,11 +125,11 @@ private struct SkyWatchSmallView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                     Spacer(minLength: 2)
-                    Text("\(RadarFormat.miles(f.distanceMiles)) mi \(GeoMath.cardinal(f.bearing))")
+                    Text("\(RadarFormat.distanceText(f.distanceMiles)) \(GeoMath.cardinal(f.bearing))")
                         .font(.mono(12, .bold))
                         .foregroundStyle(Palette.value)
                 }
-                Text([f.route, "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft"].compactMap { $0 }.joined(separator: " · "))
+                Text([f.route, "\(RadarFormat.altitudeText(f.altitudeFeet))"].compactMap { $0 }.joined(separator: " · "))
                     .font(.mono(11, .semibold))
                     .foregroundStyle(Palette.route)
                     .lineLimit(1)
@@ -167,7 +167,7 @@ private struct SkyWatchLockScreenView: View {
                     .foregroundStyle(Palette.caption)
                     .lineLimit(1)
                 Spacer()
-                Text("\(state.inRangeCount) in \(context.attributes.radiusMiles) mi")
+                Text("\(state.inRangeCount) in \(RadarFormat.radius(Double(context.attributes.radiusMiles)))")
                     .font(.mono(11, .semibold))
                     .foregroundStyle(Palette.caption)
             }
@@ -191,10 +191,10 @@ private struct SkyWatchLockScreenView: View {
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 1) {
-                        Text("\(RadarFormat.miles(f.distanceMiles)) mi \(GeoMath.cardinal(f.bearing))")
+                        Text("\(RadarFormat.distanceText(f.distanceMiles)) \(GeoMath.cardinal(f.bearing))")
                             .font(.mono(17, .heavy))
                             .foregroundStyle(Palette.value)
-                        Text("\(RadarFormat.wholeNumber(f.altitudeFeet)) ft")
+                        Text("\(RadarFormat.altitudeText(f.altitudeFeet))")
                             .font(.mono(12))
                             .foregroundStyle(Palette.caption)
                     }

@@ -33,23 +33,23 @@ You've already created the app (you're on its version page). Confirm on **App In
 ## Step 3 · Publish the privacy policy and support page
 
 Apple requires a public **Privacy Policy URL** and **Support URL** before you can submit. Both
-pages are written and ready in [`Website/`](Website/). The simplest free host is GitHub Pages.
+are part of the app's website, in the [`Website/`](../Website/) folder at the top of the
+repository. That folder is its own git repository, already published by GitHub Pages at
+https://sargeywargey.github.io/whattheflight/. Its README has the details. (`AppStore/Website/`
+is an older copy from before the site moved there; don't upload it.)
 
-1. Open `Website/support.html` and `Website/privacy.html` and replace `[your support email]`
-   with an address you're happy to publish. A free alias works, or an iCloud+ Hide My Email
-   address. Don't use a work address.
-2. On github.com, click **+ → New repository**. Name it `whattheflight`, set it to **Public**,
-   and click **Create repository**.
-3. Click **uploading an existing file**, drag in the four files from `AppStore/Website/`
-   (`index.html`, `support.html`, `privacy.html`, `icon.png`) and click **Commit changes**.
-4. In the new repo, go to **Settings → Pages**. Under **Build and deployment**, choose
-   **Deploy from a branch**, branch **main**, folder **/ (root)**, then **Save**.
-5. Wait a minute or two, then open these and check they load:
+1. Replace `[your support email]` in `Website/support.html`, `Website/privacy.html` and
+   `Website/press.html` with an address you're happy to publish. A free alias works, or an
+   iCloud+ Hide My Email address. Don't use a work address.
+2. From the `Website` folder, run `./publish.sh "Support email"`. It commits and pushes, and the
+   site updates a minute or so later.
+3. Open these and check they load:
    - `https://sargeywargey.github.io/whattheflight/`
    - `https://sargeywargey.github.io/whattheflight/support.html`
    - `https://sargeywargey.github.io/whattheflight/privacy.html`
 
-(If you'd rather do it from the terminal, ask and I'll run it with `gh`.)
+The rest of the website's launch checklist (the App Store badge, letting search engines in) is
+under "Before publishing" in `Website/README.md`.
 
 ## Step 4 · Fill in the app-wide pages
 

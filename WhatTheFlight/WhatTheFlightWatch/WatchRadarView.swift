@@ -29,7 +29,10 @@ struct WatchRadarView: View {
     /// The long press that switched aim styles also ends as a tap; that tap is ignored.
     @State private var ignoreNextPointerTap = false
     @Environment(\.isLuminanceReduced) private var isLuminanceReduced
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.batterySaver) private var batterySaver
+    /// Reduce Motion, or the Watch's battery saver: no springs, glows or sweep.
+    private var reduceMotion: Bool { systemReduceMotion || batterySaver }
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     /// "Up" on screen, in compass degrees.
@@ -347,17 +350,26 @@ struct WatchFlightHero: View {
                     .minimumScaleFactor(0.7)
             }
             // One Text, so the whole line shrinks together on small screens.
-            (Text("\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft") + trend
-                + Text(" · \(RadarFormat.miles(contact.distanceMiles)) mi"))
+            (Text("\(RadarFormat.altitudeText(contact.altitudeFeet))") + trend
+                + Text(" · \(RadarFormat.distanceText(contact.distanceMiles))"))
                 .font(.mono(isCompact ? 10 : 11, .semibold))
                 .foregroundStyle(Palette.value)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 .padding(.top, 2)
             if !isCompact {
-                Text("\(RadarFormat.wholeNumber(flight.groundSpeedKnots)) kts · \(GeoMath.cardinal(contact.bearing))")
-                    .font(.mono(10))
-                    .foregroundStyle(Palette.caption)
+                // With a route, what it's doing ("Approach ATL") says more than its speed.
+                if flight.hasRoute, let phase = contact.phase {
+                    Text(phase.short)
+                        .font(.mono(10, .semibold))
+                        .foregroundStyle(Palette.route)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                } else {
+                    Text("\(RadarFormat.speedText(flight.groundSpeedKnots)) · \(GeoMath.cardinal(contact.bearing))")
+                        .font(.mono(10))
+                        .foregroundStyle(Palette.caption)
+                }
             }
             if let staleFor {
                 WatchStaleChip(since: staleFor, retry: onRetry)
@@ -397,8 +409,8 @@ struct WatchFlightHero: View {
         if let from = flight.origin?.city ?? flight.originIATA, let to = flight.destination?.city ?? flight.destinationIATA {
             parts.append("\(from) to \(to)")
         }
-        parts.append("\(RadarFormat.miles(contact.distanceMiles)) miles \(GeoMath.cardinal(contact.bearing))")
-        parts.append("\(RadarFormat.wholeNumber(contact.altitudeFeet)) feet")
+        parts.append("\(RadarFormat.spokenDistance(contact.distanceMiles)) \(GeoMath.cardinal(contact.bearing))")
+        parts.append("\(RadarFormat.spokenAltitude(contact.altitudeFeet))")
         if let staleFor {
             parts.append("no signal for \(RadarFormat.countdown(staleFor))")
         } else if contact.isApproaching, contact.closestApproach.secondsFromNow < 3600 {
@@ -412,7 +424,10 @@ struct WatchFlightHero: View {
 struct WatchApproachChip: View {
     let contact: RadarContact
     @State private var glow = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.batterySaver) private var batterySaver
+    /// Reduce Motion, or the Watch's battery saver: no springs, glows or sweep.
+    private var reduceMotion: Bool { systemReduceMotion || batterySaver }
     @Environment(\.isLuminanceReduced) private var isLuminanceReduced
 
     var body: some View {
@@ -430,7 +445,7 @@ struct WatchApproachChip: View {
             } else if contact.isApproaching, contact.closestApproach.secondsFromNow < 3600 {
                 HStack(spacing: 3) {
                     Image(systemName: "scope").font(.system(size: 8, weight: .bold))
-                    Text("\(RadarFormat.countdown(contact.closestApproach.secondsFromNow)) · \(RadarFormat.miles(contact.closestApproach.distanceMiles)) mi")
+                    Text("\(RadarFormat.countdown(contact.closestApproach.secondsFromNow)) · \(RadarFormat.distanceText(contact.closestApproach.distanceMiles))")
                         .font(.mono(10, .semibold))
                         .monospacedDigit()
                 }
@@ -492,7 +507,10 @@ struct WatchPerimeterLayer: View {
     /// VoiceOver's way into the list: the icons themselves aren't separate elements.
     let onShowList: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.batterySaver) private var batterySaver
+    /// Reduce Motion, or the Watch's battery saver: no springs, glows or sweep.
+    private var reduceMotion: Bool { systemReduceMotion || batterySaver }
     @Environment(\.favoriteAircraft) private var favorites
 
     var body: some View {
@@ -589,7 +607,7 @@ struct WatchCenterState: View {
             return denied ? "Turn on Location for What The Flight? in the Watch app on iPhone." : "Allow location to see what's overhead."
         case .noPhoneSpot: return "Open What The Flight? on your iPhone once to share its spot."
         case .scanning: return "Listening for aircraft"
-        case .clearSkies(let radius): return "Nothing airborne within \(Int(radius)) mi."
+        case .clearSkies(let radius): return "Nothing airborne within \(RadarFormat.radius(radius))."
         case .error(let text): return text
         }
     }
@@ -602,4 +620,9 @@ struct WatchCenterState: View {
         default: return nil
         }
     }
+}
+
+extension EnvironmentValues {
+    /// Apple Watch's battery saver is on (`WatchSettings.batterySaver`).
+    @Entry var batterySaver = false
 }

@@ -41,6 +41,15 @@ final class AlertSpeaker: NSObject, AVSpeechSynthesizerDelegate {
             ?? AVSpeechSynthesisVoice(language: language)
     }()
 
+    #if os(iOS)
+    /// Headphones, AirPods or the car are connected: somewhere an alert can be read out
+    /// without the whole room hearing it.
+    static var hasPrivateRoute: Bool {
+        let personal: Set<AVAudioSession.Port> = [.headphones, .bluetoothA2DP, .bluetoothLE, .bluetoothHFP, .carAudio]
+        return AVAudioSession.sharedInstance().currentRoute.outputs.contains { personal.contains($0.portType) }
+    }
+    #endif
+
     func speak(_ text: String, about flightID: String? = nil) {
         // A burst of alerts (say, on first load) shouldn't turn into a minute of talking.
         guard pending < 2 else { return }

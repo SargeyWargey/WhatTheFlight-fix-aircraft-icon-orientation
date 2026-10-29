@@ -230,9 +230,18 @@ struct TVRadarScreen: View {
                             .transition(.opacity.combined(with: .scale(scale: 0.96)))
                     }
                 } else {
-                    StatusBadge(model: model)
-                        .scaleEffect(1.6)
-                        .position(layout.statusPoint)
+                    VStack(spacing: 8) {
+                        StatusBadge(model: model)
+                            .scaleEffect(1.6)
+                            .frame(height: 52)
+                        if model.source == .adsbLol, !model.isDemo {
+                            Text("via \(model.source.title)")
+                                .font(.mono(18, .bold))
+                                .foregroundStyle(Palette.caption)
+                                .paperHalo()
+                        }
+                    }
+                    .position(layout.statusPoint)
                 }
 
                 NoticeBanner(model: model)
@@ -247,6 +256,11 @@ struct TVRadarScreen: View {
                 RadarBackdrop(showTopography: settings.showTopography, showSweep: settings.radarSweep, isActive: scenePhase == .active,
                               topographyMotion: settings.topographyMotion)
                     .ignoresSafeArea()
+                if settings.weatherFog, let fog = model.weatherFog, let observer = model.observer {
+                    RadarFogLayer(fog: fog, observer: observer, radiusMiles: settings.radiusMiles, heading: heading,
+                                  isActive: scenePhase == .active)
+                        .ignoresSafeArea()
+                }
             }
         }
     }
@@ -395,7 +409,8 @@ struct TVRadarScreen: View {
     /// "Atlanta, GA · 20 mi": the map's range, which can differ from the radar's.
     private var mapCaption: String? {
         let place = settings.locationMode == .custom ? settings.customPlaceName : model.logPlaceName
-        return [place, "\(Int(settings.effectiveMapRadius)) mi"].compactMap { $0 }.joined(separator: " · ")
+        let via = model.source == .adsbLol && !model.isDemo ? "via \(model.source.title)" : nil
+        return [place, RadarFormat.radius(settings.effectiveMapRadius, in: settings.units), via].compactMap { $0 }.joined(separator: " · ")
     }
 
     // MARK: Map panel
@@ -410,7 +425,7 @@ struct TVRadarScreen: View {
             HStack(alignment: .top, spacing: 40) {
                 panelColumn("Range") {
                     ForEach(RadarSettings.mapRadiusChoices, id: \.self) { miles in
-                        panelChip(miles.map { "\(Int($0)) mi" } ?? "Same as radar",
+                        panelChip(miles.map { RadarFormat.radius($0, in: settings.units) } ?? "Same as radar",
                                   isSelected: settings.mapRadiusMiles == miles, focus: .mapRange(miles)) {
                             settings.mapRadiusMiles = miles
                         }

@@ -494,8 +494,8 @@ struct TVSightingDetailView: View {
                     fact("Seen", s.firstSeen.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
                     fact("In range for", s.inRangeText)
                     fact("Closest pass", s.closestText)
-                    fact("Altitude then", "\(RadarFormat.wholeNumber(s.altitudeAtClosestFeet)) ft")
-                    fact("Speed then", "\(RadarFormat.wholeNumber(s.speedKnots)) kts")
+                    fact("Altitude then", "\(RadarFormat.altitudeText(s.altitudeAtClosestFeet))")
+                    fact("Speed then", "\(RadarFormat.speedText(s.speedKnots))")
                     fact("Heading", s.trackAtClosest.map { "\(Int($0.rounded()) % 360)° \(GeoMath.cardinal($0))" } ?? "—")
                     fact("Registration", s.registration ?? "—")
                     fact("Callsign", s.callsign ?? "—")
@@ -714,7 +714,7 @@ private struct TVVisitRow: View {
                 }
                 .lineLimit(1)
                 HStack(spacing: 18) {
-                    Text("\(RadarFormat.wholeNumber(s.altitudeAtClosestFeet)) ft · \(RadarFormat.wholeNumber(s.speedKnots)) kts")
+                    Text("\(RadarFormat.altitudeText(s.altitudeAtClosestFeet)) · \(RadarFormat.speedText(s.speedKnots))")
                     Label(s.inRangeText.lowercased(), systemImage: "clock")
                         .labelStyle(TVLabelStyle())
                         .accessibilityLabel("\(s.inRangeText) in range")

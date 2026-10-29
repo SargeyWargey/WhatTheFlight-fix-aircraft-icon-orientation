@@ -55,7 +55,7 @@ struct WatchTourView: View {
 
     private var welcome: some View {
         TourCard(title: "Your wrist radar",
-                 text: "The same radar as your iPhone: icons on the edge point at real aircraft, the number is miles, the nearest takes the center. Turn the Crown for the rest.") {
+                 text: "The same radar as your iPhone: icons on the edge point at real aircraft, the number is how far away it is, the nearest takes the center. Turn the Crown for the rest.") {
             MiniWatchRadar()
         }
     }
@@ -215,7 +215,7 @@ private struct MiniWatchRadar: View {
                         .foregroundStyle(focused ? Palette.signal : Palette.blip)
                         .rotationEffect(.degrees(blip.track))
                         .position(edgePoint(blip.bearing, size: size, inset: 10))
-                    Text("\(blip.miles)")
+                    Text(RadarFormat.distance(Double(blip.miles)))
                         .font(.mono(8, .bold))
                         .foregroundStyle(focused ? Palette.signal : Palette.blip)
                         .position(edgePoint(blip.bearing, size: size, inset: 23))

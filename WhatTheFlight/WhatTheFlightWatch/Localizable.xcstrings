@@ -1,0 +1,755 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    " · %@" : {
+
+    },
+    " %@" : {
+
+    },
+    "--:--" : {
+
+    },
+    "\"Delta 1199, Atlanta to Chicago\"" : {
+
+    },
+    "%@" : {
+
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ %@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "%@ %@ %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ %3$@ %4$@"
+          }
+        }
+      }
+    },
+    "%@ %@ in" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ in"
+          }
+        }
+      }
+    },
+    "%@ %@ in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ in %3$@"
+          }
+        }
+      }
+    },
+    "%@ %@ overhead now" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ overhead now"
+          }
+        }
+      }
+    },
+    "%@ %lld aircraft within %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$lld aircraft within %3$@"
+          }
+        }
+      }
+    },
+    "%@ Identify a plane" : {
+
+    },
+    "%@ in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ in %2$@"
+          }
+        }
+      }
+    },
+    "%@ in all" : {
+
+    },
+    "%@ mi flown" : {
+
+    },
+    "%@ OVERHEAD" : {
+
+    },
+    "%@ overhead now" : {
+
+    },
+    "%@ to %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ to %2$@"
+          }
+        }
+      }
+    },
+    "%@ to go" : {
+
+    },
+    "%@ today" : {
+
+    },
+    "%@, %@ %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@ %3$@, %4$@"
+          }
+        }
+      }
+    },
+    "%@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$@"
+          }
+        }
+      }
+    },
+    "%@′" : {
+
+    },
+    "%lld" : {
+
+    },
+    "%lld in range" : {
+
+    },
+    "%lld MI" : {
+
+    },
+    "%lld more aircraft. Use the list for details." : {
+
+    },
+    "%lld more nearby" : {
+
+    },
+    "© %@ · Planespotters.net" : {
+
+    },
+    "+%lld just outside your %@ radius" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "+%1$lld just outside your %2$@ radius"
+          }
+        }
+      }
+    },
+    "+%lld more in range" : {
+
+    },
+    "0.5×" : {
+
+    },
+    "0°" : {
+
+    },
+    "1×" : {
+
+    },
+    "2×" : {
+
+    },
+    "4 MI" : {
+
+    },
+    "10 mi is about what you can see from the ground. Look further on your iPhone." : {
+
+    },
+    "90°" : {
+
+    },
+    "A red arrow on the screen's edge shows which way is aiming." : {
+
+    },
+    "A survey map, every fifth line heavier" : {
+
+    },
+    "adsb.lol" : {
+
+    },
+    "adsb.lol only: open ADS-B data, without routes" : {
+
+    },
+    "Ahead" : {
+
+    },
+    "Aim at a plane" : {
+
+    },
+    "Aim with" : {
+
+    },
+    "Aircraft" : {
+
+    },
+    "Aircraft photos" : {
+
+    },
+    "Aircraft the Watch sees go in the same logbook as your iPhone's, through iCloud." : {
+
+    },
+    "Aircraft type" : {
+
+    },
+    "Airline" : {
+
+    },
+    "Airlines" : {
+
+    },
+    "Airports" : {
+
+    },
+    "Also here: %@ · turn crown" : {
+
+    },
+    "Apple TV" : {
+
+    },
+    "Apple Watch" : {
+
+    },
+    "ATL → ORD" : {
+
+    },
+    "ATL → ORD · A321neo" : {
+
+    },
+    "Automatic" : {
+
+    },
+    "B748 or Boeing 747" : {
+
+    },
+    "Back to radar" : {
+
+    },
+    "Badge unlocked" : {
+
+    },
+    "Battery saver" : {
+
+    },
+    "Big gentle hills, one line weight" : {
+
+    },
+    "Callsign" : {
+
+    },
+    "Change it any time: hold the pointer button." : {
+
+    },
+    "Clear skies — nothing's flying within %@ of you." : {
+
+    },
+    "Close" : {
+
+    },
+    "Closest in" : {
+
+    },
+    "Collections" : {
+
+    },
+    "Countries" : {
+
+    },
+    "Custom Spot" : {
+
+    },
+    "Demo traffic" : {
+
+    },
+    "Display" : {
+
+    },
+    "DL1199" : {
+
+    },
+    "Dropped off radar" : {
+
+    },
+    "East" : {
+
+    },
+    "East-northeast" : {
+
+    },
+    "East-southeast" : {
+
+    },
+    "Favorites & pins" : {
+
+    },
+    "Find in the Sky" : {
+
+    },
+    "Flight data: Flightradar24 (unofficial). Airlines: OpenFlights (ODbL). Airports: OurAirports. Photos: Planespotters.net." : {
+
+    },
+    "Flightradar24" : {
+
+    },
+    "Flightradar24 only" : {
+
+    },
+    "Flightradar24, switching to adsb.lol while it's down" : {
+
+    },
+    "Haptics" : {
+
+    },
+    "Helicopters" : {
+
+    },
+    "Higher" : {
+
+    },
+    "Highlands" : {
+
+    },
+    "Hold to switch to %@" : {
+
+    },
+    "Hybrid" : {
+
+    },
+    "I couldn't reach Flightradar24 just now. Try again in a moment." : {
+
+    },
+    "Identify" : {
+
+    },
+    "Identify & Find" : {
+
+    },
+    "Identify a plane" : {
+
+    },
+    "Identify a Plane" : {
+
+    },
+    "Identify reads out the aircraft it locks on to. Pointing arm-out, watchOS treats your wrist as down: the screen dims, but the call-out still plays and the lock taps your wrist. To keep the app up longer, set Settings → General → Return to Clock → What The Flight? to After 1 hour." : {
+
+    },
+    "Identify: %@ at a plane" : {
+
+    },
+    "If Point misbehaves" : {
+
+    },
+    "Imperial" : {
+
+    },
+    "IN RANGE" : {
+
+    },
+    "iPad" : {
+
+    },
+    "iPhone" : {
+
+    },
+    "Keep a logbook" : {
+
+    },
+    "Keeps watching while your iPhone is locked. Overhead alerts tap your wrist." : {
+
+    },
+    "Kilometers, meters and km/h" : {
+
+    },
+    "Level %lld" : {
+
+    },
+    "Logbook" : {
+
+    },
+    "Look %@" : {
+
+    },
+    "Look up · %@" : {
+
+    },
+    "Mac" : {
+
+    },
+    "Map" : {
+
+    },
+    "Metric" : {
+
+    },
+    "MI" : {
+
+    },
+    "Miles, feet and knots" : {
+
+    },
+    "Milestones" : {
+
+    },
+    "Military" : {
+
+    },
+    "Moments" : {
+
+    },
+    "Moving away" : {
+
+    },
+    "My Location" : {
+
+    },
+    "N" : {
+
+    },
+    "N685DA" : {
+
+    },
+    "Nearby" : {
+
+    },
+    "Nearby aircraft" : {
+
+    },
+    "Nearest" : {
+
+    },
+    "Nearest aircraft" : {
+
+    },
+    "New types" : {
+
+    },
+    "Next aircraft" : {
+
+    },
+    "NO SIGNAL · %@" : {
+
+    },
+    "No signal for %@" : {
+
+    },
+    "North" : {
+
+    },
+    "North up" : {
+
+    },
+    "North-northeast" : {
+
+    },
+    "North-northwest" : {
+
+    },
+    "Northeast" : {
+
+    },
+    "Northwest" : {
+
+    },
+    "Not while watching your iPhone's spot: the logbook is what you saw yourself." : {
+
+    },
+    "Notable" : {
+
+    },
+    "Notable aircraft" : {
+
+    },
+    "Nothing within %@ right now." : {
+
+    },
+    "NOW" : {
+
+    },
+    "Off" : {
+
+    },
+    "On it" : {
+
+    },
+    "Open data" : {
+
+    },
+    "Open on iPhone from the Handoff icon in its app switcher." : {
+
+    },
+    "Open What The Flight? on your Watch once so I know where you are." : {
+
+    },
+    "Or swipe up from the radar." : {
+
+    },
+    "Overhead" : {
+
+    },
+    "OVERHEAD" : {
+
+    },
+    "Photographed" : {
+
+    },
+    "Photos on cellular" : {
+
+    },
+    "Pick your style" : {
+
+    },
+    "Pin to Center" : {
+
+    },
+    "Plain paper" : {
+
+    },
+    "Point at a plane" : {
+
+    },
+    "Point at an aircraft you can see and the Watch tells you what it is." : {
+
+    },
+    "Pointer button" : {
+
+    },
+    "Previous aircraft" : {
+
+    },
+    "QTR or Qatar Airways" : {
+
+    },
+    "Radar" : {
+
+    },
+    "Radar sweep" : {
+
+    },
+    "Radius" : {
+
+    },
+    "Rare Birds" : {
+
+    },
+    "RCH" : {
+
+    },
+    "Read aloud" : {
+
+    },
+    "Relief" : {
+
+    },
+    "Remaster" : {
+
+    },
+    "Retries the feed" : {
+
+    },
+    "Reverse arm direction" : {
+
+    },
+    "Ridges and winding valleys, the most detail" : {
+
+    },
+    "Routes" : {
+
+    },
+    "Satellite" : {
+
+    },
+    "Settings" : {
+
+    },
+    "Show nearby list" : {
+
+    },
+    "Shows details" : {
+
+    },
+    "Shows details. Turn the crown for other aircraft." : {
+
+    },
+    "Shows the nearby list" : {
+
+    },
+    "Shows this aircraft in the center" : {
+
+    },
+    "Skip" : {
+
+    },
+    "Skip the tour" : {
+
+    },
+    "Sky View" : {
+
+    },
+    "South" : {
+
+    },
+    "South-southeast" : {
+
+    },
+    "South-southwest" : {
+
+    },
+    "Southeast" : {
+
+    },
+    "Southwest" : {
+
+    },
+    "Split" : {
+
+    },
+    "Squawk %@" : {
+
+    },
+    "Standard" : {
+
+    },
+    "Start Sky Watch on iPhone" : {
+
+    },
+    "Start Watching" : {
+
+    },
+    "Survey" : {
+
+    },
+    "Survey lines over faint hill shading" : {
+
+    },
+    "Switch to %@" : {
+
+    },
+    "Tail number" : {
+
+    },
+    "Take the tour" : {
+
+    },
+    "Tells you about the aircraft nearest to you right now." : {
+
+    },
+    "This aircraft is no longer in the feed." : {
+
+    },
+    "Try Identify" : {
+
+    },
+    "Turn right" : {
+
+    },
+    "Turn screen around" : {
+
+    },
+    "Turn screen around if the text reads upside down. Reverse arm direction only if Find sends you the opposite way to the aircraft." : {
+
+    },
+    "Types" : {
+
+    },
+    "Unpin" : {
+
+    },
+    "Updates less often, without the sweep or animations. The radar still moves between updates, and Identify and Find work as usual." : {
+
+    },
+    "Watch from" : {
+
+    },
+    "Watchlist" : {
+
+    },
+    "West" : {
+
+    },
+    "West-northwest" : {
+
+    },
+    "West-southwest" : {
+
+    },
+    "What's That Plane?" : {
+
+    },
+    "While the app is open. For alerts with your wrist down, start Sky Watch on iPhone. The watchlist comes from your iPhone's Alerts settings." : {
+
+    },
+    "Within" : {
+
+    },
+    "Wrist alerts" : {
+
+    }
+  },
+  "version" : "1.0"
+}

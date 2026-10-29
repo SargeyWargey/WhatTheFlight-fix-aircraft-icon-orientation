@@ -1,0 +1,205 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ %@ %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ %3$@ %4$@"
+          }
+        }
+      }
+    },
+    "%@ %@ in" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ in"
+          }
+        }
+      }
+    },
+    "%@ %@ in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ in %3$@"
+          }
+        }
+      }
+    },
+    "%@ %@ overhead now" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ overhead now"
+          }
+        }
+      }
+    },
+    "%@ %@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "%@ %lld aircraft within %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$lld aircraft within %3$@"
+          }
+        }
+      }
+    },
+    "%@ Identify a plane" : {
+
+    },
+    "%@ OVERHEAD" : {
+
+    },
+    "%@ in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ in %2$@"
+          }
+        }
+      }
+    },
+    "%@ overhead now" : {
+
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "%lld" : {
+
+    },
+    "%lld MI" : {
+
+    },
+    "%lld in range" : {
+
+    },
+    "+%lld more in range" : {
+
+    },
+    "--:--" : {
+
+    },
+    "Automatic" : {
+
+    },
+    "Counts down to the next aircraft passing over you." : {
+
+    },
+    "Demo traffic" : {
+
+    },
+    "Every aircraft around you on a little radar, north up." : {
+
+    },
+    "Flightradar24" : {
+
+    },
+    "Flightradar24 only" : {
+
+    },
+    "Flightradar24, switching to adsb.lol while it's down" : {
+
+    },
+    "IN RANGE" : {
+
+    },
+    "Identify" : {
+
+    },
+    "Identify a plane" : {
+
+    },
+    "Imperial" : {
+
+    },
+    "Kilometers, meters and km/h" : {
+
+    },
+    "Look up · %@" : {
+
+    },
+    "MI" : {
+
+    },
+    "Metric" : {
+
+    },
+    "Miles, feet and knots" : {
+
+    },
+    "NOW" : {
+
+    },
+    "Nearest Aircraft" : {
+
+    },
+    "Next Overhead" : {
+
+    },
+    "Open data" : {
+
+    },
+    "Point at a plane to find out what it is." : {
+
+    },
+    "Sky Radar" : {
+
+    },
+    "The nearest aircraft: how far, which way, and where it's heading." : {
+
+    },
+    "adsb.lol" : {
+
+    },
+    "adsb.lol only: open ADS-B data, without routes" : {
+
+    }
+  },
+  "version" : "1.0"
+}

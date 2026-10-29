@@ -159,7 +159,7 @@ struct IdentifyView: View {
     private var searchingText: String {
         let count = "\(visible.count) aircraft"
         guard let g = leadGuidance, !g.isLevel else {
-            return "\(count) within \(Int(WristPointing.identifyRangeMiles)) mi"
+            return "\(count) within \(RadarFormat.radius(WristPointing.identifyRangeMiles))"
         }
         return "\(count) · \(g.raise > 0 ? "up" : "down") \(Int(abs(g.raise).rounded()))°"
     }
@@ -189,7 +189,7 @@ struct IdentifyView: View {
                     .foregroundStyle(Palette.route)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
-                Text("\(RadarFormat.wholeNumber(contact.altitudeFeet)) ft · \(RadarFormat.miles(contact.distanceMiles)) mi \(GeoMath.cardinal(contact.bearing))")
+                Text("\(RadarFormat.altitudeText(contact.altitudeFeet)) · \(RadarFormat.distanceText(contact.distanceMiles)) \(GeoMath.cardinal(contact.bearing))")
                     .font(.mono(10, .semibold))
                     .foregroundStyle(Palette.value)
                     .lineLimit(1)

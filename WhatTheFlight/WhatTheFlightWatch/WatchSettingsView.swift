@@ -20,6 +20,8 @@ struct WatchSettingsView: View {
     let close: () -> Void
     /// Replays the first-run tour.
     var showTour: () -> Void = {}
+    /// Today's and all-time counts at the top, when the Watch keeps a logbook.
+    var logbook: Logbook? = nil
 
     @State private var skyWatchMessage: String?
     @State private var askingPhone = false
@@ -33,6 +35,9 @@ struct WatchSettingsView: View {
                         Spacer()
                         WatchNearbyCount(model: model)
                     }
+                }
+                if let logbook, settings.keepLogbook {
+                    WatchLogbookRow(logbook: logbook)
                 }
             } footer: {
                 Text("Or swipe up from the radar.")
@@ -50,12 +55,28 @@ struct WatchSettingsView: View {
                         .foregroundStyle(Palette.caption)
                 }
                 Picker("Radius", selection: $settings.radiusMiles) {
-                    ForEach(radiusChoices, id: \.self) { Text("\(Int($0)) mi").tag($0) }
+                    ForEach(radiusChoices, id: \.self) { Text(RadarFormat.radius($0, in: settings.units)).tag($0) }
                 }
             } header: {
                 Text("Radar")
             } footer: {
                 Text("10 mi is about what you can see from the ground. Look further on your iPhone.")
+            }
+
+            Section {
+                Toggle("Keep a logbook", isOn: $settings.keepLogbook)
+            } header: {
+                Text("Logbook")
+            } footer: {
+                Text(watchSettings.locationSource == .phone
+                     ? "Not while watching your iPhone's spot: the logbook is what you saw yourself."
+                     : "Aircraft the Watch sees go in the same logbook as your iPhone's, through iCloud.")
+            }
+
+            Section {
+                Toggle("Battery saver", isOn: $watchSettings.batterySaver)
+            } footer: {
+                Text("Updates less often, without the sweep or animations. The radar still moves between updates, and Identify and Find work as usual.")
             }
 
             Section("Display") {
@@ -71,12 +92,24 @@ struct WatchSettingsView: View {
 
             Section {
                 Toggle("Overhead", isOn: $settings.overheadAlerts)
+                if settings.overheadAlerts {
+                    Picker("Within", selection: $settings.overheadAlertMiles) {
+                        ForEach(overheadChoices, id: \.self) { Text(RadarFormat.preciseDistance($0, in: settings.units)).tag($0) }
+                    }
+                    Picker("Ahead", selection: $settings.overheadAlertLeadSeconds) {
+                        ForEach(leadChoices, id: \.self) { Text(RadarFormat.countdown($0)).tag($0) }
+                    }
+                }
                 Toggle("Notable aircraft", isOn: $settings.notableAlerts)
+                Toggle("Favorites & pins", isOn: $settings.favoriteAlerts)
                 Toggle("Haptics", isOn: $settings.hapticsEnabled)
+                if !settings.watchlist.isEmpty {
+                    LabeledContent("Watchlist", value: "\(settings.watchlist.count)")
+                }
             } header: {
                 Text("Wrist alerts")
             } footer: {
-                Text("While the app is open. For alerts with your wrist down, start Sky Watch on iPhone.")
+                Text("While the app is open. For alerts with your wrist down, start Sky Watch on iPhone. The watchlist comes from your iPhone's Alerts settings.")
             }
 
             Section {
@@ -133,6 +166,15 @@ struct WatchSettingsView: View {
                     .accessibilityLabel("Back to radar")
             }
         }
+    }
+
+    /// The Watch's own choices plus whatever the iPhone set, so the picker always shows it.
+    private var overheadChoices: [Double] {
+        Array(Set([1, 1.5, 2, 3] + [settings.overheadAlertMiles])).sorted()
+    }
+
+    private var leadChoices: [Double] {
+        Array(Set([60, 120, 180, 300] + [settings.overheadAlertLeadSeconds])).sorted()
     }
 
     private var radiusChoices: [Double] {
@@ -204,5 +246,49 @@ struct AimStyleSettingsView: View {
             }
         }
         .navigationTitle("Aim with")
+    }
+}
+
+/// "Today 12 · Total 1,480" at the top of the settings page.
+struct WatchLogbookRow: View {
+    let logbook: Logbook
+
+    var body: some View {
+        let today = DailyRecap(logbook.sightings).total
+        HStack {
+            Label("Logbook", systemImage: "book.closed.fill")
+            Spacer()
+            VStack(alignment: .trailing, spacing: 0) {
+                Text("\(RadarFormat.wholeNumber(today)) today").font(.mono(12, .bold))
+                Text("\(RadarFormat.wholeNumber(logbook.sightings.count)) in all").font(.mono(9)).foregroundStyle(Palette.caption)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// A badge just earned on the wrist: its symbol and name, for a moment.
+struct WatchBadgeCard: View {
+    let badge: Achievement
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: badge.symbol)
+                .font(.system(size: 34, weight: .semibold))
+                .foregroundStyle(Palette.notable)
+            Text(badge.hasLevels && badge.level > 1 ? "Level \(badge.level)" : "Badge unlocked")
+                .font(.mono(10, .bold))
+                .textCase(.uppercase)
+                .foregroundStyle(Palette.caption)
+            Text(badge.title)
+                .font(.mono(16, .heavy))
+                .foregroundStyle(Palette.ink)
+                .multilineTextAlignment(.center)
+            Text(badge.detail)
+                .font(.mono(10))
+                .foregroundStyle(Palette.caption)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
     }
 }

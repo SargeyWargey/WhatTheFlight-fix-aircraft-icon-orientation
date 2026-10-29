@@ -26,6 +26,8 @@ final class AppRouter {
         case find(String)
         case sky
         case logbook
+        /// An airframe's page in the logbook (Spotlight, Siri).
+        case airframe(String)
         case radar
         case startSkyWatch
     }
@@ -40,7 +42,11 @@ final class AppRouter {
         case .sky: return URL(string: "\(scheme)://sky")!
         case .find(let id): return URL(string: "\(scheme)://sky/\(id)")!
         case .logbook: return URL(string: "\(scheme)://logbook")!
-        case .radar, .startSkyWatch: return URL(string: "\(scheme)://radar")!
+        case .airframe(let reg):
+            let safe = reg.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? reg
+            return URL(string: "\(scheme)://logbook/airframe/\(safe)")!
+        case .radar: return URL(string: "\(scheme)://radar")!
+        case .startSkyWatch: return URL(string: "\(scheme)://skywatch")!
         }
     }
 
@@ -54,7 +60,10 @@ final class AppRouter {
         case "sky":
             let id = url.pathComponents.dropFirst().first ?? ""
             pending = id.isEmpty ? .sky : .find(id)
-        case "logbook": pending = .logbook
+        case "logbook":
+            let parts = Array(url.pathComponents.dropFirst())
+            pending = parts.count == 2 && parts[0] == "airframe" ? .airframe(parts[1]) : .logbook
+        case "skywatch": pending = .startSkyWatch
         default: pending = .radar
         }
         return true

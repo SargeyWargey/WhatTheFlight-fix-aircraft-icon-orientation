@@ -96,6 +96,26 @@ enum AircraftTypeCatalog {
         "H155", "H175", "H215", "H225", "AW09", "B47G", "BH06", "BH12",
     ]
 
+    /// Types whose code or name matches `text` ("747", "B744", "Dreamliner"): exact code
+    /// first, then names starting with it, then names containing it.
+    static func search(_ text: String, limit: Int = 20) -> [(code: String, name: String)] {
+        let q = text.trimmingCharacters(in: .whitespaces).lowercased()
+        guard q.count >= 2 else { return [] }
+        func rank(_ code: String, _ name: String) -> Int? {
+            let n = name.lowercased()
+            if code.lowercased() == q { return 0 }
+            if n.hasPrefix(q) { return 1 }
+            if n.contains(" \(q)") || n.contains("-\(q)") { return 2 }
+            if n.contains(q) || code.lowercased().hasPrefix(q) { return 3 }
+            return nil
+        }
+        return names
+            .compactMap { code, name in rank(code, name).map { (code: code, name: name, rank: $0) } }
+            .sorted { ($0.rank, $0.name) < ($1.rank, $1.name) }
+            .prefix(limit)
+            .map { (code: $0.code, name: $0.name) }
+    }
+
     private static let names: [String: String] = {
         var table: [String: String] = [:]
         for line in raw.split(separator: "\n") {

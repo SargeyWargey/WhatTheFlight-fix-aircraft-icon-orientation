@@ -34,6 +34,9 @@ final class WatchSettings {
     var flipScreen: Bool { didSet { defaults.set(flipScreen, forKey: Key.flipScreen) } }
     /// Identify reads out what you're pointing at.
     var speakIdentification: Bool { didSet { defaults.set(speakIdentification, forKey: Key.speakIdentification) } }
+    /// Updates less often, no sweep, no springy animations, a coarser compass. Identify and
+    /// Find are unchanged: pointing is the point.
+    var batterySaver: Bool { didSet { defaults.set(batterySaver, forKey: Key.batterySaver) } }
     /// The first-run tour has been shown (or skipped).
     var hasSeenTour: Bool { didSet { defaults.set(hasSeenTour, forKey: Key.hasSeenTour) } }
 
@@ -53,6 +56,7 @@ final class WatchSettings {
         aimStyle = WristPointing.AimStyle(rawValue: defaults.string(forKey: Key.aimStyle) ?? "") ?? .point
         speakIdentification = defaults.object(forKey: Key.speakIdentification) == nil ? true : defaults.bool(forKey: Key.speakIdentification)
         hasSeenTour = defaults.bool(forKey: Key.hasSeenTour)
+        batterySaver = defaults.bool(forKey: Key.batterySaver)
         if defaults.object(forKey: Key.phoneLatitude) != nil {
             phoneObserver = CLLocationCoordinate2D(latitude: defaults.double(forKey: Key.phoneLatitude),
                                                    longitude: defaults.double(forKey: Key.phoneLongitude))
@@ -73,6 +77,14 @@ final class WatchSettings {
         if settings.overheadAlerts != context.overheadAlerts { settings.overheadAlerts = context.overheadAlerts }
         if settings.overheadAlertMiles != context.overheadAlertMiles { settings.overheadAlertMiles = context.overheadAlertMiles }
         if settings.notableAlerts != context.notableAlerts { settings.notableAlerts = context.notableAlerts }
+        if let raw = context.units, let units = UnitSystem(rawValue: raw), settings.units != units { settings.units = units }
+        if let lead = context.overheadAlertLeadSeconds, settings.overheadAlertLeadSeconds != lead {
+            settings.overheadAlertLeadSeconds = lead.clamped(to: RadarSettings.overheadAlertLeadRange)
+        }
+        if let watchlist = context.watchlist, settings.watchlist != watchlist { settings.watchlist = watchlist }
+        if let favorites = context.favoriteAlerts, settings.favoriteAlerts != favorites { settings.favoriteAlerts = favorites }
+        if let keep = context.keepLogbook, settings.keepLogbook != keep { settings.keepLogbook = keep }
+        if let sync = context.syncLogbook, settings.syncLogbook != sync { settings.syncLogbook = sync }
     }
 
     private enum Key {
@@ -84,6 +96,7 @@ final class WatchSettings {
         static let aimStyle = "wtf.watch.aimStyle"
         static let speakIdentification = "wtf.watch.speakIdentification"
         static let hasSeenTour = "wtf.watch.hasSeenTour"
+        static let batterySaver = "wtf.watch.batterySaver"
         static let phoneLatitude = "wtf.watch.phoneLatitude"
         static let phoneLongitude = "wtf.watch.phoneLongitude"
         static let phonePlaceName = "wtf.watch.phonePlaceName"

@@ -51,7 +51,7 @@ struct TrafficNotificationView: View {
                         if let route = f.route {
                             Text(route).font(.mono(12, .bold)).foregroundStyle(Palette.route)
                         }
-                        Text("\(RadarFormat.miles(f.distanceMiles)) mi \(GeoMath.cardinal(f.bearing))")
+                        Text("\(RadarFormat.distanceText(f.distanceMiles)) \(GeoMath.cardinal(f.bearing))")
                             .font(.mono(11, .semibold))
                             .foregroundStyle(Palette.value)
                     }
@@ -59,7 +59,7 @@ struct TrafficNotificationView: View {
                 if let badge = f.notableBadge, let tag = f.notableTag {
                     Text(badge).font(.mono(10, .heavy)).foregroundStyle(Palette.color(for: tag))
                 }
-                Text([f.typeName, "\(RadarFormat.wholeNumber(f.altitudeFeet)) ft"].compactMap { $0 }.joined(separator: " · "))
+                Text([f.typeName, "\(RadarFormat.altitudeText(f.altitudeFeet))"].compactMap { $0 }.joined(separator: " · "))
                     .font(.mono(10))
                     .foregroundStyle(Palette.caption)
                 if let seconds = f.closestPassSeconds {

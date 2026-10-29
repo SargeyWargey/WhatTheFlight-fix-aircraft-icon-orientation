@@ -2,16 +2,17 @@
 //  TrafficAlerts.swift
 //  WhatTheFlight
 //
-//  Decides when something deserves a heads-up: an aircraft about to pass overhead, or a
-//  notable one (emergency, military, air ambulance, rare type) inside the radius. Each
-//  aircraft alerts at most once per reason. How it's delivered (banner, notification,
-//  Live Activity) is up to the platform.
+//  Decides when something deserves a heads-up: an aircraft about to pass overhead, a
+//  notable one (emergency, military, air ambulance, rare type), one on the watchlist, a
+//  favourite or pinned aircraft coming back into range, or the first of a type or airline
+//  in the logbook. Each aircraft alerts at most once per reason. How it's delivered
+//  (banner, notification, speech, a tap on the wrist) is up to the platform.
 //
 
 import Foundation
 
 struct TrafficAlert: Identifiable, Equatable, Sendable {
-    enum Reason: String, Sendable { case overhead, notable }
+    enum Reason: String, Sendable { case overhead, notable, watchlist, favorite, firstSeen }
 
     let flightID: String
     let reason: Reason
@@ -20,6 +21,9 @@ struct TrafficAlert: Identifiable, Equatable, Sendable {
     let symbol: String
     /// The aircraft as it was when the alert fired, for richer notifications (Apple Watch).
     var flight: SnapshotFlight? = nil
+    /// What the sentence read aloud should add: the watchlist rule it matched ("Qatar
+    /// Airways"), what's new to the logbook, or whether it's a favourite or a pin.
+    var spokenNote: String? = nil
 
     var id: String { "\(flightID)-\(reason.rawValue)" }
 }
@@ -47,17 +51,44 @@ struct TrafficAlertRules: Equatable, Sendable {
     var overheadMiles = 1.5
     /// …and is at most this far in the future.
     var leadSeconds: TimeInterval = 150
+    /// Tail numbers, types, airlines and callsigns to be told about.
+    var watchlist: [WatchlistRule] = []
+    /// A favourite or pinned aircraft coming into range.
+    var favorites = true
+    /// The first of a type or an airline in the logbook.
+    var firstSeen = true
+}
+
+/// The first of something in the logbook, for "First Qatar Airways in your logbook".
+enum FirstSeen: Equatable, Sendable {
+    case type(String)
+    case airline(String)
+
+    var name: String {
+        switch self {
+        case .type(let name), .airline(let name): return name
+        }
+    }
+}
+
+/// What the engine asks the app about each aircraft. The defaults say no to everything (the
+/// Watch has no logbook, tests that don't care).
+struct TrafficAlertLookups {
+    var isFavorite: (Flight) -> Bool = { _ in false }
+    var isPinned: (String) -> Bool = { _ in false }
+    var firstSeen: (RadarContact) -> FirstSeen? = { _ in nil }
 }
 
 struct TrafficAlertEngine {
     private var alerted: [String: Date] = [:]
 
-    mutating func evaluate(_ contacts: [RadarContact], rules: TrafficAlertRules, now: Date = Date()) -> [TrafficAlert] {
+    mutating func evaluate(_ contacts: [RadarContact], rules: TrafficAlertRules, lookups: TrafficAlertLookups = TrafficAlertLookups(),
+                           now: Date = Date()) -> [TrafficAlert] {
         // Forget aircraft we haven't heard about for half an hour.
         alerted = alerted.filter { now.timeIntervalSince($0.value) < 1800 }
         var alerts: [TrafficAlert] = []
         for contact in contacts {
-            for alert in candidates(for: contact, rules: rules) {
+            for alert in candidates(for: contact, rules: rules, lookups: lookups) {
                 if alerted[alert.id] == nil { alerts.append(alert) }
                 alerted[alert.id] = now
             }
@@ -65,12 +96,52 @@ struct TrafficAlertEngine {
         return alerts
     }
 
-    private func candidates(for contact: RadarContact, rules: TrafficAlertRules) -> [TrafficAlert] {
+    private func candidates(for contact: RadarContact, rules: TrafficAlertRules, lookups: TrafficAlertLookups) -> [TrafficAlert] {
         let f = contact.flight
         let profile = contact.profile
         let name = f.displayIdentifier
         let what = profile.typeName ?? f.typeCode ?? (profile.kind == .helicopter ? "Helicopter" : "Aircraft")
+        let whereNow = "\(RadarFormat.distanceText(contact.distanceMiles)) \(GeoMath.cardinal(contact.bearing)) at \(RadarFormat.altitudeText(contact.altitudeFeet))"
         var result: [TrafficAlert] = []
+
+        // A favourite or pin says it all; a watchlist match for the same aircraft would repeat it.
+        var isFollowed = false
+        if rules.favorites {
+            let favorite = lookups.isFavorite(f)
+            if favorite || lookups.isPinned(f.id) {
+                isFollowed = true
+                result.append(TrafficAlert(
+                    flightID: f.id, reason: .favorite,
+                    title: favorite ? "\(name) is back · favorite" : "\(name) is in range · pinned",
+                    body: "\(what), \(whereNow).",
+                    symbol: favorite ? "heart.fill" : "pin.fill",
+                    flight: SnapshotFlight(contact),
+                    spokenNote: favorite ? "favorite" : "pinned"
+                ))
+            }
+        }
+
+        if !isFollowed, let rule = rules.watchlist.match(f, airline: profile.airline) {
+            result.append(TrafficAlert(
+                flightID: f.id, reason: .watchlist,
+                title: "\(name) · on your watchlist",
+                body: "\(what), \(whereNow). Watchlist: \(rule.title).",
+                symbol: "eye.fill",
+                flight: SnapshotFlight(contact),
+                spokenNote: rule.spokenTitle
+            ))
+        }
+
+        if rules.firstSeen, let first = lookups.firstSeen(contact) {
+            result.append(TrafficAlert(
+                flightID: f.id, reason: .firstSeen,
+                title: "First \(first.name) in your logbook",
+                body: "\(name), \(whereNow).",
+                symbol: "sparkles",
+                flight: SnapshotFlight(contact),
+                spokenNote: first.name
+            ))
+        }
 
         if rules.overhead {
             let cpa = contact.closestApproach
@@ -81,7 +152,7 @@ struct TrafficAlertEngine {
                 result.append(TrafficAlert(
                     flightID: f.id, reason: .overhead,
                     title: "\(name) overhead \(when)",
-                    body: "\(what) at \(RadarFormat.wholeNumber(contact.altitudeFeet)) ft — look \(GeoMath.cardinal(contact.bearing))\(f.hasRoute ? ", \(f.originIATA ?? "") → \(f.destinationIATA ?? "")" : "").",
+                    body: "\(what) at \(RadarFormat.altitudeText(contact.altitudeFeet)) — look \(GeoMath.cardinal(contact.bearing))\(f.hasRoute ? ", \(f.originIATA ?? "") → \(f.destinationIATA ?? "")" : "").",
                     symbol: "scope",
                     flight: SnapshotFlight(contact)
                 ))
@@ -92,7 +163,7 @@ struct TrafficAlertEngine {
             result.append(TrafficAlert(
                 flightID: f.id, reason: .notable,
                 title: "\(name) \(top.reason)",
-                body: "\(what), \(RadarFormat.miles(contact.distanceMiles)) mi \(GeoMath.cardinal(contact.bearing)) at \(RadarFormat.wholeNumber(contact.altitudeFeet)) ft.",
+                body: "\(what), \(RadarFormat.distanceText(contact.distanceMiles)) \(GeoMath.cardinal(contact.bearing)) at \(RadarFormat.altitudeText(contact.altitudeFeet)).",
                 symbol: top.tag.symbol,
                 flight: SnapshotFlight(contact)
             ))
@@ -106,6 +177,28 @@ struct TrafficAlertEngine {
 /// Sentences for reading an alert aloud. Written for the ear: "Delta Air Lines flight 1199"
 /// instead of "DL1199", tail numbers spelled out, no abbreviations or brackets.
 enum SpokenTraffic {
+    /// The sentence for an alert, with what it matched (a watchlist rule, a first).
+    static func sentence(for contact: RadarContact, alert: TrafficAlert) -> String {
+        let f = contact.flight
+        let name = spokenName(f)
+        let what = f.typeName.map { ", a \($0)" } ?? ""
+        let whereNow = contact.distanceMiles < 0.5
+            ? "right overhead, at \(RadarFormat.spokenAltitude(contact.altitudeFeet))"
+            : "\(RadarFormat.spokenDistance(contact.distanceMiles)) \(direction(contact.bearing)), at \(RadarFormat.spokenAltitude(contact.altitudeFeet))"
+        switch alert.reason {
+        case .overhead, .notable:
+            return sentence(for: contact, reason: alert.reason)
+        case .watchlist:
+            return "On your watchlist: \(alert.spokenNote ?? "an aircraft you asked about"). \(name)\(what), \(whereNow)."
+        case .favorite:
+            return alert.spokenNote == "pinned"
+                ? "\(name), which you pinned, is in range\(what), \(whereNow)."
+                : "Your favorite \(name) is back\(what), \(whereNow)."
+        case .firstSeen:
+            return "A first for your logbook: \(alert.spokenNote ?? "something new"). \(name), \(whereNow)."
+        }
+    }
+
     static func sentence(for contact: RadarContact, reason: TrafficAlert.Reason) -> String {
         let f = contact.flight
         let name = spokenName(f)
@@ -114,7 +207,7 @@ enum SpokenTraffic {
             return ", from \(from) to \(to),"
         }()
         let what = f.typeName.map { ", a \($0)" } ?? ""
-        let altitude = "\(RadarFormat.wholeNumber(Int((Double(contact.altitudeFeet) / 100).rounded()) * 100)) feet"
+        let altitude = RadarFormat.spokenAltitude(contact.altitudeFeet)
         let look = "Look \(direction(contact.bearing))."
 
         switch reason {
@@ -130,7 +223,9 @@ enum SpokenTraffic {
             return "\(name)\(route) \(when), at \(altitude). \(look)"
         case .notable:
             let reasonText = f.notable.first.map { speakable($0.reason) } ?? "is nearby"
-            return "Heads up. \(name)\(what) \(reasonText), \(RadarFormat.miles(contact.distanceMiles)) miles \(direction(contact.bearing)), at \(altitude)."
+            return "Heads up. \(name)\(what) \(reasonText), \(RadarFormat.spokenDistance(contact.distanceMiles)) \(direction(contact.bearing)), at \(altitude)."
+        case .watchlist, .favorite, .firstSeen:
+            return "\(name)\(what), \(RadarFormat.spokenDistance(contact.distanceMiles)) \(direction(contact.bearing)), at \(altitude)."
         }
     }
 
@@ -166,8 +261,8 @@ enum SpokenTraffic {
     /// The ambient map's VoiceOver label: "DL570, Delta Air Lines, 3 miles northeast, 30,000 feet".
     static func mapLabel(for contact: RadarContact) -> String {
         let f = contact.flight
-        let where_ = contact.distanceMiles < 0.5 ? "overhead" : "\(RadarFormat.miles(contact.distanceMiles)) miles \(direction(contact.bearing))"
-        return "\(f.displayIdentifier), \(contact.profile.operatorInfo.title), \(where_), \(RadarFormat.wholeNumber(contact.altitudeFeet)) feet"
+        let where_ = contact.distanceMiles < 0.5 ? "overhead" : "\(RadarFormat.spokenDistance(contact.distanceMiles)) \(direction(contact.bearing))"
+        return "\(f.displayIdentifier), \(contact.profile.operatorInfo.title), \(where_), \(RadarFormat.spokenAltitude(contact.altitudeFeet))"
     }
 
     static func direction(_ bearing: Double) -> String {
@@ -192,8 +287,9 @@ extension SpokenTraffic {
         let f = contact.flight
         var first = spokenName(f)
         if let from = f.origin?.city, let to = f.destination?.city { first += ", \(from) to \(to)" }
-        let altitude = "\(RadarFormat.wholeNumber(Int((Double(contact.altitudeFeet) / 100).rounded()) * 100)) feet"
-        let where_ = contact.distanceMiles < 0.5 ? "right overhead" : "\(RadarFormat.miles(contact.distanceMiles)) miles \(direction(contact.bearing))"
+        if let phase = contact.phase, phase.isInformative { first += ", \(phase.spoken(origin: f.origin, destination: f.destination))" }
+        let altitude = RadarFormat.spokenAltitude(contact.altitudeFeet)
+        let where_ = contact.distanceMiles < 0.5 ? "right overhead" : "\(RadarFormat.spokenDistance(contact.distanceMiles)) \(direction(contact.bearing))"
         let what = f.typeName.map { "A \($0)" } ?? (f.kind == .helicopter ? "A helicopter" : "An aircraft")
         var sentence = "\(first). \(what) at \(altitude), \(where_)."
         if let notable = f.notable.first { sentence += " It \(speakable(notable.reason))." }
@@ -212,8 +308,8 @@ extension SpokenTraffic {
         }
         let direction = ["N": "north", "NE": "northeast", "E": "east", "SE": "southeast",
                          "S": "south", "SW": "southwest", "W": "west", "NW": "northwest"][GeoMath.cardinal(contact.bearing)] ?? ""
-        let miles = contact.distanceMiles < 0.5 ? "right overhead" : "\(RadarFormat.miles(contact.distanceMiles)) miles \(direction)"
-        var sentence = "That's \(who). It's \(miles) at \(RadarFormat.wholeNumber(contact.altitudeFeet)) feet"
+        let miles = contact.distanceMiles < 0.5 ? "right overhead" : "\(RadarFormat.spokenDistance(contact.distanceMiles)) \(direction)"
+        var sentence = "That's \(who). It's \(miles) at \(RadarFormat.spokenAltitude(contact.altitudeFeet))"
         if contact.isApproaching, contact.closestApproach.secondsFromNow < 900 {
             let minutes = Int((contact.closestApproach.secondsFromNow / 60).rounded())
             sentence += minutes < 1 ? ", and it's about to pass closest" : ", and passes closest in about \(minutes) minute\(minutes == 1 ? "" : "s")"

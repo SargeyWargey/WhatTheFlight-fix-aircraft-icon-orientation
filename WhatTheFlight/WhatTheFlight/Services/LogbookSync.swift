@@ -8,10 +8,11 @@
 //  (`Sighting.merged(with:)`). Sky View photos ride on their sighting's record; each
 //  photo's image is a record of its own ("photo-<id>", the logbook's 1600 px copy as a
 //  CKAsset) so sighting saves stay small. `CKSyncEngine` does the scheduling, batching and
-//  retries.
+//  retries. Apple Watch syncs sightings too, but never downloads photo images (it has no
+//  gallery), so the photo records are skipped there.
 //
 
-#if os(iOS) || os(tvOS)
+#if os(iOS) || os(tvOS) || os(watchOS)
 import CloudKit
 import Foundation
 import os
@@ -136,6 +137,9 @@ final class LogbookSync: CKSyncEngineDelegate {
             var incoming: [Sighting] = []
             for modification in changes.modifications {
                 let record = modification.record
+                #if os(watchOS)
+                if record.recordType == Self.photoRecordType { continue }
+                #endif
                 serverRecords[record.recordID.recordName] = record
                 if record.recordType == Self.photoRecordType {
                     importPhoto(from: record)

@@ -19,6 +19,7 @@ let package = Package(
                 "Radar",
                 "Models/GeographicBounds.swift",
                 "Services/FlightFeed.swift",
+                "Services/OpenFeed.swift",
                 "Services/PinSync.swift",
                 "Services/RadarSettings.swift",
                 "Services/SharedRadarStore.swift",

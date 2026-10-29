@@ -43,11 +43,11 @@ enum LogbookTab: String, Hashable, CaseIterable {
 
     var title: String {
         switch self {
-        case .overview: return "Overview"
-        case .sightings: return "Sightings"
-        case .stats: return "Stats"
-        case .badges: return "Badges"
-        case .photos: return "Photos"
+        case .overview: return String(localized: "Overview")
+        case .sightings: return String(localized: "Sightings")
+        case .stats: return String(localized: "Stats")
+        case .badges: return String(localized: "Badges")
+        case .photos: return String(localized: "Photos")
         }
     }
 
@@ -261,7 +261,7 @@ private struct TierLadder: View {
 // MARK: - Tiles and tags
 
 struct LogbookStatTile: View {
-    let title: String
+    let title: LocalizedStringKey
     let value: String
     var scale: CGFloat = 1
     var symbol: String? = nil
@@ -328,7 +328,7 @@ struct LogbookDayTags: View {
 /// An uppercase heading in the compass's red, so sections stand out over the contours, with
 /// an optional link or note on the right.
 struct LogbookHeader<Trailing: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     var scale: CGFloat = 1
     @ViewBuilder var trailing: Trailing
 
@@ -349,7 +349,7 @@ struct LogbookHeader<Trailing: View>: View {
 }
 
 extension LogbookHeader where Trailing == EmptyView {
-    init(_ title: String, scale: CGFloat = 1) {
+    init(_ title: LocalizedStringKey, scale: CGFloat = 1) {
         self.init(title: title, scale: scale) { EmptyView() }
     }
 }
@@ -370,7 +370,7 @@ extension Sighting {
         [operatorName, typeName ?? typeCode].compactMap { $0 }.joined(separator: " · ")
     }
 
-    var closestText: String { "\(RadarFormat.miles(closestMiles)) mi" }
+    var closestText: String { "\(RadarFormat.distanceText(closestMiles))" }
 
     /// "iPhone, Apple TV".
     var devicesText: String? {
@@ -604,7 +604,7 @@ struct LogbookActivityChart: View {
     }
 }
 
-/// Altitude at the closest pass in 5,000 ft bands, highest at the top: a row per band, its
+/// Altitude at the closest pass in 5,000 ft (1,500 m) bands, highest at the top: a row per band, its
 /// label in a column of its own so it never touches the bar. Warm near the ground, cool up
 /// high (`ChartTone.altitude`).
 struct LogbookAltitudeChart: View {
@@ -613,8 +613,7 @@ struct LogbookAltitudeChart: View {
     var height: CGFloat = 180
 
     var body: some View {
-        let band = LogbookSky.altitudeBand / 1000
-        let labels = bins.indices.map { i in i == bins.count - 1 ? "\(i * band)k+ ft" : "\(i * band)–\((i + 1) * band)k" }
+        let labels = bins.indices.map { LogbookSky.altitudeBandLabel($0) }
         let peak = max(1, bins.max() ?? 1)
         let busiest = bins.max().flatMap { max in max > 0 ? bins.firstIndex(of: max) : nil }
         VStack(spacing: 4 * scale) {
@@ -649,7 +648,10 @@ struct LogbookAltitudeChart: View {
         .frame(height: height * scale)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Altitude at the closest pass")
-        .accessibilityValue(LogbookChartStyle.peakDescription(bins) { "\(labels[$0]) feet" })
+        .accessibilityValue(LogbookChartStyle.peakDescription(bins) { i in
+            let label = labels[i].replacingOccurrences(of: " km", with: "").replacingOccurrences(of: " ft", with: "")
+            return "\(label) \(Units.isMetric ? "kilometers" : "feet")"
+        })
     }
 }
 

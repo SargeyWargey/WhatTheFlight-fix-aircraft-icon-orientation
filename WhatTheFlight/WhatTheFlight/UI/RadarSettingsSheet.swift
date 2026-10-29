@@ -47,7 +47,7 @@ struct RadarSettingsSheet: View {
             Form {
                 Section {
                     NavigationLink(value: SettingsPage.radar) {
-                        SettingsPageRow("Radar", systemImage: "scope", color: .green, value: "\(Int(settings.radiusMiles)) mi")
+                        SettingsPageRow("Radar", systemImage: "scope", color: .green, value: RadarFormat.radius(settings.radiusMiles, in: settings.units))
                     }
                     NavigationLink(value: SettingsPage.display) {
                         SettingsPageRow("Display", systemImage: "sun.max.fill", color: .blue, value: settings.appearance.title)
@@ -150,13 +150,56 @@ private struct RadarSettingsPage: View {
         Form {
             Section {
                 VStack(alignment: .leading, spacing: 6) {
-                    LabeledContent("Radius", value: "\(Int(settings.radiusMiles)) mi")
+                    LabeledContent("Radius", value: RadarFormat.radius(settings.radiusMiles, in: settings.units))
                     Slider(value: $settings.radiusMiles, in: RadarSettings.radiusRange, step: 1)
-                        .accessibilityLabel("Radius in miles")
+                        .accessibilityLabel("Radius")
+                        .accessibilityValue(RadarFormat.spokenDistance(settings.radiusMiles, in: settings.units))
                 }
                 Toggle("Show helicopters", isOn: $settings.showHelicopters)
             } header: {
                 SettingsHeader("Radar")
+            }
+
+            Section {
+                Toggle(isOn: $settings.weatherFog) {
+                    InfoLabel("Clouds and fog", info: "Clouds and fog drift across the radar and the map, downwind, from Apple Weather around you (or the airport weather reports when Apple Weather isn't available). It's broadly where the weather is, not a satellite picture.")
+                }
+                Toggle(isOn: $settings.showsVisibility) {
+                    InfoLabel("Can I see it?", info: "Under the aircraft's type on the radar: \"Above the clouds\", \"Lost in the haze\", \"Too far away to make out\" or \"Close to the sun\" when you won't spot it by eye. Nothing shows when you can.")
+                }
+                Toggle(isOn: $settings.preferVisible) {
+                    InfoLabel("Prefer aircraft you can see", info: "When the nearest aircraft is above the clouds, lost in haze or too small to make out, the nearest one you can actually see takes the center instead. Uses the local weather report and where the sun is.")
+                }
+            } header: {
+                SettingsHeader("Weather")
+            } footer: {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Clouds from Apple Weather; \"Can I see it?\" from airport reports at aviationweather.gov. Both every 15 minutes.")
+                    if settings.weatherFog {
+                        WeatherAttributionView()
+                    }
+                }
+            }
+
+            Section {
+                Picker("Data source", selection: $settings.dataSource) {
+                    ForEach(DataSourcePreference.allCases) { Text($0.title).tag($0) }
+                }
+            } header: {
+                SettingsHeader("Traffic", info: "Automatic uses Flightradar24 and switches to adsb.lol, open community ADS-B data, if Flightradar24 stops answering. Open data has no routes or schedules, so flights show without their airports. Data from adsb.lol is © adsb.lol contributors, ODbL 1.0.")
+            } footer: {
+                Text(settings.dataSource.subtitle + ".")
+            }
+
+            Section {
+                Picker("Units", selection: $settings.units) {
+                    ForEach(UnitSystem.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+            } header: {
+                SettingsHeader("Units")
+            } footer: {
+                Text("\(settings.units.subtitle), on the radar, in the logbook, in alerts and on your widgets and Apple Watch.")
             }
         }
         .settingsPage("Radar")
@@ -198,6 +241,9 @@ private struct DisplaySettingsPage: View {
                 Toggle("Compass bezel", isOn: $settings.showCompassBezel)
                 Toggle("Radar sweep", isOn: $settings.radarSweep)
                 Toggle("Aircraft photos", isOn: $settings.showPhotos)
+                Toggle(isOn: $settings.aircraftFacts) {
+                    InfoLabel("Aircraft details", info: "The maker, exact model and registered owner on an aircraft's details, from adsbdb.com. Owners are only shown when they're a company or organisation, never a person.")
+                }
                 Toggle(isOn: $settings.cardPhotos) {
                     InfoLabel("Photos on flight cards", info: "The aircraft's photo under its details on the radar and beside them on the map card, whenever Planespotters has one. Sky View always shows it.")
                 }
@@ -336,6 +382,10 @@ private struct LocationSettingsPage: View {
     let location: RadarLocationService
 
     @Environment(\.openURL) private var openURL
+    /// Naming a new spot (`renaming == nil`) or renaming one.
+    @State private var isNaming = false
+    @State private var renaming: SavedSpot?
+    @State private var spotName = ""
 
     var body: some View {
         Form {
@@ -364,8 +414,74 @@ private struct LocationSettingsPage: View {
             } header: {
                 SettingsHeader("Watch from", info: "A custom spot lets you watch the sky over home, an airport fence, anywhere. Aircraft seen at a custom spot aren't logged and don't count toward stats or badges: the logbook is what you saw yourself.")
             }
+
+            Section {
+                ForEach(settings.savedSpots) { spot in
+                    Button {
+                        withAnimation(.snappy) { settings.watch(spot) }
+                    } label: {
+                        HStack {
+                            Label {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(spot.name).foregroundStyle(Palette.value)
+                                    Text(spot.coordinate.shortDescription).font(.footnote).foregroundStyle(Palette.caption)
+                                }
+                            } icon: {
+                                Image(systemName: "mappin.circle.fill").foregroundStyle(Palette.signal)
+                            }
+                            Spacer()
+                            if settings.currentSavedSpot?.id == spot.id {
+                                Image(systemName: "checkmark").fontWeight(.semibold).foregroundStyle(Palette.ink)
+                            }
+                        }
+                    }
+                    .swipeActions {
+                        Button("Delete", systemImage: "trash", role: .destructive) { settings.removeSpot(spot) }
+                        Button("Rename", systemImage: "pencil") {
+                            renaming = spot
+                            spotName = spot.name
+                            isNaming = true
+                        }
+                    }
+                }
+                if let save = spotToSave {
+                    Button(settings.locationMode == .custom ? "Save This Spot…" : "Save Where I Am…", systemImage: "plus.circle") {
+                        renaming = nil
+                        spotName = save.name
+                        pendingCoordinate = save.coordinate
+                        isNaming = true
+                    }
+                }
+            } header: {
+                SettingsHeader("Saved spots", info: "Name the places you watch from (home, the office, the end of the runway) and switch between them with a tap. Like any custom spot, what you see from a saved spot isn't logged unless you're there with My Location.")
+            } footer: {
+                if settings.savedSpots.isEmpty { Text("Save a spot to come back to it in one tap.") }
+            }
         }
         .settingsPage("Location")
+        .alert(renaming == nil ? "Name This Spot" : "Rename Spot", isPresented: $isNaming) {
+            TextField("Home", text: $spotName)
+            Button("Save") {
+                if let renaming {
+                    settings.saveSpot(named: spotName, at: renaming.coordinate)
+                } else if let pendingCoordinate {
+                    settings.saveSpot(named: spotName, at: pendingCoordinate)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    @State private var pendingCoordinate: CLLocationCoordinate2D?
+
+    /// What "Save" would keep, with a suggested name: the custom spot, or where you are.
+    private var spotToSave: (coordinate: CLLocationCoordinate2D, name: String)? {
+        if settings.locationMode == .custom, let spot = settings.customCoordinate {
+            guard !settings.savedSpots.contains(where: { $0.isAt(spot) }) else { return nil }
+            return (spot, settings.customPlaceName ?? "")
+        }
+        guard let here = location.location?.coordinate, !settings.savedSpots.contains(where: { $0.isAt(here) }) else { return nil }
+        return (here, "Home")
     }
 
     private var deviceStatus: String {
@@ -391,16 +507,43 @@ private struct AlertSettingsPage: View {
                 }
                 if settings.overheadAlerts {
                     VStack(alignment: .leading, spacing: 6) {
-                        LabeledContent("Overhead means within", value: "\(settings.overheadAlertMiles.formatted(.number.precision(.fractionLength(0...1)))) mi")
+                        LabeledContent("Overhead means within", value: RadarFormat.preciseDistance(settings.overheadAlertMiles, in: settings.units))
                         Slider(value: $settings.overheadAlertMiles, in: RadarSettings.overheadAlertRange, step: 0.5)
-                            .accessibilityLabel("Overhead distance in miles")
+                            .accessibilityLabel("Overhead distance")
                     }
                 }
                 Toggle(isOn: $settings.notableAlerts) {
                     InfoLabel("Notable aircraft", info: "Emergencies, military, air ambulances and rare types.")
                 }
+                Toggle(isOn: $settings.favoriteAlerts) {
+                    InfoLabel("Favorites and pins", info: "When an aircraft you've favorited or pinned comes into range.")
+                }
+                Toggle(isOn: $settings.firstSeenAlerts) {
+                    InfoLabel("Firsts for your logbook", info: "The first time a new aircraft type or airline turns up. Starts once your logbook has \(Logbook.firstSeenBaseline) sightings, so a new logbook isn't one alert after another.")
+                }
+                NavigationLink {
+                    WatchlistView(settings: settings)
+                } label: {
+                    LabeledContent("Watchlist", value: settings.watchlist.isEmpty ? "None" : "\(settings.watchlist.count)")
+                }
             } header: {
                 SettingsHeader("Alerts")
+            }
+
+            Section {
+                Toggle(isOn: $settings.spokenAlerts) {
+                    InfoLabel("Read alerts aloud", info: "Alerts are spoken as well as shown: “Delta Air Lines flight 1199 is approaching overhead…”. With Sky Watch on they're read out with your iPhone locked too, so a walk needs no looking.")
+                }
+                if settings.spokenAlerts {
+                    Toggle(isOn: $settings.spokenAlertsHeadphonesOnly) {
+                        InfoLabel("Only with headphones", info: "AirPods, headphones or CarPlay. With nothing connected, alerts stay quiet.")
+                    }
+                    Button("Play a Sample", systemImage: "play.circle") {
+                        AlertSpeaker.shared.speak(sampleSentence)
+                    }
+                }
+            } header: {
+                SettingsHeader("Read aloud")
             }
 
             Section {
@@ -430,6 +573,14 @@ private struct AlertSettingsPage: View {
         }
         .settingsPage("Alerts")
     }
+
+    /// The nearest real aircraft if there is one, so the sample sounds like the real thing.
+    private var sampleSentence: String {
+        if let contact = model.contacts.first {
+            return SpokenTraffic.sentence(for: contact, reason: .overhead)
+        }
+        return "Delta Air Lines flight 1199, from Atlanta to Chicago, is approaching overhead, about 2 minutes away, at \(RadarFormat.spokenAltitude(9_500)). Look northeast."
+    }
 }
 
 private struct LogbookSettingsPage: View {
@@ -438,6 +589,16 @@ private struct LogbookSettingsPage: View {
     let openLogbook: () -> Void
 
     @State private var confirmClear = false
+
+    /// The digest's minutes after midnight as a time today, for the picker.
+    private var digestTime: Binding<Date> {
+        Binding(get: {
+            Calendar.current.date(byAdding: .minute, value: settings.digestMinutes, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        }, set: { date in
+            let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
+            settings.digestMinutes = (parts.hour ?? 20) * 60 + (parts.minute ?? 0)
+        })
+    }
 
     var body: some View {
         Form {
@@ -462,6 +623,23 @@ private struct LogbookSettingsPage: View {
             } header: {
                 SettingsHeader("Logging")
             }
+
+            Section {
+                Toggle(isOn: Binding(get: { settings.dailyDigest }, set: { on in
+                    settings.dailyDigest = on
+                    if on { Task { _ = await AlertNotifier.requestAuthorization() } }
+                })) {
+                    InfoLabel("Evening digest", info: "One notification at the end of a day you logged something: how many aircraft, any new types or airlines, and the closest pass. Tap it for the logbook.")
+                }
+                .disabled(!settings.keepLogbook)
+                if settings.dailyDigest {
+                    DatePicker("Time", selection: digestTime, displayedComponents: .hourAndMinute)
+                }
+            } header: {
+                SettingsHeader("Digest")
+            }
+
+            LogbookTransferSection(logbook: logbook)
 
             Section {
                 Button("Clear Logbook", systemImage: "trash", role: .destructive) { confirmClear = true }
@@ -515,7 +693,9 @@ private struct AboutSettingsPage: View {
 
             Section {
                 LabeledContent("Flight data", value: "Flightradar24")
+                LabeledContent("Backup flight data", value: "adsb.lol (ODbL)")
                 LabeledContent("Photos", value: "Planespotters.net")
+                LabeledContent("Aircraft details", value: "adsbdb.com")
                 LabeledContent("Airports", value: "OurAirports")
                 LabeledContent("Airlines", value: "OpenFlights (ODbL)")
             } header: {
@@ -540,7 +720,7 @@ private struct AboutSettingsPage: View {
     }
 }
 
-private extension View {
+extension View {
     /// The paper background, ink tint and inline title every settings page shares.
     func settingsPage(_ title: String) -> some View {
         self.scrollContentBackground(.hidden)
@@ -556,12 +736,12 @@ private extension View {
 /// A row on the first page that opens a page of its own: an icon tile, the title and a
 /// short summary of what's set inside.
 private struct SettingsPageRow: View {
-    let title: String
+    let title: LocalizedStringKey
     let systemImage: String
     let color: Color
     let value: String?
 
-    init(_ title: String, systemImage: String, color: Color, value: String? = nil) {
+    init(_ title: LocalizedStringKey, systemImage: String, color: Color, value: String? = nil) {
         self.title = title
         self.systemImage = systemImage
         self.color = color
@@ -588,17 +768,23 @@ private struct SettingsPageRow: View {
 /// A section heading in the radar's mono voice, with an optional ⓘ for notes about the
 /// whole section.
 struct SettingsHeader: View {
-    let title: String
-    let info: String?
+    let title: Text
+    let info: Text?
 
-    init(_ title: String, info: String? = nil) {
-        self.title = title
-        self.info = info
+    init(_ title: LocalizedStringKey, info: LocalizedStringKey? = nil) {
+        self.title = Text(title)
+        self.info = info.map { Text($0) }
+    }
+
+    @_disfavoredOverload
+    init<S: StringProtocol>(_ title: S, info: String? = nil) {
+        self.title = Text(title)
+        self.info = info.map { Text($0) }
     }
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(title)
+            title
                 .fontDesign(.monospaced)
             if let info {
                 InfoButton(info: info)
@@ -612,8 +798,11 @@ struct SettingsHeader: View {
 
 /// ⓘ that shows a setting's explanation in a small popover, instead of a long footer.
 struct InfoButton: View {
-    let info: String
+    let info: Text
     @State private var isShown = false
+
+    init(info: Text) { self.info = info }
+    init(info: LocalizedStringKey) { self.info = Text(info) }
 
     var body: some View {
         Button { isShown = true } label: {
@@ -625,7 +814,7 @@ struct InfoButton: View {
         .accessibilityLabel("More info")
         .accessibilityHint(info)
         .popover(isPresented: $isShown) {
-            Text(info)
+            info
                 .font(.subheadline)
                 .foregroundStyle(Palette.value)
                 .fixedSize(horizontal: false, vertical: true)
@@ -638,17 +827,23 @@ struct InfoButton: View {
 
 /// A setting's title with its ⓘ right after it.
 struct InfoLabel: View {
-    let title: String
-    let info: String
+    let title: Text
+    let info: Text
 
-    init(_ title: String, info: String) {
-        self.title = title
-        self.info = info
+    init(_ title: LocalizedStringKey, info: LocalizedStringKey) {
+        self.title = Text(title)
+        self.info = Text(info)
+    }
+
+    @_disfavoredOverload
+    init<S: StringProtocol>(_ title: S, info: String) {
+        self.title = Text(title)
+        self.info = Text(info)
     }
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(title)
+            title
             InfoButton(info: info)
         }
     }
@@ -691,7 +886,7 @@ struct LocationPickerView: View {
                     Text(center?.shortDescription ?? "Move the map")
                         .font(.subheadline.weight(.semibold).monospacedDigit())
                         .foregroundStyle(Palette.value)
-                    Text("\(Int(settings.radiusMiles)) mi radius")
+                    Text("\(RadarFormat.radius(settings.radiusMiles, in: settings.units)) radius")
                         .font(.caption)
                         .foregroundStyle(Palette.caption)
                     HStack(spacing: 10) {
