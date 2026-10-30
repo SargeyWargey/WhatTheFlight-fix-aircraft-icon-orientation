@@ -540,14 +540,18 @@ final class RadarModel {
     #endif
 
     /// Aircraft anywhere in the world whose tail number, flight number or callsign starts
-    /// with `query`: exact matches first, then airborne before parked, then nearest.
-    /// Demo traffic searches itself.
+    /// with `query`, or flying for the airline or to and from the airport it names: exact
+    /// matches first, then airborne before parked, then nearest. Demo traffic searches itself.
     func searchAnywhere(_ query: String) async throws -> [RadarContact] {
         let q = query.uppercased().filter { !$0.isWhitespace }
         guard let observer, q.count >= 3 else { return [] }
-        let found = settings.demoTraffic
-            ? flights.filter { $0.matches(search: q) }
-            : try await liveFeed.search(q)
+        let found: [Flight]
+        if settings.demoTraffic {
+            found = flights.filter { $0.matches(search: query) }
+        } else {
+            let request = await Task.detached(priority: .userInitiated) { FlightSearchQuery(query) }.value
+            found = try await liveFeed.search(request)
+        }
         let bare = q.replacingOccurrences(of: "-", with: "")
         func isExact(_ f: Flight) -> Bool {
             [f.registration?.replacingOccurrences(of: "-", with: ""), f.flightNumber, f.callsign].contains { $0?.uppercased() == bare }
@@ -826,14 +830,14 @@ enum FlightSearchState: Equatable {
 
 extension Flight {
     /// Search-box matching: flight, callsign, tail number (with or without its hyphen),
-    /// type, airline, airports, squawk.
+    /// type, airline, airports (code, city or name), squawk.
     func matches(search query: String) -> Bool {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
         guard !q.isEmpty else { return true }
         let haystack: [String?] = [
             flightNumber, callsign, registration, registration?.replacingOccurrences(of: "-", with: ""),
-            typeCode, typeName, operatorInfo.title, airline?.iata, airlineICAO, airline?.radioCallsign,
-            notable.first?.badge, originIATA, destinationIATA, origin?.city, destination?.city, squawk,
+            typeCode, typeName, operatorInfo.title, airline?.name, airline?.iata, airlineICAO, airline?.radioCallsign,
+            notable.first?.badge, originIATA, destinationIATA, origin?.city, destination?.city, origin?.name, destination?.name, squawk,
         ]
         return haystack.contains { $0?.lowercased().contains(q) == true }
     }

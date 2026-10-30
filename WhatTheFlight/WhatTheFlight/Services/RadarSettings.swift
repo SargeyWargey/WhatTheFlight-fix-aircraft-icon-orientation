@@ -57,8 +57,9 @@ final class RadarSettings {
         }
     }
 
-    /// Apple TV: the radar face, the radar with the live map beside it, or the map alone. The
-    /// dock's view button steps through them in this order.
+    /// Apple TV and iPad: the radar face, the radar with the live map beside it (below it on an
+    /// iPad in portrait), or the map alone. The TV's view button and the iPad bar's step
+    /// through them in this order.
     enum TVView: String, CaseIterable, Identifiable {
         case radar, split, map
         var id: String { rawValue }
@@ -78,6 +79,9 @@ final class RadarSettings {
             case .map: return "map.fill"
             }
         }
+
+        /// iPad in portrait: the split stacks the radar above the map.
+        var stackedSymbol: String { self == .split ? "rectangle.split.1x2.fill" : symbol }
 
         var next: TVView {
             let all = Self.allCases
@@ -250,13 +254,16 @@ final class RadarSettings {
     var raiseToSkyView: Bool { didSet { save(raiseToSkyView, .raiseToSkyView) } }
     /// iPhone: Sky View photos also go to the camera roll at full resolution.
     var skySaveToPhotos: Bool { didSet { save(skySaveToPhotos, .skySaveToPhotos) } }
-    /// The ambient map: the Split and Map views on the TV, a map pane beside the radar on iPad
-    /// in landscape and the iPhone Duo half open, and the bar's Map button everywhere else on
-    /// iPhone and iPad. Off, nothing else changes.
+    /// The ambient map: the Split and Map views on the TV and iPad, a map pane beside the radar
+    /// on the iPhone Duo half open, and the bar's Map button everywhere else on iPhone. Off,
+    /// nothing else changes.
     var mapView: Bool { didSet { save(mapView, .mapView) } }
-    /// iPhone / iPad: the live map in place of the radar (the bar's Map / Radar button), when
-    /// there's no map pane beside it. Remembered, like the TV's view.
+    /// iPhone: the live map in place of the radar (the bar's Map / Radar button), when there's
+    /// no map pane beside it. Remembered, like the TV's view.
     var mapScreen: Bool { didSet { save(mapScreen, .mapScreen) } }
+    /// iPad: the radar, the split or the map (the bar's view button). In Split View or Slide
+    /// Over, too narrow to split, Split shows the radar.
+    var padView: TVView { didSet { save(padView.rawValue, .padView) } }
     /// Apple TV: which view is showing. Read it through `effectiveTVView`.
     var tvView: TVView { didSet { save(tvView.rawValue, .tvView) } }
     /// The map turns so "up" is the TV's facing direction, like the radar. On = north up.
@@ -358,6 +365,8 @@ final class RadarSettings {
         skySaveToPhotos = value(.skySaveToPhotos, true)
         mapView = value(.mapView, true)
         mapScreen = value(.mapScreen, false)
+        // The iPad used to split only in landscape; one left on the map stays there.
+        padView = TVView(rawValue: value(.padView, value(.mapScreen, false) ? "map" : "split")) ?? .split
         tvView = TVView(rawValue: value(.tvView, "radar")) ?? .radar
         mapNorthUp = value(.mapNorthUp, false)
         mapRadiusMiles = optionalDouble(.mapRadius)?.clamped(to: Self.radiusRange)
@@ -476,6 +485,7 @@ final class RadarSettings {
         skySaveToPhotos = true
         mapView = true
         mapScreen = false
+        padView = .split
         tvView = .radar
         mapNorthUp = false
         mapRadiusMiles = nil
@@ -490,7 +500,7 @@ final class RadarSettings {
         case showHelicopters, showTopography, topography, topographyMotion, showCompassBezel, radarSweep, showPhotos, cardPhotos
         case haptics, keepAwake, demoTraffic, hasSeenWelcome, customPlaceName, tvFacing
         case overheadAlerts, overheadAlertMiles, overheadAlertLead, notableAlerts, spokenAlerts, keepLogbook, raiseToSkyView
-        case mapView, mapScreen, tvView, mapNorthUp, mapRadius, mapType, skySaveToPhotos, pinnedAircraft, favoriteAircraft
+        case mapView, mapScreen, padView, tvView, mapNorthUp, mapRadius, mapType, skySaveToPhotos, pinnedAircraft, favoriteAircraft
         case spokenAlertsHeadphonesOnly, watchlist, favoriteAlerts, firstSeenAlerts
         case savedSpots = "spots"
         case dailyDigest = "digest", digestMinutes = "digestTime"

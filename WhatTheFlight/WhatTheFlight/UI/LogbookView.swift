@@ -46,14 +46,19 @@ struct LogbookView: View {
     var isLive: (String) -> Bool = { _ in false }
     /// Shows a Done button that calls this.
     var onDone: (() -> Void)?
-    /// A page to open on, on the Overview tab (Spotlight's airframe results).
+    /// A page to open on (Spotlight's airframe results, a widget's badge), on `initialTab`.
     var initialRoute: LogbookRoute? = nil
+    /// The tab to open on (widgets); the Overview otherwise.
+    var initialTab: LogbookTab? = nil
 
-    @State private var tab = LogbookTab.initial
+    @State private var chosenTab: LogbookTab?
+
+    private var tab: LogbookTab { chosenTab ?? initialTab ?? LogbookTab.initial }
 
     var body: some View {
-        let ctx = LogbookContext(logbook: logbook, onTrack: onTrack, isLive: isLive, showTab: { tab = $0 })
-        TabView(selection: $tab) {
+        let tab = Binding(get: { self.tab }, set: { chosenTab = $0 })
+        let ctx = LogbookContext(logbook: logbook, onTrack: onTrack, isLive: isLive, showTab: { chosenTab = $0 })
+        TabView(selection: tab) {
             Tab(LogbookTab.overview.title, systemImage: LogbookTab.overview.symbol, value: LogbookTab.overview) {
                 stack(.overview, ctx) { LogbookOverview(ctx: ctx) }
             }
@@ -75,7 +80,7 @@ struct LogbookView: View {
     }
 
     private func stack<Content: View>(_ tab: LogbookTab, _ ctx: LogbookContext, @ViewBuilder _ content: () -> Content) -> some View {
-        LogbookTabStack(tab: tab, ctx: ctx, initial: tab == .overview ? initialRoute.map { [$0] } ?? [] : []) {
+        LogbookTabStack(tab: tab, ctx: ctx, initial: tab == (initialTab ?? .overview) ? initialRoute.map { [$0] } ?? [] : []) {
             content()
                 .toolbar {
                     if let onDone {

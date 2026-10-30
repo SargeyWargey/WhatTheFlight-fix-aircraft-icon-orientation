@@ -56,6 +56,37 @@ enum AirportCatalog {
         table[iata.uppercased()]
     }
 
+    /// The airport whose code is `text`, or (from four letters) those whose city or name has
+    /// a word starting with it ("chicago", "o'hare"). Where a curated airport matches, only
+    /// curated ones: "Chicago" means O'Hare and Midway, not Aurora Municipal.
+    static func search(_ text: String, limit: Int = 3) -> [Airport] {
+        let q = words(text)
+        if q.count == 3, let hit = table[q.uppercased()] { return [hit] }
+        guard q.count >= 4 else { return [] }
+        func rank(_ a: Airport) -> Int? {
+            let city = words(a.city)
+            if city == q { return 0 }
+            if city.hasPrefix(q) { return 1 }
+            if " \(city)".contains(" \(q)") { return 2 }
+            if " \(words(a.name))".contains(" \(q)") { return 3 }
+            return nil
+        }
+        let hits = table.values
+            .compactMap { a in rank(a).map { (airport: a, rank: $0, curated: curatedCodes.contains(a.iata)) } }
+            .sorted { ($0.curated ? 0 : 1, $0.rank, $0.airport.iata) < ($1.curated ? 0 : 1, $1.rank, $1.airport.iata) }
+        let curatedOnly = hits.first?.curated == true
+        return hits.filter { !curatedOnly || $0.curated }.prefix(limit).map(\.airport)
+    }
+
+    /// Lower case, punctuation as spaces: "Dallas–Fort Worth" → "dallas fort worth".
+    private static func words(_ text: String) -> String {
+        String(text.trimmingCharacters(in: .whitespaces).lowercased().map { $0.isLetter || $0.isNumber ? $0 : " " })
+    }
+
+    private static let curatedCodes = Set(raw.split(separator: "\n").compactMap {
+        $0.trimmingCharacters(in: .whitespaces).split(separator: "|").first.map(String.init)
+    })
+
     /// The closest known airport, if one is within `withinMiles` ("on the ground at ATL").
     static func nearest(to coordinate: CLLocationCoordinate2D, withinMiles: Double) -> Airport? {
         var best: (airport: Airport, miles: Double)?

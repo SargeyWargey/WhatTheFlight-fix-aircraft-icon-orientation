@@ -272,7 +272,7 @@ private struct DisplaySettingsPage: View {
             return button + " Half open like a book or standing like a laptop, the radar goes on one side of the fold and the map on the other."
         }
         if UIDevice.current.userInterfaceIdiom == .pad {
-            return button + " In landscape the map sits beside the radar instead."
+            return "Map view adds a button to the bar at the bottom of the radar that steps through Radar, Split and Map: the radar, the radar with a live map of the traffic beside it (below it in portrait), and the map alone."
         }
         return button
     }

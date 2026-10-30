@@ -78,7 +78,7 @@ struct TVWhereaboutsView: View {
     private var status: some View {
         switch lookup.state {
         case .loading:
-            Text("Looking for it on Flightradar24…")
+            Text("Looking for it…")
                 .font(.mono(28))
                 .foregroundStyle(Palette.caption)
         case .notFound:

@@ -339,7 +339,7 @@ struct TVAircraftListView: View {
                 .padding(.vertical, 40)
             }
             .scrollClipDisabled()
-            .searchable(text: $query, prompt: "Tail number, flight, airline…")
+            .searchable(text: $query, prompt: "Flight, airline, airport")
             .task(id: trimmedQuery) { await searchWorldwide() }
         }
         .background(RadarBackdrop(showTopography: true, showSweep: false, isActive: true).ignoresSafeArea())

@@ -17,8 +17,12 @@ final class WorldFeed: FlightFeed, @unchecked Sendable {
 
     func flights(in bounds: GeographicBounds) async throws -> [Flight] { local }
 
-    func search(_ query: String) async throws -> [Flight] {
-        (local + world).filter { f in [f.registration, f.flightNumber, f.callsign].contains { $0?.hasPrefix(query) == true } }
+    func search(_ query: FlightSearchQuery) async throws -> [Flight] {
+        (local + world).filter { f in
+            [f.registration, f.flightNumber, f.callsign].contains { $0?.hasPrefix(query.identifier) == true }
+                || f.airlineICAO.map(query.airlines.contains) == true
+                || [f.originIATA, f.destinationIATA].contains { $0.map(query.airports.contains) == true }
+        }
     }
 
     func lookup(registrations: [String], callsigns: [String]) async throws -> [Flight] {
@@ -163,5 +167,31 @@ final class PinnedRadarModelTests: XCTestCase {
         XCTAssertEqual(results.map(\.id), ["x2", "x3"])
         let short = try await model.searchAnywhere("DL")
         XCTAssertTrue(short.isEmpty, "too short to send")
+    }
+
+    func testASearchReadsAirlinesAndAirportsFromNames() {
+        let american = FlightSearchQuery("american")
+        XCTAssertEqual(american.identifier, "AMERICAN")
+        XCTAssertEqual(american.airlines.first, "AAL", "curated airlines lead")
+        XCTAssertEqual(FlightSearchQuery("xna").airports, ["XNA"])
+        XCTAssertEqual(Set(FlightSearchQuery("Chicago").airports), ["ORD", "MDW"], "only the curated airports when there are some")
+        XCTAssertTrue(FlightSearchQuery("o'hare").airports.contains("ORD"))
+        XCTAssertTrue(FlightSearchQuery("Dallas").airports.contains("DFW"))
+        XCTAssertEqual(FlightSearchQuery("DL570"), FlightSearchQuery(identifier: "DL570"), "flight numbers name nothing")
+        XCTAssertEqual(FlightSearchQuery("AAL").airlines, [], "a three-letter code is already a callsign prefix")
+    }
+
+    func testWorldwideSearchFindsAnAirlinesAndAnAirportsFlights() async throws {
+        func flight(_ id: String, airline: String? = nil, from: String? = nil, to: String? = nil) -> Flight {
+            var f = TestTraffic.flight(id, miles: 300)
+            (f.airlineICAO, f.originIATA, f.destinationIATA) = (airline, from, to)
+            return f
+        }
+        feed.world = [flight("aa1", airline: "AAL", from: "DFW", to: "ORD"), flight("dl1", airline: "DAL", from: "XNA", to: "ATL"),
+                      flight("ua1", airline: "UAL", from: "ORD", to: "XNA")]
+        let american = try await model.searchAnywhere("American")
+        XCTAssertEqual(american.map(\.id), ["aa1"])
+        let xna = try await model.searchAnywhere("XNA")
+        XCTAssertEqual(Set(xna.map(\.id)), ["dl1", "ua1"])
     }
 }

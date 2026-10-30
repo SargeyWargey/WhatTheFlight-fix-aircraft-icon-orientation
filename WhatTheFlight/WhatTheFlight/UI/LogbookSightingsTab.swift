@@ -764,7 +764,7 @@ struct SightingDetailView: View {
         if let route = s.routeText { text += " \(route)" }
         if let type = s.typeName ?? s.typeCode { text += " · \(type)" }
         text += " — \(RadarFormat.preciseDistance(s.closestMiles)) away at \(RadarFormat.altitudeText(s.altitudeAtClosestFeet))"
-        text += ", \(s.firstSeen.formatted(date: .abbreviated, time: .shortened)). Spotted with What The Flight?"
+        text += ", \(s.firstSeen.formatted(date: .abbreviated, time: .shortened)). Spotted with What the Flight app"
         return text
     }
 }

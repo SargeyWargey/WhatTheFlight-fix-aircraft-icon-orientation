@@ -219,6 +219,8 @@ final class Logbook {
     @ObservationIgnored var onLocalChange: ((_ saved: Set<String>, _ deleted: Set<String>) -> Void)?
     /// Photo images this device added or deleted (by photo id), for iCloud.
     @ObservationIgnored var onLocalPhotoChange: ((_ saved: Set<String>, _ deleted: Set<String>) -> Void)?
+    /// After every save, whatever changed it (the widgets' snapshot).
+    @ObservationIgnored var onSave: (() -> Void)?
     /// The logbook's copies of Sky View photos.
     @ObservationIgnored let photoStore: SpotPhotoStore
 
@@ -555,6 +557,7 @@ final class Logbook {
         lastSave = Date()
         isDirty = false
         guard let fileURL, canSave else { return }
+        onSave?()
         let snapshot = sightings
         Task.detached(priority: .utility) {
             do {

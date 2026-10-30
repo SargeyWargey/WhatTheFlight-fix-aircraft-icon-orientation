@@ -131,16 +131,28 @@
 				"Data/AirportCatalog+Data.swift",
 				Data/RegistrationCountry.swift,
 				Models/GeographicBounds.swift,
+				Radar/LogbookFormat.swift,
 				Services/AircraftPhotoProvider.swift,
 				Services/AppRouter.swift,
 				Services/FlightFeed.swift,
 				Services/FlightFollowAttributes.swift,
+				Services/LogbookSnapshot.swift,
 				Services/OpenFeed.swift,
 				Services/SharedRadarStore.swift,
 				Services/SkyWatchAttributes.swift,
 				UI/Theme.swift,
 			);
 			target = 7C5E000B2E3D806500AAC798 /* WhatTheFlightWidgets */;
+		};
+		7C5EA0012E3D806500AAC798 /* Exceptions for "WhatTheFlightWidgets" folder in "WhatTheFlight" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BadgesView.swift,
+				LogbookStatsView.swift,
+				LogbookWidgetParts.swift,
+				SkyClockView.swift,
+			);
+			target = 7C446A912E3D806500AAC798 /* WhatTheFlight */;
 		};
 		7C5F00062E3D806500AAC798 /* Exceptions for "WhatTheFlightTopShelf" folder in "WhatTheFlightTopShelf" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -205,6 +217,7 @@
 				Radar/Logbook.swift,
 				Radar/LogbookAchievements.swift,
 				Radar/LogbookDigest.swift,
+				Radar/LogbookFormat.swift,
 				Radar/LogbookSky.swift,
 				Radar/RadarModel.swift,
 				Radar/SpotPhoto.swift,
@@ -293,6 +306,7 @@
 		7C5E00052E3D806500AAC798 /* WhatTheFlightWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				7C5EA0012E3D806500AAC798 /* Exceptions for "WhatTheFlightWidgets" folder in "WhatTheFlight" target */,
 				7C5E00062E3D806500AAC798 /* Exceptions for "WhatTheFlightWidgets" folder in "WhatTheFlightWidgets" target */,
 			);
 			path = WhatTheFlightWidgets;

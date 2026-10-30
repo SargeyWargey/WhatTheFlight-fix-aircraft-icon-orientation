@@ -28,10 +28,10 @@ enum FeedSource: String, Codable, Sendable {
         }
     }
 
-    /// The credit line under a flight's details.
-    var attribution: String {
+    /// The credit line under a flight's details: open data's licence asks for one.
+    var attribution: String? {
         switch self {
-        case .flightradar24: return "Live data: Flightradar24 (unofficial feed). Positions between updates are estimated."
+        case .flightradar24: return nil
         case .adsbLol: return "Live data: adsb.lol, © adsb.lol contributors, ODbL 1.0. No routes from this source. Positions between updates are estimated."
         case .demo: return "Simulated traffic for trying the app out."
         }
@@ -117,9 +117,9 @@ struct ReadsbFeed: FlightFeed {
     }
 
     /// Exact tail numbers (with and without the hyphen) and callsigns: open data has no
-    /// prefix search.
-    func search(_ query: String) async throws -> [Flight] {
-        let q = query.uppercased().filter { !$0.isWhitespace }
+    /// prefix search, and without routes no airports either.
+    func search(_ query: FlightSearchQuery) async throws -> [Flight] {
+        let q = query.identifier
         guard q.count >= 3 else { return [] }
         let urls = [
             Self.listURL("reg", values: [q] + RegistrationCountry.hyphenatedForms(of: q), base: baseURL),
@@ -295,7 +295,7 @@ actor LayeredFeed: FlightFeed {
         try await run { try await $0.flights(in: bounds) }
     }
 
-    func search(_ query: String) async throws -> [Flight] {
+    func search(_ query: FlightSearchQuery) async throws -> [Flight] {
         try await run { try await $0.search(query) }
     }
 

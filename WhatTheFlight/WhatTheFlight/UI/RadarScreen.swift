@@ -3,11 +3,12 @@
 //  WhatTheFlight
 //
 //  The main screen. No cards on the radar: the focused flight in the middle, every other
-//  aircraft on the edge, and a floating glass bar along the bottom (`RadarControlBar`): Map /
-//  Radar, Sky View, the aircraft count (Aircraft search), the logbook and settings. With Map
-//  view on and no map pane beside it, Map swaps the radar for the live map and a card for the
-//  focused flight; the bar stays put, so getting around works the same on both. Demo traffic
-//  (a solid DEMO count) and a custom spot each get a tag just above the bar.
+//  aircraft on the edge, and a floating glass bar along the bottom (`RadarControlBar`): the
+//  view button, Sky View, the aircraft count (Aircraft search), the logbook and settings.
+//  With Map view on, the view button swaps the radar for the live map and a card for the
+//  focused flight (on iPad it steps Radar → Split → Map, `RadarRootView` placing the map
+//  pane); the bar stays put, so getting around works the same on both. Demo traffic (a solid
+//  DEMO count) and a custom spot each get a tag just above the bar.
 //  On the iPhone Duo in landscape the buttons move to the system's vertical bar strip down
 //  the side of the screen instead (`RadarRootView`), and the radar takes the full height.
 //
@@ -31,8 +32,10 @@ struct RadarScreen: View {
     /// Read in this view's body, so the per-tick traffic it depends on redraws the radar
     /// screen only, not the root view and whatever sheet it's presenting.
     let centerState: () -> CenterStateView.Kind?
-    /// Map view on with no map pane beside the radar: the bar offers Map / Radar.
-    let offersMap: Bool
+    /// The live map and its card in place of the radar.
+    let showsMap: Bool
+    /// The view the bar's view button switches to, nil for no button (`RadarRootView`).
+    let nextView: RadarSettings.TVView?
     /// Off while `RadarRootView` stands the bar in the vertical bar strip instead (the iPhone
     /// Duo in landscape).
     var showsBar = true
@@ -47,8 +50,8 @@ struct RadarScreen: View {
         var openDetail: (String) -> Void
         /// The count on the bar: Aircraft search, full height.
         var openSearchFullHeight: () -> Void
-        /// Map / Radar on the bar.
-        var toggleMap: () -> Void
+        /// The view button on the bar: Map / Radar, or on iPad Radar → Split → Map.
+        var showNextView: () -> Void
         /// Sky View on the bar (lifting the phone opens it too).
         var openSkyView: () -> Void
         var openSpotPicker: () -> Void
@@ -68,15 +71,11 @@ struct RadarScreen: View {
 
     private var heading: Double { location.heading ?? 0 }
 
-    /// The map in place of the radar. It needs a spot to centre on.
-    private var showsMap: Bool { offersMap && settings.mapScreen && model.observer != nil }
-
     var body: some View {
         GeometryReader { geo in
             let chrome = RadarChrome(size: geo.size, safeBottom: geo.safeAreaInsets.bottom, tagsHeight: tagsHeight,
                                      barHeight: showsBar ? RadarControlBar.height : 0)
             let layout = RadarLayout(size: chrome.radarSize)
-            let showsMap = showsMap
 
             ZStack {
                 if showsMap, let observer = model.observer {
@@ -100,8 +99,9 @@ struct RadarScreen: View {
                 if showsBar {
                     // As wide as the system tab bar: its margins from the sides, centred and
                     // capped on a wide screen.
-                    RadarControlBar(model: model, offersMap: offersMap, showsMap: showsMap,
-                                    onToggleMap: actions.toggleMap, onSkyView: actions.openSkyView,
+                    RadarControlBar(model: model, nextView: nextView,
+                                    stacksSplit: geo.size.width <= geo.size.height,
+                                    onNextView: actions.showNextView, onSkyView: actions.openSkyView,
                                     onSearch: actions.openSearchFullHeight,
                                     onLogbook: actions.openLogbook, onSettings: actions.openSettings)
                         .frame(width: max(0, min(RadarControlBar.maxWidth, geo.size.width - 2 * RadarControlBar.sideMargin)))
@@ -315,11 +315,11 @@ struct RadarChrome {
     }
 }
 
-/// iPhone / iPad: the floating glass bar along the bottom. First the ways of looking: Map /
-/// Radar swaps the view in place (named for where it goes, like the TV's view button) and Sky
-/// View opens the camera. Then the live dot and the aircraft count (Aircraft search), the
-/// logbook and settings. Demo traffic turns the count into a solid ink "DEMO 12", so nobody
-/// mistakes simulated aircraft for the real sky.
+/// iPhone / iPad: the floating glass bar along the bottom. First the ways of looking: the view
+/// button (Map / Radar, on iPad Radar → Split → Map, named for where it goes like the TV's)
+/// and Sky View, which opens the camera. Then the live dot and the aircraft count (Aircraft
+/// search), the logbook and settings. Demo traffic turns the count into a solid ink "DEMO 12",
+/// so nobody mistakes simulated aircraft for the real sky.
 ///
 /// With a `rail`, the iPhone Duo in landscape: the same buttons in the system's vertical bar
 /// strip, laid out the way the system lays out its own bar there (Safari's, say). The ways of
@@ -328,11 +328,12 @@ struct RadarChrome {
 /// the large content viewer still name them. The caller gives it the strip's height.
 struct RadarControlBar: View {
     let model: RadarModel
-    /// Map view on, with no map pane beside the radar.
-    let offersMap: Bool
-    let showsMap: Bool
+    /// Where the view button goes; nil, no button (Map view off, the Duo half open).
+    let nextView: RadarSettings.TVView?
+    /// iPad in portrait: a split stacks the radar above the map, so its symbol does too.
+    var stacksSplit = false
     var rail: Rail?
-    let onToggleMap: () -> Void
+    let onNextView: () -> Void
     let onSkyView: () -> Void
     let onSearch: () -> Void
     let onLogbook: () -> Void
@@ -370,8 +371,8 @@ struct RadarControlBar: View {
         if let rail {
             VStack(spacing: 0) {
                 VStack(spacing: rail.spacing) {
-                    if offersMap {
-                        mapButton.glassSurface(in: Circle(), interactive: true)
+                    if let nextView {
+                        viewButton(nextView).glassSurface(in: Circle(), interactive: true)
                     }
                     if SkyViewSupport.isAvailable {
                         skyViewButton.glassSurface(in: Circle(), interactive: true)
@@ -389,7 +390,7 @@ struct RadarControlBar: View {
             .environment(\.barRail, rail)
         } else {
             HStack(spacing: 0) {
-                if offersMap { mapButton }
+                if let nextView { viewButton(nextView) }
                 if SkyViewSupport.isAvailable { skyViewButton }
                 aircraftButton
                 logbookButton
@@ -401,14 +402,23 @@ struct RadarControlBar: View {
         }
     }
 
-    private var mapButton: some View {
-        BarButton(title: showsMap ? "Radar" : "Map", action: onToggleMap) {
-            Image(systemName: showsMap ? "scope" : "map.fill")
+    private func viewButton(_ next: RadarSettings.TVView) -> some View {
+        BarButton(title: LocalizedStringKey(next.title), action: onNextView) {
+            Image(systemName: stacksSplit ? next.stackedSymbol : next.symbol)
         }
         .disabled(model.observer == nil)
-        .accessibilityLabel(showsMap ? "Radar" : "Map")
-        .accessibilityHint(showsMap ? "Shows the radar instead of the map" : "Shows a live map of the traffic instead of the radar")
+        .accessibilityLabel(next.title)
+        .accessibilityHint(viewHint(next))
         .accessibilityIdentifier("mapButton")
+    }
+
+    private func viewHint(_ next: RadarSettings.TVView) -> String {
+        switch next {
+        case .radar: return String(localized: "Shows the radar instead of the map")
+        case .split: return stacksSplit ? String(localized: "Shows a live map of the traffic below the radar")
+                                        : String(localized: "Shows a live map of the traffic beside the radar")
+        case .map: return String(localized: "Shows a live map of the traffic instead of the radar")
+        }
     }
 
     private var skyViewButton: some View {

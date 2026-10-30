@@ -12,8 +12,9 @@ import CoreLocation
 protocol FlightFeed: Sendable {
     func flights(in bounds: GeographicBounds) async throws -> [Flight]
     /// Aircraft anywhere in the world whose tail number, flight number or callsign starts
-    /// with `query`.
-    func search(_ query: String) async throws -> [Flight]
+    /// with the query's identifier, or flying for the airlines or to and from the airports
+    /// it names.
+    func search(_ query: FlightSearchQuery) async throws -> [Flight]
     /// Where these airframes (by registration) and flights (by callsign) are now, anywhere.
     func lookup(registrations: [String], callsigns: [String]) async throws -> [Flight]
     /// Where this airframe (or, without a registration, this callsign) is right now,
@@ -26,11 +27,41 @@ protocol FlightFeed: Sendable {
 }
 
 extension FlightFeed {
-    func search(_ query: String) async throws -> [Flight] { [] }
+    func search(_ query: FlightSearchQuery) async throws -> [Flight] { [] }
     func lookup(registrations: [String], callsigns: [String]) async throws -> [Flight] { [] }
     func locate(registration: String?, callsign: String?) async throws -> Flight? { nil }
     func lastSource() async -> FeedSource? { nil }
     func setPreference(_ preference: DataSourcePreference) async {}
+}
+
+/// A worldwide search, read from what was typed: a prefix of a tail number, flight number or
+/// callsign, plus the airlines ("american") and airports ("XNA", "chicago") it names.
+struct FlightSearchQuery: Equatable, Sendable {
+    /// Upper case, spaces removed: "DL570", "N509DN", "GXLEI".
+    let identifier: String
+    /// ICAO designators of the airlines the text names: "american" → AAL, EGF…
+    let airlines: [String]
+    /// IATA codes of the airports it names: "xna" → XNA, "chicago" → ORD, MDW.
+    let airports: [String]
+
+    init(identifier: String, airlines: [String] = [], airports: [String] = []) {
+        self.identifier = identifier
+        self.airlines = airlines
+        self.airports = airports
+    }
+
+    /// Reads the catalogs (a few milliseconds), so build it off the main thread.
+    init(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
+        let isWords = !trimmed.isEmpty && trimmed.allSatisfy { $0.isLetter || " -'.&/".contains($0) }
+        self.init(
+            identifier: trimmed.uppercased().filter { !$0.isWhitespace },
+            // Names from four letters: a three-letter code is already a callsign prefix
+            // ("AAL"), and "air" starts half the catalog.
+            airlines: isWords && trimmed.count >= 4 ? AirlineCatalog.search(trimmed, limit: 4, namesOnly: true).map(\.icao) : [],
+            airports: isWords ? AirportCatalog.search(trimmed).map(\.iata) : []
+        )
+    }
 }
 
 enum FeedError: LocalizedError, Equatable {
@@ -150,13 +181,17 @@ struct FlightRadarFeed: FlightFeed {
         return try await fetch(url).max { $0.positionTime < $1.positionTime }
     }
 
-    func search(_ query: String) async throws -> [Flight] {
-        let q = query.uppercased().filter { !$0.isWhitespace }
+    /// `airline` takes ICAO designators and `airport` IATA codes (flights to and from it),
+    /// both exact, both comma lists.
+    func search(_ query: FlightSearchQuery) async throws -> [Flight] {
+        let q = query.identifier
         guard q.count >= 2 else { return [] }
         let urls = [
             Self.worldURL(filter: "reg", values: [q] + RegistrationCountry.hyphenatedForms(of: q)),
             Self.worldURL(filter: "flight", values: [q]),
             Self.worldURL(filter: "callsign", values: [q]),
+            Self.worldURL(filter: "airline", values: query.airlines),
+            Self.worldURL(filter: "airport", values: query.airports),
         ].compactMap { $0 }
         return try await fetchAll(urls)
     }

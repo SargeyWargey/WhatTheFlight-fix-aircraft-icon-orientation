@@ -180,6 +180,22 @@ final class TrafficMapGeometryTests: XCTestCase {
     }
 
     @MainActor
+    func testTheIPadStartsSplitUnlessItWasLeftOnTheMapAndKeepsItsChoice() {
+        let fresh = UserDefaults(suiteName: "TrafficMapGeometryTests-\(UUID().uuidString)")!
+        XCTAssertEqual(RadarSettings(defaults: fresh).padView, .split)
+
+        let onMap = UserDefaults(suiteName: "TrafficMapGeometryTests-\(UUID().uuidString)")!
+        onMap.set(true, forKey: "wtf.mapScreen")
+        XCTAssertEqual(RadarSettings(defaults: onMap).padView, .map)
+
+        let settings = RadarSettings(defaults: fresh)
+        settings.padView = .radar
+        XCTAssertEqual(RadarSettings(defaults: fresh).padView, .radar)
+        settings.resetToDefaults()
+        XCTAssertEqual(settings.padView, .split)
+    }
+
+    @MainActor
     func testTheMapRangeFollowsTheRadarUntilSetAndPersistsWithTheMapType() {
         let defaults = UserDefaults(suiteName: "TrafficMapGeometryTests-\(UUID().uuidString)")!
         let settings = RadarSettings(defaults: defaults)

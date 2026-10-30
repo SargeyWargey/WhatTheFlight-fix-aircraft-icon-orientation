@@ -9,6 +9,8 @@
 //    whattheflight://sky           Sky View
 //    whattheflight://sky/<id>      Sky View, guiding you to that flight
 //    whattheflight://logbook       the logbook
+//    whattheflight://logbook/stats a logbook tab (stats, badges…)
+//    whattheflight://logbook/badge/<id>  a badge's page
 //
 
 #if os(iOS)
@@ -28,6 +30,10 @@ final class AppRouter {
         case logbook
         /// An airframe's page in the logbook (Spotlight, Siri).
         case airframe(String)
+        /// A logbook tab by name, `LogbookTab`'s raw value (widgets).
+        case logbookTab(String)
+        /// A badge's page in the logbook (the Badges widget).
+        case badge(String)
         case radar
         case startSkyWatch
     }
@@ -45,6 +51,8 @@ final class AppRouter {
         case .airframe(let reg):
             let safe = reg.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? reg
             return URL(string: "\(scheme)://logbook/airframe/\(safe)")!
+        case .logbookTab(let tab): return URL(string: "\(scheme)://logbook/\(tab)")!
+        case .badge(let id): return URL(string: "\(scheme)://logbook/badge/\(id)")!
         case .radar: return URL(string: "\(scheme)://radar")!
         case .startSkyWatch: return URL(string: "\(scheme)://skywatch")!
         }
@@ -62,7 +70,12 @@ final class AppRouter {
             pending = id.isEmpty ? .sky : .find(id)
         case "logbook":
             let parts = Array(url.pathComponents.dropFirst())
-            pending = parts.count == 2 && parts[0] == "airframe" ? .airframe(parts[1]) : .logbook
+            switch (parts.first, parts.count) {
+            case ("airframe", 2): pending = .airframe(parts[1])
+            case ("badge", 2): pending = .badge(parts[1])
+            case (let tab?, 1): pending = .logbookTab(tab)
+            default: pending = .logbook
+            }
         case "skywatch": pending = .startSkyWatch
         default: pending = .radar
         }

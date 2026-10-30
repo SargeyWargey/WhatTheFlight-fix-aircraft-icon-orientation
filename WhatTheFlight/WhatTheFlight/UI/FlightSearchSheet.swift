@@ -3,7 +3,8 @@
 //  WhatTheFlight
 //
 //  Every aircraft the radar can see, searchable by flight, airline, type, registration or
-//  airport, plus any aircraft in the world by tail number, flight number or callsign.
+//  airport, plus any aircraft in the world by tail number, flight number, callsign, airline
+//  or airport.
 //  Tapping one sends it to the centre of the radar; pinning it, from its details, follows it
 //  wherever it goes (on the radar edge and the map). Rows carry no pin button: a pinned
 //  aircraft that isn't flying, which has no details, is unpinned with a swipe. Favourites come
@@ -80,7 +81,7 @@ struct FlightSearchSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(Palette.paper.ignoresSafeArea())
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Flight, tail number, airline, airport…")
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Flight, airline, airport")
             .textInputAutocapitalization(.characters)
             .autocorrectionDisabled()
             .navigationTitle("Aircraft")
@@ -117,10 +118,10 @@ struct FlightSearchSheet: View {
             } header: {
                 Text(remote.isEmpty ? "Worldwide" : "Worldwide · \(remote.count)")
             } footer: {
-                Text("Tail numbers, flight numbers (DL570) and callsigns (DAL570) anywhere in the world.")
+                Text("Tail numbers, flights (DL570), callsigns (DAL570), airlines (American) and airports (XNA, Chicago) anywhere in the world.")
             }
         } else if !hasLocal, !trimmedQuery.isEmpty {
-            Text("Keep typing to search worldwide by tail or flight number.")
+            Text("Keep typing to search worldwide.")
                 .monoScaled(13)
                 .foregroundStyle(Palette.caption)
                 .listRowBackground(Color.clear)

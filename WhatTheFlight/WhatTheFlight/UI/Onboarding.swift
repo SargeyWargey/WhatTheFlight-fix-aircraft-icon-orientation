@@ -65,8 +65,8 @@ struct TourPage: Identifiable {
     private static func mapPage(_ device: TourDevice) -> TourPage {
         switch device {
         case .pad:
-            TourPage(art: .map, eyebrow: "The map", title: "Turn it for the map",
-                     body: "Hold your iPad sideways and a live map of the same traffic joins the radar. A pinned aircraft leaves a yellow trail.")
+            TourPage(art: .map, eyebrow: "The map", title: "Radar, split or map",
+                     body: "Tap Split for a live map of the same traffic alongside the radar, Map for the map alone, and Radar to come back. A pinned aircraft leaves a yellow trail.")
         case .duo:
             TourPage(art: .map, eyebrow: "The map", title: "Unfold for the map",
                      body: "Open iPhone Duo halfway: the radar takes one side and a live map the other. A pinned aircraft leaves a yellow trail.")
@@ -125,6 +125,9 @@ private struct TourScreen {
     let device: TourDevice
     let unit: CGFloat
     var landscape = false
+    /// iPad: the radar and the map together, the radar on the top half and the map below,
+    /// under the bar (the map beside the radar on its side), as `RadarRootView` lays them out.
+    var split = false
 
     /// The real screen, in points.
     var real: CGSize {
@@ -152,9 +155,9 @@ private struct TourScreen {
 
     var size: CGSize { CGSize(width: real.width * k, height: real.height * k) }
 
-    var turned: TourScreen {
+    var splitting: TourScreen {
         var screen = self
-        screen.landscape.toggle()
+        screen.split = true
         return screen
     }
 
@@ -166,25 +169,29 @@ private struct TourScreen {
     static let barSideMargin: CGFloat = 21
     static let barMaxWidth: CGFloat = 480
 
-    /// Where the radar's backdrop goes: the whole screen, or the square on the left of an
-    /// iPad on its side.
+    /// Where the radar's backdrop goes: the whole screen, or with the iPad's split the top half
+    /// (the square on the left on its side).
     var radarPane: CGRect {
-        device == .pad && landscape
+        guard device == .pad && split else { return CGRect(origin: .zero, size: size) }
+        return landscape
             ? CGRect(x: 0, y: 0, width: size.height, height: size.height)
-            : CGRect(origin: .zero, size: size)
+            : CGRect(x: 0, y: 0, width: size.width, height: size.height / 2)
     }
 
-    /// iPad on its side: the map beside the radar.
+    /// The iPad's split: the map on the bottom half, or beside the radar on its side.
     var mapPane: CGRect? {
-        guard device == .pad && landscape else { return nil }
-        return CGRect(x: size.height, y: 0, width: size.width - size.height, height: size.height)
+        guard device == .pad && split else { return nil }
+        return landscape
+            ? CGRect(x: size.height, y: 0, width: size.width - size.height, height: size.height)
+            : CGRect(x: 0, y: size.height / 2, width: size.width, height: size.height / 2)
     }
 
-    /// Where the icons and the hero go: above the bar, left of the Duo's strip, or all of it.
+    /// Where the icons and the hero go, in the radar pane's own coordinates: above the bar (or
+    /// all the top half, the bar being over the map), left of the Duo's strip, or all of it.
     var face: CGRect {
         switch device {
         case .phone, .pad:
-            CGRect(x: 0, y: 0, width: radarPane.width, height: barTop - 3 * chromeK)
+            CGRect(x: 0, y: 0, width: radarPane.width, height: min(radarPane.maxY, barTop - 3 * chromeK) - radarPane.minY)
         case .duo:
             CGRect(x: 0, y: 0, width: size.width - Self.strip * k, height: size.height)
         case .tv:
@@ -380,10 +387,17 @@ private struct DeviceShell<Content: View>: View {
     }
 }
 
-/// The radar's bar, drawn small: Map (or Radar), Sky View, the live count, Logbook and
-/// Settings, sharing a glass capsule as wide as the real one (the system tab bar's margins).
+/// The radar's bar, drawn small: the view button (Map, Radar, or on iPad Split), Sky View, the
+/// live count, Logbook and Settings, sharing a glass capsule as wide as the real one (the
+/// system tab bar's margins).
 private struct MiniBar: View {
-    enum First { case map, radar, none }
+    /// The view the first button goes to.
+    enum First {
+        case map, split, radar, none
+
+        /// The radar's: Split on iPad, where the button steps Radar → Split → Map.
+        static func fromRadar(on device: TourDevice) -> First { device == .pad ? .split : .map }
+    }
 
     let screen: TourScreen
     var first = First.map
@@ -396,7 +410,7 @@ private struct MiniBar: View {
                         min(TourScreen.barMaxWidth, screen.real.width - 2 * TourScreen.barSideMargin) * c)
         HStack(spacing: 0) {
             if first != .none {
-                item(first == .radar ? "scope" : "map.fill", tapped: tapped)
+                item(symbol(for: first), tapped: tapped)
             }
             item("camera.viewfinder")
             HStack(spacing: 3 * c) {
@@ -410,6 +424,14 @@ private struct MiniBar: View {
         .padding(.horizontal, 6 * c)
         .frame(width: max(0, width), height: TourScreen.barHeight * c)
         .miniGlass(Capsule())
+    }
+
+    private func symbol(for first: First) -> String {
+        switch first {
+        case .radar: "scope"
+        case .split: screen.landscape ? "rectangle.split.2x1.fill" : "rectangle.split.1x2.fill"
+        case .map, .none: "map.fill"
+        }
     }
 
     private func item(_ symbol: String, tapped: Bool = false) -> some View {
@@ -495,7 +517,8 @@ private struct MiniRail: View {
 /// A screen and its chrome: the bar along the bottom (iPhone, iPad) or the strip (iPhone Duo).
 private struct MiniScreen<Content: View>: View {
     let screen: TourScreen
-    var first = MiniBar.First.map
+    /// The bar's first button; nil, the radar's.
+    var first: MiniBar.First? = nil
     var tapped = false
     /// Over the bar too: a sheet.
     var cover: AnyView? = nil
@@ -515,11 +538,10 @@ private struct MiniScreen<Content: View>: View {
     @ViewBuilder private var chrome: some View {
         switch screen.device {
         case .phone, .pad:
-            // On its side the iPad has the map beside the radar, so no Map button.
-            MiniBar(screen: screen, first: screen.mapPane == nil ? first : .none, tapped: tapped)
+            MiniBar(screen: screen, first: first ?? .fromRadar(on: screen.device), tapped: tapped)
                 .position(screen.barMid)
         case .duo:
-            MiniRail(screen: screen, showsMap: first != .none, showsRadar: first == .radar, tapped: tapped)
+            MiniRail(screen: screen, showsMap: first != MiniBar.First.none, showsRadar: first == .radar, tapped: tapped)
                 .position(x: screen.size.width - 48 * screen.k, y: screen.size.height / 2)
         case .tv:
             EmptyView()
@@ -639,7 +661,7 @@ private struct MiniRadarScreen: View {
     var showHero = true
     var showNorth = false
     var sweep = false
-    var first = MiniBar.First.map
+    var first: MiniBar.First? = nil
     var tapped = false
     /// Drawn over the radar, in screen coordinates.
     var overlay: AnyView? = nil
@@ -650,6 +672,7 @@ private struct MiniRadarScreen: View {
         MiniScreen(screen: screen, first: first, tapped: tapped, cover: cover) {
             RadarFace(screen: screen, size: screen.radarPane.size, face: screen.face, heading: heading,
                       focused: focused, pinned: pinned, showHero: showHero, showNorth: showNorth, sweep: sweep)
+                .offset(x: screen.radarPane.minX, y: screen.radarPane.minY)
             if let pane = screen.mapPane {
                 MiniMap(size: pane.size, icon: screen.iconSize * 0.9, focused: focused, pinned: TourTraffic.pinnedOnMap)
                     .offset(x: pane.minX, y: pane.minY)
@@ -1015,8 +1038,8 @@ private struct TourDetails: View {
     }
 }
 
-/// The map, the way each device shows it: the iPhone's Map button, the iPad turning on its
-/// side, the iPhone Duo opening like a book, the TV's ▲.
+/// The map, the way each device shows it: the iPhone's Map button, the iPad's Split and Map,
+/// the iPhone Duo opening like a book, the TV's ▲.
 private struct TourMap: View {
     let screen: TourScreen
 
@@ -1095,60 +1118,55 @@ private struct MapCard: View {
     }
 }
 
-/// The iPad turns a quarter to the left and the map joins the radar beside it.
+/// Tap Split: the map joins the radar on the bottom half. Map: the map alone under a one-row
+/// card. Radar: back again.
 private struct PadMap: View {
     let screen: TourScreen
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// One loop, in seconds: upright, turn, the map fades in, holds, fades out, turn back.
-    private static let loop: TimeInterval = 8
+    /// One loop, in seconds: radar, split, map, each tapped away from on the bar.
+    private static let loop: TimeInterval = 9
+    /// When each tap lands: Split, Map, Radar. Each view fades into the next just after.
+    private static let taps: [TimeInterval] = [1.6, 4.6, 7.4]
 
     var body: some View {
+        // Worked out from the clock rather than with `phaseAnimator`, which stalls on a long
+        // delay while the sheet behind keeps redrawing.
         TimelineView(.animation(paused: reduceMotion)) { context in
-            let t = reduceMotion ? 4 : context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: Self.loop)
+            let t = reduceMotion ? 3.5 : context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: Self.loop)
             scene(at: t)
         }
-        .frame(width: 300 * screen.unit, height: 300 * screen.unit)
     }
 
-    /// Worked out from the clock rather than animated: the upright iPad turned a quarter has
-    /// the same outline as the one on its side, so swapping one for the other mid-turn has to
-    /// happen in a single frame.
     private func scene(at t: TimeInterval) -> some View {
-        func ease(_ from: TimeInterval, _ to: TimeInterval) -> Double {
-            let x = max(0, min(1, (t - from) / (to - from)))
+        func ease(_ from: TimeInterval) -> Double {
+            let x = max(0, min(1, (t - from - 0.3) / 0.5))
             return x * x * (3 - 2 * x)
         }
-        // Turn 1.6–2.4 s, map 2.4–2.9 s, back 6.2–6.6 s, turn back 6.6–7.4 s.
-        let angle = -90 * (ease(1.6, 2.4) - ease(6.6, 7.4))
-        let onSide = t >= 2.4 && t < 6.6
-        let map = ease(2.4, 2.9) - ease(6.2, 6.6)
-        let turned = screen.turned
-        return ZStack {
-            if onSide {
-                MiniScreen(screen: turned) {
-                    RadarFace(screen: turned, size: turned.radarPane.size, face: turned.face, pinned: TourTraffic.pinnedOnMap)
-                    if let pane = turned.mapPane {
-                        ZStack {
-                            Palette.paper
-                            MiniMap(size: pane.size, icon: turned.iconSize * 0.9, ring: 0.36)
-                                .opacity(map)
-                        }
-                        .frame(width: pane.width, height: pane.height)
+        let (toSplit, toMap, toRadar) = (ease(Self.taps[0]), ease(Self.taps[1]), ease(Self.taps[2]))
+        // Named for where it goes, swapping halfway through each fade.
+        let next: MiniBar.First = toRadar > 0.5 || toSplit < 0.5 ? .split : toMap < 0.5 ? .map : .radar
+        let tapped = Self.taps.contains { t >= $0 && t < $0 + 0.3 }
+        let split = screen.splitting
+        let face = screen.face
+        return MiniScreen(screen: screen, first: next, tapped: tapped) {
+            RadarFace(screen: screen, size: screen.size, face: face, pinned: TourTraffic.pinnedOnMap)
+                .opacity(1 - toSplit + toRadar)
+            if let pane = split.mapPane {
+                ZStack(alignment: .topLeading) {
+                    RadarFace(screen: split, size: split.radarPane.size, face: split.face, pinned: TourTraffic.pinnedOnMap)
+                        .offset(y: split.radarPane.minY)
+                    MiniMap(size: pane.size, icon: screen.iconSize * 0.9, ring: 0.4)
                         .offset(x: pane.minX, y: pane.minY)
-                    }
                 }
-            } else {
-                MiniRadarScreen(screen: screen, pinned: TourTraffic.pinnedOnMap)
-                    .rotationEffect(.degrees(angle))
-                    .overlay(alignment: .top) {
-                        Image(systemName: "rotate.left")
-                            .font(.system(size: 16 * screen.unit, weight: .bold))
-                            .foregroundStyle(Palette.signal)
-                            .offset(y: -24 * screen.unit)
-                            .opacity(1 - ease(1.3, 1.6) + ease(7.4, 7.7))
-                    }
+                .opacity(toSplit - toMap)
             }
+            ZStack(alignment: .topLeading) {
+                MiniMap(size: screen.size, icon: screen.iconSize * 0.9, ring: 0.42)
+                MapCard(width: face.width - 48 * screen.k, size: screen.heroSize)
+                    .position(x: face.midX, y: face.maxY - screen.heroSize)
+            }
+            .opacity(toMap - toRadar)
         }
         .transaction { $0.animation = nil }
     }

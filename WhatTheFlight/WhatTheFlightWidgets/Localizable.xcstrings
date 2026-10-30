@@ -1,8 +1,34 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "—" : {
+
+    },
+    "·" : {
+
+    },
     "%@" : {
 
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %lld types" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$lld types"
+          }
+        }
+      }
     },
     "%@ %@" : {
       "localizations" : {
@@ -10,26 +36,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ %2$@"
-          }
-        }
-      }
-    },
-    "%@ %@ in %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@ in %3$@"
-          }
-        }
-      }
-    },
-    "%@ %@ overhead now" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@ overhead now"
           }
         }
       }
@@ -54,7 +60,66 @@
         }
       }
     },
+    "%@ %@ in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ in %3$@"
+          }
+        }
+      }
+    },
+    "%@ %@ overhead now" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ overhead now"
+          }
+        }
+      }
+    },
+    "%@ %lld today · %@ logged" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$lld today · %3$@ logged"
+          }
+        }
+      }
+    },
+    "%@ %lld today · %lld-day streak" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$lld today · %3$lld-day streak"
+          }
+        }
+      }
+    },
+    "%@ aircraft" : {
+
+    },
+    "%@ Badges" : {
+
+    },
     "%@ Clear skies" : {
+
+    },
+    "%@ in all · %lld types" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ in all · %2$lld types"
+          }
+        }
+      }
+    },
+    "%@ Logbook" : {
 
     },
     "%@ Nothing passing over" : {
@@ -70,12 +135,12 @@
         }
       }
     },
-    "%@ · %@" : {
+    "%@%lld" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$@ · %2$@"
+            "value" : "%1$@%2$lld"
           }
         }
       }
@@ -84,6 +149,19 @@
 
     },
     "%lld aircraft in range" : {
+
+    },
+    "%lld aircraft today, best day %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld aircraft today, best day %2$lld"
+          }
+        }
+      }
+    },
+    "%lld day streak" : {
 
     },
     "%lld in %@" : {
@@ -99,16 +177,131 @@
     "%lld in range" : {
 
     },
-    "ARRIVES IN" : {
+    "%lld notable" : {
+
+    },
+    "%lld of %lld earned" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld earned"
+          }
+        }
+      }
+    },
+    "%lld of %lld levels" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld levels"
+          }
+        }
+      }
+    },
+    "%lld of 50 aircraft logged here before the clock draws." : {
+
+    },
+    "%lld today" : {
+
+    },
+    "%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "%lld/%lld earned" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld earned"
+          }
+        }
+      }
+    },
+    "1 day streak" : {
+
+    },
+    "1 notable" : {
+
+    },
+    "adsb.lol" : {
+
+    },
+    "adsb.lol only: open ADS-B data, without routes" : {
+
+    },
+    "Aircraft by hour" : {
+
+    },
+    "Aircraft by hour of the day" : {
+
+    },
+    "aircraft logged" : {
+
+    },
+    "Aircraft per day" : {
+
+    },
+    "Aircraft you've logged today, your streak and your records." : {
+
+    },
+    "Airframes" : {
+
+    },
+    "Airlines" : {
 
     },
     "Alerts with your phone locked" : {
 
     },
+    "All places" : {
+
+    },
+    "Also close" : {
+
+    },
     "Also up there" : {
 
     },
+    "ARRIVES IN" : {
+
+    },
     "Automatic" : {
+
+    },
+    "Badge" : {
+
+    },
+    "Badges" : {
+
+    },
+    "best day" : {
+
+    },
+    "best run" : {
+
+    },
+    "Best run %lld days" : {
+
+    },
+    "Busiest" : {
+
+    },
+    "Busiest at %@" : {
+
+    },
+    "busy" : {
+
+    },
+    "by %@" : {
 
     },
     "Clear skies" : {
@@ -120,16 +313,49 @@
     "Closest pass in" : {
 
     },
+    "Countries" : {
+
+    },
     "Counts down to the next aircraft passing over you." : {
+
+    },
+    "day streak" : {
+
+    },
+    "days in a row" : {
 
     },
     "Demo traffic" : {
 
     },
-    "Ends the Sky Watch Live Activity and its alerts." : {
+    "Directions aircraft fly" : {
+
+    },
+    "East" : {
+
+    },
+    "East-northeast" : {
+
+    },
+    "East-southeast" : {
 
     },
     "Ends the flight's Live Activity." : {
+
+    },
+    "Ends the Sky Watch Live Activity and its alerts." : {
+
+    },
+    "Every aircraft that flies over is logged on its own." : {
+
+    },
+    "Every badge" : {
+
+    },
+    "Every level" : {
+
+    },
+    "Filling in" : {
 
     },
     "Flightradar24" : {
@@ -141,16 +367,66 @@
     "Flightradar24, switching to adsb.lol while it's down" : {
 
     },
+    "Follow one badge, or leave it empty to see the one you're closest to." : {
+
+    },
+    "Following" : {
+
+    },
     "Imperial" : {
+
+    },
+    "in the next ten minutes" : {
+
+    },
+    "keep it going" : {
 
     },
     "Kilometers, meters and km/h" : {
 
     },
+    "L%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "L%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "Landed" : {
+
+    },
     "LANDED" : {
 
     },
-    "Landed" : {
+    "Last 14 days" : {
+
+    },
+    "Last 30 days" : {
+
+    },
+    "Level %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Level %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "light" : {
+
+    },
+    "Log one to keep the streak" : {
+
+    },
+    "Logbook" : {
+
+    },
+    "Logged" : {
 
     },
     "Look %@ · %@" : {
@@ -169,19 +445,49 @@
     "Miles, feet and knots" : {
 
     },
+    "Mostly" : {
+
+    },
     "Moving away" : {
+
+    },
+    "N" : {
+
+    },
+    "New: %@" : {
+
+    },
+    "Next overhead" : {
 
     },
     "Next Overhead" : {
 
     },
-    "Next overhead" : {
+    "Next up" : {
+
+    },
+    "North" : {
+
+    },
+    "North-northeast" : {
+
+    },
+    "North-northwest" : {
+
+    },
+    "Northeast" : {
+
+    },
+    "Northwest" : {
 
     },
     "Nothing airborne nearby." : {
 
     },
     "Nothing in range" : {
+
+    },
+    "Nothing logged yet" : {
 
     },
     "Nothing passing over" : {
@@ -193,16 +499,22 @@
     "Now" : {
 
     },
-    "Open What The Flight? once to start." : {
-
-    },
-    "Open What The Flight? to start" : {
+    "of %lld" : {
 
     },
     "Open data" : {
 
     },
     "Open the app to start" : {
+
+    },
+    "Open What The Flight?" : {
+
+    },
+    "Open What The Flight? once to start." : {
+
+    },
+    "Open What The Flight? to start" : {
 
     },
     "Over you in %@" : {
@@ -217,13 +529,43 @@
     "Passing now" : {
 
     },
+    "Peak" : {
+
+    },
+    "peak %lld" : {
+
+    },
+    "quiet" : {
+
+    },
+    "Recently earned" : {
+
+    },
     "Sky Watch" : {
 
     },
     "Sky Watch · %@" : {
 
     },
+    "South" : {
+
+    },
+    "South-southeast" : {
+
+    },
+    "South-southwest" : {
+
+    },
+    "Southeast" : {
+
+    },
+    "Southwest" : {
+
+    },
     "Start Sky Watch" : {
+
+    },
+    "steady" : {
 
     },
     "Stop" : {
@@ -238,22 +580,46 @@
     "The nearest aircraft to you, and what else is in the sky." : {
 
     },
+    "today" : {
+
+    },
+    "Today" : {
+
+    },
+    "Types" : {
+
+    },
+    "Unlocked" : {
+
+    },
+    "Watch a badge fill toward its next level, and see what you've earned." : {
+
+    },
+    "West" : {
+
+    },
+    "West-northwest" : {
+
+    },
+    "West-southwest" : {
+
+    },
+    "When aircraft pass over where you watch, and which way they fly." : {
+
+    },
     "Where are you?" : {
 
     },
-    "adsb.lol" : {
+    "Your logbook shows up here once the app has run." : {
 
     },
-    "adsb.lol only: open ADS-B data, without routes" : {
+    "Your sky" : {
 
     },
-    "in the next ten minutes" : {
+    "Your Sky" : {
 
     },
-    "·" : {
-
-    },
-    "—" : {
+    "Your sky shows up here once the app has run." : {
 
     }
   },

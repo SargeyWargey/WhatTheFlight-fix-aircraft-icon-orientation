@@ -14,6 +14,9 @@ struct WhatTheFlightWidgets: WidgetBundle {
     var body: some Widget {
         NearestFlightWidget()
         NextOverheadWidget()
+        LogbookStatsWidget()
+        BadgesWidget()
+        SkyClockWidget()
         SkyWatchLiveActivity()
         FlightFollowLiveActivity()
     }

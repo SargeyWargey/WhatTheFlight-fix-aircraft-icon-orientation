@@ -61,5 +61,5 @@ struct Whereabouts: Equatable, Sendable {
         return "\(RadarFormat.wholeNumber(Int(distanceMiles.rounded()))) mi \(GeoMath.cardinal(bearing)) of you"
     }
 
-    static let notFoundText = "Not on Flightradar24 right now. It's probably parked with its transponder off, or flying somewhere without coverage."
+    static let notFoundText = "It isn't transmitting right now. It's probably parked with its transponder off, or flying somewhere without coverage."
 }

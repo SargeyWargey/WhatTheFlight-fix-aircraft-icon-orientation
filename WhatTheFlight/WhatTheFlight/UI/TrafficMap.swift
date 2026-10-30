@@ -4,8 +4,9 @@
 //
 //  The ambient map: every aircraft inside the radius on a muted MapKit map, with fading
 //  trails, the radius ring, the airports traffic is using right now and the observer. The
-//  Apple TV shows it full screen (`TVMapStack`); iPad shows it beside the radar in landscape,
-//  and iPhone and iPad swap it in for the radar from the bar's Map button (`RadarScreen`).
+//  Apple TV shows it full screen (`TVMapStack`); iPad shows it beside the radar (below it in
+//  portrait) in its Split view, and iPhone and iPad swap it in for the radar from the bar's
+//  Map button (`RadarScreen`).
 //  The pieces it shares with the flight detail map (ring, observer dot, projected path,
 //  airport pin) live here too.
 //
@@ -36,7 +37,9 @@ struct TrafficMap: View {
     let trail: (String) -> [RadarModel.TrailPoint]
     /// Bump to rebuild trails and airport pins (`model.trailVersion`).
     let trailVersion: Int
-    /// Compass direction for "up"; nil = north up.
+    /// Compass direction for "up"; nil = north up. Asked of the camera: the aircraft turn by
+    /// the heading the map actually has (`cameraHeading`), which stays behind once the user
+    /// has moved an interactive map.
     var headingUp: Double? = nil
     var options = Options()
     var onTap: ((String) -> Void)? = nil
@@ -73,6 +76,11 @@ struct TrafficMap: View {
     /// distance rather than a span; the ratio holds for as long as the map keeps its size.
     @State private var metresPerMile: Double?
     @State private var awaitingFit = false
+    /// The heading the map is drawn at, from MapKit as the camera moves. The glyphs turn by
+    /// this rather than `headingUp`, so they stay with the map: a map the user has dragged
+    /// doesn't follow the phone round, and while the camera turns they turn with it. Like the
+    /// fog's placement, an object only the glyphs read, so a turning camera redraws them alone.
+    @LazyState private var cameraHeading = MapCameraHeading()
     @State private var mapSize: CGSize = .zero
     @State private var visibleBounds: GeographicBounds?
     @State private var trails: [TrailSegment] = []
@@ -131,6 +139,10 @@ struct TrafficMap: View {
     }
 
     private var heading: Double { headingUp ?? 0 }
+
+    /// The user has dragged or zoomed a map that would otherwise turn with them: it holds
+    /// still, ignoring `headingUp`, until Recentre.
+    private var isHeldByUser: Bool { options.interactive && headingUp != nil && camera.positionedByUser }
 
     /// Yellow reads less strongly than the blue on a pale map, so a pinned trail is wider.
     private func trailWidth(pinned: Bool) -> CGFloat {
@@ -276,8 +288,12 @@ struct TrafficMap: View {
             rebuildAirports()
             learnFit(from: context.camera)
             placeFog(proxy)
+            cameraHeading.note(context.camera.heading, tolerance: 0)
         }
-        .onMapCameraChange(frequency: .continuous) { _ in placeFog(proxy) }
+        .onMapCameraChange(frequency: .continuous) { context in
+            placeFog(proxy)
+            cameraHeading.note(context.camera.heading, tolerance: 0.25)
+        }
         .onChange(of: FogPlaceKey(on: options.fog != nil, radiusMiles: radiusMiles, latitude: observer.latitude,
                                   longitude: observer.longitude, size: mapSize)) { _, _ in placeFog(proxy) }
         .onChange(of: PlaceKey(observer: observer, radiusMiles: radiusMiles, northUp: headingUp == nil,
@@ -297,11 +313,12 @@ struct TrafficMap: View {
         }
         .overlay(alignment: .bottomTrailing) {
             if options.interactive {
-                RecenterButton { reframe(animated: true) }
+                RecenterButton(isHeld: isHeldByUser) { reframe(animated: true) }
+                    .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: isHeldByUser)
                     .padding(16)
-                    // iPhone's map: above the hero card and the bar.
-                    .padding(.trailing, options.cardInset.width)
-                    .padding(.bottom, options.cardInset.height)
+                // iPhone's map: above the hero card and the bar.
+                .padding(.trailing, options.cardInset.width)
+                .padding(.bottom, options.cardInset.height)
             }
         }
         .disabled(!options.interactive)
@@ -318,8 +335,8 @@ struct TrafficMap: View {
         let isFocused = blip.role == .focused
         let isAnnounced = blip.id == announcedID
         // Glyph only: the radar or the hero card beside the map already names the focus.
-        AircraftBlip(profile: blip.contact.profile, screenTrack: flight.track - heading, isFocused: isFocused,
-                     isAnnounced: isAnnounced, isFavorite: favorites.contains(flight), scale: options.scale)
+        MapBlip(profile: blip.contact.profile, track: flight.track, heading: cameraHeading, isFocused: isFocused,
+                isAnnounced: isAnnounced, isFavorite: favorites.contains(flight), scale: options.scale)
             .opacity(blip.role == .fringe ? 0.4 : 1)
             .onTapGesture { onTap?(blip.id) }
             .accessibilityElement()
@@ -570,20 +587,41 @@ struct AirportPin: View {
 }
 
 /// Back to the fitted frame after panning around (iPad).
+/// The round glass button that refits the map. Once the user has dragged a map that turns
+/// with them it holds still, which can look stuck when the phone turns and the map doesn't:
+/// the button then stretches leftward into a pill carrying "Tap to turn with you again" in
+/// the pin's yellow. The caller animates `isHeld`.
 private struct RecenterButton: View {
+    var isHeld = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "location.fill")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(Palette.ink)
-                .frame(width: 44, height: 44)
-                .glassSurface(in: Circle(), interactive: true)
+            HStack(spacing: 0) {
+                if isHeld {
+                    Text("Tap to turn with you again")
+                        .font(.mono(11, .semibold))
+                        .tracking(0.8)
+                        .textCase(.uppercase)
+                        .foregroundStyle(Palette.pinned)
+                        .lineLimit(1)
+                        .fixedSize()
+                        .padding(.leading, 16)
+                        .transition(.opacity)
+                }
+                Image(systemName: "location.fill")
+                    .font(.system(size: 17, weight: .semibold))
+                    // Yellow with the note, so the whole pill reads as one message.
+                    .foregroundStyle(isHeld ? Palette.pinned : Palette.ink)
+                    .frame(width: 44, height: 44)
+            }
+            // A capsule round 44 × 44 is the circle; held, it grows into the pill.
+            .glassSurface(in: Capsule(), interactive: true)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Recenter map")
-        .accessibilityHint("Shows your whole radius again")
+        .accessibilityHint(isHeld ? Text("Shows your whole radius again and turns the map with you")
+                                  : Text("Shows your whole radius again"))
     }
 }
 
@@ -620,4 +658,39 @@ extension GeographicBounds {
     }
 }
 #endif
+
+// MARK: - Camera heading
+
+/// The heading MapKit is drawing the map at (`onMapCameraChange`), which the glyphs turn by
+/// so they always lie along their track on the map. Only `MapBlip` reads it, so a turning
+/// camera redraws the glyphs and not the map.
+@Observable
+final class MapCameraHeading {
+    private(set) var degrees: Double = 0
+
+    /// A pan or zoom leaves the heading alone, so this changes anything only while the camera
+    /// is turning; `tolerance` 0 takes the settled value exactly.
+    func note(_ heading: Double, tolerance: Double) {
+        let turned = GeoMath.normalize(heading)
+        guard turned != degrees, abs(GeoMath.shortestDelta(from: degrees, to: turned)) >= tolerance else { return }
+        degrees = turned
+    }
+}
+
+/// An aircraft on the map, turned to its track on the map as the camera has it. Its own view
+/// so that reading the heading tracks this glyph alone.
+private struct MapBlip: View {
+    let profile: FlightProfile
+    let track: Double
+    let heading: MapCameraHeading
+    let isFocused: Bool
+    let isAnnounced: Bool
+    let isFavorite: Bool
+    let scale: CGFloat
+
+    var body: some View {
+        AircraftBlip(profile: profile, screenTrack: track - heading.degrees, isFocused: isFocused,
+                     isAnnounced: isAnnounced, isFavorite: isFavorite, scale: scale)
+    }
+}
 #endif

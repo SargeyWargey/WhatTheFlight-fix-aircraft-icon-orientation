@@ -63,6 +63,16 @@
         }
       }
     },
+    "%@ · %lld types" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$lld types"
+          }
+        }
+      }
+    },
     "%@ · on the radar or map, hold ● to change it" : {
 
     },
@@ -82,12 +92,42 @@
         }
       }
     },
+    "%@ %@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ · %3$@"
+          }
+        }
+      }
+    },
     "%@ %@ by %@%@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ %2$@ by %3$@%4$@"
+          }
+        }
+      }
+    },
+    "%@ %lld today · %@ logged" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$lld today · %3$@ logged"
+          }
+        }
+      }
+    },
+    "%@ %lld today · %lld-day streak" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$lld today · %3$lld-day streak"
           }
         }
       }
@@ -141,6 +181,9 @@
         }
       }
     },
+    "%@ Badges" : {
+
+    },
     "%@ before it passes over" : {
 
     },
@@ -187,6 +230,16 @@
         }
       }
     },
+    "%@ in all · %lld types" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ in all · %2$lld types"
+          }
+        }
+      }
+    },
     "%@ in range" : {
 
     },
@@ -200,6 +253,9 @@
 
     },
     "%@ is off screen" : {
+
+    },
+    "%@ Logbook" : {
 
     },
     "%@ radius" : {
@@ -251,13 +307,39 @@
     "%@, other data sources" : {
 
     },
+    "%@%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$lld"
+          }
+        }
+      }
+    },
     "%@×" : {
 
     },
     "%lld" : {
 
     },
+    "%lld aircraft today, best day %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld aircraft today, best day %2$lld"
+          }
+        }
+      }
+    },
+    "%lld day streak" : {
+
+    },
     "%lld levels to go" : {
+
+    },
+    "%lld notable" : {
 
     },
     "%lld notable · %lld new type%@ · closest %@" : {
@@ -310,6 +392,26 @@
         }
       }
     },
+    "%lld of %lld earned" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld earned"
+          }
+        }
+      }
+    },
+    "%lld of %lld levels" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld levels"
+          }
+        }
+      }
+    },
     "%lld of %lld unlocked" : {
       "localizations" : {
         "en" : {
@@ -319,6 +421,9 @@
           }
         }
       }
+    },
+    "%lld of 50 aircraft logged here before the clock draws." : {
+
     },
     "%lld percent of the way. %@." : {
       "localizations" : {
@@ -330,12 +435,35 @@
         }
       }
     },
+    "%lld today" : {
+
+    },
     "%lld-day streak · best %lld" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld-day streak · best %2$lld"
+          }
+        }
+      }
+    },
+    "%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "%lld/%lld earned" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld earned"
           }
         }
       }
@@ -416,6 +544,12 @@
 
     },
     "0.5×" : {
+
+    },
+    "1 day streak" : {
+
+    },
+    "1 notable" : {
 
     },
     "1×" : {
@@ -640,6 +774,9 @@
     "Also announce them out loud: “Delta Air Lines flight 1199 is approaching overhead…”" : {
 
     },
+    "Also close" : {
+
+    },
     "Altitude" : {
 
     },
@@ -722,6 +859,9 @@
     "Backup traffic" : {
 
     },
+    "Badge" : {
+
+    },
     "Badge Ring" : {
 
     },
@@ -754,10 +894,19 @@
         }
       }
     },
+    "best day" : {
+
+    },
     "Best day" : {
 
     },
     "Best hour" : {
+
+    },
+    "best run" : {
+
+    },
+    "Best run %lld days" : {
 
     },
     "Best streak" : {
@@ -770,6 +919,9 @@
 
     },
     "BOARDING PASS" : {
+
+    },
+    "Busiest" : {
 
     },
     "BUSIEST" : {
@@ -801,6 +953,12 @@
 
     },
     "Business jet" : {
+
+    },
+    "busy" : {
+
+    },
+    "by %@" : {
 
     },
     "By day of the week" : {
@@ -954,6 +1112,9 @@
     "Couldn't check" : {
 
     },
+    "Couldn't make the video" : {
+
+    },
     "Counting planes" : {
 
     },
@@ -981,10 +1142,16 @@
     "Day" : {
 
     },
+    "day streak" : {
+
+    },
     "Days" : {
 
     },
     "Days and hours" : {
+
+    },
+    "days in a row" : {
 
     },
     "Decimal degrees. South latitudes and west longitudes are negative (Atlanta is 33.749, -84.388)." : {
@@ -1021,6 +1188,9 @@
 
     },
     "Digest" : {
+
+    },
+    "Directions aircraft fly" : {
 
     },
     "Directions aircraft were heading" : {
@@ -1119,6 +1289,15 @@
     "Every aircraft that comes inside your radius, with where you were, stats and badges. Demo traffic and custom spots aren't logged, only what's around you." : {
 
     },
+    "Every aircraft that flies over is logged on its own." : {
+
+    },
+    "Every badge" : {
+
+    },
+    "Every level" : {
+
+    },
     "EVERY LEVEL" : {
 
     },
@@ -1201,10 +1380,10 @@
     "Flight data" : {
 
     },
-    "Flight, airline, type, airport…" : {
+    "Flight, airline, airport" : {
 
     },
-    "Flight, tail number, airline, airport…" : {
+    "Flight, airline, type, airport…" : {
 
     },
     "Flight: ?" : {
@@ -1226,6 +1405,9 @@
 
     },
     "Follow on Lock Screen" : {
+
+    },
+    "Following" : {
 
     },
     "Follows your Home Screen" : {
@@ -1349,6 +1531,9 @@
     "Keep a logbook" : {
 
     },
+    "keep it going" : {
+
+    },
     "Keep screen awake" : {
 
     },
@@ -1358,7 +1543,7 @@
     "Keep typing to search worldwide" : {
 
     },
-    "Keep typing to search worldwide by tail or flight number." : {
+    "Keep typing to search worldwide." : {
 
     },
     "Kilometers, meters and km/h" : {
@@ -1366,6 +1551,16 @@
     },
     "Kind" : {
 
+    },
+    "L%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "L%1$lld/%2$lld"
+          }
+        }
+      }
     },
     "Last 14 days" : {
 
@@ -1395,7 +1590,20 @@
     "LEVEL %lld" : {
 
     },
+    "Level %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Level %1$lld of %2$lld"
+          }
+        }
+      }
+    },
     "Lift to open Sky View" : {
+
+    },
+    "light" : {
 
     },
     "Light" : {
@@ -1413,6 +1621,9 @@
     "LOCKED" : {
 
     },
+    "Log one to keep the streak" : {
+
+    },
     "Logbook" : {
 
     },
@@ -1425,6 +1636,9 @@
           }
         }
       }
+    },
+    "Logged" : {
+
     },
     "Logged on" : {
 
@@ -1447,7 +1661,7 @@
     "Looking for Apple TV…" : {
 
     },
-    "Looking for it on Flightradar24…" : {
+    "Looking for it…" : {
 
     },
     "Looking straight up" : {
@@ -1460,6 +1674,9 @@
 
     },
     "Maker, exact model and registered owner from adsbdb.com (companies only, never a person)" : {
+
+    },
+    "Making your video…" : {
 
     },
     "Map" : {
@@ -1529,6 +1746,9 @@
         }
       }
     },
+    "Mostly" : {
+
+    },
     "Motion" : {
 
     },
@@ -1567,6 +1787,9 @@
 
     },
     "New types" : {
+
+    },
+    "New: %@" : {
 
     },
     "Next" : {
@@ -1662,6 +1885,9 @@
     "Nothing logged that month" : {
 
     },
+    "Nothing logged yet" : {
+
+    },
     "Nothing logged yet today" : {
 
     },
@@ -1683,6 +1909,9 @@
     "Nothing yet." : {
 
     },
+    "Now" : {
+
+    },
     "Number %lld, %@%@%@, %lld times" : {
       "localizations" : {
         "en" : {
@@ -1692,6 +1921,9 @@
           }
         }
       }
+    },
+    "of %lld" : {
+
     },
     "of %lld %@" : {
       "localizations" : {
@@ -1761,10 +1993,16 @@
     "Open Sky View" : {
 
     },
+    "Open What The Flight?" : {
+
+    },
     "Open What The Flight? on your Apple TV. Both devices must be on the same Wi-Fi." : {
 
     },
     "Open What The Flight? once so I know where you're watching from." : {
+
+    },
+    "Open What The Flight? to start" : {
 
     },
     "OpenFlights" : {
@@ -1821,6 +2059,12 @@
           }
         }
       }
+    },
+    "Peak" : {
+
+    },
+    "peak %lld" : {
+
     },
     "Per day" : {
 
@@ -1928,6 +2172,9 @@
     "Question Contrail" : {
 
     },
+    "quiet" : {
+
+    },
     "Radar" : {
 
     },
@@ -1962,6 +2209,9 @@
 
     },
     "Recenter map" : {
+
+    },
+    "Recently earned" : {
 
     },
     "Recently unlocked" : {
@@ -2123,6 +2373,12 @@
     "Share" : {
 
     },
+    "Share as Pictures" : {
+
+    },
+    "Share as Video" : {
+
+    },
     "Share Boarding Pass" : {
 
     },
@@ -2139,6 +2395,12 @@
 
     },
     "Showing the latest %lld" : {
+
+    },
+    "Shows a live map of the traffic below the radar" : {
+
+    },
+    "Shows a live map of the traffic beside the radar" : {
 
     },
     "Shows a live map of the traffic instead of the radar" : {
@@ -2166,6 +2428,9 @@
 
     },
     "Shows your whole radius again" : {
+
+    },
+    "Shows your whole radius again and turns the map with you" : {
 
     },
     "Sighting" : {
@@ -2258,6 +2523,9 @@
     "Status" : {
 
     },
+    "steady" : {
+
+    },
     "Stop Following" : {
 
     },
@@ -2303,10 +2571,7 @@
     "Tail number" : {
 
     },
-    "Tail number, flight, airline…" : {
-
-    },
-    "Tail numbers, flight numbers (DL570) and callsigns (DAL570) anywhere in the world." : {
+    "Tail numbers, flights (DL570), callsigns (DAL570), airlines (American) and airports (XNA, Chicago) anywhere in the world." : {
 
     },
     "Take one in Sky View and it lands here, with a boarding pass to share." : {
@@ -2328,6 +2593,9 @@
 
     },
     "Tap an airport to see its routes." : {
+
+    },
+    "Tap to turn with you again" : {
 
     },
     "Teal & Coral" : {
@@ -2399,6 +2667,12 @@
     "Times seen" : {
 
     },
+    "today" : {
+
+    },
+    "Today" : {
+
+    },
     "Today · %@" : {
 
     },
@@ -2445,6 +2719,9 @@
     "Try Again" : {
 
     },
+    "Try again, or share the cards as pictures." : {
+
+    },
     "Try Demo Traffic" : {
 
     },
@@ -2480,6 +2757,9 @@
 
     },
     "Unknown" : {
+
+    },
+    "Unlocked" : {
 
     },
     "UNLOCKED" : {
@@ -2669,6 +2949,9 @@
     "Your collection" : {
 
     },
+    "Your logbook shows up here once the app has run." : {
+
+    },
     "Your photo · %@" : {
 
     },
@@ -2682,6 +2965,9 @@
 
     },
     "Your sky" : {
+
+    },
+    "Your sky shows up here once the app has run." : {
 
     },
     "Your sky, hour by hour" : {

@@ -403,7 +403,7 @@ struct SkyView: View {
                         .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(width: 44, height: 44)
-                        .glassSurface(in: Circle(), interactive: true)
+                        .skyGlass(in: Circle(), interactive: true)
                 }
                 .accessibilityLabel("Close Sky View")
                 Spacer()
@@ -418,7 +418,7 @@ struct SkyView: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .glassSurface(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .skyGlass(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .padding(.horizontal, 16)
             .padding(.top, 58)
@@ -439,7 +439,7 @@ struct SkyView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
-                    .glassSurface(in: Capsule())
+                    .skyGlass(in: Capsule())
                     .padding(.top, 12)
                     .transition(.opacity)
             }
@@ -463,7 +463,7 @@ struct SkyView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .glassSurface(in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .skyGlass(in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .animation(.smooth(duration: 0.3), value: risers.map(\.id))
             }
 
@@ -772,13 +772,32 @@ private struct ZoomChips: View {
                 }
             }
             .padding(5)
-            .glassSurface(in: Capsule())
+            .skyGlass(in: Capsule())
             .animation(.snappy, value: active)
         }
     }
 }
 
 // MARK: - Pieces
+
+private extension View {
+    /// Glass over the camera, darkened and kept in dark mode: in light mode glass alone goes
+    /// pale over a bright sky and the white text on it washes out.
+    func skyGlass<S: Shape>(in shape: S, interactive: Bool = false) -> some View {
+        background(.black.opacity(0.55), in: shape)
+            .glassSurface(in: shape, interactive: interactive)
+            .environment(\.colorScheme, .dark)
+    }
+
+    /// A small dark tag behind an aircraft's name: no glass, so it doesn't blur the sky
+    /// around the aircraft.
+    func skyTag() -> some View {
+        padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .environment(\.colorScheme, .dark)
+    }
+}
 
 /// Horizon line plus compass ticks every 15°, labelled at the cardinal points.
 private struct SkyGrid: View {
@@ -853,8 +872,8 @@ private struct SkyMarker: View {
     }
 }
 
-/// Callsign plus type and distance as shadowed text: readable over sky and cloud without a
-/// box that could hide the aircraft itself.
+/// Callsign plus type and distance on a small dark tag, readable over a bright daytime sky.
+/// It sits above the aircraft's ring (`placedLabels`), so it never hides the aircraft itself.
 private struct SkyLabel: View {
     let contact: RadarContact
     let isGoal: Bool
@@ -873,8 +892,7 @@ private struct SkyLabel: View {
                 .opacity(0.85)
         }
         .foregroundStyle(isGoal ? Palette.signal : .white)
-        .shadow(color: .black.opacity(0.85), radius: 1.5)
-        .shadow(color: .black.opacity(0.5), radius: 4)
+        .skyTag()
         .padding(4)
         .contentShape(Rectangle())
         .fixedSize()
@@ -896,9 +914,11 @@ private struct EdgeArrow: View {
             Text(contact.flight.displayIdentifier)
                 .font(.mono(isGoal ? 13 : 10, .bold))
                 .fixedSize()
+                .skyTag()
         }
         .foregroundStyle(isGoal ? Palette.signal : .white)
         .shadow(color: .black.opacity(0.6), radius: 2)
+        .environment(\.colorScheme, .dark)
         .accessibilityLabel("\(contact.flight.displayIdentifier) is off screen")
     }
 }
@@ -985,7 +1005,7 @@ private struct LockedCard: View {
             .fixedSize(horizontal: false, vertical: true)
             .foregroundStyle(.white)
             .padding(8)
-            .glassSurface(in: RoundedRectangle(cornerRadius: 22, style: .continuous), interactive: true)
+            .skyGlass(in: RoundedRectangle(cornerRadius: 22, style: .continuous), interactive: true)
         }
         .buttonStyle(.plain)
         .accessibilityHint("Shows flight details")

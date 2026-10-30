@@ -32,7 +32,10 @@ struct FlightDetailSheet: View {
             ScrollView {
                 if let contact {
                     VStack(spacing: 18) {
-                        header(contact)
+                        VStack(spacing: 12) {
+                            header(contact)
+                            pinAndFavorite(contact)
+                        }
                         if settings.showPhotos {
                             PhotoCard(flight: contact.flight)
                         }
@@ -52,11 +55,13 @@ struct FlightDetailSheet: View {
                         telemetry(contact)
                         routeCard(contact)
                         actions(contact)
-                        Text(model.source.attribution)
-                            .monoScaled(10)
-                            .foregroundStyle(Palette.faint)
-                            .multilineTextAlignment(.center)
-                            .padding(.top, 4)
+                        if let attribution = model.source.attribution {
+                            Text(attribution)
+                                .monoScaled(10)
+                                .foregroundStyle(Palette.faint)
+                                .multilineTextAlignment(.center)
+                                .padding(.top, 4)
+                        }
                     }
                     .padding(.horizontal, 18)
                     .padding(.bottom, 30)
@@ -232,38 +237,42 @@ struct FlightDetailSheet: View {
         }
     }
 
-    private func actions(_ contact: RadarContact) -> some View {
+    /// Pin (or Track on Radar) and Favorite: short buttons right under the logbook count.
+    private func pinAndFavorite(_ contact: RadarContact) -> some View {
         let isFocused = model.focus.focusedID == contact.id
         let isPinned = model.isPinned(contact.id)
         let isFavorite = model.isFavorite(contact.flight)
-        return VStack(spacing: 10) {
-            HStack(spacing: 10) {
-                Button {
-                    if isPinned {
-                        withAnimation(.snappy) { model.unpin(contact.id) }
-                    } else if isFocused {
-                        withAnimation(.snappy) { model.pin(contact.flight) }
-                    } else {
-                        model.focus(on: contact.id)
-                        dismiss()
-                    }
-                } label: {
-                    Label(isFocused || isPinned ? (isPinned ? "Unpin" : "Pin") : "Track on Radar",
-                          systemImage: isFocused || isPinned ? (isPinned ? "pin.slash" : "pin") : "scope")
-                        .frame(maxWidth: .infinity)
+        return HStack(spacing: 10) {
+            Button {
+                if isPinned {
+                    withAnimation(.snappy) { model.unpin(contact.id) }
+                } else if isFocused {
+                    withAnimation(.snappy) { model.pin(contact.flight) }
+                } else {
+                    model.focus(on: contact.id)
+                    dismiss()
                 }
-                .buttonStyle(RadarButtonStyle(prominent: true))
-
-                Button {
-                    withAnimation(.snappy) { model.toggleFavorite(contact.flight) }
-                } label: {
-                    Label(isFavorite ? "Unfavorite" : "Favorite", systemImage: isFavorite ? "heart.slash" : "heart")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(FavoriteButtonStyle(isOn: isFavorite))
-                .accessibilityHint(isFavorite ? "Stops calling this aircraft out in yellow"
-                                              : "Calls this aircraft out in yellow on the radar, the map and in your logbook")
+            } label: {
+                Label(isFocused || isPinned ? (isPinned ? "Unpin" : "Pin") : "Track on Radar",
+                      systemImage: isFocused || isPinned ? (isPinned ? "pin.slash" : "pin") : "scope")
+                    .frame(maxWidth: .infinity)
             }
+            .buttonStyle(RadarButtonStyle(prominent: true, compact: true))
+
+            Button {
+                withAnimation(.snappy) { model.toggleFavorite(contact.flight) }
+            } label: {
+                Label(isFavorite ? "Unfavorite" : "Favorite", systemImage: isFavorite ? "heart.slash" : "heart")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(FavoriteButtonStyle(isOn: isFavorite, compact: true))
+            .accessibilityHint(isFavorite ? "Stops calling this aircraft out in yellow"
+                                          : "Calls this aircraft out in yellow on the radar, the map and in your logbook")
+        }
+    }
+
+    private func actions(_ contact: RadarContact) -> some View {
+        VStack(spacing: 10) {
             HStack(spacing: 10) {
                 SightingShareButton(info: SightingCardInfo(contact: contact, observer: model.observer,
                                                            trail: model.trail(for: contact.id).map(\.coordinate),
@@ -325,7 +334,7 @@ struct FlightDetailSheet: View {
         var text = "✈️ \(f.displayIdentifier)"
         if f.hasRoute { text += " \(Self.place(f.originIATA, f.origin)) → \(Self.place(f.destinationIATA, f.destination))" }
         if let type = f.typeName ?? f.typeCode { text += " · \(type)" }
-        text += " — \(RadarFormat.altitudeText(contact.altitudeFeet)), \(RadarFormat.distanceText(contact.distanceMiles)) away. Spotted with What The Flight?"
+        text += " — \(RadarFormat.altitudeText(contact.altitudeFeet)), \(RadarFormat.distanceText(contact.distanceMiles)) away. Spotted with What the Flight app"
         return text
     }
 
@@ -346,15 +355,17 @@ struct FlightDetailSheet: View {
 
 struct RadarButtonStyle: ButtonStyle {
     let prominent: Bool
+    /// About half the height, for a row of buttons up among the details.
+    var compact = false
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .monoScaled(14, .bold)
-            .padding(.vertical, 13)
+            .monoScaled(compact ? 13 : 14, .bold)
+            .padding(.vertical, compact ? 7 : 13)
             .padding(.horizontal, 12)
             .foregroundStyle(prominent ? Color.white : Palette.ink)
             .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: compact ? 11 : 14, style: .continuous)
                     .fill(prominent ? Palette.ink : Palette.ink.opacity(0.1))
             )
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
@@ -365,21 +376,18 @@ struct RadarButtonStyle: ButtonStyle {
 /// Favourite or not: yellow when it is, like the aircraft on the radar.
 struct FavoriteButtonStyle: ButtonStyle {
     let isOn: Bool
+    /// About half the height, like `RadarButtonStyle(compact:)`.
+    var compact = false
 
     func makeBody(configuration: Configuration) -> some View {
+        let shape = RoundedRectangle(cornerRadius: compact ? 11 : 14, style: .continuous)
         configuration.label
-            .monoScaled(14, .bold)
-            .padding(.vertical, 13)
+            .monoScaled(compact ? 13 : 14, .bold)
+            .padding(.vertical, compact ? 7 : 13)
             .padding(.horizontal, 12)
             .foregroundStyle(isOn ? Palette.value : Palette.ink)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(isOn ? Palette.favorite.opacity(0.28) : Palette.ink.opacity(0.1))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(Palette.favorite.opacity(isOn ? 0.8 : 0), lineWidth: 1.5)
-            )
+            .background(shape.fill(isOn ? Palette.favorite.opacity(0.28) : Palette.ink.opacity(0.1)))
+            .overlay(shape.strokeBorder(Palette.favorite.opacity(isOn ? 0.8 : 0), lineWidth: 1.5))
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.snappy(duration: 0.2), value: configuration.isPressed)
     }

@@ -3,7 +3,8 @@
 //  WhatTheFlight
 //
 //  "Your 2026 in the sky": a month or a year of the logbook as a stack of story cards to
-//  swipe through and share (each renders at 1080 × 1920). The entry card sits on the
+//  swipe through and share, as pictures (each renders at 1080 × 1920) or as one video of
+//  them all (`RecapVideo`). The entry card sits on the
 //  Overview tab. The numbers come from `LogbookRecap`; every card leads with a picture of
 //  them: a heat calendar, a 24-hour clock and heading rose, a waffle of the mix, ranking
 //  bars and silhouettes, the altitude-speed cloud with the records ringed, and the new types.
@@ -1103,6 +1104,10 @@ struct LogbookRecapView: View {
     private static let format = RecapSlide.Format.story
     private static let largest: CGFloat = 1.6
     private static let chrome: CGFloat = 90
+    /// How far the video has got while it's being made.
+    @State private var videoProgress: Double?
+    @State private var videoTask: Task<Void, Never>?
+    @State private var videoFailed = false
     #endif
 
     var body: some View {
@@ -1126,15 +1131,48 @@ struct LogbookRecapView: View {
         .toolbar {
             if let recap {
                 ToolbarItem(placement: .primaryAction) {
-                    ShareLink(items: RecapSlide.Kind.allCases.compactMap { RecapRenderer.share(kind: $0, recap: recap) },
-                              subject: Text("My \(period.title()) in the sky")) { slides in
-                        SharePreview("\(period.title()) in the sky", image: Image(uiImage: slides.image))
+                    Menu {
+                        Button {
+                            shareVideo(recap)
+                        } label: {
+                            Label("Share as Video", systemImage: "play.rectangle")
+                        }
+                        ShareLink(items: RecapSlide.Kind.allCases.compactMap { RecapRenderer.share(kind: $0, recap: recap) },
+                                  subject: Text("My \(period.title()) in the sky")) { slides in
+                            SharePreview("\(period.title()) in the sky", image: Image(uiImage: slides.image))
+                        } label: {
+                            Label("Share as Pictures", systemImage: "photo.on.rectangle")
+                        }
                     } label: {
                         Label("Share", systemImage: "square.and.arrow.up")
                     }
+                    .disabled(videoProgress != nil)
                 }
             }
         }
+        .overlay {
+            if let videoProgress {
+                VStack(spacing: 10) {
+                    ProgressView(value: videoProgress)
+                        .tint(Palette.ink)
+                        .frame(width: 180)
+                    Text("Making your video…")
+                        .monoScaled(13, .semibold)
+                        .foregroundStyle(Palette.value)
+                }
+                .padding(.horizontal, 22)
+                .padding(.vertical, 16)
+                .glassSurface(in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .transition(.opacity)
+            }
+        }
+        .animation(.smooth(duration: 0.2), value: videoProgress == nil)
+        .alert("Couldn't make the video", isPresented: $videoFailed) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Try again, or share the cards as pictures.")
+        }
+        .onDisappear { videoTask?.cancel() }
         #endif
         #if os(tvOS)
         .onExitCommand { dismiss() }
@@ -1198,6 +1236,23 @@ struct LogbookRecapView: View {
         }
     }
     #else
+    /// Makes the cards into a video, then opens the share sheet with it.
+    private func shareVideo(_ recap: LogbookRecap) {
+        videoProgress = 0
+        videoTask = Task {
+            do {
+                let url = try await RecapRenderer.video(recap: recap) { fraction in
+                    Task { @MainActor in if videoProgress != nil { videoProgress = fraction } }
+                }
+                videoProgress = nil
+                RecapVideo.presentShareSheet(for: url)
+            } catch {
+                videoProgress = nil
+                if !(error is CancellationError) { videoFailed = true }
+            }
+        }
+    }
+
     private func pages(_ recap: LogbookRecap, scale: CGFloat) -> some View {
         TabView(selection: $page) {
             ForEach(RecapSlide.Kind.allCases) { kind in
@@ -1214,13 +1269,31 @@ struct LogbookRecapView: View {
 @MainActor
 enum RecapRenderer {
     /// A card as a picture at three times its size: a story is 1080 × 1920.
-    static func share(kind: RecapSlide.Kind, recap: LogbookRecap, format: RecapSlide.Format = .story) -> SpotCardShare? {
+    static func image(kind: RecapSlide.Kind, recap: LogbookRecap, format: RecapSlide.Format = .story) -> UIImage? {
         let renderer = ImageRenderer(content: RecapSlide(kind: kind, recap: recap, format: format).background(Color.black))
         renderer.proposedSize = ProposedViewSize(format.size)
         renderer.scale = 3
         renderer.isOpaque = true
-        guard let image = renderer.uiImage else { return nil }
-        return SpotCardShare(image: image, name: "\(recap.period.title()) in the sky \(kind.rawValue + 1)")
+        return renderer.uiImage
+    }
+
+    static func share(kind: RecapSlide.Kind, recap: LogbookRecap, format: RecapSlide.Format = .story) -> SpotCardShare? {
+        image(kind: kind, recap: recap, format: format)
+            .map { SpotCardShare(image: $0, name: "\(recap.period.title()) in the sky \(kind.rawValue + 1)") }
+    }
+
+    /// Every story card, one after another, as a video (`RecapVideo`).
+    static func video(recap: LogbookRecap, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
+        var cards: [CGImage] = []
+        for kind in RecapSlide.Kind.allCases {
+            if let card = image(kind: kind, recap: recap)?.cgImage { cards.append(card) }
+            // Let the progress show between cards.
+            await Task.yield()
+        }
+        let name = "\(recap.period.title()) in the sky"
+        return try await Task.detached(priority: .userInitiated) {
+            try await RecapVideo.make(cards: cards, name: name, progress: progress)
+        }.value
     }
 }
 #endif
